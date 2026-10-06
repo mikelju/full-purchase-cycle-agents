@@ -102,7 +102,7 @@ def test_set_baseline_below_threshold_keeps_the_stored_baseline(baseline_copy, m
 
 @pytest.mark.parametrize("mode", ["live", "replay"])
 def test_set_baseline_needs_record_mode(mode, capsys):
-    args = argparse.Namespace(mode=mode, split="test", set_baseline=True, workers=1)
+    args = argparse.Namespace(suite="order_line_extraction", mode=mode, split="test", set_baseline=True, workers=1)
     assert harness.cmd_eval(args) == 2
     assert "--mode record" in capsys.readouterr().err
 

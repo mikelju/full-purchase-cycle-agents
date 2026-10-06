@@ -45,3 +45,14 @@ def test_tracked_files_and_recordings_hold_no_keys():
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
         assert not SECRET_PATTERNS.search(text), f"possible secret in {name}"
+
+
+def test_phase_02_data_files_are_tracked_and_scanned():
+    tracked = set(_tracked())
+    for name in (
+        "evals/recordings/web_form_matching.jsonl",
+        "evals/datasets/web_form_matching/dataset.jsonl",
+        "evals/baselines/web_form_matching.json",
+        "examples/web_form_submission.json",
+    ):
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"

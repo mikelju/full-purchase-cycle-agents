@@ -1,0 +1,2367 @@
+{
+ "dataset_version": "1.0",
+ "lines": {
+  "WFM-0157": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0158": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-LTX-8.5",
+   "source": "model"
+  },
+  "WFM-0159": {
+   "product_accuracy": true,
+   "sku": "DRS-NONADH-10",
+   "source": "model"
+  },
+  "WFM-0160": {
+   "product_accuracy": true,
+   "sku": "SUP-LUMBAR",
+   "source": "model"
+  },
+  "WFM-0161": {
+   "product_accuracy": true,
+   "sku": "SUP-WRIST-L",
+   "source": "model"
+  },
+  "WFM-0162": {
+   "product_accuracy": true,
+   "sku": "SUP-KNEE-L",
+   "source": "deterministic"
+  },
+  "WFM-0163": {
+   "product_accuracy": true,
+   "sku": "GRAB-REACH",
+   "source": "deterministic"
+  },
+  "WFM-0164": {
+   "product_accuracy": true,
+   "sku": "COVERALL-L",
+   "source": "deterministic"
+  },
+  "WFM-0165": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0166": {
+   "product_accuracy": true,
+   "sku": "BPM-CUFF-L",
+   "source": "model"
+  },
+  "WFM-0167": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0168": {
+   "product_accuracy": true,
+   "sku": "THERM-COVER",
+   "source": "model"
+  },
+  "WFM-0169": {
+   "product_accuracy": true,
+   "sku": "TAPE-TR-12",
+   "source": "model"
+  },
+  "WFM-0170": {
+   "product_accuracy": true,
+   "sku": "HOT-WATER-BOTTLE",
+   "source": "model"
+  },
+  "WFM-0171": {
+   "product_accuracy": true,
+   "sku": "THERM-DIG",
+   "source": "model"
+  },
+  "WFM-0172": {
+   "product_accuracy": true,
+   "sku": "STRIP-6x100",
+   "source": "deterministic"
+  },
+  "WFM-0173": {
+   "product_accuracy": true,
+   "sku": "WIPE-SURF-100",
+   "source": "model"
+  },
+  "WFM-0174": {
+   "product_accuracy": true,
+   "sku": "OXI-PAED",
+   "source": "model"
+  },
+  "WFM-0175": {
+   "product_accuracy": true,
+   "sku": "GAUZE-NS-7-12",
+   "source": "model"
+  },
+  "WFM-0176": {
+   "product_accuracy": true,
+   "sku": "PLST-ROLL-6",
+   "source": "model"
+  },
+  "WFM-0177": {
+   "product_accuracy": true,
+   "sku": "TOOTHBRUSH-SOFT",
+   "source": "model"
+  },
+  "WFM-0178": {
+   "product_accuracy": true,
+   "sku": "RAZOR-DISP",
+   "source": "model"
+  },
+  "WFM-0179": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0180": {
+   "product_accuracy": true,
+   "sku": "BND-COH-7",
+   "source": "model"
+  },
+  "WFM-0181": {
+   "product_accuracy": true,
+   "sku": "NDL-18G",
+   "source": "model"
+  },
+  "WFM-0182": {
+   "product_accuracy": true,
+   "sku": "NDL-26G",
+   "source": "model"
+  },
+  "WFM-0183": {
+   "product_accuracy": true,
+   "sku": "PEN-31-5",
+   "source": "model"
+  },
+  "WFM-0184": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0185": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0186": {
+   "product_accuracy": true,
+   "sku": "SUN-50-50",
+   "source": "model"
+  },
+  "WFM-0187": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0188": {
+   "product_accuracy": true,
+   "sku": "PLST-WP",
+   "source": "model"
+  },
+  "WFM-0189": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0190": {
+   "product_accuracy": true,
+   "sku": "SUP-ELBOW-M",
+   "source": "model"
+  },
+  "WFM-0191": {
+   "product_accuracy": true,
+   "sku": "SYR-INS-10",
+   "source": "deterministic"
+  },
+  "WFM-0192": {
+   "product_accuracy": true,
+   "sku": "SHARPS-2",
+   "source": "model"
+  },
+  "WFM-0193": {
+   "product_accuracy": true,
+   "sku": "SUP-ELBOW-S",
+   "source": "deterministic"
+  },
+  "WFM-0194": {
+   "product_accuracy": true,
+   "sku": "URN-CUP-60",
+   "source": "model"
+  },
+  "WFM-0195": {
+   "product_accuracy": true,
+   "sku": "INC-BRF-NIGHT-L",
+   "source": "deterministic"
+  },
+  "WFM-0196": {
+   "product_accuracy": true,
+   "sku": "DRS-FILM-10x12",
+   "source": "deterministic"
+  },
+  "WFM-0197": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0198": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0199": {
+   "product_accuracy": true,
+   "sku": "MASK-FFP3-V",
+   "source": "deterministic"
+  },
+  "WFM-0200": {
+   "product_accuracy": true,
+   "sku": "STETH-DUAL",
+   "source": "model"
+  },
+  "WFM-0201": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-NEO-7.5",
+   "source": "deterministic"
+  },
+  "WFM-0202": {
+   "product_accuracy": true,
+   "sku": "WIPE-SURF-200",
+   "source": "model"
+  },
+  "WFM-0203": {
+   "product_accuracy": true,
+   "sku": "URN-BAG-LEG",
+   "source": "model"
+  },
+  "WFM-0204": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0205": {
+   "product_accuracy": true,
+   "sku": "SYR-2",
+   "source": "deterministic"
+  },
+  "WFM-0206": {
+   "product_accuracy": true,
+   "sku": "DRS-FILM-10x12",
+   "source": "model"
+  },
+  "WFM-0207": {
+   "product_accuracy": true,
+   "sku": "URN-BAG-LEG",
+   "source": "deterministic"
+  },
+  "WFM-0208": {
+   "product_accuracy": true,
+   "sku": "LAN-100",
+   "source": "deterministic"
+  },
+  "WFM-0209": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0210": {
+   "product_accuracy": true,
+   "sku": "STOCK-KNEE-S",
+   "source": "model"
+  },
+  "WFM-0211": {
+   "product_accuracy": true,
+   "sku": "BPM-ANER",
+   "source": "model"
+  },
+  "WFM-0212": {
+   "product_accuracy": true,
+   "sku": "KIT-FA-WALL",
+   "source": "deterministic"
+  },
+  "WFM-0213": {
+   "product_accuracy": true,
+   "sku": "SCALPEL-10",
+   "source": "deterministic"
+  },
+  "WFM-0214": {
+   "product_accuracy": true,
+   "sku": "BND-TRI",
+   "source": "deterministic"
+  },
+  "WFM-0215": {
+   "product_accuracy": true,
+   "sku": "GLV-LTXP-M",
+   "source": "deterministic"
+  },
+  "WFM-0216": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0217": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0218": {
+   "product_accuracy": true,
+   "sku": "CATH-FOL-12",
+   "source": "model"
+  },
+  "WFM-0219": {
+   "product_accuracy": true,
+   "sku": "URN-CUP-60",
+   "source": "model"
+  },
+  "WFM-0220": {
+   "product_accuracy": true,
+   "sku": "KIT-FA-SMALL",
+   "source": "deterministic"
+  },
+  "WFM-0221": {
+   "product_accuracy": true,
+   "sku": "ALC70-1000",
+   "source": "deterministic"
+  },
+  "WFM-0222": {
+   "product_accuracy": true,
+   "sku": "BND-COH-5",
+   "source": "model"
+  },
+  "WFM-0223": {
+   "product_accuracy": true,
+   "sku": "INC-BRF-M",
+   "source": "deterministic"
+  },
+  "WFM-0224": {
+   "product_accuracy": true,
+   "sku": "SHARPS-1",
+   "source": "deterministic"
+  },
+  "WFM-0225": {
+   "product_accuracy": true,
+   "sku": "NDL-19G",
+   "source": "deterministic"
+  },
+  "WFM-0226": {
+   "product_accuracy": true,
+   "sku": "SYR-1",
+   "source": "model"
+  },
+  "WFM-0227": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0228": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0229": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0230": {
+   "product_accuracy": true,
+   "sku": "BLANKET-FOIL",
+   "source": "model"
+  },
+  "WFM-0231": {
+   "product_accuracy": true,
+   "sku": "GLV-NIT-XS",
+   "source": "deterministic"
+  },
+  "WFM-0232": {
+   "product_accuracy": true,
+   "sku": "INC-BRF-L",
+   "source": "model"
+  },
+  "WFM-0233": {
+   "product_accuracy": true,
+   "sku": "SUN-KIDS-50-200",
+   "source": "deterministic"
+  },
+  "WFM-0234": {
+   "product_accuracy": true,
+   "sku": "MASK-FFP2-BLK",
+   "source": "model"
+  },
+  "WFM-0235": {
+   "product_accuracy": true,
+   "sku": "NDL-26G",
+   "source": "model"
+  },
+  "WFM-0236": {
+   "product_accuracy": true,
+   "sku": "GAUZE-NS-5",
+   "source": "deterministic"
+  },
+  "WFM-0237": {
+   "product_accuracy": true,
+   "sku": "NDL-30G",
+   "source": "deterministic"
+  },
+  "WFM-0238": {
+   "product_accuracy": true,
+   "sku": "COT-BUDS",
+   "source": "deterministic"
+  },
+  "WFM-0239": {
+   "product_accuracy": true,
+   "sku": "BND-ELA-5",
+   "source": "model"
+  },
+  "WFM-0240": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0241": {
+   "product_accuracy": true,
+   "sku": "NDL-23G",
+   "source": "model"
+  },
+  "WFM-0242": {
+   "product_accuracy": true,
+   "sku": "PLST-FAB",
+   "source": "model"
+  },
+  "WFM-0243": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0244": {
+   "product_accuracy": true,
+   "sku": "GEL-5000",
+   "source": "model"
+  },
+  "WFM-0245": {
+   "product_accuracy": true,
+   "sku": "TONGUE-AD",
+   "source": "deterministic"
+  },
+  "WFM-0246": {
+   "product_accuracy": true,
+   "sku": "ALC70-500",
+   "source": "deterministic"
+  },
+  "WFM-0247": {
+   "product_accuracy": true,
+   "sku": "VISOR",
+   "source": "deterministic"
+  },
+  "WFM-0248": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0249": {
+   "product_accuracy": true,
+   "sku": "GLV-NITX-S",
+   "source": "model"
+  },
+  "WFM-0250": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0251": {
+   "product_accuracy": true,
+   "sku": "SAL-5",
+   "source": "model"
+  },
+  "WFM-0252": {
+   "product_accuracy": true,
+   "sku": "SUN-50-200",
+   "source": "deterministic"
+  },
+  "WFM-0253": {
+   "product_accuracy": true,
+   "sku": "SYR-LL-5",
+   "source": "model"
+  },
+  "WFM-0254": {
+   "product_accuracy": true,
+   "sku": "CREAM-FOOT",
+   "source": "model"
+  },
+  "WFM-0255": {
+   "product_accuracy": true,
+   "sku": "TAPE-ZNC-25",
+   "source": "model"
+  },
+  "WFM-0256": {
+   "product_accuracy": true,
+   "sku": "LAN-PEN",
+   "source": "model"
+  },
+  "WFM-0257": {
+   "product_accuracy": true,
+   "sku": "BND-ELA-15",
+   "source": "deterministic"
+  },
+  "WFM-0258": {
+   "product_accuracy": true,
+   "sku": "SAL-250",
+   "source": "deterministic"
+  },
+  "WFM-0259": {
+   "product_accuracy": true,
+   "sku": "LAN-100",
+   "source": "model"
+  },
+  "WFM-0260": {
+   "product_accuracy": true,
+   "sku": "APRON-PE",
+   "source": "deterministic"
+  },
+  "WFM-0261": {
+   "product_accuracy": true,
+   "sku": "THERM-SHEATH",
+   "source": "model"
+  },
+  "WFM-0262": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0263": {
+   "product_accuracy": true,
+   "sku": "BND-TUB-E",
+   "source": "model"
+  },
+  "WFM-0264": {
+   "product_accuracy": true,
+   "sku": "GLV-NIT-S",
+   "source": "model"
+  },
+  "WFM-0265": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0266": {
+   "product_accuracy": true,
+   "sku": "SHARPS-2",
+   "source": "model"
+  },
+  "WFM-0267": {
+   "product_accuracy": true,
+   "sku": "COT-ROLL-250",
+   "source": "deterministic"
+  },
+  "WFM-0268": {
+   "product_accuracy": true,
+   "sku": "SUP-ANKLE-L",
+   "source": "deterministic"
+  },
+  "WFM-0269": {
+   "product_accuracy": true,
+   "sku": "STETH-DUAL",
+   "source": "model"
+  },
+  "WFM-0270": {
+   "product_accuracy": true,
+   "sku": "SYR-3",
+   "source": "deterministic"
+  },
+  "WFM-0271": {
+   "product_accuracy": true,
+   "sku": "GEL-WALL",
+   "source": "model"
+  },
+  "WFM-0272": {
+   "product_accuracy": true,
+   "sku": "WIPE-WASH-CAP",
+   "source": "deterministic"
+  },
+  "WFM-0273": {
+   "product_accuracy": true,
+   "sku": "TONGUE-KID",
+   "source": "deterministic"
+  },
+  "WFM-0274": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0275": {
+   "product_accuracy": true,
+   "sku": "CATH-FOL-14",
+   "source": "model"
+  },
+  "WFM-0276": {
+   "product_accuracy": true,
+   "sku": "CREAM-HAND-100",
+   "source": "model"
+  },
+  "WFM-0277": {
+   "product_accuracy": true,
+   "sku": "SUP-ANKLE-L",
+   "source": "model"
+  },
+  "WFM-0278": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0279": {
+   "product_accuracy": true,
+   "sku": "INC-PAD-MAXI",
+   "source": "model"
+  },
+  "WFM-0280": {
+   "product_accuracy": true,
+   "sku": "COUCH-60-SMOOTH",
+   "source": "model"
+  },
+  "WFM-0281": {
+   "product_accuracy": true,
+   "sku": "SUP-ELBOW-S",
+   "source": "model"
+  },
+  "WFM-0282": {
+   "product_accuracy": true,
+   "sku": "TAPE-TR-12",
+   "source": "deterministic"
+  },
+  "WFM-0283": {
+   "product_accuracy": true,
+   "sku": "CATH-SIL-16",
+   "source": "deterministic"
+  },
+  "WFM-0284": {
+   "product_accuracy": true,
+   "sku": "MOUTHWASH-500",
+   "source": "model"
+  },
+  "WFM-0285": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0286": {
+   "product_accuracy": true,
+   "sku": "BND-ELA-7",
+   "source": "model"
+  },
+  "WFM-0287": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0288": {
+   "product_accuracy": true,
+   "sku": "ALC96-500",
+   "source": "deterministic"
+  },
+  "WFM-0289": {
+   "product_accuracy": true,
+   "sku": "BND-ELA-5",
+   "source": "deterministic"
+  },
+  "WFM-0290": {
+   "product_accuracy": true,
+   "sku": "WALKER-FOLD",
+   "source": "model"
+  },
+  "WFM-0291": {
+   "product_accuracy": true,
+   "sku": "BND-TUB-E",
+   "source": "model"
+  },
+  "WFM-0292": {
+   "product_accuracy": true,
+   "sku": "SOAP-LIQ-500",
+   "source": "model"
+  },
+  "WFM-0293": {
+   "product_accuracy": true,
+   "sku": "STOCK-THIGH-S",
+   "source": "deterministic"
+  },
+  "WFM-0294": {
+   "product_accuracy": true,
+   "sku": "WIPE-SURF-100",
+   "source": "deterministic"
+  },
+  "WFM-0295": {
+   "product_accuracy": true,
+   "sku": "CRUTCH-ADULT",
+   "source": "deterministic"
+  },
+  "WFM-0296": {
+   "product_accuracy": true,
+   "sku": "GAUZE-ST-10",
+   "source": "deterministic"
+  },
+  "WFM-0297": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0298": {
+   "product_accuracy": true,
+   "sku": "MASK-IIR",
+   "source": "model"
+  },
+  "WFM-0299": {
+   "product_accuracy": true,
+   "sku": "GOWN-SURG-ST",
+   "source": "model"
+  },
+  "WFM-0300": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0301": {
+   "product_accuracy": true,
+   "sku": "CREAM-HAND-50",
+   "source": "model"
+  },
+  "WFM-0302": {
+   "product_accuracy": true,
+   "sku": "SUP-ANKLE-M",
+   "source": "model"
+  },
+  "WFM-0303": {
+   "product_accuracy": true,
+   "sku": "GAUZE-NS-7",
+   "source": "model"
+  },
+  "WFM-0304": {
+   "product_accuracy": true,
+   "sku": "COT-ROLL-250",
+   "source": "model"
+  },
+  "WFM-0305": {
+   "product_accuracy": true,
+   "sku": "BPM-CUFF-S",
+   "source": "model"
+  },
+  "WFM-0306": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0307": {
+   "product_accuracy": true,
+   "sku": "ALC70-100",
+   "source": "model"
+  },
+  "WFM-0308": {
+   "product_accuracy": true,
+   "sku": "GEL-500",
+   "source": "model"
+  },
+  "WFM-0309": {
+   "product_accuracy": true,
+   "sku": "PAD-60x90",
+   "source": "model"
+  },
+  "WFM-0310": {
+   "product_accuracy": true,
+   "sku": "STRIP-6x100",
+   "source": "model"
+  },
+  "WFM-0311": {
+   "product_accuracy": true,
+   "sku": "THERM-DIG-FLEX",
+   "source": "model"
+  },
+  "WFM-0312": {
+   "product_accuracy": true,
+   "sku": "LAN-200",
+   "source": "deterministic"
+  },
+  "WFM-0313": {
+   "product_accuracy": true,
+   "sku": "THERM-DIG",
+   "source": "deterministic"
+  },
+  "WFM-0314": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0315": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0316": {
+   "product_accuracy": true,
+   "sku": "BLANKET-FOIL",
+   "source": "model"
+  },
+  "WFM-0317": {
+   "product_accuracy": true,
+   "sku": "CANE-ADJ",
+   "source": "deterministic"
+  },
+  "WFM-0318": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0319": {
+   "product_accuracy": true,
+   "sku": "CREAM-MOIST-500",
+   "source": "deterministic"
+  },
+  "WFM-0320": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0321": {
+   "product_accuracy": true,
+   "sku": "GLV-NITX-L",
+   "source": "model"
+  },
+  "WFM-0322": {
+   "product_accuracy": true,
+   "sku": "NDL-21G",
+   "source": "deterministic"
+  },
+  "WFM-0323": {
+   "product_accuracy": true,
+   "sku": "GLU-STRIP-100",
+   "source": "deterministic"
+  },
+  "WFM-0324": {
+   "product_accuracy": true,
+   "sku": "SHARPS-5",
+   "source": "deterministic"
+  },
+  "WFM-0325": {
+   "product_accuracy": true,
+   "sku": "GOWN-SURG-ST",
+   "source": "deterministic"
+  },
+  "WFM-0326": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-NEO-6.5",
+   "source": "model"
+  },
+  "WFM-0327": {
+   "product_accuracy": true,
+   "sku": "KIDNEY-DISH",
+   "source": "model"
+  },
+  "WFM-0328": {
+   "product_accuracy": true,
+   "sku": "PILL-CUP",
+   "source": "deterministic"
+  },
+  "WFM-0329": {
+   "product_accuracy": true,
+   "sku": "DRS-ISL-5x7",
+   "source": "deterministic"
+  },
+  "WFM-0330": {
+   "product_accuracy": true,
+   "sku": "BPM-WRIST",
+   "source": "model"
+  },
+  "WFM-0331": {
+   "product_accuracy": true,
+   "sku": "OXI-HAND",
+   "source": "model"
+  },
+  "WFM-0332": {
+   "product_accuracy": true,
+   "sku": "STRIP-3x75",
+   "source": "model"
+  },
+  "WFM-0333": {
+   "product_accuracy": true,
+   "sku": "LAN-PEN",
+   "source": "deterministic"
+  },
+  "WFM-0334": {
+   "product_accuracy": true,
+   "sku": "STOCK-THIGH-L",
+   "source": "deterministic"
+  },
+  "WFM-0335": {
+   "product_accuracy": true,
+   "sku": "PLST-WP",
+   "source": "deterministic"
+  },
+  "WFM-0336": {
+   "product_accuracy": true,
+   "sku": "SUP-ELBOW-M",
+   "source": "deterministic"
+  },
+  "WFM-0337": {
+   "product_accuracy": true,
+   "sku": "TONGUE-ST",
+   "source": "deterministic"
+  },
+  "WFM-0338": {
+   "product_accuracy": true,
+   "sku": "DRS-FOAM-15",
+   "source": "deterministic"
+  },
+  "WFM-0339": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0340": {
+   "product_accuracy": true,
+   "sku": "GEL-WALL",
+   "source": "model"
+  },
+  "WFM-0341": {
+   "product_accuracy": true,
+   "sku": "PILL-CRUSH",
+   "source": "deterministic"
+  },
+  "WFM-0342": {
+   "product_accuracy": true,
+   "sku": "GAUZE-ST-5",
+   "source": "model"
+  },
+  "WFM-0343": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0344": {
+   "product_accuracy": true,
+   "sku": "INC-PANT-XL",
+   "source": "deterministic"
+  },
+  "WFM-0345": {
+   "product_accuracy": true,
+   "sku": "GLV-LTXP-L",
+   "source": "deterministic"
+  },
+  "WFM-0346": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0347": {
+   "product_accuracy": true,
+   "sku": "GLV-LTXP-S",
+   "source": "deterministic"
+  },
+  "WFM-0348": {
+   "product_accuracy": true,
+   "sku": "FORCEPS-DISP",
+   "source": "model"
+  },
+  "WFM-0349": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0350": {
+   "product_accuracy": true,
+   "sku": "COT-BUDS",
+   "source": "model"
+  },
+  "WFM-0351": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0352": {
+   "product_accuracy": true,
+   "sku": "STOOL-CUP",
+   "source": "model"
+  },
+  "WFM-0353": {
+   "product_accuracy": true,
+   "sku": "ICE-INSTANT",
+   "source": "model"
+  },
+  "WFM-0354": {
+   "product_accuracy": true,
+   "sku": "WHEELCHAIR-CUSH",
+   "source": "model"
+  },
+  "WFM-0355": {
+   "product_accuracy": true,
+   "sku": "SYR-5",
+   "source": "deterministic"
+  },
+  "WFM-0356": {
+   "product_accuracy": true,
+   "sku": "SUN-KIDS-50-200",
+   "source": "model"
+  },
+  "WFM-0357": {
+   "product_accuracy": true,
+   "sku": "DRS-FOAM-10",
+   "source": "model"
+  },
+  "WFM-0358": {
+   "product_accuracy": true,
+   "sku": "CATH-FOL-12",
+   "source": "model"
+  },
+  "WFM-0359": {
+   "product_accuracy": true,
+   "sku": "STOOL-CUP",
+   "source": "model"
+  },
+  "WFM-0360": {
+   "product_accuracy": true,
+   "sku": "CATH-FOL-18",
+   "source": "deterministic"
+  },
+  "WFM-0361": {
+   "product_accuracy": true,
+   "sku": "RAZOR-DISP",
+   "source": "deterministic"
+  },
+  "WFM-0362": {
+   "product_accuracy": true,
+   "sku": "TONGUE-AD",
+   "source": "model"
+  },
+  "WFM-0363": {
+   "product_accuracy": true,
+   "sku": "GLU-METER",
+   "source": "model"
+  },
+  "WFM-0364": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-NEO-7",
+   "source": "deterministic"
+  },
+  "WFM-0365": {
+   "product_accuracy": true,
+   "sku": "FORCEPS-DISP",
+   "source": "model"
+  },
+  "WFM-0366": {
+   "product_accuracy": true,
+   "sku": "ALC96-250",
+   "source": "deterministic"
+  },
+  "WFM-0367": {
+   "product_accuracy": true,
+   "sku": "SHARPS-10",
+   "source": "deterministic"
+  },
+  "WFM-0368": {
+   "product_accuracy": true,
+   "sku": "CATH-SIL-18",
+   "source": "deterministic"
+  },
+  "WFM-0369": {
+   "product_accuracy": true,
+   "sku": "CPR-MASK",
+   "source": "model"
+  },
+  "WFM-0370": {
+   "product_accuracy": true,
+   "sku": "GLV-NIT200-L",
+   "source": "model"
+  },
+  "WFM-0371": {
+   "product_accuracy": true,
+   "sku": "APRON-PE",
+   "source": "model"
+  },
+  "WFM-0372": {
+   "product_accuracy": true,
+   "sku": "STOCK-KNEE-L",
+   "source": "model"
+  },
+  "WFM-0373": {
+   "product_accuracy": true,
+   "sku": "EYE-WASH-500",
+   "source": "model"
+  },
+  "WFM-0374": {
+   "product_accuracy": true,
+   "sku": "THERM-IR",
+   "source": "deterministic"
+  },
+  "WFM-0375": {
+   "product_accuracy": true,
+   "sku": "BND-ELA-7",
+   "source": "deterministic"
+  },
+  "WFM-0376": {
+   "product_accuracy": true,
+   "sku": "SUN-50-50",
+   "source": "model"
+  },
+  "WFM-0377": {
+   "product_accuracy": true,
+   "sku": "TAPE-SILK-25",
+   "source": "model"
+  },
+  "WFM-0378": {
+   "product_accuracy": true,
+   "sku": "OXI-PAED",
+   "source": "deterministic"
+  },
+  "WFM-0379": {
+   "product_accuracy": true,
+   "sku": "SYR-1",
+   "source": "model"
+  },
+  "WFM-0380": {
+   "product_accuracy": true,
+   "sku": "INC-PANT-M",
+   "source": "model"
+  },
+  "WFM-0381": {
+   "product_accuracy": true,
+   "sku": "SUP-ANKLE-M",
+   "source": "deterministic"
+  },
+  "WFM-0382": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0383": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0384": {
+   "product_accuracy": true,
+   "sku": "THERM-IR",
+   "source": "model"
+  },
+  "WFM-0385": {
+   "product_accuracy": true,
+   "sku": "PLST-KIDS",
+   "source": "deterministic"
+  },
+  "WFM-0386": {
+   "product_accuracy": true,
+   "sku": "SAL-10",
+   "source": "deterministic"
+  },
+  "WFM-0387": {
+   "product_accuracy": true,
+   "sku": "GLV-LTX-XL",
+   "source": "model"
+  },
+  "WFM-0388": {
+   "product_accuracy": true,
+   "sku": "TONGUE-ST",
+   "source": "model"
+  },
+  "WFM-0389": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0390": {
+   "product_accuracy": true,
+   "sku": "GAUZE-NS-7-12",
+   "source": "deterministic"
+  },
+  "WFM-0391": {
+   "product_accuracy": true,
+   "sku": "WIPE-WASH-CAP",
+   "source": "model"
+  },
+  "WFM-0392": {
+   "product_accuracy": true,
+   "sku": "CREAM-BARRIER",
+   "source": "model"
+  },
+  "WFM-0393": {
+   "product_accuracy": true,
+   "sku": "TAPE-PAP-50",
+   "source": "model"
+  },
+  "WFM-0394": {
+   "product_accuracy": true,
+   "sku": "NDL-25G",
+   "source": "deterministic"
+  },
+  "WFM-0395": {
+   "product_accuracy": true,
+   "sku": "PILL-CUP",
+   "source": "model"
+  },
+  "WFM-0396": {
+   "product_accuracy": true,
+   "sku": "MASK-II",
+   "source": "model"
+  },
+  "WFM-0397": {
+   "product_accuracy": true,
+   "sku": "STETH-PAED",
+   "source": "model"
+  },
+  "WFM-0398": {
+   "product_accuracy": true,
+   "sku": "SYR-LL-5",
+   "source": "deterministic"
+  },
+  "WFM-0399": {
+   "product_accuracy": true,
+   "sku": "BPM-CUFF-M",
+   "source": "model"
+  },
+  "WFM-0400": {
+   "product_accuracy": true,
+   "sku": "COVERALL-XL",
+   "source": "model"
+  },
+  "WFM-0401": {
+   "product_accuracy": true,
+   "sku": "GLV-NITX-XL",
+   "source": "model"
+  },
+  "WFM-0402": {
+   "product_accuracy": true,
+   "sku": "GEL-5000",
+   "source": "model"
+  },
+  "WFM-0403": {
+   "product_accuracy": true,
+   "sku": "SAL-30",
+   "source": "model"
+  },
+  "WFM-0404": {
+   "product_accuracy": true,
+   "sku": "SUN-50-200",
+   "source": "model"
+  },
+  "WFM-0405": {
+   "product_accuracy": true,
+   "sku": "COUCH-60",
+   "source": "deterministic"
+  },
+  "WFM-0406": {
+   "product_accuracy": true,
+   "sku": "PEN-31-8",
+   "source": "model"
+  },
+  "WFM-0407": {
+   "product_accuracy": true,
+   "sku": "TAPE-ZNC-50",
+   "source": "model"
+  },
+  "WFM-0408": {
+   "product_accuracy": true,
+   "sku": "MASK-FFP3",
+   "source": "deterministic"
+  },
+  "WFM-0409": {
+   "product_accuracy": true,
+   "sku": "KIT-FA-REFILL",
+   "source": "deterministic"
+  },
+  "WFM-0410": {
+   "product_accuracy": true,
+   "sku": "PLST-ASST",
+   "source": "model"
+  },
+  "WFM-0411": {
+   "product_accuracy": true,
+   "sku": "BPM-ARM",
+   "source": "deterministic"
+  },
+  "WFM-0412": {
+   "product_accuracy": true,
+   "sku": "PAD-40x60",
+   "source": "model"
+  },
+  "WFM-0413": {
+   "product_accuracy": true,
+   "sku": "ALC96-250",
+   "source": "model"
+  },
+  "WFM-0414": {
+   "product_accuracy": true,
+   "sku": "GLU-METER",
+   "source": "deterministic"
+  },
+  "WFM-0415": {
+   "product_accuracy": true,
+   "sku": "GLV-VIN-L",
+   "source": "model"
+  },
+  "WFM-0416": {
+   "product_accuracy": true,
+   "sku": "NDL-21G",
+   "source": "model"
+  },
+  "WFM-0417": {
+   "product_accuracy": true,
+   "sku": "GLV-LTXP-M",
+   "source": "model"
+  },
+  "WFM-0418": {
+   "product_accuracy": true,
+   "sku": "GAUZE-NS-7",
+   "source": "deterministic"
+  },
+  "WFM-0419": {
+   "product_accuracy": true,
+   "sku": "TAPE-SILK-25",
+   "source": "deterministic"
+  },
+  "WFM-0420": {
+   "product_accuracy": true,
+   "sku": "GLV-VIN-S",
+   "source": "model"
+  },
+  "WFM-0421": {
+   "product_accuracy": true,
+   "sku": "GOGGLES",
+   "source": "model"
+  },
+  "WFM-0422": {
+   "product_accuracy": true,
+   "sku": "COUCH-60-SMOOTH",
+   "source": "deterministic"
+  },
+  "WFM-0423": {
+   "product_accuracy": true,
+   "sku": "SYR-5",
+   "source": "model"
+  },
+  "WFM-0424": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0425": {
+   "product_accuracy": true,
+   "sku": "SUP-KNEE-M",
+   "source": "model"
+  },
+  "WFM-0426": {
+   "product_accuracy": true,
+   "sku": "STETH-PAED",
+   "source": "deterministic"
+  },
+  "WFM-0427": {
+   "product_accuracy": false,
+   "sku": "SUN-30-50",
+   "source": "model"
+  },
+  "WFM-0428": {
+   "product_accuracy": true,
+   "sku": "PLST-BLUE",
+   "source": "model"
+  },
+  "WFM-0429": {
+   "product_accuracy": true,
+   "sku": "GLV-NITX-L",
+   "source": "model"
+  },
+  "WFM-0430": {
+   "product_accuracy": true,
+   "sku": "WIPE-WET-80",
+   "source": "model"
+  },
+  "WFM-0431": {
+   "product_accuracy": true,
+   "sku": "COT-ROLL-1000",
+   "source": "deterministic"
+  },
+  "WFM-0432": {
+   "product_accuracy": true,
+   "sku": "WALKER-FOLD",
+   "source": "model"
+  },
+  "WFM-0433": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0434": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0435": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0436": {
+   "product_accuracy": true,
+   "sku": "WIPE-SURF-200",
+   "source": "deterministic"
+  },
+  "WFM-0437": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0438": {
+   "product_accuracy": true,
+   "sku": "MASK-II",
+   "source": "model"
+  },
+  "WFM-0439": {
+   "product_accuracy": true,
+   "sku": "STOCK-KNEE-S",
+   "source": "model"
+  },
+  "WFM-0440": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0441": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0442": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0443": {
+   "product_accuracy": true,
+   "sku": "TAPE-PAP-12",
+   "source": "deterministic"
+  },
+  "WFM-0444": {
+   "product_accuracy": true,
+   "sku": "OIL-MASSAGE",
+   "source": "deterministic"
+  },
+  "WFM-0445": {
+   "product_accuracy": true,
+   "sku": "SHOE-COVER",
+   "source": "deterministic"
+  },
+  "WFM-0446": {
+   "product_accuracy": true,
+   "sku": "NDL-30G",
+   "source": "model"
+  },
+  "WFM-0447": {
+   "product_accuracy": true,
+   "sku": "GLV-VIN-M",
+   "source": "deterministic"
+  },
+  "WFM-0448": {
+   "product_accuracy": true,
+   "sku": "INC-PANT-M",
+   "source": "deterministic"
+  },
+  "WFM-0449": {
+   "product_accuracy": true,
+   "sku": "BPM-ARM",
+   "source": "model"
+  },
+  "WFM-0450": {
+   "product_accuracy": true,
+   "sku": "INC-BRF-XL",
+   "source": "deterministic"
+  },
+  "WFM-0451": {
+   "product_accuracy": true,
+   "sku": "TAPE-PAP-25",
+   "source": "deterministic"
+  },
+  "WFM-0452": {
+   "product_accuracy": true,
+   "sku": "SUP-WRIST-L",
+   "source": "deterministic"
+  },
+  "WFM-0453": {
+   "product_accuracy": true,
+   "sku": "WIPE-WET-80",
+   "source": "model"
+  },
+  "WFM-0454": {
+   "product_accuracy": true,
+   "sku": "SAL-5",
+   "source": "model"
+  },
+  "WFM-0455": {
+   "product_accuracy": true,
+   "sku": "CANE-FOLD",
+   "source": "model"
+  },
+  "WFM-0456": {
+   "product_accuracy": true,
+   "sku": "SHARPS-06",
+   "source": "deterministic"
+  },
+  "WFM-0457": {
+   "product_accuracy": true,
+   "sku": "TAPE-SILK-12",
+   "source": "model"
+  },
+  "WFM-0458": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-LTX-8",
+   "source": "model"
+  },
+  "WFM-0459": {
+   "product_accuracy": true,
+   "sku": "MASK-IIR-TIE",
+   "source": "deterministic"
+  },
+  "WFM-0460": {
+   "product_accuracy": true,
+   "sku": "SUP-WRIST-S",
+   "source": "model"
+  },
+  "WFM-0461": {
+   "product_accuracy": true,
+   "sku": "COUCH-60",
+   "source": "model"
+  },
+  "WFM-0462": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0463": {
+   "product_accuracy": true,
+   "sku": "GOWN-ISO-XL",
+   "source": "model"
+  },
+  "WFM-0464": {
+   "product_accuracy": true,
+   "sku": "DRS-FOAM-10",
+   "source": "model"
+  },
+  "WFM-0465": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0466": {
+   "product_accuracy": true,
+   "sku": "PAD-60x90",
+   "source": "deterministic"
+  },
+  "WFM-0467": {
+   "product_accuracy": true,
+   "sku": "SUP-ELBOW-L",
+   "source": "model"
+  },
+  "WFM-0468": {
+   "product_accuracy": true,
+   "sku": "TAPE-PAP-50",
+   "source": "deterministic"
+  },
+  "WFM-0469": {
+   "product_accuracy": true,
+   "sku": "GLV-LTX-S",
+   "source": "model"
+  },
+  "WFM-0470": {
+   "product_accuracy": true,
+   "sku": "GAUZE-NS-10",
+   "source": "model"
+  },
+  "WFM-0471": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0472": {
+   "product_accuracy": true,
+   "sku": "GLV-NITX-S",
+   "source": "model"
+  },
+  "WFM-0473": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0474": {
+   "product_accuracy": true,
+   "sku": "URN-BAG-2L",
+   "source": "deterministic"
+  },
+  "WFM-0475": {
+   "product_accuracy": true,
+   "sku": "BND-TRI",
+   "source": "model"
+  },
+  "WFM-0476": {
+   "product_accuracy": true,
+   "sku": "STOCK-THIGH-M",
+   "source": "model"
+  },
+  "WFM-0477": {
+   "product_accuracy": true,
+   "sku": "CANE-FOLD",
+   "source": "deterministic"
+  },
+  "WFM-0478": {
+   "product_accuracy": true,
+   "sku": "SUP-KNEE-L",
+   "source": "model"
+  },
+  "WFM-0479": {
+   "product_accuracy": true,
+   "sku": "GLV-LTX-XL",
+   "source": "deterministic"
+  },
+  "WFM-0480": {
+   "product_accuracy": true,
+   "sku": "MASK-FFP3",
+   "source": "model"
+  },
+  "WFM-0481": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-LTX-6.5",
+   "source": "model"
+  },
+  "WFM-0482": {
+   "product_accuracy": true,
+   "sku": "MASK-FFP2-BLK",
+   "source": "deterministic"
+  },
+  "WFM-0483": {
+   "product_accuracy": true,
+   "sku": "GAUZE-NS-10-12",
+   "source": "model"
+  },
+  "WFM-0484": {
+   "product_accuracy": true,
+   "sku": "GLV-NIT-XL",
+   "source": "model"
+  },
+  "WFM-0485": {
+   "product_accuracy": true,
+   "sku": "SYR-LL-20",
+   "source": "deterministic"
+  },
+  "WFM-0486": {
+   "product_accuracy": true,
+   "sku": "INC-PAD-NORMAL",
+   "source": "model"
+  },
+  "WFM-0487": {
+   "product_accuracy": true,
+   "sku": "INC-PAD-MAXI",
+   "source": "deterministic"
+  },
+  "WFM-0488": {
+   "product_accuracy": true,
+   "sku": "SOAP-LIQ-500",
+   "source": "deterministic"
+  },
+  "WFM-0489": {
+   "product_accuracy": true,
+   "sku": "GLV-NIT-M",
+   "source": "model"
+  },
+  "WFM-0490": {
+   "product_accuracy": true,
+   "sku": "GAUZE-NS-10",
+   "source": "deterministic"
+  },
+  "WFM-0491": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0492": {
+   "product_accuracy": true,
+   "sku": "TAPE-ZNC-25",
+   "source": "deterministic"
+  },
+  "WFM-0493": {
+   "product_accuracy": true,
+   "sku": "SYR-LL-10",
+   "source": "model"
+  },
+  "WFM-0494": {
+   "product_accuracy": true,
+   "sku": "GEL-1000",
+   "source": "model"
+  },
+  "WFM-0495": {
+   "product_accuracy": true,
+   "sku": "PEN-32-6",
+   "source": "model"
+  },
+  "WFM-0496": {
+   "product_accuracy": true,
+   "sku": "PLST-SPOT",
+   "source": "deterministic"
+  },
+  "WFM-0497": {
+   "product_accuracy": true,
+   "sku": "CAP-BOUF",
+   "source": "deterministic"
+  },
+  "WFM-0498": {
+   "product_accuracy": true,
+   "sku": "PILL-CRUSH",
+   "source": "model"
+  },
+  "WFM-0499": {
+   "product_accuracy": true,
+   "sku": "NDL-25G",
+   "source": "model"
+  },
+  "WFM-0500": {
+   "product_accuracy": true,
+   "sku": "DRS-FILM-6x7",
+   "source": "deterministic"
+  },
+  "WFM-0501": {
+   "product_accuracy": true,
+   "sku": "ALC70-1000",
+   "source": "model"
+  },
+  "WFM-0502": {
+   "product_accuracy": true,
+   "sku": "NDL-22G",
+   "source": "deterministic"
+  },
+  "WFM-0503": {
+   "product_accuracy": true,
+   "sku": "GAUZE-ROLL-10",
+   "source": "deterministic"
+  },
+  "WFM-0504": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0505": {
+   "product_accuracy": true,
+   "sku": "INC-PAD-LIGHT",
+   "source": "deterministic"
+  },
+  "WFM-0506": {
+   "product_accuracy": true,
+   "sku": "DRS-ISL-9x25",
+   "source": "deterministic"
+  },
+  "WFM-0507": {
+   "product_accuracy": true,
+   "sku": "PEN-32-6",
+   "source": "deterministic"
+  },
+  "WFM-0508": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-NEO-7.5",
+   "source": "model"
+  },
+  "WFM-0509": {
+   "product_accuracy": true,
+   "sku": "SYR-LL-50",
+   "source": "model"
+  },
+  "WFM-0510": {
+   "product_accuracy": true,
+   "sku": "GOGGLES",
+   "source": "deterministic"
+  },
+  "WFM-0511": {
+   "product_accuracy": true,
+   "sku": "PEN-32-4",
+   "source": "model"
+  },
+  "WFM-0512": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0513": {
+   "product_accuracy": true,
+   "sku": "TOURNIQ",
+   "source": "model"
+  },
+  "WFM-0514": {
+   "product_accuracy": true,
+   "sku": "TOOTHBRUSH-SOFT",
+   "source": "deterministic"
+  },
+  "WFM-0515": {
+   "product_accuracy": true,
+   "sku": "GLV-NITX-M",
+   "source": "model"
+  },
+  "WFM-0516": {
+   "product_accuracy": true,
+   "sku": "OXI-FING",
+   "source": "model"
+  },
+  "WFM-0517": {
+   "product_accuracy": true,
+   "sku": "SYR-LL-20",
+   "source": "model"
+  },
+  "WFM-0518": {
+   "product_accuracy": true,
+   "sku": "PLST-SPOT",
+   "source": "model"
+  },
+  "WFM-0519": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-NEO-7",
+   "source": "model"
+  },
+  "WFM-0520": {
+   "product_accuracy": true,
+   "sku": "BND-COH-7",
+   "source": "model"
+  },
+  "WFM-0521": {
+   "product_accuracy": true,
+   "sku": "SUN-FACE-50-50",
+   "source": "model"
+  },
+  "WFM-0522": {
+   "product_accuracy": true,
+   "sku": "WIPE-PAD-100",
+   "source": "model"
+  },
+  "WFM-0523": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0524": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0525": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0526": {
+   "product_accuracy": true,
+   "sku": "SHARPS-5",
+   "source": "model"
+  },
+  "WFM-0527": {
+   "product_accuracy": true,
+   "sku": "SAL-500",
+   "source": "deterministic"
+  },
+  "WFM-0528": {
+   "product_accuracy": true,
+   "sku": "GLV-LTX-L",
+   "source": "deterministic"
+  },
+  "WFM-0529": {
+   "product_accuracy": true,
+   "sku": "GLV-NIT200-S",
+   "source": "deterministic"
+  },
+  "WFM-0530": {
+   "product_accuracy": true,
+   "sku": "BPM-CUFF-S",
+   "source": "model"
+  },
+  "WFM-0531": {
+   "product_accuracy": true,
+   "sku": "COVERALL-XL",
+   "source": "deterministic"
+  },
+  "WFM-0532": {
+   "product_accuracy": true,
+   "sku": "GEL-500",
+   "source": "model"
+  },
+  "WFM-0533": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0534": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0535": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0536": {
+   "product_accuracy": true,
+   "sku": "BPM-CUFF-L",
+   "source": "deterministic"
+  },
+  "WFM-0537": {
+   "product_accuracy": true,
+   "sku": "CPR-MASK",
+   "source": "deterministic"
+  },
+  "WFM-0538": {
+   "product_accuracy": true,
+   "sku": "BND-ELA-15",
+   "source": "model"
+  },
+  "WFM-0539": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0540": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0541": {
+   "product_accuracy": true,
+   "sku": "GOWN-ISO",
+   "source": "deterministic"
+  },
+  "WFM-0542": {
+   "product_accuracy": true,
+   "sku": "TAPE-KIN",
+   "source": "model"
+  },
+  "WFM-0543": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0544": {
+   "product_accuracy": true,
+   "sku": "INC-BRF-NIGHT-M",
+   "source": "model"
+  },
+  "WFM-0545": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0546": {
+   "product_accuracy": true,
+   "sku": "GLV-VIN-M",
+   "source": "model"
+  },
+  "WFM-0547": {
+   "product_accuracy": true,
+   "sku": "SYR-INS-03",
+   "source": "model"
+  },
+  "WFM-0548": {
+   "product_accuracy": true,
+   "sku": "INC-BRF-NIGHT-L",
+   "source": "model"
+  },
+  "WFM-0549": {
+   "product_accuracy": true,
+   "sku": "BND-COH-5",
+   "source": "model"
+  },
+  "WFM-0550": {
+   "product_accuracy": true,
+   "sku": "GEL-PACK-S",
+   "source": "deterministic"
+  },
+  "WFM-0551": {
+   "product_accuracy": true,
+   "sku": "LAN-200",
+   "source": "model"
+  },
+  "WFM-0552": {
+   "product_accuracy": true,
+   "sku": "COT-PADS",
+   "source": "model"
+  },
+  "WFM-0553": {
+   "product_accuracy": true,
+   "sku": "SYR-INS-05",
+   "source": "deterministic"
+  },
+  "WFM-0554": {
+   "product_accuracy": true,
+   "sku": "SWAB-TRANS",
+   "source": "model"
+  },
+  "WFM-0555": {
+   "product_accuracy": true,
+   "sku": "WHEELCHAIR-CUSH",
+   "source": "deterministic"
+  },
+  "WFM-0556": {
+   "product_accuracy": true,
+   "sku": "STOCK-THIGH-M",
+   "source": "deterministic"
+  },
+  "WFM-0557": {
+   "product_accuracy": true,
+   "sku": "CREAM-FOOT",
+   "source": "deterministic"
+  },
+  "WFM-0558": {
+   "product_accuracy": true,
+   "sku": "SCALPEL-15",
+   "source": "model"
+  },
+  "WFM-0559": {
+   "product_accuracy": true,
+   "sku": "CATH-SIL-12",
+   "source": "deterministic"
+  },
+  "WFM-0560": {
+   "product_accuracy": true,
+   "sku": "TAPE-TR-25",
+   "source": "model"
+  },
+  "WFM-0561": {
+   "product_accuracy": true,
+   "sku": "GLU-STRIP-100",
+   "source": "model"
+  },
+  "WFM-0562": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0563": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0564": {
+   "product_accuracy": true,
+   "sku": "GAUZE-ST-10",
+   "source": "model"
+  },
+  "WFM-0565": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-NEO-8.5",
+   "source": "deterministic"
+  },
+  "WFM-0566": {
+   "product_accuracy": true,
+   "sku": "COT-BALL",
+   "source": "deterministic"
+  },
+  "WFM-0567": {
+   "product_accuracy": true,
+   "sku": "SYR-3",
+   "source": "model"
+  },
+  "WFM-0568": {
+   "product_accuracy": true,
+   "sku": "GLU-STRIP-50",
+   "source": "model"
+  },
+  "WFM-0569": {
+   "product_accuracy": true,
+   "sku": "STITCH-CUT",
+   "source": "deterministic"
+  },
+  "WFM-0570": {
+   "product_accuracy": true,
+   "sku": "SYR-20",
+   "source": "model"
+  },
+  "WFM-0571": {
+   "product_accuracy": true,
+   "sku": "AFTERSUN-200",
+   "source": "deterministic"
+  },
+  "WFM-0572": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0573": {
+   "product_accuracy": true,
+   "sku": "LIP-BALM",
+   "source": "model"
+  },
+  "WFM-0574": {
+   "product_accuracy": true,
+   "sku": "MASK-FFP2",
+   "source": "deterministic"
+  },
+  "WFM-0575": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0576": {
+   "product_accuracy": true,
+   "sku": "INC-PAD-NORMAL",
+   "source": "deterministic"
+  },
+  "WFM-0577": {
+   "product_accuracy": true,
+   "sku": "MOUTHWASH-500",
+   "source": "model"
+  },
+  "WFM-0578": {
+   "product_accuracy": true,
+   "sku": "DRS-ISL-9x10",
+   "source": "model"
+  },
+  "WFM-0579": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0580": {
+   "product_accuracy": true,
+   "sku": "PEN-31-5",
+   "source": "model"
+  },
+  "WFM-0581": {
+   "product_accuracy": true,
+   "sku": "PAD-60x60",
+   "source": "deterministic"
+  },
+  "WFM-0582": {
+   "product_accuracy": true,
+   "sku": "BURN-GEL",
+   "source": "deterministic"
+  },
+  "WFM-0583": {
+   "product_accuracy": true,
+   "sku": "NDL-27G",
+   "source": "deterministic"
+  },
+  "WFM-0584": {
+   "product_accuracy": true,
+   "sku": "GRAB-REACH",
+   "source": "model"
+  },
+  "WFM-0585": {
+   "product_accuracy": true,
+   "sku": "BPM-WRIST",
+   "source": "deterministic"
+  },
+  "WFM-0586": {
+   "product_accuracy": true,
+   "sku": "GAUZE-ST-5",
+   "source": "model"
+  },
+  "WFM-0587": {
+   "product_accuracy": true,
+   "sku": "CREAM-MOIST-500",
+   "source": "model"
+  },
+  "WFM-0588": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0589": {
+   "product_accuracy": true,
+   "sku": "MASK-KIDS",
+   "source": "model"
+  },
+  "WFM-0590": {
+   "product_accuracy": true,
+   "sku": "CREAM-HAND-50",
+   "source": "model"
+  },
+  "WFM-0591": {
+   "product_accuracy": true,
+   "sku": "SCALPEL-10",
+   "source": "model"
+  },
+  "WFM-0592": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0593": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0594": {
+   "product_accuracy": true,
+   "sku": "DRS-ISL-9x10",
+   "source": "model"
+  },
+  "WFM-0595": {
+   "product_accuracy": true,
+   "sku": "CATH-SIL-18",
+   "source": "model"
+  },
+  "WFM-0596": {
+   "product_accuracy": true,
+   "sku": "SUP-ANKLE-S",
+   "source": "model"
+  },
+  "WFM-0597": {
+   "product_accuracy": true,
+   "sku": "MASK-KIDS",
+   "source": "model"
+  },
+  "WFM-0598": {
+   "product_accuracy": true,
+   "sku": "SPONGE-SOAP",
+   "source": "deterministic"
+  },
+  "WFM-0599": {
+   "product_accuracy": true,
+   "sku": "GEL-1000",
+   "source": "model"
+  },
+  "WFM-0600": {
+   "product_accuracy": true,
+   "sku": "GLV-NIT200-M",
+   "source": "deterministic"
+  },
+  "WFM-0601": {
+   "product_accuracy": true,
+   "sku": "COT-BALL",
+   "source": "model"
+  },
+  "WFM-0602": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0603": {
+   "product_accuracy": true,
+   "sku": "SYR-INS-03",
+   "source": "deterministic"
+  },
+  "WFM-0604": {
+   "product_accuracy": true,
+   "sku": "GOWN-ISO-XL",
+   "source": "model"
+  },
+  "WFM-0605": {
+   "product_accuracy": true,
+   "sku": "BND-ELA-10",
+   "source": "model"
+  },
+  "WFM-0606": {
+   "product_accuracy": true,
+   "sku": "GLV-NITX-XL",
+   "source": "model"
+  },
+  "WFM-0607": {
+   "product_accuracy": true,
+   "sku": "TAPE-PAP-12",
+   "source": "model"
+  },
+  "WFM-0608": {
+   "product_accuracy": true,
+   "sku": "SAL-30",
+   "source": "model"
+  },
+  "WFM-0609": {
+   "product_accuracy": true,
+   "sku": "PAD-REUSE-75",
+   "source": "deterministic"
+  },
+  "WFM-0610": {
+   "product_accuracy": true,
+   "sku": "SUP-WRIST-M",
+   "source": "model"
+  },
+  "WFM-0611": {
+   "product_accuracy": true,
+   "sku": "GLV-NIT-L",
+   "source": "model"
+  },
+  "WFM-0612": {
+   "product_accuracy": true,
+   "sku": "COUCH-50",
+   "source": "model"
+  },
+  "WFM-0613": {
+   "product_accuracy": true,
+   "sku": "URN-CUP-100",
+   "source": "deterministic"
+  },
+  "WFM-0614": {
+   "product_accuracy": false,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0615": {
+   "product_accuracy": true,
+   "sku": "SLING-ARM",
+   "source": "model"
+  },
+  "WFM-0616": {
+   "product_accuracy": true,
+   "sku": "TAPE-TR-25",
+   "source": "deterministic"
+  },
+  "WFM-0617": {
+   "product_accuracy": true,
+   "sku": "MASK-IIR",
+   "source": "deterministic"
+  },
+  "WFM-0618": {
+   "product_accuracy": true,
+   "sku": null,
+   "source": "model"
+  },
+  "WFM-0619": {
+   "product_accuracy": true,
+   "sku": "TOURNIQ",
+   "source": "model"
+  },
+  "WFM-0620": {
+   "product_accuracy": true,
+   "sku": "EYE-WASH-500",
+   "source": "model"
+  },
+  "WFM-0621": {
+   "product_accuracy": true,
+   "sku": "GLV-SURG-LTX-7.5",
+   "source": "model"
+  },
+  "WFM-0622": {
+   "product_accuracy": true,
+   "sku": "COT-APPL",
+   "source": "deterministic"
+  },
+  "WFM-0623": {
+   "product_accuracy": true,
+   "sku": "WIPE-ALC-100",
+   "source": "model"
+  },
+  "WFM-0624": {
+   "product_accuracy": true,
+   "sku": "PLST-KIDS",
+   "source": "model"
+  }
+ },
+ "measured_at": "2026-10-06",
+ "metrics": {
+  "product_accuracy": {
+   "high": 0.9988272676166395,
+   "hits": 466,
+   "low": 0.9845538900283609,
+   "n": 468,
+   "value": 0.9957264957264957
+  },
+  "submission_accuracy": {
+   "high": 0.9966078145115164,
+   "hits": 160,
+   "low": 0.9561093234318235,
+   "n": 162,
+   "value": 0.9876543209876543
+  }
+ },
+ "mode": "record",
+ "model": "claude-haiku-4-5",
+ "split": "test",
+ "threshold": 0.95,
+ "threshold_rule": "95% if line product accuracy reaches 95% on the test split; otherwise the owner decides (deviation)"
+}

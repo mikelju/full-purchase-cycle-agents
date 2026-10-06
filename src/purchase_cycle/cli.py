@@ -1,6 +1,7 @@
-"""Command line: seed the database and run the demo graph."""
+"""Command line: seed the database and run the demo graphs."""
 
 import argparse
+import json
 import sys
 import uuid
 
@@ -8,9 +9,11 @@ from dotenv import load_dotenv
 
 from purchase_cycle import config, db
 from purchase_cycle.graph import build_graph, sqlite_checkpointer
-from purchase_cycle.llm import InvalidModelOutput, MissingRecording, ModelClient
+from purchase_cycle.llm import MATCHING, InvalidModelOutput, MissingRecording, ModelClient
+from purchase_cycle.web_form import build_web_form_graph
 
 DEMO_SENTENCE = "Hi Laura, could you send us 40 boxes of powder-free nitrile gloves, size M? Thanks, Begona"
+DEMO_SUBMISSION = config.ROOT / "examples" / "web_form_submission.json"
 
 
 def cmd_seed(args) -> int:
@@ -52,10 +55,48 @@ def cmd_demo(args) -> int:
         )
     else:
         print("catalog: no matching product")
+    _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return 0
+
+
+def _print_usage(client) -> None:
     for usage in client.usage:
         print(
             f"tokens: uncached_input={usage['input_tokens']}  cache_read={usage['cache_read']}  cache_write={usage['cache_creation']}  output={usage['output_tokens']}"
         )
+
+
+def cmd_web_form_demo(args) -> int:
+    conn = db.connect(args.db)
+    db.seed(conn)
+    client = ModelClient(args.mode, db.catalog_rows(conn), task=MATCHING)
+    conn.close()
+    graph = build_web_form_graph(client, args.db, checkpointer=sqlite_checkpointer(args.checkpoints))
+    thread_id = args.thread_id or uuid.uuid4().hex[:12]
+    run_config = {"configurable": {"thread_id": thread_id}, "run_name": "web_form_order"}
+    submission = json.loads(open(args.submission, encoding="utf-8").read())
+    try:
+        state = graph.invoke({"submission": submission}, run_config)
+    except (MissingRecording, InvalidModelOutput) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    saved = client.save_recordings()
+    print(f"mode={args.mode}  thread_id={thread_id}  submission={args.submission}")
+    if state["errors"]:
+        print("submission rejected, nothing stored:")
+        for error in state["errors"]:
+            print(f"  {error}")
+        return 1
+    print("matching:")
+    for n, line in enumerate(state["lines"], start=1):
+        print(f'  {n}. "{line["product"]}" x {line["quantity"]} -> {line["sku"] or "no match"}  ({line["source"]})')
+    order = state["order_id"]
+    print(f"stored order: {order if order is not None else 'none (no line matched)'}")
+    print("reply:")
+    print(state["reply"])
+    _print_usage(client)
     if saved:
         print(f"recordings saved: {saved}")
     return 0
@@ -76,6 +117,12 @@ def main(argv=None) -> int:
     demo.add_argument("--resume", action="store_true", help="continue the thread from its last checkpoint")
     demo.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
 
+    web = sub.add_parser("web-form-demo", help="run the web form order subgraph on a submission file")
+    web.add_argument("submission", nargs="?", default=str(DEMO_SUBMISSION))
+    web.add_argument("--mode", choices=config.MODES, default="replay")
+    web.add_argument("--thread-id", help="checkpoint thread of the run")
+    web.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+
     from purchase_cycle.evaluation.cli import add_eval_commands
 
     add_eval_commands(sub)
@@ -84,7 +131,7 @@ def main(argv=None) -> int:
     if args.command == "demo" and args.resume and not args.thread_id:
         demo.error("--resume needs --thread-id of the thread to continue")
     config.configure_tracing(getattr(args, "mode", "replay"))
-    handlers = {"seed": cmd_seed, "demo": cmd_demo}
+    handlers = {"seed": cmd_seed, "demo": cmd_demo, "web-form-demo": cmd_web_form_demo}
     return (handlers.get(args.command) or args.handler)(args)
 
 

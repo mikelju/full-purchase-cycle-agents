@@ -1,0 +1,416 @@
+{"answer": {"sku": "SHOWER-GEL-750"}, "case_id": "WFS-0001-2", "key": "87cb2514d3a54b6ae9febf8236d8c33c2be6a596fd97aac60c8a2ee6196a220f", "sentence": "dermatological body wash 750ml"}
+{"answer": {"sku": "GAUZE-ST-7"}, "case_id": "WFS-0002-2", "key": "be1c960549c7022c5785ca43856fb6d0b827a7512aa1c4ba34ca5c8178ccff26", "sentence": "steril gauze swbs 7.5 x 7.5 cm 8 ply"}
+{"answer": {"sku": "GLV-LTX-M"}, "case_id": "WFS-0003-1", "key": "fc4b7002ab7149c0ed87eb79934f2b5ebc90766fbed6083a8b11bf43b01d864e", "sentence": "latex exam glovs powder-free size M"}
+{"answer": {"sku": null}, "case_id": "WFS-0004-1", "key": "e862828511172f87d66735cece0683604162b9e0a733adbb189849dac9c49a1d", "sentence": "ethyl alcohol 80% 1 litre"}
+{"answer": {"sku": "PLST-ROLL-8"}, "case_id": "WFS-0004-2", "key": "9ec6d113e8bf6d0c08c6631846fdeb9ac324453d39629fa12059180f5b398f02", "sentence": "plaster strip 8cm wide, cut to size"}
+{"answer": {"sku": "COT-PADS"}, "case_id": "WFS-0004-3", "key": "17b39cd2e9d753166ba209f667cc27b0a198d06f27bd8420e33671fca52d466f", "sentence": "cotton rounds"}
+{"answer": {"sku": "SOAP-LIQ-5000"}, "case_id": "WFS-0005-1", "key": "c16a477294cdc0c14e3868f3c3d66468cd31d8db86352121a1262083417803ea", "sentence": "liquid soap 5L refill"}
+{"answer": {"sku": null}, "case_id": "WFS-0006-1", "key": "d7c6cf3975c88c3ac9412c3c98ca82dbedcc87a0e416b19c2750584218c3c446", "sentence": "Foley catheter 22 Fr, 2-way silicone"}
+{"answer": {"sku": "GLV-VIN-XL"}, "case_id": "WFS-0006-2", "key": "6e1170a583fd64355168100a102fe85a5034e52cfce4bbd720a01618eeb353a1", "sentence": "vinyl gloves XL"}
+{"answer": {"sku": "COUCH-50"}, "case_id": "WFS-0007-2", "key": "c98316e6d60f557ab02a188e6512a0ea55395d61109aa70614ddfe9d76ba3f74", "sentence": "exam table paper roll 50cm"}
+{"answer": {"sku": "NDL-18G"}, "case_id": "WFS-0009-1", "key": "64084ed9f0583340cdcf528372a6919c6d70fec25aca7dbdcf8d2d11e130f1f8", "sentence": "hypodermic neddle 18G x 40mm"}
+{"answer": {"sku": "SAL-1000"}, "case_id": "WFS-0009-2", "key": "3599e6e0804d0ecbad65b55c8640abd4952dec03deec848b0b149772ab01ed13", "sentence": "normal saline irrigation 1L"}
+{"answer": {"sku": "WIPE-WASHGLV"}, "case_id": "WFS-0010-1", "key": "36c10515550c27058062ac9842e86026e1d9c3b124134e242b21830a078d6b59", "sentence": "moist wash gloves"}
+{"answer": {"sku": "KIT-FA-REFILL"}, "case_id": "WFS-0011-1", "key": "2481c846837f7b122e71d0c395afb0d2ae1e37517bc193f88aa01eb1f018ca63", "sentence": "first aid kt refil pack"}
+{"answer": {"sku": "CANE-ADJ"}, "case_id": "WFS-0011-2", "key": "52ddac1b8fdc3ef627cc51820c3fed2c63c474acfb746d9f87f9b342f8781543", "sentence": "height adjustable aluminium cane"}
+{"answer": {"sku": "WIPE-PAD-100"}, "case_id": "WFS-0013-1", "key": "9ba0e0e9f0ecaf2abc9b5afc03f4319bd48b4f74f449e4a998a03f1e3bbf8291", "sentence": "prep pads alcohol single-use, 100 box"}
+{"answer": {"sku": null}, "case_id": "WFS-0013-2", "key": "eef1dc19f89299a49b497bbc2706ee0d02a43d6256f53103458538f613ec904b", "sentence": "compressor nebuliser machine"}
+{"answer": {"sku": null}, "case_id": "WFS-0013-3", "key": "c283efa9b3c0782ff04286809252fca8a53b81e22d3faf12213db13fbbd56895", "sentence": "volumetric infusion pump"}
+{"answer": {"sku": "CATH-SIL-16"}, "case_id": "WFS-0014-1", "key": "271eb6d38b500d1677906fc92df5da522555b7c25f1d3bd11094b63c7bfa1d94", "sentence": "foly catheter 100% silcone 16Fr"}
+{"answer": {"sku": "OIL-MASSAGE"}, "case_id": "WFS-0016-1", "key": "3cef2d5f978a99064cc3c7d626f3d25ab10f3f5baf234a857ed8eda2a6acb10f", "sentence": "massgae oil 500ml"}
+{"answer": {"sku": null}, "case_id": "WFS-0016-2", "key": "cc5c12c937b97b8e549e4f3f825355d97dd0da964edc2beac6fcae6ec1b9de2a", "sentence": "foley cath 22Fr latex"}
+{"answer": {"sku": null}, "case_id": "WFS-0017-2", "key": "f407ae4277ed1b76f03f9e1d38e5efc48769ff41b70046375f8a607c26f5dd33", "sentence": "sterile gauze swabs 15x15 cm"}
+{"answer": {"sku": "GEL-PACK-L"}, "case_id": "WFS-0017-3", "key": "06a1720aa304faa6128457fa38b346da55081aa957c5fe052befa72ce6ee048c", "sentence": "large hot/cold gel pack 15x25"}
+{"answer": {"sku": null}, "case_id": "WFS-0018-1", "key": "7488e2904f620427b1f01f7d0f2fbc257ef71962fdd41d4e8c09a2f8e4a03f61", "sentence": "electric hospital bed with side rails"}
+{"answer": {"sku": "INC-PANT-L"}, "case_id": "WFS-0018-2", "key": "f7f8677a5e22e972068bb61568dc0c16b0c891cb6c803011a4fa1c83c5a05fbe", "sentence": "Adult pull-up pnats size L"}
+{"answer": {"sku": null}, "case_id": "WFS-0019-1", "key": "42c3e52c8ea386892aa789c88a87b29762b7ae1c6a87026117261c4be017e28e", "sentence": "sterile surgical gloves size 9"}
+{"answer": {"sku": "PLST-ROLL-6"}, "case_id": "WFS-0019-2", "key": "2716ac59c5ee31af49c7550d81cb1b130461206c4b38859a44a4354975a7c874", "sentence": "6cm plaster strip roll, cut to size 1m"}
+{"answer": {"sku": null}, "case_id": "WFS-0020-1", "key": "c0d1018a5bca2c46b3ca9c2d68e76675d35691cf7347079ffe7c0cde3b23061d", "sentence": "Nitrile exam gloves XXL powder free"}
+{"answer": {"sku": "ALC70-250"}, "case_id": "WFS-0020-3", "key": "775a99ef6adf0f34c1fb9c97d1d46933862381d789f661728490577202c1d7d8", "sentence": "250ml ethyl alc 70%"}
+{"answer": {"sku": "STOCK-THIGH-S"}, "case_id": "WFS-0020-4", "key": "56901fce5049dcaddae32c000f7c4629cf0a7c92570d46deb232b5f9e244b327", "sentence": "thigh high compression stockings class 1, small"}
+{"answer": {"sku": null}, "case_id": "WFS-0020-5", "key": "eb45e2398905c4562bbd840e7c854b1654f19fc96c2e5d0fac61ab24b87d0c58", "sentence": "Infusion pump, syringe driver type"}
+{"answer": {"sku": "STOCK-KNEE-L"}, "case_id": "WFS-0022-1", "key": "a6203c27b1a5befda078fe668fbc1795cb16ef2d652fbe8fd5b2222361191de6", "sentence": "compression knee highs size L"}
+{"answer": {"sku": "BND-TUB-C"}, "case_id": "WFS-0022-2", "key": "bffd6982224ff06143ce6d0ed5c57e66bfc200c3c45854f16887113e755cca0b", "sentence": "tubular bandage C size 10m roll"}
+{"answer": {"sku": null}, "case_id": "WFS-0023-3", "key": "bf062f0262d90e590ad11f520a64f015c2564f52bd959b6ad9e13a70d58ca39b", "sentence": "60 ml syringe luer lock"}
+{"answer": {"sku": "INC-BRF-XL"}, "case_id": "WFS-0024-2", "key": "2a60f11e79054937d52f8af5749ad7fe61b7b0382592a20e0a6695ef91d5ffae", "sentence": "adult incontinecne briefs XL"}
+{"answer": {"sku": "GLV-SURG-NEO-8"}, "case_id": "WFS-0025-1", "key": "3f6a345988dc7cc49041233f298beae7140ae69fa7c8c3cde0993bb0d01a8b20", "sentence": "steirle latex free surgical gloves sz 8"}
+{"answer": {"sku": "SYR-LL-50"}, "case_id": "WFS-0025-2", "key": "0192f6af113c5f1e8439ca6c0a87f154704633829f196ae7f4d105d25f792a90", "sentence": "50ml luer lock syringes"}
+{"answer": {"sku": null}, "case_id": "WFS-0025-3", "key": "2f300f69a90fd92a6cf8251eb5c0b9d3ee80f7b542f7b40867741c866ba0f4b3", "sentence": "syringes 60ml catheter tip"}
+{"answer": {"sku": "GLV-NIT-M"}, "case_id": "WFS-0025-4", "key": "35f235139f4144f5b35864692dbe2dc4d89c56aca17e8b15008ef7c374c13429", "sentence": "medium nitrile exam gloves, box of 100"}
+{"answer": {"sku": "INC-BRF-M"}, "case_id": "WFS-0025-5", "key": "4331330b5529fe698273cdb388cc1b8505fa8d4d4e6394cfe1a46c2bdcf0bda5", "sentence": "incontinence briefs medium, regular 20 pack"}
+{"answer": {"sku": null}, "case_id": "WFS-0027-1", "key": "4ecda04d831990e6e4b9f24e43fb3bd2034fed5775788ab575b87305dafa6fa3", "sentence": "straight stair lift"}
+{"answer": {"sku": "SUN-FACE-50-50"}, "case_id": "WFS-0028-2", "key": "c33b4d03229c08ab5a98edc4ab1c8576c8a2cb2b3208e12a42a67a8286c0f2a5", "sentence": "face sunscreen SPF50+ 50ml"}
+{"answer": {"sku": "SHAMPOO-500"}, "case_id": "WFS-0028-3", "key": "f43bd6efa105fe637f764b40703aaf389c45b54c2fd7349b19a629d5a6d56c71", "sentence": "mild shampo 500ml"}
+{"answer": {"sku": "DRS-ISL-9x25"}, "case_id": "WFS-0029-1", "key": "920dcf7e4cdc8ceea3cd07c87372ee30924576d40de926e774e19be17481a786", "sentence": "island dressing 9x25cm"}
+{"answer": {"sku": "GLU-STRIP-50"}, "case_id": "WFS-0030-1", "key": "39c316ebb3ce62d0385f13ac83ef514139075aa8489f1a3b2c13f98dfc17d1fa", "sentence": "test strips blood glucose x50"}
+{"answer": {"sku": "SCALPEL-11"}, "case_id": "WFS-0030-5", "key": "20163441e2d1c438f20032d9e2733420cc644dd4e465f34610824b309a8d2ccd", "sentence": "disposable scalpel #11"}
+{"answer": {"sku": "COT-ROLL-1000"}, "case_id": "WFS-0031-1", "key": "f25e981745d1ccb045e3f2dd664db5360eb2fbbf8e14d552d43385185682a9aa", "sentence": "1kg cotton wool roll"}
+{"answer": {"sku": "GLV-VIN-L"}, "case_id": "WFS-0033-2", "key": "4628663993176d7e3b649a8361a433a2ee60498207ce6cb1542d9bf575e2b8fb", "sentence": "large vinyl exam gloves"}
+{"answer": {"sku": null}, "case_id": "WFS-0034-1", "key": "a46e6b09ff48d1bbfed3de3ed1428ad50f60970ea7fea298ad5dfd6d926e8a29", "sentence": "AED automated external defibrillator"}
+{"answer": {"sku": null}, "case_id": "WFS-0034-2", "key": "3e643329f3cce5f6d61508a1a00bfdb062756b4750756f44cb3de231063f1c6c", "sentence": "Electric wheelchair, folding"}
+{"answer": {"sku": "THERM-EAR"}, "case_id": "WFS-0035-1", "key": "944d31eb0c873c45385b76eb845f7681b81e49c64fdf17755a4a09812cede5d8", "sentence": "tympanic thermometer"}
+{"answer": {"sku": "OXI-HAND"}, "case_id": "WFS-0035-3", "key": "a82ccc95def8daf1d9de29c193ae305574088330b386b2fec62c17e711f8239d", "sentence": "handheld puls oximter with probe"}
+{"answer": {"sku": "MASK-FFP2"}, "case_id": "WFS-0035-4", "key": "d73174cbde716c02a51a8e7d5d2d3ef8b8937b0b1833cca69e0a40fd5c2d96ef", "sentence": "FFP2 masks without valve, standard colour"}
+{"answer": {"sku": null}, "case_id": "WFS-0036-1", "key": "2e15e4950a14b4cf593d3c00cab65c89270c7cbea19717a2bad5db3695dade53", "sentence": "infant formula milk stage 1"}
+{"answer": {"sku": "GLV-SURG-NEO-6.5"}, "case_id": "WFS-0036-3", "key": "305c73d9036541c6ba07e7ca6bb623028933028ff15b518b777c82845e7172e7", "sentence": "neoprene sterile surgical gloves size 6.5"}
+{"answer": {"sku": "THERM-COVER"}, "case_id": "WFS-0037-2", "key": "ae2216edb543e89c8cd3212c2a5572fde0d14e46b4ae1b3efeb59ce8c57936e9", "sentence": "ear thermometer probe covers"}
+{"answer": {"sku": "SHARPS-30"}, "case_id": "WFS-0037-3", "key": "bd76ed119353d1a5c93f3d4cd8d1c3d4db8d23e9372e5aba0f49080a0f0886b1", "sentence": "30 litre sharps bin"}
+{"answer": {"sku": "WIPE-PAD-200"}, "case_id": "WFS-0038-1", "key": "406d183c6d54f8ce124f1c844ce4842b271386016b9c0f26b743954c51b8e8cf", "sentence": "single-use prep pads alcohol, 200"}
+{"answer": {"sku": "SCALPEL-15"}, "case_id": "WFS-0038-2", "key": "17914fa714a2d8d61e42f24de20d00e197f29b3f90e9bab768db2825453afc82", "sentence": "Sterile disposable scalpal no 15"}
+{"answer": {"sku": "SAL-250"}, "case_id": "WFS-0038-3", "key": "9b9aa3fc09386478b4e5ffe277bf765ef09c29e41affb09c375717b44f7c3061", "sentence": "salien solution 0.9% irrigation 250 ml"}
+{"answer": {"sku": null}, "case_id": "WFS-0039-1", "key": "416ee28380cf5c542c8620696f67a56c1c7dbf367be0134871af068537b2d56f", "sentence": "stairlift for curved staircase"}
+{"answer": {"sku": null}, "case_id": "WFS-0040-1", "key": "54c1dde83f36269e27d430853806b6433008de3cbd9412313d92c556f65e39fe", "sentence": "Ethanol 80% 500ml bottle"}
+{"answer": {"sku": null}, "case_id": "WFS-0040-2", "key": "5730d3b567349c69501388c010d992fb92be30b9c1ab9554b5f1d657f4ddfe1a", "sentence": "Disposable syringe 60 ml, luer slip"}
+{"answer": {"sku": null}, "case_id": "WFS-0040-3", "key": "dc5c275b49bdecc2be85435b50bc9c456ba8e2366be78b5e3b2b537fa05cd2e7", "sentence": "underpads 90 x 180 cm"}
+{"answer": {"sku": "CATH-FOL-18"}, "case_id": "WFS-0041-1", "key": "21e340852d9d869c3262b58e8374d5b5f44a0d89032ef5221be8b4f4fb332ea6", "sentence": "silicone coated latex foley 18Fr"}
+{"answer": {"sku": null}, "case_id": "WFS-0042-1", "key": "ac384dd5689b3f893930d7f545725b17b0ed69bc92526e0c19cbef461020cf7e", "sentence": "ultrasound gel 5 litre"}
+{"answer": {"sku": "SHARPS-1"}, "case_id": "WFS-0043-1", "key": "384d5b3613db9796b498f61c2e2018604df17e6412319058b0f79a813008826f", "sentence": "sharps conatiner 1 litre"}
+{"answer": {"sku": "NDL-27G"}, "case_id": "WFS-0043-2", "key": "2603d6903e1bb214d3449f74ecc07eb4654158101d1e57f969e3c76616a794f3", "sentence": "27G hypodermic needles 13mm"}
+{"answer": {"sku": "GLV-NIT200-L"}, "case_id": "WFS-0043-3", "key": "dc4b289ae3be3860a056c4f4845d14155faec2f2fc6973a645ef890e64f5eeb1", "sentence": "nitrle gloves powder free valu pack size L"}
+{"answer": {"sku": "COT-ROLL-500"}, "case_id": "WFS-0044-2", "key": "a3097f9019ff29bee6468d082f900b61113c608ba644f5c2d7eac74691ef55e9", "sentence": "500g cotton roll"}
+{"answer": {"sku": "KIT-FA-SMALL"}, "case_id": "WFS-0045-1", "key": "49c7eb2e267cd4553afd92ce38ec10ac6745df37911d928333279851c998324d", "sentence": "small frst aid kit for vehicls"}
+{"answer": {"sku": "STRIP-3x75"}, "case_id": "WFS-0046-1", "key": "46f71ef72cc46e2b794f19c27fc7df86fd473ee9a7bfa50d1db2a39fb6097bcb", "sentence": "skin closur strips 3 x 75 mm"}
+{"answer": {"sku": null}, "case_id": "WFS-0046-2", "key": "28403b8137f4ba3c4cbdd1a5081a6ba4047751ebbb90eefde420616018d01d2c", "sentence": "Ultrasonic nebuliser"}
+{"answer": {"sku": "CATH-FOL-16"}, "case_id": "WFS-0048-2", "key": "c27f37bde7a0994f6c51934658f026535ba9a15dddc699111f0f89c1c327c9bd", "sentence": "Foley 2-way latex 16 Fr"}
+{"answer": {"sku": null}, "case_id": "WFS-0049-1", "key": "3d2a7135d795a4cc5d81a0d4a316882e9264b7f6aa99ec58a49098d04c85234d", "sentence": "COVID-19 rapid antigen test"}
+{"answer": {"sku": "SHARPS-30"}, "case_id": "WFS-0050-1", "key": "d91a8903021df57785f8eb82a04ac311b707e3eedeb85c95e83c026eda50e97b", "sentence": "30L sharps container"}
+{"answer": {"sku": "KIT-FA-WALL"}, "case_id": "WFS-0051-1", "key": "2f74f071a9c4b2f5a6c36b814a38d29dec17d77e4409ebee1d62ed3bed37c975", "sentence": "first aid cabnet wall mountd"}
+{"answer": {"sku": null}, "case_id": "WFS-0051-2", "key": "ce3687ab8baf7bd3d5b74e33da6e862cd2a70d6bb6c0eff19ccc0dbf9f15ad1b", "sentence": "sharps container 15 litres"}
+{"answer": {"sku": "CATH-FOL-14"}, "case_id": "WFS-0052-1", "key": "b48b03c8c806e036ae5911df6ba71d7e85d56587dea0a2d606b441aa24f5e0e3", "sentence": "foley cath silicone coated latex 14Fr"}
+{"answer": {"sku": "BND-TUB-C"}, "case_id": "WFS-0052-2", "key": "4f88680344c92fe688a98584eed662fbb9e795c1e40838a781e6c147c89537c8", "sentence": "tubular support bandage size C 10m roll"}
+{"answer": {"sku": "GLV-SURG-LTX-7"}, "case_id": "WFS-0052-3", "key": "a4d98cb00c298ed65ee6b1924409b54813c9dc5945f5912cf9e2de49043f4197", "sentence": "sterile latex surgicl gloves size 7"}
+{"answer": {"sku": "GLV-LTXP-L"}, "case_id": "WFS-0053-1", "key": "905e733217399b72f038a19c7f8ed4797c8c949b17a9c43ff2f643907bf2ad1d", "sentence": "latex exam gloves lightly powderd sz L"}
+{"answer": {"sku": "CREAM-HAND-100"}, "case_id": "WFS-0053-3", "key": "f2790b10e98e9eebc7d699bf654da8d10a4034c1c1ae364def32266cfc18f9ad", "sentence": "repairing hnad cream 100 ml"}
+{"answer": {"sku": null}, "case_id": "WFS-0054-1", "key": "4741e5020b53cb98df7052e4d1bb4054e708e48dca90c3c4ba8cf1ad2d19f0e5", "sentence": "sunscreen SPF 15 lotion 200 ml"}
+{"answer": {"sku": "AFTERSUN-200"}, "case_id": "WFS-0054-2", "key": "8ecbd42af2c8a896b2eed3019ff7ea8bad74831310a89f93fd1fcb53236426b4", "sentence": "aloe vera after sun gel 200ml"}
+{"answer": {"sku": "DRS-FILM-6x7"}, "case_id": "WFS-0054-3", "key": "0e72780dbe8f90bdf720e16b876294943a130f82b95039fad95d4eb4fc81e862", "sentence": "small transparent film dressing 6x7"}
+{"answer": {"sku": "BND-COH-10"}, "case_id": "WFS-0055-1", "key": "8cdc854d38a66d90498220e405bb89c1fcc6a992f8047c9acd9139055022c8c7", "sentence": "cohesive bandage 10cm"}
+{"answer": {"sku": "SHARPS-06"}, "case_id": "WFS-0055-3", "key": "bc165ab678efcf77639664a131cf8b46aebbf11180da608232626a547bb93f5e", "sentence": "sharps containr 0.6 L"}
+{"answer": {"sku": "SYR-INS-10"}, "case_id": "WFS-0055-4", "key": "821f3ac5336f7dfec87f0288970ff07f129836b096fb75bd0a58f6aa452d2d3d", "sentence": "1ml insulin syringes with attached needle"}
+{"answer": {"sku": "INC-PANT-L"}, "case_id": "WFS-0055-5", "key": "37b7286f9d44e876f652a707b8ea7af0da5d0e6d55d67969d79e99322e62c3ba", "sentence": "pull-ups size L"}
+{"answer": {"sku": "SOAP-LIQ-5000"}, "case_id": "WFS-0056-1", "key": "335f1e90b5e28b28dd1200a80eca0487e85799186e793ada3239d6ff47817d01", "sentence": "liquid soap refill 5L jerrycan"}
+{"answer": {"sku": "ALC96-500"}, "case_id": "WFS-0056-2", "key": "1b7195b966137f92f517e1d77646096774a5b1b9ea9ec9e576277013d18ec8cc", "sentence": "96% ethanol 500ml"}
+{"answer": {"sku": "BND-COH-10"}, "case_id": "WFS-0056-4", "key": "efdfa19008553bafb243863e10176d2102c4780dfcc3ef56efae7b8cba738352", "sentence": "cohesive bandage 10cm wide"}
+{"answer": {"sku": "MASK-FFP3-V"}, "case_id": "WFS-0057-1", "key": "d78933c2e05f40c0854df85c260b7d4222d3a825d533a18f23d37b1b2efbf2dc", "sentence": "FFP3 mask with valve"}
+{"answer": {"sku": "STRIP-6x75"}, "case_id": "WFS-0057-2", "key": "170975cce0d3e10f29c5654b633615b5eedf64ec469551b47ea06765e00dd2cb", "sentence": "closure strips 6x75mm"}
+{"answer": {"sku": "HOT-WATER-BOTTLE"}, "case_id": "WFS-0058-1", "key": "33364a8e9e0c019b7fc98e57bfb3d82ca5c2c696bd280f42876163e75c268417", "sentence": "2L hot water bottle"}
+{"answer": {"sku": "WIPE-PAD-200"}, "case_id": "WFS-0058-2", "key": "af660a5dca4346ee5c86eff34251964ac9c362877dae5458f1285857d2ba2d9b", "sentence": "alcohol prep pds, box of 200"}
+{"answer": {"sku": "SAL-1000"}, "case_id": "WFS-0059-1", "key": "48ada7c77c1268a600be7e55fa5539157c46c20ad0d5b4ffa1726cb674b472b7", "sentence": "1L saline for irrigation"}
+{"answer": {"sku": null}, "case_id": "WFS-0059-3", "key": "95bba0d7397d7c1307f76e067494e908ddd322bcb9b21b1efffa151446b073bc", "sentence": "contact lens solution multipurpose 360 ml"}
+{"answer": {"sku": "PILL-BOX-7"}, "case_id": "WFS-0059-4", "key": "3b7100f2b4cb3ce683185a3b899815980c231f236658e890392151be62dbd25d", "sentence": "weekly pill orgainser 7 days"}
+{"answer": {"sku": "COT-APPL"}, "case_id": "WFS-0059-5", "key": "267d20c203dd297bc66631a7f8ced3496db9936bdded0d9ef0ec06695586308e", "sentence": "sterile cotton tipped swab sticks 15cm"}
+{"answer": {"sku": "SAL-10"}, "case_id": "WFS-0060-1", "key": "44f527852078a8093d19f2a664fafc2f4d41c8c6fe727ece6e3923b1e1ddb8d3", "sentence": "slaine 0.9% single-dose 10ml"}
+{"answer": {"sku": "GLV-SURG-LTX-8.5"}, "case_id": "WFS-0060-2", "key": "78607aa0922f71e0c5d7de613ee41a1e1667547381428d674457f244d424717e", "sentence": "sterile latex surgical gloevs 8.5"}
+{"answer": {"sku": "PAD-REUSE-75"}, "case_id": "WFS-0061-1", "key": "c9fb7e1cd587b04abea49c5088df0d7b8a59f886530fd66a72f35f43f3083615", "sentence": "washable reusable bed pad 75x90"}
+{"answer": {"sku": null}, "case_id": "WFS-0064-1", "key": "a7ca6bc556ce629ce0d8ac07da82a5349b5e3558704f6332699ff99fa2c7afff", "sentence": "mobile patient lift, electric"}
+{"answer": {"sku": "GLV-SURG-LTX-8.5"}, "case_id": "WFS-0064-2", "key": "327dcd33036dbd9988e46a4845b29878b4346d92283a927df2094788515de3d0", "sentence": "latex surgical gloves 8.5"}
+{"answer": {"sku": "DRS-NONADH-10"}, "case_id": "WFS-0064-3", "key": "8adbf3ba3f651b5a9041ec8f1992af1221260dea9192e7d546f1df5ea7bfabb2", "sentence": "non-adherent pad 10x10"}
+{"answer": {"sku": "SUP-LUMBAR"}, "case_id": "WFS-0065-1", "key": "bc9157674ca6cebe3b34a83e526c05ae9f7aa68c763f15ac6f3ecd5f2be0cc8b", "sentence": "back support brace"}
+{"answer": {"sku": "SUP-WRIST-L"}, "case_id": "WFS-0065-2", "key": "6cec2ad90412807cb40d92844b1c9c673f60c9f8629aef676dc7f0842e87fa56", "sentence": "wrist support elastic large"}
+{"answer": {"sku": null}, "case_id": "WFS-0066-1", "key": "875644cd5c560988d0280d5ae38664983a70f0f55af64055186df92ad1e8a5af", "sentence": "medical oxygen cylinder 10 L"}
+{"answer": {"sku": "BPM-CUFF-L"}, "case_id": "WFS-0066-2", "key": "4f13b1d4ca6cd24afecd480b4874e4651fe5dad8f292f247253e2f5a2e92df5b", "sentence": "replacment BP cuff large adlut 32-42 cm"}
+{"answer": {"sku": null}, "case_id": "WFS-0067-1", "key": "88e6d188da73ccb51e5a4abd371949c900715d1343763490b3824c22b14dc942", "sentence": "crepe bandage 20 cm x 4.5 m"}
+{"answer": {"sku": "THERM-COVER"}, "case_id": "WFS-0068-1", "key": "b2573f0f0f6bd0a9ab66b0510b5136266a5a6552c23be9e2fa17d17454f6e2b6", "sentence": "ear thermometer porbe covers"}
+{"answer": {"sku": "TAPE-TR-12"}, "case_id": "WFS-0068-2", "key": "2fc727fc67753a038c5581d96cac7c0af48079a719047717f59ce686359a62f0", "sentence": "transparent tape 1.25cm"}
+{"answer": {"sku": "HOT-WATER-BOTTLE"}, "case_id": "WFS-0069-1", "key": "adc03dc8ab155514cb6abdb26287137dc2a4dc434578733f2bc4656ee92f029f", "sentence": "2 litre hot water bottle"}
+{"answer": {"sku": "THERM-DIG"}, "case_id": "WFS-0069-2", "key": "3992eb1e3600cd4143e7551e73c8bbecdc9c203b47b0b2abbf6d7b4d4cefe0a7", "sentence": "rigid-tip digital thermometer"}
+{"answer": {"sku": "WIPE-SURF-100"}, "case_id": "WFS-0069-4", "key": "6ae2194f0335ec6d45935f73e9dd21b0ca440504363dc1abff52b4b6f1880a41", "sentence": "canister alcohol-free disinfectant wipes for surfaces"}
+{"answer": {"sku": "OXI-PAED"}, "case_id": "WFS-0070-1", "key": "85373e5a1ae7016d774c9c4ca0b17abf5586f20b2e9ea3b6190f1d3cd0977f55", "sentence": "paediatric fingertip oximeter"}
+{"answer": {"sku": "GAUZE-NS-7-12"}, "case_id": "WFS-0070-2", "key": "9c0cf328eb6c695b9b1083e6b375b6f094a2f9193841ba5c36055e0c543ef9be", "sentence": "non sterile gauze 7.5x7.5 12 ply"}
+{"answer": {"sku": "PLST-ROLL-6"}, "case_id": "WFS-0071-1", "key": "eb07d65e5b0c0bb61e794282f2989f50741410f16e5021f6879953a2b88c3bff", "sentence": "cut to size plaster roll 6 cm"}
+{"answer": {"sku": "TOOTHBRUSH-SOFT"}, "case_id": "WFS-0071-2", "key": "62dfd17cac341cc711a101fc531c41badb4384c254b7ba483f98ca1845983ef5", "sentence": "soft bristle toothbrushes"}
+{"answer": {"sku": "RAZOR-DISP"}, "case_id": "WFS-0071-3", "key": "ba56f30f2f5c9b8ac3546dc74369d41512d50fb23507c96149462cae47bb19b0", "sentence": "disposable razers twin blade"}
+{"answer": {"sku": null}, "case_id": "WFS-0072-1", "key": "d55206d6287d251f819dbc136aa1b72f897403ccff74ee8e4963247690e71e54", "sentence": "infusion pumps"}
+{"answer": {"sku": "BND-COH-7"}, "case_id": "WFS-0072-2", "key": "f55abdd04a5e9dc252d9d5f1f9bf58f13011c4fc1df8a8b5167d8d6f1df9ebc5", "sentence": "cohesive bandge 7.5 cm"}
+{"answer": {"sku": "NDL-18G"}, "case_id": "WFS-0072-3", "key": "85cc03a9ab320b24e900e8f490821484cfc323f1da2d3102e372e28393379c6b", "sentence": "18G needles 40mm hypodermic"}
+{"answer": {"sku": "NDL-26G"}, "case_id": "WFS-0073-1", "key": "dfc3e14c4f906d8c23448a18e0bc03d842a3a25cf222ef51c03fbc51dafcd9fc", "sentence": "26G hypo needle"}
+{"answer": {"sku": "PEN-31-5"}, "case_id": "WFS-0073-2", "key": "535b4a5248a0470f0c3f3fea589cf99dc6c0bc1ff43ec91c3d1917d923c1c282", "sentence": "pen needles 31G 5mm"}
+{"answer": {"sku": null}, "case_id": "WFS-0073-3", "key": "c5568c838c2909ed4fa026b8cf84f709b1cb03fb335b2b087818eb94983841d8", "sentence": "Ultrasound transmission gel 5L refill"}
+{"answer": {"sku": null}, "case_id": "WFS-0074-1", "key": "1b25459a7d4085cbaeed597f6fcbeb922b4ea1879cb42b1802074501419ef905", "sentence": "Hospital bed, manual crank"}
+{"answer": {"sku": "SUN-50-50"}, "case_id": "WFS-0074-2", "key": "a70ee9f7ed83521edbbbacbbec9e55a52f064d94d444efda260575a4cf6e0458", "sentence": "sunscrn SPF50+ 50ml"}
+{"answer": {"sku": null}, "case_id": "WFS-0074-3", "key": "5991cd8ddb77a32b74bba0380e13fc963cdd65b3820748326500cafc85c9691d", "sentence": "pregnancy test strips"}
+{"answer": {"sku": "PLST-WP"}, "case_id": "WFS-0074-4", "key": "2927992d3d77e41359328c06a09268d8e149e7d6d36bd100456eabe0c3c34eae", "sentence": "waterproof plasters assorted"}
+{"answer": {"sku": null}, "case_id": "WFS-0075-1", "key": "94fe9a490f65bce7ad13b6c503af9d9264da7e2f060d7ec7dae3383166a961ed", "sentence": "scrubs uniform set, navy, size M"}
+{"answer": {"sku": "SUP-ELBOW-M"}, "case_id": "WFS-0075-2", "key": "d5bfaed5fe411c14831382dccd1f5749800bcd1922f8eeaf8ed3f31d5c1f6021", "sentence": "elastic eblow support M"}
+{"answer": {"sku": "SHARPS-2"}, "case_id": "WFS-0076-2", "key": "cd231f46319ff07f0fc6e163b2ef2a01e0102e97ff9105619b7332a7832e16aa", "sentence": "2L sharps container"}
+{"answer": {"sku": "URN-CUP-60"}, "case_id": "WFS-0076-4", "key": "3f9ea33d2016a58c21acdc38771d82219dabb5435dcaccc20a8fdbbdec62809b", "sentence": "urine sample pot 60ml"}
+{"answer": {"sku": null}, "case_id": "WFS-0078-1", "key": "d3fa1454cca3e4b2e965c37e1d6d344f3f3591a0f4ace3e2cfedb623c887fb7c", "sentence": "insulin syringes 2 ml"}
+{"answer": {"sku": null}, "case_id": "WFS-0078-2", "key": "b82c36b908747fa1949ecc1c8c23e2f1d5e2020c6369bdb99e28f36c17060f6c", "sentence": "nitrile gloves size XXL"}
+{"answer": {"sku": "STETH-DUAL"}, "case_id": "WFS-0080-1", "key": "291a0f35341e90b7d1861d7e3959897da9ac77282e1484c583ed7c4ea48bef6b", "sentence": "duel head stethescope"}
+{"answer": {"sku": "WIPE-SURF-200"}, "case_id": "WFS-0081-2", "key": "5a6a620c46fca1020ddf3d6d3c753c16ad0ea4a27c2751075d4f517e2f436436", "sentence": "surface disinfectent wipes alcohol free refil"}
+{"answer": {"sku": "URN-BAG-LEG"}, "case_id": "WFS-0082-1", "key": "321fa61e6828c17062cfe11c7f893ae8fa2e6c81f4492fd63b370a95fb23f56b", "sentence": "legg urin bag 750 ml"}
+{"answer": {"sku": null}, "case_id": "WFS-0082-2", "key": "cac9d2fff00d5d7d6d5825e3fa42d041c127faac1a4a497c966604dd6386ed53", "sentence": "Stair lift chair"}
+{"answer": {"sku": "DRS-FILM-10x12"}, "case_id": "WFS-0082-4", "key": "0c841cc0b59e413c04528b4750e70b400877ff918c7ccccff87c23bc184fabd0", "sentence": "transparent flim dressing 10x12"}
+{"answer": {"sku": null}, "case_id": "WFS-0083-2", "key": "6e8182dfa6b021e002f61bd60387ecbc3261ca16abba1194f9aa470aba4b6f0f", "sentence": "Midstream pregnancy test"}
+{"answer": {"sku": "STOCK-KNEE-S"}, "case_id": "WFS-0083-3", "key": "799b83f92cc9e087c1d636d1e5a52031fe85c44b1423b87b5a22298ab0383dc9", "sentence": "knee high compression stockings S class I"}
+{"answer": {"sku": "BPM-ANER"}, "case_id": "WFS-0084-1", "key": "f67c073a3c36416c2849790d9db42eba3f76faa628bf8ef07743d9e303373752", "sentence": "stethoscope + aneroid sphygmomanometer"}
+{"answer": {"sku": null}, "case_id": "WFS-0086-2", "key": "a53b494a3763de539cc29189c588c68353ce8b64283a9e6c08a24fab53b077c3", "sentence": "portable oxygen cylinder 2 litre"}
+{"answer": {"sku": null}, "case_id": "WFS-0086-3", "key": "038f9ba5dc8ded8602bfdc44f536fc4b291000de974f3248e8c273b3d4e77824", "sentence": "folding massage table"}
+{"answer": {"sku": "CATH-FOL-12"}, "case_id": "WFS-0086-4", "key": "31689ef8fdae309b5794877eac28db5c0c27bbe14bf45725522030d1a6e8e0e5", "sentence": "Foley cathter silicone coated latex 12 Fr"}
+{"answer": {"sku": "URN-CUP-60"}, "case_id": "WFS-0087-1", "key": "ec9c84e3022690785b23f96f4caa8fcba5af9e3c83c472b96c05a34b45581a0e", "sentence": "sterile urin contaner 60ml"}
+{"answer": {"sku": "BND-COH-5"}, "case_id": "WFS-0087-4", "key": "b822c4ccdc77a11ade68232531750b2950949508bd474da25b8fa9c5de350698", "sentence": "self-adherent wrap 5cm"}
+{"answer": {"sku": "SYR-1"}, "case_id": "WFS-0089-2", "key": "de24f858cf519ea707efea4428a5508bd757bf62cacd9fc9a4e35d59531f8e71", "sentence": "1 ml luer slip syringe"}
+{"answer": {"sku": null}, "case_id": "WFS-0089-3", "key": "26904b7680d9063487a4b44878b400fa474a6b4689af8f4c021eaf1ab1c0b730", "sentence": "hearing aid batteries size 312"}
+{"answer": {"sku": null}, "case_id": "WFS-0090-1", "key": "9e9cd5e4302f7c011541644eea0464a6d3e722582fcc0bcd9bbd59f61073aa2f", "sentence": "Disposable underpad 90x180"}
+{"answer": {"sku": null}, "case_id": "WFS-0090-2", "key": "a9513ad5595dfc0ba4f83f7d15e9243a01a749d7555bf11b31af616bbfe0cc6e", "sentence": "FFP1 masks"}
+{"answer": {"sku": "BLANKET-FOIL"}, "case_id": "WFS-0090-3", "key": "a4f2867bef6885a067222489789e65dd711ea86c37ea7a033a7c09c204e671a6", "sentence": "foil blanket"}
+{"answer": {"sku": "INC-BRF-L"}, "case_id": "WFS-0091-2", "key": "94fff461585b9d48ccfeced37e6ba8e270f53fe9e6ccf2c7b1fe1dcc56af1bf1", "sentence": "adult incontinence birefs L"}
+{"answer": {"sku": "MASK-FFP2-BLK"}, "case_id": "WFS-0092-2", "key": "22b3c831a00e4eac6bf247707d6ab322c3cfc934c7fd17e0264c2b39ee915163", "sentence": "black FFP2 masks no valve"}
+{"answer": {"sku": "NDL-26G"}, "case_id": "WFS-0092-3", "key": "33b0dc7f3603fcccbf14759c8676b81f779c5f21535610985559f7556b9e503b", "sentence": "26 gauge hypodermic needle 13mm"}
+{"answer": {"sku": "BND-ELA-5"}, "case_id": "WFS-0094-2", "key": "310f5af6308d8f1570d9e3680d9dad25498394573b6d324d798e0305ec783f36", "sentence": "elastic crep bandage 5 cm"}
+{"answer": {"sku": null}, "case_id": "WFS-0094-3", "key": "de774ab9353092a076e399ea08a0121a80b6920aef09a67f97b303d642b28aeb", "sentence": "clear ultrasound gel, 5 litre can"}
+{"answer": {"sku": "NDL-23G"}, "case_id": "WFS-0094-4", "key": "67e5af785b7ba8eb2801996127620ee2be5a6d4cba70f7191c876facd1892352", "sentence": "23G x 25mm needle hypodermic"}
+{"answer": {"sku": "PLST-FAB"}, "case_id": "WFS-0095-1", "key": "de7a32e0d06ea71680c6b52697eee4a1e806351979016e00f51e059398627351", "sentence": "fabric plasters mixed sizes"}
+{"answer": {"sku": null}, "case_id": "WFS-0095-2", "key": "8332a2aa75eca453cc498eb9de07e9d9eeabefd2e49ccdfe446a01bca1a2d2e0", "sentence": "NITRILE EXAMINATION GLOVES XXL"}
+{"answer": {"sku": "GEL-5000"}, "case_id": "WFS-0095-3", "key": "db891e52b7eee3a149cbe0207e3f92ec92148864237f9ac26955ebe4ae6e3801", "sentence": "hand sanitser gel 5 litre jerrycann"}
+{"answer": {"sku": null}, "case_id": "WFS-0097-1", "key": "1ba6b7cbf0c6bdeb8324792ac9e97adc6292dd32869a1460314ff693196f5366", "sentence": "FFP1 dust mask with valve"}
+{"answer": {"sku": "GLV-NITX-S"}, "case_id": "WFS-0097-2", "key": "ba1ddf55379fe17aea15d1fbcd39bc5fe418a5e4730fab6a4c7b666f85e4b8f9", "sentence": "extended cuff nitrile gloves small 30cm"}
+{"answer": {"sku": null}, "case_id": "WFS-0097-3", "key": "be69d2f0e76bc9ba0fc891bd9e2cdd9d73431ed1d238f8eacd83e3c02eb3b74f", "sentence": "titanium dental implants"}
+{"answer": {"sku": "SAL-5"}, "case_id": "WFS-0097-4", "key": "7cb8dea61292ad9028bdc4a621731726621ceafd736e242bfa81c021cd7c1251", "sentence": "5ml saline ampoules single dose"}
+{"answer": {"sku": "SYR-LL-5"}, "case_id": "WFS-0098-2", "key": "27fdb7731179b32aba799118df13f22a8079b02aa4aa2e290e8edde7256ee2aa", "sentence": "dispsable syringe 5ml luer lck"}
+{"answer": {"sku": "CREAM-FOOT"}, "case_id": "WFS-0099-1", "key": "268280ac23844ee63c53dd7d9f8bc89c5a466c592ffe9b8becc3190f44088945", "sentence": "heel cream for dry cracked feet 100ml"}
+{"answer": {"sku": "TAPE-ZNC-25"}, "case_id": "WFS-0099-2", "key": "58ba7ceb4c11e9732b367f325ebecb68633e9832f2a62d820174271f8b702f41", "sentence": "zinc oxide tape 2.5cm"}
+{"answer": {"sku": "LAN-PEN"}, "case_id": "WFS-0100-1", "key": "98bdba54a2f34ee19b0b316ffec93c682eb26607ceb6d1ec4a989059bc173f6b", "sentence": "lancing pen device"}
+{"answer": {"sku": "LAN-100"}, "case_id": "WFS-0101-1", "key": "d622d5941368f2edc70fcc0b39a2540addf34595d625b7c11caba7981ea21f2f", "sentence": "28G safety lancets, 100 count"}
+{"answer": {"sku": "THERM-SHEATH"}, "case_id": "WFS-0102-1", "key": "0147e60c29d51d0b7125403cc8a8ebe8e0a3a697e3748a45afa98f49cb22b8ad", "sentence": "digital thermometer sheaths disposable"}
+{"answer": {"sku": null}, "case_id": "WFS-0102-2", "key": "06d51368b2f02dc9492845487c95a634d568e21f82f1d1472f3f6b6311121f89", "sentence": "Infusion pump with drip sensor"}
+{"answer": {"sku": "BND-TUB-E"}, "case_id": "WFS-0102-3", "key": "9c1673c560b93b3184d4a9d245f8ac0aa3a671e928859f34da3a30f7ad95a0c6", "sentence": "size E tubular bandage 10m"}
+{"answer": {"sku": "GLV-NIT-S"}, "case_id": "WFS-0103-1", "key": "95e36b2f365d3239da4506ad5d6bc0ce63b7d2c5b54b9e22ee27e754a5803dfe", "sentence": "nitril gloves powder free sz S"}
+{"answer": {"sku": null}, "case_id": "WFS-0104-1", "key": "9ec27dec27282b7958b1c8c18b3e37251b14f6e476fabe1472bc3f7f1c0d41a0", "sentence": "Elastic crepe bandage 20cm"}
+{"answer": {"sku": "SHARPS-2"}, "case_id": "WFS-0104-2", "key": "fde4238e3a00ec75869f500a18449980df11f21ac813d8080fc4c81d293f8394", "sentence": "2 litre sharps bin"}
+{"answer": {"sku": "STETH-DUAL"}, "case_id": "WFS-0105-2", "key": "4d1452a961588be7541457b2cab5d7f1b3dba77ee2209584ad758bfb4b52013b", "sentence": "stethoscope, double head"}
+{"answer": {"sku": "GEL-WALL"}, "case_id": "WFS-0106-1", "key": "598c1e06f7281b553b4acc81bb53c0fb78379b77581dcf99da4f84948d6ec761", "sentence": "wall mounted hand gel dispenser 1L"}
+{"answer": {"sku": null}, "case_id": "WFS-0106-4", "key": "593b8ba4ef9f27e9b19459805789dbc1cb124770ae65dbae0e0f81482682924f", "sentence": "hospital beds"}
+{"answer": {"sku": "CATH-FOL-14"}, "case_id": "WFS-0106-5", "key": "77506ffffd318f728e4f616fca2116960d8217c48d7219c934fc0b77001d8f25", "sentence": "silicone-coated latex Foley catheter Fr 14"}
+{"answer": {"sku": "CREAM-HAND-100"}, "case_id": "WFS-0107-1", "key": "2868c2217b4613839d0ce5919b147dcd7657a060ad673d63d891ba88a4a19bf7", "sentence": "hand cream 100ml"}
+{"answer": {"sku": "SUP-ANKLE-L"}, "case_id": "WFS-0107-2", "key": "f389591707ed03f871fb9e3bdca493eda77ae555a81ee598def09f87911ebc6a", "sentence": "elastc ankle suport L"}
+{"answer": {"sku": null}, "case_id": "WFS-0107-3", "key": "1b27fcc59868c1a1621fc3b8e018ef68926c36b5744d46b815bc0827892107fc", "sentence": "nebulizer machine with mask kit"}
+{"answer": {"sku": "INC-PAD-MAXI"}, "case_id": "WFS-0108-1", "key": "2c454117e1d67eeb8fc5f498190f79d0cc90b584ac2108ac7ae9d0b7eb7e4630", "sentence": "maxi absorbency incontinence pads"}
+{"answer": {"sku": "COUCH-60-SMOOTH"}, "case_id": "WFS-0108-2", "key": "0bd4662419811e00a3a748cc8d2a3d55bf3ac7502a4da23ba6e51499b1489057", "sentence": "smooth exam couch rol 60cm x 100m"}
+{"answer": {"sku": "SUP-ELBOW-S"}, "case_id": "WFS-0109-1", "key": "16877db4f90c5530742399b1184b5ac9f55830dc8fa91c62be31a20f22690c5a", "sentence": "small elastic elbow support"}
+{"answer": {"sku": "MOUTHWASH-500"}, "case_id": "WFS-0110-1", "key": "474c652f120ccf39d4a8e16cd6d2245d466cbb4c007e551b4debd9be599a8154", "sentence": "mouthwash 500ml no alcohol"}
+{"answer": {"sku": null}, "case_id": "WFS-0110-2", "key": "d833f384019542ae13c4068026fa071962ee4104d266f1da3042238f2e81acda", "sentence": "baby formula powder 800 g"}
+{"answer": {"sku": "BND-ELA-7"}, "case_id": "WFS-0111-1", "key": "ccdcbda3e08e7642ce2b21c29aa6d93ea65e8b696d373cbf6186eb2ea844ff0a", "sentence": "crepe bandage 7.5cm"}
+{"answer": {"sku": null}, "case_id": "WFS-0111-2", "key": "409ef87338778af3df54d27f3cc3970f6b1c9ebced3589d39821dcc10f3d2330", "sentence": "electric wheelchairs"}
+{"answer": {"sku": "WALKER-FOLD"}, "case_id": "WFS-0112-3", "key": "9b8fc582cbff33410792e8abd62e7a1d5ef1bd6c013e22ae3e8954574d18fbf0", "sentence": "folding walker"}
+{"answer": {"sku": "BND-TUB-E"}, "case_id": "WFS-0112-4", "key": "a262314305e2fa017553692f389d5ba8eb84b0b056f78bbf3788d23239080975", "sentence": "Tubular bandage, size E"}
+{"answer": {"sku": "SOAP-LIQ-500"}, "case_id": "WFS-0113-1", "key": "d104340e841c7fb22cba5b662dc02c8eb995af83eaba26796bf1c88ba7b40d15", "sentence": "mild liquid soap 500 ml bottle"}
+{"answer": {"sku": null}, "case_id": "WFS-0115-1", "key": "5611a478269190f4b678abea47d3d08bab75aac1f5d5f72b076bdafb4cd8efcb", "sentence": "Gauze swabs sterile 15 x 15 cm 8 ply"}
+{"answer": {"sku": "MASK-IIR"}, "case_id": "WFS-0115-2", "key": "a72aeec37df87cc6855227accd72fea7fa50ea4cc401b8538b6938edd87f323b", "sentence": "surgical mask type IIR ear lops"}
+{"answer": {"sku": "GOWN-SURG-ST"}, "case_id": "WFS-0116-1", "key": "0d5ba4027c150d1f8cf570c49ed2011386def53688210f787f6e403e93032c8c", "sentence": "sterile surgicle gown reinforced L"}
+{"answer": {"sku": null}, "case_id": "WFS-0116-2", "key": "ae016268c39e954f3e3bebf0dfe0756872c4040d4ae5286c9b04b73f8f4f5378", "sentence": "defibrillator AED, semi-automatic"}
+{"answer": {"sku": "CREAM-HAND-50"}, "case_id": "WFS-0117-1", "key": "17967a6d8e07b0f9aecc4c64b88b36b11ef249f8608000d5238ed554a508eb5c", "sentence": "hand repair cream 50 ml"}
+{"answer": {"sku": "SUP-ANKLE-M"}, "case_id": "WFS-0117-2", "key": "c85723e95763b54954b724a143a8b86f8c9138571e7cc5c3a8317a6544bdb864", "sentence": "ankle support elastic medium"}
+{"answer": {"sku": "GAUZE-NS-7"}, "case_id": "WFS-0118-1", "key": "775b1ae50c5105eefc0b690db892c22c671853da00ccbcf98c42598c118390d7", "sentence": "non-sterile gauze swabs 7.5cm 8-ply"}
+{"answer": {"sku": "COT-ROLL-250"}, "case_id": "WFS-0118-2", "key": "cd0027d85f7b23fa32f6288d200025e012e4a5ea5af3ce0ca7e528e30fd3468b", "sentence": "coton wool roll 250g"}
+{"answer": {"sku": "BPM-CUFF-S"}, "case_id": "WFS-0118-3", "key": "a95312e2b6143b9c327cba88e20479badc36cbc6f69f065a6d32a63412297f18", "sentence": "BP cuff small adult 17-22cm"}
+{"answer": {"sku": null}, "case_id": "WFS-0119-1", "key": "71e512f00871161a8dc056ebc0b90417c51840bc44dd9e11557f7e011b7a58ab", "sentence": "ffp1 respirator no valve"}
+{"answer": {"sku": "ALC70-100"}, "case_id": "WFS-0120-1", "key": "48659fa2b3baf6bfebd613a629a940ef4f658b13fa63ec39e8f6260d72f8b022", "sentence": "ethly alcohol 70% 100ml"}
+{"answer": {"sku": "GEL-500"}, "case_id": "WFS-0120-2", "key": "61d6b3bbad551dc95793fdb1b8e69153335a1dd4fa5167ce3e96ae456150f0ef", "sentence": "hand sanitizer 500ml pump bottle"}
+{"answer": {"sku": "PAD-60x90"}, "case_id": "WFS-0121-1", "key": "1821f420b9aae1ab4ad92746ca84a8677e4d04366f5c1c29323a8711210f3dc6", "sentence": "disposable udnerpad 60x90"}
+{"answer": {"sku": "STRIP-6x100"}, "case_id": "WFS-0121-2", "key": "a71270e811e93fa5198a9e860c53c03c03ab0ea60d22fc125f41cc85fa2a9d73", "sentence": "skin closures 6x100mm"}
+{"answer": {"sku": "THERM-DIG-FLEX"}, "case_id": "WFS-0122-1", "key": "1b50a0e8b56988482729e8f9f6cbb6c5c5713d4fb7cd986ddf103eb7a00b13f2", "sentence": "Digital thermoemter flexible tip"}
+{"answer": {"sku": null}, "case_id": "WFS-0122-4", "key": "15a10a6176a7b5b12249a40dadb0fb4599c23c84f146a49d7b536ab2baebea8f", "sentence": "Contact lens cleaning solution"}
+{"answer": {"sku": null}, "case_id": "WFS-0123-1", "key": "3827850e35cf1f12ee1e25c173f4ed5c42e0b608eb0b8688bc1feaa6b435009c", "sentence": "X-ray film 35 x 43 cm"}
+{"answer": {"sku": "BLANKET-FOIL"}, "case_id": "WFS-0123-2", "key": "1279f6cfacf0c4275df980a05260201634eaae6f6cad475bf55955acf6755482", "sentence": "foil emergency blankets"}
+{"answer": {"sku": null}, "case_id": "WFS-0124-1", "key": "fcfb9d5230485fd66e14d06ee64a9f37762ba4b0cf60e7463bd05d7747ae4857", "sentence": "dental implant kit"}
+{"answer": {"sku": null}, "case_id": "WFS-0124-3", "key": "d617b02d2e29880b738f672616ea758228105a94596307834bf7c6c4f033b33e", "sentence": "Patient hoist with sling"}
+{"answer": {"sku": "GLV-NITX-L"}, "case_id": "WFS-0125-1", "key": "a8074c61d3e79ca775b2fd73eaf4c47329d88af085ead0d12ef27eecae2cb5f1", "sentence": "nitrile gloves extended cuff 30cm large"}
+{"answer": {"sku": "GLV-SURG-NEO-6.5"}, "case_id": "WFS-0127-1", "key": "975207627d8ba3ca4f9089a9d8431cb2b5ed3df6747a204dfb58914f39472c6e", "sentence": "neoprene surgical gloves 6.5"}
+{"answer": {"sku": "KIDNEY-DISH"}, "case_id": "WFS-0127-2", "key": "8b64f182c2568bd867947b2ef66248f63bbacd4aacc77b9e85e847c79b32b8ec", "sentence": "disposable kidney bowls"}
+{"answer": {"sku": "BPM-WRIST"}, "case_id": "WFS-0129-2", "key": "83d27803cb32aed0a6a9e637e239efcbe3d03833bbdca66bce1f138f435c7acf", "sentence": "wrist blood presure monitr"}
+{"answer": {"sku": "OXI-HAND"}, "case_id": "WFS-0129-3", "key": "56019b039bf7417d66b0ae2af24c050cc22e80786e562c1583bec59ecb9db9b9", "sentence": "pulse oximeter handheld + probe"}
+{"answer": {"sku": "STRIP-3x75"}, "case_id": "WFS-0129-4", "key": "4be0f4a54446e8bebc66755783693430f36efc12b212f745624beccd9a447ae7", "sentence": "3x75mm skin closures"}
+{"answer": {"sku": null}, "case_id": "WFS-0132-2", "key": "d7816fdb141754ffb7fbd6c0a05a14f88129002d77a752a0c31a6175a05ee77e", "sentence": "Foley catheters 22 Fr"}
+{"answer": {"sku": "GEL-WALL"}, "case_id": "WFS-0132-3", "key": "026db2214a0e0705e3c40c126a86b91fb926b98f31490cfba39bc49e9b2e7cb7", "sentence": "wall mounted sanitiser dispenser 1L"}
+{"answer": {"sku": "GAUZE-ST-5"}, "case_id": "WFS-0132-5", "key": "9f191b272b7c25c7090f1be3cb7ca89d2af1939a096c096710bdb50b0c1fcc75", "sentence": "sterile gauze 5x5"}
+{"answer": {"sku": null}, "case_id": "WFS-0133-1", "key": "449f0cd0579dcc9bfdbb3af8fa0c20d769ce564d7940bb28e8bede49d0c80a7e", "sentence": "contact lens solution"}
+{"answer": {"sku": null}, "case_id": "WFS-0134-3", "key": "1f87db64456f757815df60876a5397dddc7d4ead312141b47fa5ef5fa39ea8c1", "sentence": "patient lifts"}
+{"answer": {"sku": "FORCEPS-DISP"}, "case_id": "WFS-0134-5", "key": "b400c08a134712449cf889c73ab0e171566e14e47445a88d8351d10755ad00fa", "sentence": "sterile single use plastic forceps"}
+{"answer": {"sku": null}, "case_id": "WFS-0135-1", "key": "87906c46fb7f7cb72b7a19e63d59b51441c320f26ac03dcda32da0ecef95e223", "sentence": "scrubs uniforms"}
+{"answer": {"sku": "COT-BUDS"}, "case_id": "WFS-0135-2", "key": "6304cb392dd354f727fc08e3edfec17ba0e7b90aa294f3bf60cd4e20a30fa2f9", "sentence": "paper stick cotton buds"}
+{"answer": {"sku": null}, "case_id": "WFS-0136-1", "key": "b5fb81c84e02749db975be04e135ec777e3f78da2ab29b5b445658993d75ce23", "sentence": "Adjustable hospital bed, 3-function"}
+{"answer": {"sku": "STOOL-CUP"}, "case_id": "WFS-0136-2", "key": "face169c162518c24056377a9ec0d8b90a4907ef90ba0eb3dbf71bcf32f30e3f", "sentence": "stool specimen pot"}
+{"answer": {"sku": "ICE-INSTANT"}, "case_id": "WFS-0136-3", "key": "b2b28a2c761b079722b5561b831c94b9992b56f41382e29fd029f858ca51988f", "sentence": "instant ice pack"}
+{"answer": {"sku": "WHEELCHAIR-CUSH"}, "case_id": "WFS-0136-4", "key": "432f112be5373f67ca2324325318e657525ff3769d662be7ed908f7addd40a75", "sentence": "anti pressure wheelchair cusion"}
+{"answer": {"sku": "SUN-KIDS-50-200"}, "case_id": "WFS-0137-2", "key": "2e6e6ee327b9cfe7efc22935c7b48acdc95fee1f32d084c318b477a7ce10415e", "sentence": "kids sunscren SPF 50+ 200 ml"}
+{"answer": {"sku": "DRS-FOAM-10"}, "case_id": "WFS-0137-3", "key": "214b6a86c402fd2503e4c4d13dd447867b4b4bfc5e7553a66b890725d4bdf069", "sentence": "faom dressing 10x10 with border"}
+{"answer": {"sku": "CATH-FOL-12"}, "case_id": "WFS-0138-1", "key": "89ff9746876454cdb047bd43a715b3d9b0852935d6b22989a5f70dd949b4f247", "sentence": "12Fr latex foley catheter"}
+{"answer": {"sku": "STOOL-CUP"}, "case_id": "WFS-0138-2", "key": "db8e9735a129f54ec5f62214cd3be51cef2d0040b4ab0a88504330277240c2c9", "sentence": "stool sample pot 30ml"}
+{"answer": {"sku": "TONGUE-AD"}, "case_id": "WFS-0138-5", "key": "095b72790543f1d520babc52f8edab87570105c7f1278357f8df35e5faee9024", "sentence": "tongue blades adult size"}
+{"answer": {"sku": "GLU-METER"}, "case_id": "WFS-0139-1", "key": "bf3e526b7b8dd744a85c24453ed90918c0f6c2d5ecdca12ceb1b781e7f65aa42", "sentence": "blood glucos meter kit"}
+{"answer": {"sku": "FORCEPS-DISP"}, "case_id": "WFS-0139-3", "key": "409a7087bf457516b932df15c8c6004872c6a8b22f272c6dde1527bdf23cf4b6", "sentence": "disposable plastic forceps"}
+{"answer": {"sku": "CPR-MASK"}, "case_id": "WFS-0141-1", "key": "e60655bef375da15f6a17015379449d3c7fb2e86503fe79c5dc1c4942a49f258", "sentence": "CPR shield one way valve"}
+{"answer": {"sku": "GLV-NIT200-L"}, "case_id": "WFS-0141-2", "key": "803d27e5d7e4b72bb15b7ff2d5304a9e2bf49ceb452c5fb044582d8e49811cd4", "sentence": "nitrile gloves value pack L"}
+{"answer": {"sku": "APRON-PE"}, "case_id": "WFS-0141-3", "key": "b7f2e3f6b45d4809dd92eb991fd7e0a0b93cdabb8a3aa896234599b1536edea8", "sentence": "plastic aporn white disposable"}
+{"answer": {"sku": "STOCK-KNEE-L"}, "case_id": "WFS-0141-4", "key": "9b5801464fb1ea6db9646ba20e55ea9ca84af9f59c3eb4e8b6a750a65fdd9a7a", "sentence": "knee-high compression stockings, large, class 1"}
+{"answer": {"sku": "EYE-WASH-500"}, "case_id": "WFS-0142-1", "key": "8edf362c90b6903d3c17a823015de23910bc3ae0c8a699d26221de4856f0f48f", "sentence": "eye wash bottle 500ml"}
+{"answer": {"sku": "SUN-50-50"}, "case_id": "WFS-0142-4", "key": "192a1191c4aee7273b39bc70d0f7dd98f82f3cd75a6a9213ef1dedd83567347a", "sentence": "sunscreen SPF50+ 50ml"}
+{"answer": {"sku": "TAPE-SILK-25"}, "case_id": "WFS-0143-1", "key": "11574e6600c27ba33fb5d80f8c117adb15578318082ede4a1ed4c5850f2d161a", "sentence": "slk tape 2.5cm x 9.1m"}
+{"answer": {"sku": "SYR-1"}, "case_id": "WFS-0143-3", "key": "ac3bc4695c024011d068a11b0921584d2ee9c1cb8d7cf1c105c4336e2f3af005", "sentence": "1ml syringe luer slip"}
+{"answer": {"sku": "INC-PANT-M"}, "case_id": "WFS-0143-4", "key": "950793dd9d9e3187516db21b3a6072923b102ed93edb377bcb2da0fdef190fee", "sentence": "adult pul-up pantz size M"}
+{"answer": {"sku": null}, "case_id": "WFS-0144-1", "key": "9da7beb9c6afa6e0acff0ae3d14ab66a7bee2e1b1f6a105c57f0b7e6e6234284", "sentence": "nebuliser machines"}
+{"answer": {"sku": null}, "case_id": "WFS-0144-2", "key": "53d21878ed2b3bb25475c7e40e09e4a9a6922b04d39a477f3bf078214aee4a94", "sentence": "Baby formula, lactose free"}
+{"answer": {"sku": "THERM-IR"}, "case_id": "WFS-0144-3", "key": "d267f5b3aec4cdcbb0e451625d5e713e3b57caa9db2f99e9c3c28739076d34e0", "sentence": "infrared forhead thermometer non contact"}
+{"answer": {"sku": "GLV-LTX-XL"}, "case_id": "WFS-0145-3", "key": "0367ece04fb0e95ed68f55448e2c2c2a8f91d544434e6d49331e28fb059038eb", "sentence": "latex exam gloves powder free XL"}
+{"answer": {"sku": "TONGUE-ST"}, "case_id": "WFS-0146-1", "key": "56e44b6ec8e1aa3aba800ef6364e3e776524c769447b075dd5903ed087a38bb1", "sentence": "sterile wooden tongue depresors individually wrapped"}
+{"answer": {"sku": null}, "case_id": "WFS-0146-2", "key": "cb16866437718932b58ce82fd0d43c8c9df829075d101b5fafd0b835c175ce7e", "sentence": "Insulin syringe 2ml with needle"}
+{"answer": {"sku": "WIPE-WASH-CAP"}, "case_id": "WFS-0147-1", "key": "f3febe95b6c9a988e4ea459585cda2d00e8a38dbc9c6fd8ea0f83cba687ac0d4", "sentence": "rinse free shampo cap"}
+{"answer": {"sku": "CREAM-BARRIER"}, "case_id": "WFS-0147-2", "key": "d79a777262a36abba4fd5ace535c2cba0d9266a7331b05f69c6a6614db5ec436", "sentence": "bariar cream skin protecion 100g"}
+{"answer": {"sku": "TAPE-PAP-50"}, "case_id": "WFS-0148-1", "key": "28dfe72679c90b1f8c0fadf97007a8ad1baa7e1bda273b7600c3642b89001f31", "sentence": "microporous paper tape 5cm"}
+{"answer": {"sku": "PILL-CUP"}, "case_id": "WFS-0148-3", "key": "72e96e8e3c7c66cb62ea4f54b199aff63faf1d53089aa751a66703507c04def2", "sentence": "30ml plastic medication cups"}
+{"answer": {"sku": "MASK-II"}, "case_id": "WFS-0149-1", "key": "e47615f945ca54a7008c1fcc10e1f53fe8e079e218ace9d3c3f662ccf2a53839", "sentence": "type II surgical masks earloop"}
+{"answer": {"sku": "STETH-PAED"}, "case_id": "WFS-0149-2", "key": "9c6e2dfb075b9b8518623bce53d2b0642bdf3f465b9793390b036b710654ab9e", "sentence": "Paediatric stethoscop"}
+{"answer": {"sku": "BPM-CUFF-M"}, "case_id": "WFS-0149-4", "key": "feb6aaeb60775ca08c49e47717d52a222bb01e1ef6a6e870603b6bb114e45dc8", "sentence": "adult BP cuff 22-32cm replacement"}
+{"answer": {"sku": "COVERALL-XL"}, "case_id": "WFS-0150-1", "key": "8f7d3164242881893dda9a112c038543b1b87ff1d9cb91514a32f6f8c48b11ca", "sentence": "dispsable coverall XL"}
+{"answer": {"sku": "GLV-NITX-XL"}, "case_id": "WFS-0151-1", "key": "2fbc8f44fa68eec471bb5e43baadacb756b70a68de11421c221c65e83fddb2ce", "sentence": "nitrile gloves extended cuff XL"}
+{"answer": {"sku": "GEL-5000"}, "case_id": "WFS-0151-2", "key": "7a36e07bf2d5c013aa3d248889215e9a5cc41be6dbb10151bd2d230433ba83d4", "sentence": "hand sanitizer gel 5L"}
+{"answer": {"sku": "SAL-30"}, "case_id": "WFS-0152-1", "key": "5f95252d6c129325a28b2edddbc052d1bc2a6152cd05284cb2e1f9b6ca613516", "sentence": "saline single dose 30ml"}
+{"answer": {"sku": "SUN-50-200"}, "case_id": "WFS-0152-2", "key": "dd84f674069f5b3de10273472bda5ac231598d184ed23677b998c49f28189fa7", "sentence": "sun lotion SPF 50+ 200ml"}
+{"answer": {"sku": "PEN-31-8"}, "case_id": "WFS-0153-1", "key": "20dbc99baef4b06ba60c918fa0bb15142219159fcbba37fd8101303b9cc1532b", "sentence": "pen neelde 31G 8mm"}
+{"answer": {"sku": "TAPE-ZNC-50"}, "case_id": "WFS-0154-1", "key": "3f97cd81b36bd0aa54ce422b94199e274b0de16d874bbc0a7e05fe81933f6080", "sentence": "zinc oxide strapping tape 5cm"}
+{"answer": {"sku": "PLST-ASST"}, "case_id": "WFS-0155-3", "key": "f41771d32495f59e24138796019fac04e72125fddd061260b06f7dc2d2bbb2e5", "sentence": "plain assorted adhesive plasters"}
+{"answer": {"sku": "PAD-40x60"}, "case_id": "WFS-0155-5", "key": "09a77c040247ccd82c1649d85aa92ebd1875e027ee9e1952a58d6fce5cc97aec", "sentence": "bed pads 40x60"}
+{"answer": {"sku": "ALC96-250"}, "case_id": "WFS-0156-1", "key": "10e362e899d92b988c9a4751adf6e8064d0c0429ada73a2fff83e61a0bc72531", "sentence": "96% alcohol 250ml"}
+{"answer": {"sku": "GLV-VIN-L"}, "case_id": "WFS-0157-1", "key": "45bc4a67cdb72a6c32067a769576d22518d39ac94ce1be6bce725473df5b0091", "sentence": "L vinyl gloves powder free"}
+{"answer": {"sku": "NDL-21G"}, "case_id": "WFS-0157-2", "key": "f20c8fdea12ceb1f4cfd19bdd3c86e3d69f7371256d35cc1cda5f6cb2e15c9a5", "sentence": "21G needle 40mm"}
+{"answer": {"sku": "GLV-LTXP-M"}, "case_id": "WFS-0157-3", "key": "e2a48e9f542d34ed8465e2133a06cca0d94f3aaff2e473db004a2fb32dc01cfc", "sentence": "latex gloves lightly powdreed M"}
+{"answer": {"sku": "GLV-VIN-S"}, "case_id": "WFS-0159-1", "key": "0145542fd73810b43fa78b1fb7d99c397360c3f1551c8d8df7cff5de30607164", "sentence": "small vinyl exam gloves, powder-free"}
+{"answer": {"sku": "GOGGLES"}, "case_id": "WFS-0159-2", "key": "b503578f5263fb101cd6f1b8e5b2537e808bda6efaaf1bd15a09473e96b08165", "sentence": "protective goggels anti fog"}
+{"answer": {"sku": "SYR-5"}, "case_id": "WFS-0159-4", "key": "7307e9a72d78ceeed68f74149b85b782c7176f5bdfaefa11b2cf8fd480ad857e", "sentence": "5ml luer slip syringes"}
+{"answer": {"sku": null}, "case_id": "WFS-0159-5", "key": "7e8ae8ac24aacdf97fd33153c82fdecbd80242c34b8b8c83ba57165fb92a5691", "sentence": "x-ray films"}
+{"answer": {"sku": "SUP-KNEE-M"}, "case_id": "WFS-0160-1", "key": "287ea64ad5c3480d79c38ad1c203a59c4c9c8f8930b1c12c0d59248f280fe2f7", "sentence": "knee support elastic M"}
+{"answer": {"sku": "SUN-30-50"}, "case_id": "WFS-0160-3", "key": "55efe2dc7b66979d03f4e04ff6b203bb83c63d6e678feeec15147c7923d9aaea", "sentence": "Sun cream SPF15"}
+{"answer": {"sku": "PLST-BLUE"}, "case_id": "WFS-0160-4", "key": "ca9db8cf22bb32460d29fc0f1a72648fa4ea480372f5177fe3d0a43482fb8545", "sentence": "blue detectable plasters"}
+{"answer": {"sku": "GLV-NITX-L"}, "case_id": "WFS-0161-1", "key": "347b2a7e96f24bd349fe7f14aac544d0fea007d91448b354e1e4ac570c367215", "sentence": "extended cuff nitrile gloves L 30cm"}
+{"answer": {"sku": "WIPE-WET-80"}, "case_id": "WFS-0161-2", "key": "3420ebaa9cc7f7da6e6eb2d1756cd305a780c424480a9a1226257743a1c6dd55", "sentence": "patient wet wipes"}
+{"answer": {"sku": "WALKER-FOLD"}, "case_id": "WFS-0162-2", "key": "43d1b58c42d0d667a3a149d3f3358503f81da4ded4f96788f61d1592b351863b", "sentence": "folding walking farme"}
+{"answer": {"sku": null}, "case_id": "WFS-0162-3", "key": "cd18f40d0fdd36f30184788d270e864ef66725c7b66923fd931ec6cce616f38d", "sentence": "ceiling patient lift"}
+{"answer": {"sku": null}, "case_id": "WFS-0163-1", "key": "2c6f926d78cfd0736e57566d5a01a9736a11387950d0f8b9f58fa870cb39c940", "sentence": "Scrub top and trousers, green"}
+{"answer": {"sku": null}, "case_id": "WFS-0163-2", "key": "8d52b0c626e2a775832c1883a46833bc38c89eb388b37b24fcd1dd65b4f763f8", "sentence": "oxygen cylinders"}
+{"answer": {"sku": null}, "case_id": "WFS-0164-1", "key": "83ff9032e0f8f8e86265e92795474289ec5c32e5e28aae142f950f66d6fc04cb", "sentence": "Surgical gloves sz 9 latex"}
+{"answer": {"sku": "MASK-II"}, "case_id": "WFS-0164-2", "key": "ca8fdba0beb7b880e54b3baa8bdefba4bb6022ff3edac7e441e99d2fc2781de4", "sentence": "surgical face mask typ II ear loops"}
+{"answer": {"sku": "STOCK-KNEE-S"}, "case_id": "WFS-0164-3", "key": "b566ba592b987a785ccf070b5c32326e7e83ab7410196be7d0c639f144638f4a", "sentence": "small knee-high compression socks"}
+{"answer": {"sku": null}, "case_id": "WFS-0165-1", "key": "7a6d743dcf3f53e398927ba4f7e25c0381d55a9f0b697ad785529a2ce4d44bf0", "sentence": "pregnancy tests"}
+{"answer": {"sku": null}, "case_id": "WFS-0165-2", "key": "c31753312a06eac78ea0322d1bc1c35bb66b856f20ed4a7968968c6ba92507ab", "sentence": "contact lens solution, travel size 100 ml"}
+{"answer": {"sku": null}, "case_id": "WFS-0165-3", "key": "16729c3dae03e4d6c76fa77cc0d5db3827550d8348a40f924bc24f899e21bcf0", "sentence": "Underpads 90 x 180 cm, extra large"}
+{"answer": {"sku": "NDL-30G"}, "case_id": "WFS-0167-1", "key": "9f31545e225c554252eaeb334b8a92e8cdbe74c755b23d678f07ebdd4746f01a", "sentence": "hypodermic needel 30G 13mm"}
+{"answer": {"sku": "BPM-ARM"}, "case_id": "WFS-0169-1", "key": "072f54c5c8d318ea005a94550ab73c9802865b6cad6c0b0f7b8bf5932bdcddca", "sentence": "upper arm automatic BP monitor"}
+{"answer": {"sku": "WIPE-WET-80"}, "case_id": "WFS-0170-2", "key": "40a2266ecbb30cac5d77ea0744de22f21e10a567e7238b9b0413f72dc2c82921", "sentence": "wet body wipes for patient hygene"}
+{"answer": {"sku": "SAL-5"}, "case_id": "WFS-0171-1", "key": "005ddaff0a32b0b8c52bca6b011257bbcfee7e8c7755df3946f2da97a1b1acd4", "sentence": "saline 0.9% 5ml single dose vials"}
+{"answer": {"sku": "CANE-FOLD"}, "case_id": "WFS-0171-2", "key": "77948d70e109edbf00a9e5fdf8e13335b8d7bb8b2347ab9c5bb1c44dd70ef5f2", "sentence": "foldng walkng stick"}
+{"answer": {"sku": "TAPE-SILK-12"}, "case_id": "WFS-0171-4", "key": "af56220db7b9e461cceebe5070e0b348e4e38254ff84da1e2a25102d561f50cb", "sentence": "silk tape 1.25 cm"}
+{"answer": {"sku": "GLV-SURG-LTX-8"}, "case_id": "WFS-0171-5", "key": "195480e1ad6d8f40b45a34b93e6968cba4cb5547c86bf08c095df29c97439b03", "sentence": "sterle latex surgical glovs size 8"}
+{"answer": {"sku": "SUP-WRIST-S"}, "case_id": "WFS-0173-1", "key": "4890961b13d17f3e09750e719d33fe8176ef1997544b47e46da11020b63485a1", "sentence": "small elastic wrist brace"}
+{"answer": {"sku": "COUCH-60"}, "case_id": "WFS-0173-2", "key": "d797c9d2f7a7f023acc7bcd248046d682697de2d2781705b522592d199280623", "sentence": "couch paper roll 60cm x 50m"}
+{"answer": {"sku": null}, "case_id": "WFS-0173-3", "key": "c2d97dc9b72c394e18675bfae33dffbf102e207ce017b0a9601ed1a3303fc6d2", "sentence": "Digital pregnancy test"}
+{"answer": {"sku": "GOWN-ISO-XL"}, "case_id": "WFS-0173-4", "key": "26f0c1e0e18b0de1807902350c693eb2586372cd41a65c5b3e90cfafc893d7a6", "sentence": "isolation gonw blue XL disposable"}
+{"answer": {"sku": "DRS-FOAM-10"}, "case_id": "WFS-0173-5", "key": "620e354e7835b9c11da552cfee6b81358f6b7caab7f7f730c8381ab8cd7a1f1c", "sentence": "bordered foam dressing 10x10"}
+{"answer": {"sku": null}, "case_id": "WFS-0174-1", "key": "d2373e11411f468f30c8cfa775ac985eac66fd7d678a5e7bdbd941a69a8028da", "sentence": "dental implants"}
+{"answer": {"sku": "SUP-ELBOW-L"}, "case_id": "WFS-0175-1", "key": "85d9154b72c5e53d746d4ccb473e5ee14f43fa019fe611157372d21833207b4a", "sentence": "elbow support, elastic, size large"}
+{"answer": {"sku": "GLV-LTX-S"}, "case_id": "WFS-0175-3", "key": "dbb684cba5f340135a95a63ecc5c5ddbad50b48931bce64d7cfc817c2fbf1796", "sentence": "powder free latex exam gloves small"}
+{"answer": {"sku": "GAUZE-NS-10"}, "case_id": "WFS-0175-4", "key": "ac5794bb18ea7c91f9c1277eb028605a992163a61207d30f79f5d5e63d10fc7a", "sentence": "non sterile gauze swabs 10x10 8 ply"}
+{"answer": {"sku": null}, "case_id": "WFS-0176-1", "key": "a88375cc332ef99596b19d1b48bf758d7c03401095a41a7b6e411ba70eecda4e", "sentence": "Dental implant 4.0 x 10 mm"}
+{"answer": {"sku": "GLV-NITX-S"}, "case_id": "WFS-0176-2", "key": "058aab2ed39b2695c408486dc5f70a1e653ea0e12b3391467f4270117e2c1f1b", "sentence": "long cuff nitrile gloves small"}
+{"answer": {"sku": null}, "case_id": "WFS-0176-3", "key": "1681aae19790354d50de844a697b60682c08a4bf6ee28187c7a0f10a287511c9", "sentence": "hearing aid batteries"}
+{"answer": {"sku": "BND-TRI"}, "case_id": "WFS-0177-2", "key": "bdf955bb6715944ef495f4958ebbe857c16982802fdc006c87718bb451423956", "sentence": "triangular bandge non-woven"}
+{"answer": {"sku": "STOCK-THIGH-M"}, "case_id": "WFS-0178-1", "key": "8a08afbb479ffb416adbec92216886452c2ea0e5e0d06d067619551fc42b1893", "sentence": "compresion thigh high stockins class 1 size M"}
+{"answer": {"sku": "SUP-KNEE-L"}, "case_id": "WFS-0178-3", "key": "40d9b05be1398d76b646f44b8b0abc957d2cde542163f315c45b24613ec357de", "sentence": "elastik knee suport L"}
+{"answer": {"sku": "MASK-FFP3"}, "case_id": "WFS-0178-5", "key": "e24f6b650b410967e3022a0767b3362c9ad1a2dfb3f298efc28f71f3f83e93ce", "sentence": "FFP3 respirator without valve"}
+{"answer": {"sku": "GLV-SURG-LTX-6.5"}, "case_id": "WFS-0179-1", "key": "bc3e90a93c850c0ca174eea5ef9ff0872498e585c101228eff7cd431895cd8cc", "sentence": "steril latex surgical gloves 6.5"}
+{"answer": {"sku": "GAUZE-NS-10-12"}, "case_id": "WFS-0179-3", "key": "31d1a04405e0d87c9cd7c67496231c02afbcf4f93956b2abd8dedaa3cb8511a7", "sentence": "non sterile guaze swabs 10x10cm 12ply"}
+{"answer": {"sku": "GLV-NIT-XL"}, "case_id": "WFS-0179-4", "key": "c6b330370f5f344a8a41a2152939295b18d3d6ba134f36c0c21fc4bacb2803d7", "sentence": "nitrile gloves powder-free XL box of 100"}
+{"answer": {"sku": "INC-PAD-NORMAL"}, "case_id": "WFS-0180-1", "key": "b94386cf1dcd391b51ceb9798d77ea89ccd609f296cc9cafd5d887f878ad4296", "sentence": "incontinence pads nromal absorbency"}
+{"answer": {"sku": "GLV-NIT-M"}, "case_id": "WFS-0180-4", "key": "e7b68c1b9d487e23b1684446d866d014f125e917831a9a011aba63c36d68e30c", "sentence": "nitrle gloves pwder free M"}
+{"answer": {"sku": null}, "case_id": "WFS-0181-2", "key": "f1bdae29508e6a53d5bf29d9bb88a9d0840c85727d3327c64ea4545748b88e93", "sentence": "crepe bandages 20 cm"}
+{"answer": {"sku": "SYR-LL-10"}, "case_id": "WFS-0182-1", "key": "e88bb4720d5f9a866741d418f9d510c273bc238d0ff7f2ae2f19afada0375d23", "sentence": "syrigne 10ml luer lock"}
+{"answer": {"sku": "GEL-1000"}, "case_id": "WFS-0182-2", "key": "5ba2df4877f70c5d8a4ca527e42307f812ddb0c3092dda5b5ffe0592e470387a", "sentence": "hand sanitiser gel 1L refill"}
+{"answer": {"sku": "PEN-32-6"}, "case_id": "WFS-0183-1", "key": "a22656fc09af4d2b5240f99f132ebc1231b43504ccf16102e984fc95cc630450", "sentence": "pen needles 32G 6mm"}
+{"answer": {"sku": "PILL-CRUSH"}, "case_id": "WFS-0183-4", "key": "fd171c3ac04f5d4fea1c581092fcce1ff5daf26038c6e1c5cd448c0fcbf6a04f", "sentence": "pill cruhser"}
+{"answer": {"sku": "NDL-25G"}, "case_id": "WFS-0183-5", "key": "09785ff7e6b45b0bb6c136bf8b0e37c5f2bd96a225a3aa31703d585529b662d7", "sentence": "hypodermc neeedle 25G x 16mm"}
+{"answer": {"sku": "ALC70-1000"}, "case_id": "WFS-0184-2", "key": "32043e56056eb09c08760f9d0ec7f2d868d512855d22f9eda2f67c046e0969d0", "sentence": "ethil alcohol 70% 1 litr"}
+{"answer": {"sku": null}, "case_id": "WFS-0185-3", "key": "e18a048f1d80f7dcaf51b36a72cfcc504d134f97c320fe515c910fc39fb1392c", "sentence": "Sharps bin 15 L"}
+{"answer": {"sku": "GLV-SURG-NEO-7.5"}, "case_id": "WFS-0187-1", "key": "401996478b591aae4d5513551e50191cbfbadc26f8053cbfe9d9fe70f9c508b2", "sentence": "neoprene surgical gloves sterile 7.5"}
+{"answer": {"sku": "SYR-LL-50"}, "case_id": "WFS-0187-2", "key": "f8b86bf51a82eabb42af994a872407ff2d44e438c1d4bcd77f18f2d3e64d4e5e", "sentence": "50ml luer lock syringe"}
+{"answer": {"sku": "PEN-32-4"}, "case_id": "WFS-0187-4", "key": "3ac69dfacaac8c15e66735a30cdbec2d468ce32eb07f17ba5d126bbb233baf5b", "sentence": "pen needels 32G 4mm"}
+{"answer": {"sku": null}, "case_id": "WFS-0187-5", "key": "4708896b7ed3d538a289eb435119ab3448a647290c9895fca49e98ab5e461270", "sentence": "covid antigen tests"}
+{"answer": {"sku": "TOURNIQ"}, "case_id": "WFS-0188-1", "key": "88a859445c3e826431379c2a3190b010bb23c0787d87af5e6aaf3bba8cf2539f", "sentence": "disposable tourniquet strip roll"}
+{"answer": {"sku": "GLV-NITX-M"}, "case_id": "WFS-0188-3", "key": "dcde1a65560c63eabef072ad48b036f12aa5687951a018be479a88535124be76", "sentence": "nitrile gloves extnded cuff 30 cm M"}
+{"answer": {"sku": "OXI-FING"}, "case_id": "WFS-0188-4", "key": "caaf4023fd567ec4a311b61ac8ab49c46189ba47af9126af2cb0f3e580d077de", "sentence": "adult fingertip oximeter"}
+{"answer": {"sku": "SYR-LL-20"}, "case_id": "WFS-0188-5", "key": "6c8ab6f41c6866940a7f6e7b50b07922394a23191c72df5ccacf551122c9d9aa", "sentence": "disposable syringe 20ml luer lok"}
+{"answer": {"sku": "PLST-SPOT"}, "case_id": "WFS-0189-1", "key": "3fb28cf5730b2f43532af6e68e3c7e27ffbf8994263e3b0d890e41614ef63693", "sentence": "rond spot plastres 22 mm"}
+{"answer": {"sku": "GLV-SURG-NEO-7"}, "case_id": "WFS-0189-2", "key": "f6d0cea2861e6ec271a11cd728f6a47ae6a52bd541461c5f8a72cb75b42875f3", "sentence": "sterle latex-free surg gloves neoprne 7"}
+{"answer": {"sku": "BND-COH-7"}, "case_id": "WFS-0190-1", "key": "cfd40ac7c956f515e9ec81d47223de5ed538bedd89c539aaa38bb226ff816b04", "sentence": "7.5cm cohesive bandage"}
+{"answer": {"sku": "SUN-FACE-50-50"}, "case_id": "WFS-0191-1", "key": "e573d6802b99f76b5c031502b4d18cd9d88c0dcdff80c33418aa254a99f3e80c", "sentence": "SPF 50+ face sunscreen 50ml"}
+{"answer": {"sku": "WIPE-PAD-100"}, "case_id": "WFS-0191-2", "key": "0596893df33f740b5ea6280eaa7abd5597ab8f62a557d274dbefbfd0c8ac35a6", "sentence": "single-use alcohol prep pads, 100 per box"}
+{"answer": {"sku": null}, "case_id": "WFS-0191-3", "key": "212e57e2b54932095bcae4c7012ee7b7ada278ac410700e3c7dcc4cff02ae42d", "sentence": "surgical gloves size 9"}
+{"answer": {"sku": null}, "case_id": "WFS-0191-4", "key": "dfc329255140f5a535b547c9e685ad247b9479d13bcd9ccae81865aa999c8ff0", "sentence": "Hearing aid battery 13, pack of 6"}
+{"answer": {"sku": null}, "case_id": "WFS-0192-1", "key": "34613271a4233729e9067cb91090810b4c5e531364a153d1fca1e98f76a47714", "sentence": "COVID antigen self test kit, nasal"}
+{"answer": {"sku": "SHARPS-5"}, "case_id": "WFS-0192-2", "key": "34b551d2860610b03ef13d35b0a815499b8c8d98bbe4366ef3e601b489526314", "sentence": "5 litre sharps bin"}
+{"answer": {"sku": "BPM-CUFF-S"}, "case_id": "WFS-0193-3", "key": "21b6edce62785e8c9347e770f30a59fb71edcc3043e4c1e11d863b092daf9db1", "sentence": "replacment bp cuff small adult 17-22 cm"}
+{"answer": {"sku": "GEL-500"}, "case_id": "WFS-0194-2", "key": "58d6a83a2057057ea773c20301d6d03ba3753d0b270e1e7c80f26676dc17378b", "sentence": "hand sanitiser gel 500ml pump bottle"}
+{"answer": {"sku": null}, "case_id": "WFS-0194-3", "key": "243c8f6a9f5a2720db02bd80a51459570534af1b70fa62f334aaab7303a52d4c", "sentence": "insulin syringe 2 ml"}
+{"answer": {"sku": null}, "case_id": "WFS-0194-4", "key": "1030016410592df5e632c73a4328ea49a110ad5e959fb2759546c1e4c89d3c8f", "sentence": "massage tables"}
+{"answer": {"sku": null}, "case_id": "WFS-0194-5", "key": "da0d7170860910b79dee20dcd9324d9f21ef86716ffa1e5f2b8413fa1ddfe702", "sentence": "ethyl alcohol 80%"}
+{"answer": {"sku": "BND-ELA-15"}, "case_id": "WFS-0195-3", "key": "85be7c73508cf1c0525745990d3da911420558cf61502efe5af696da198e8acb", "sentence": "crepe bandage 15cm x 4.5m"}
+{"answer": {"sku": null}, "case_id": "WFS-0195-4", "key": "5b2a95b981b0f982982ab24b3de7ac155e15389f3db9bf1f0d60c94c9c6d89de", "sentence": "sunscreen SPF 15"}
+{"answer": {"sku": null}, "case_id": "WFS-0195-5", "key": "fa0788cd7679970f598ae410377967551f72758ba632bdbc2ede2d297ac151c5", "sentence": "Power wheelchair, electric"}
+{"answer": {"sku": "TAPE-KIN"}, "case_id": "WFS-0197-1", "key": "0e60f7df7c164e03ce0ebba746fb5a5dce22f14c8109316e2cadab8b17f7a281", "sentence": "black kinesiology tape 5cm"}
+{"answer": {"sku": null}, "case_id": "WFS-0197-2", "key": "1d05c6c7fbb793a4f948dc6119ca0796291dfa7651fe011bb9aa9933dd84d5ad", "sentence": "Oxygen cylinder with regulator"}
+{"answer": {"sku": "INC-BRF-NIGHT-M"}, "case_id": "WFS-0197-3", "key": "9a760906d743acde9830f987991a8857580f63202fada8e402d895149e004b67", "sentence": "night briefs incontinence M adult"}
+{"answer": {"sku": null}, "case_id": "WFS-0198-1", "key": "e655985fc62e6e6c84d4d084ab0837049f6b5d7c71e70e5555312699e9206257", "sentence": "Massage table, portable, black"}
+{"answer": {"sku": "GLV-VIN-M"}, "case_id": "WFS-0198-2", "key": "d7fde848c2ec5bf210ba4c126b601de0c195ae886a950144ae05ea8a32c23d23", "sentence": "vinyl examination gloves medium"}
+{"answer": {"sku": "SYR-INS-03"}, "case_id": "WFS-0199-1", "key": "e0e57b9bfe94db287fe7d9aa63c96488cfeee06eb6412b9bc7894da21398bb1b", "sentence": "insulin syringe 0.3ml"}
+{"answer": {"sku": "INC-BRF-NIGHT-L"}, "case_id": "WFS-0199-2", "key": "840e16bfe4550e0323c2fdaadfc5e8291c8075796f0a933fd0ffa4fe15e8a99e", "sentence": "night incontinence briefs large"}
+{"answer": {"sku": "BND-COH-5"}, "case_id": "WFS-0199-3", "key": "fbebd1b1109a462977bc61d4e0136cf20774edd7987bba351606dc25f343d0a8", "sentence": "cohesive wrap 5cm"}
+{"answer": {"sku": "LAN-200"}, "case_id": "WFS-0199-5", "key": "04f8c8897640af5def1d4bbb52726e64767a9f542d49e5a36bd8d84d553ecf0b", "sentence": "safety lacnets 28G box of 200"}
+{"answer": {"sku": "COT-PADS"}, "case_id": "WFS-0200-1", "key": "25b420c80066d28f8b623c10fa0c2203870019fcb7a499df7fd51977ba5a9f7d", "sentence": "round cotton pads, 80 per bag"}
+{"answer": {"sku": "SWAB-TRANS"}, "case_id": "WFS-0200-3", "key": "f3c1393536a272e3190a5c381b07405a5df1ccd6620a95352494289dca59e553", "sentence": "transport swab with medium, sterile"}
+{"answer": {"sku": "SCALPEL-15"}, "case_id": "WFS-0202-1", "key": "cb4a410623940729e7dbde2f7a027671f5ab319f49d0d73dcf14fa6b202c7aea", "sentence": "size 15 scalpels"}
+{"answer": {"sku": "TAPE-TR-25"}, "case_id": "WFS-0202-3", "key": "9888cd155c5fd834de09cdc09a9a4f6fd4e8b0bedbf151f89c5aca1c4ca28de3", "sentence": "clear transparent tape 2.5cm"}
+{"answer": {"sku": "GLU-STRIP-100"}, "case_id": "WFS-0202-4", "key": "648dded7cdc9a845a032205f222a685e3fbb8cf8e824f22d7779dce107ea0a93", "sentence": "glucose test strips 100 pack"}
+{"answer": {"sku": null}, "case_id": "WFS-0202-5", "key": "508e532ba802b400aca486d1e83a4ca15082b37336fbd9307443da2fbd8d97e5", "sentence": "X-RAY FILM"}
+{"answer": {"sku": null}, "case_id": "WFS-0203-1", "key": "d9ffef0a731b91affc874eb7e1b4012c462e922378df8a36d381e8a3467a685f", "sentence": "ultrasound gel 5 litres"}
+{"answer": {"sku": "GAUZE-ST-10"}, "case_id": "WFS-0203-2", "key": "8f97fa20ee5ca631de3627b10c0d66cbe0dc2bdedde96ecbb565a03c6f05028e", "sentence": "10x10 sterile gauze swabs 8 ply"}
+{"answer": {"sku": "SYR-3"}, "case_id": "WFS-0203-5", "key": "3f5afc49eb12df4b7ae2dcfe0df14b44985845d0841fc511f065332f5849abe3", "sentence": "dispsable syringe 3ml luer slp"}
+{"answer": {"sku": "GLU-STRIP-50"}, "case_id": "WFS-0204-1", "key": "4e133fa78f9a75f499a04f13e1ee23694fd50900ed7de528459b2a5d55c3d7f4", "sentence": "glucose test stirps box of 50"}
+{"answer": {"sku": "SYR-20"}, "case_id": "WFS-0204-3", "key": "6e687c388d12db60e3f6e7e2f722567528d831076460a3cb71412f0cd57a3566", "sentence": "20 ml slip tip syringe"}
+{"answer": {"sku": null}, "case_id": "WFS-0205-2", "key": "d660e405ec294021a813093c08c8b554e9326883eb3d6d2bd7be7a8e1459a00c", "sentence": "sterile gauze swabs 15 x 15 cm"}
+{"answer": {"sku": "LIP-BALM"}, "case_id": "WFS-0205-3", "key": "e05962795a7a30433e5a36a44135d9e0d8a97d05f102a7e6fbebe7b211273e84", "sentence": "lip salve SPF15"}
+{"answer": {"sku": null}, "case_id": "WFS-0206-2", "key": "8865da131cc8c865db4c0ec4d8c7e16d8ff983b1fd14cd3e0e460790b6ca2f85", "sentence": "baby formula"}
+{"answer": {"sku": "MOUTHWASH-500"}, "case_id": "WFS-0206-4", "key": "9fbd4683d71c735213b3e1b7813b108f4d811f3fa68ca729a5217e3ab4ebaa59", "sentence": "alcohol free mouth rinse 500ml"}
+{"answer": {"sku": "DRS-ISL-9x10"}, "case_id": "WFS-0206-5", "key": "b13ef92f5d47ffceecace878c3ecac1ed00b6f998d404ab89b32feb70c356727", "sentence": "island dressing 9x10"}
+{"answer": {"sku": null}, "case_id": "WFS-0207-1", "key": "e3cc6cccfdc5008a7b16e5e2348f07342f7e63e4b318305a6808b6e7146fdd4c", "sentence": "automated external defibrillators"}
+{"answer": {"sku": "PEN-31-5"}, "case_id": "WFS-0207-2", "key": "e691c164defef593bdda21d7ed035cfdb73a84b69f07d9c92ae7cb55faeffc21", "sentence": "31G pen needles 5mm"}
+{"answer": {"sku": "GRAB-REACH"}, "case_id": "WFS-0209-2", "key": "6ffd9870562a2574935cd48fbf9d3b45b2d432a9671938e15ae424305c224c3a", "sentence": "80cm reacher grabber"}
+{"answer": {"sku": "GAUZE-ST-5"}, "case_id": "WFS-0210-2", "key": "ca2a479d9d7c0c0901b0e72d55c2c3a19cafd584e1aa37a9f728fac04437b078", "sentence": "sterile gauze swabs 5x5cm"}
+{"answer": {"sku": "CREAM-MOIST-500"}, "case_id": "WFS-0211-1", "key": "0436962f250f9ccdf577bc08d1759b968209f1862347ba5464b09fa0c07117c2", "sentence": "moisturising body creme 500 ml pump"}
+{"answer": {"sku": null}, "case_id": "WFS-0211-2", "key": "c04c404a7b29f5bfaf6f12055f667550ec3a18e6ea068ee1043b45df729a109d", "sentence": "Dental x-ray film"}
+{"answer": {"sku": "MASK-KIDS"}, "case_id": "WFS-0212-1", "key": "c124949e5763308295bc5721c51ae01f1b37e8900d054ee41d6951e3f21a13b5", "sentence": "kids face masks"}
+{"answer": {"sku": "CREAM-HAND-50"}, "case_id": "WFS-0212-2", "key": "74d142517e9181839b3e656a08983ecebd506990e844d50c7454d508b5b7ce40", "sentence": "repair hand cream 50ml"}
+{"answer": {"sku": "SCALPEL-10"}, "case_id": "WFS-0212-3", "key": "0298927c6ee56cdb8a7c77de44322e7d1a38caba0df67d6d787db60b74ce8eaa", "sentence": "sterile disposible scalpell no. 10"}
+{"answer": {"sku": null}, "case_id": "WFS-0212-4", "key": "171ac11a819dcca4233caaaa6880f6a7d15cf85d85af6b30e963ec35e382ce58", "sentence": "sharps containers 15 litres"}
+{"answer": {"sku": null}, "case_id": "WFS-0212-5", "key": "e2270276a469dbcf9ae7d968cb9480c9a93c0db04f9b9bf8cc8e1154819d6a39", "sentence": "Defibrillator, automated external, wall cabinet"}
+{"answer": {"sku": "DRS-ISL-9x10"}, "case_id": "WFS-0213-1", "key": "f3d7a963e99e51339e01b12aefabbebf614ca13be19971f39306967af10ede36", "sentence": "island dressing 9 x 10 cm"}
+{"answer": {"sku": "CATH-SIL-18"}, "case_id": "WFS-0214-1", "key": "e9bcfb663b79b746c0d8d63123d33250c5203113e61c111811f8cd38008c2a97", "sentence": "foely catheter 100% silicone 18Fr"}
+{"answer": {"sku": "SUP-ANKLE-S"}, "case_id": "WFS-0214-2", "key": "edd317c7cdda2d810bd89abec18ca3d55368408618be57eceae0e17263784a75", "sentence": "elastic ankel support size S"}
+{"answer": {"sku": "MASK-KIDS"}, "case_id": "WFS-0214-3", "key": "eb0b0c57dfd21c352dd3fbaa5e9a9751b04d4c2a679a496ddbc3db798a167cd6", "sentence": "children's surgical masks"}
+{"answer": {"sku": "GEL-1000"}, "case_id": "WFS-0216-1", "key": "da01a2e7fd5dfd7dd2088e7e8f7846d811aead75521886d267775e3515138ecf", "sentence": "hand santiser gel 1 litre refil"}
+{"answer": {"sku": "COT-BALL"}, "case_id": "WFS-0216-3", "key": "fc56fe07ff4516facfdb2146229b4cdb64578bf20a22c27152815c2a7a6099ff", "sentence": "cotton balls"}
+{"answer": {"sku": null}, "case_id": "WFS-0217-1", "key": "199eebef73fd595b31f2deb0d0bb3545adc4737ad2cc1e4b54c0ab8938fa97cd", "sentence": "electric wheelchair"}
+{"answer": {"sku": "GOWN-ISO-XL"}, "case_id": "WFS-0217-3", "key": "fbc8a18aae48ce1411e409b1c5302da422605fd6936f281eb2f407a7f83009cd", "sentence": "XL blue isolation gown"}
+{"answer": {"sku": "BND-ELA-10"}, "case_id": "WFS-0218-1", "key": "925a54d0bce713a2e12cd19ec93d31bc7f9b0a1c40909d0e05828c31d16af879", "sentence": "crepe bandage 10cm"}
+{"answer": {"sku": "GLV-NITX-XL"}, "case_id": "WFS-0218-2", "key": "43c070233b5d3d1c94fc3bbf1761a8a4d77f0bfa784ad96fef2d18131dcf2c71", "sentence": "nitrile glovs extnded cuff 30cm XL"}
+{"answer": {"sku": "TAPE-PAP-12"}, "case_id": "WFS-0218-3", "key": "e5398b6eea80ac1dfbae49dcebc959d4abce88fc159bd0b0f52049f3c16f2035", "sentence": "microporous papper tape 1.25 cm x 9.1 m"}
+{"answer": {"sku": "SAL-30"}, "case_id": "WFS-0219-1", "key": "7d110e181e0a01406357e31718a86c1fab42bd1cb99a4b6b87c4f28d8fa54046", "sentence": "salne 0.9% single-dse 30 ml"}
+{"answer": {"sku": "SUP-WRIST-M"}, "case_id": "WFS-0219-3", "key": "307742502d2aedba795c9d221f0d1e7936eaebe9105a3cb8450c408a9a979e0d", "sentence": "medium wrist support elastic"}
+{"answer": {"sku": "GLV-NIT-L"}, "case_id": "WFS-0220-1", "key": "92d4b9b638b84a332bed499dd5b658c313a777d294612622b49f57958303cce5", "sentence": "nitrile powder-free gloves L, box 100"}
+{"answer": {"sku": "COUCH-50"}, "case_id": "WFS-0220-2", "key": "1a8b329bb19b8bca1ad21253fe646061d4af12cbd2f64b5c464b8e965b7efaa4", "sentence": "50 cm exam couch paper rolls"}
+{"answer": {"sku": null}, "case_id": "WFS-0221-1", "key": "0b43e79a70ba525037c087054fa13a00e7493ad5520c04cb35f571b13cd4c97f", "sentence": "eye patch sterile"}
+{"answer": {"sku": "SLING-ARM"}, "case_id": "WFS-0221-2", "key": "4a40390409d257fd3dae9e29181938d99207c4c5aa2740a501726592997c51ad", "sentence": "adjustable sling for arm"}
+{"answer": {"sku": null}, "case_id": "WFS-0223-1", "key": "35afc0305a48b2bccfe35d0893e17f42825b6b78f88b7de2881ab45810598b4d", "sentence": "hearing aid battery size 10"}
+{"answer": {"sku": "TOURNIQ"}, "case_id": "WFS-0223-2", "key": "83d8a0588636bdb31c3c7209df47439186418d9537f6914e543c85d01b174704", "sentence": "single use tourniquets"}
+{"answer": {"sku": "EYE-WASH-500"}, "case_id": "WFS-0224-1", "key": "828e3cd074e7e2e78b597a9d9329f0ae3014eb37d13a415913f0bc22265a08da", "sentence": "eyewash bottle 500ml"}
+{"answer": {"sku": "GLV-SURG-LTX-7.5"}, "case_id": "WFS-0224-2", "key": "b881ef747dc434d55702e2cd48962e88bb6a70747e8a1326cb144a84906fce98", "sentence": "surgical latex gloves 7.5"}
+{"answer": {"sku": "WIPE-ALC-100"}, "case_id": "WFS-0225-1", "key": "9147873645e8d4fb5efa3b40e5d209be46606aaf17751510bbd349818249d9df", "sentence": "canister of alcohol surface wipes"}
+{"answer": {"sku": "PLST-KIDS"}, "case_id": "WFS-0225-2", "key": "86f0b9bcaec5385ac1109bf4b89c896a5412b67f641cc11be7e1e455b30f30d2", "sentence": "childrens plastrs with drawins"}

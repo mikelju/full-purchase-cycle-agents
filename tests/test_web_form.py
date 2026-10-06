@@ -195,3 +195,27 @@ def test_resume_after_match_stores_once_without_model(seeded_db, recordings, tmp
     assert (first["calls"], first["next"], first["orders"]) == (2, ["store"], 0)
     second = _step(*args, "second", "")
     assert (second["calls"], second["next"], second["orders"]) == (0, [], 1)
+
+
+def test_demo_command_prints_matching_order_and_reply(tmp_path, no_network, capsys):
+    from purchase_cycle.cli import main
+
+    code = main(["--db", str(tmp_path / "b.db"), "web-form-demo", "--checkpoints", str(tmp_path / "c.db")])
+    out = capsys.readouterr().out
+    assert code == 0, out
+    assert '1. "GLV-NIT-M" x 40 -> GLV-NIT-M  (deterministic)' in out
+    assert '3. "cotton rounds" x 6 -> COT-PADS  (model)' in out
+    assert '6. "compressor nebuliser machine" x 1 -> no match  (model)' in out
+    assert "stored order: 1" in out
+    assert "Order total: 379.94 EUR" in out
+    assert no_network == []
+
+
+def test_demo_command_reports_a_rejected_submission(tmp_path, capsys):
+    from purchase_cycle.cli import main
+
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps(_submission(customer_code="CLI-999")), encoding="utf-8")
+    code = main(["--db", str(tmp_path / "b.db"), "web-form-demo", str(bad), "--checkpoints", str(tmp_path / "c.db")])
+    assert code == 1
+    assert "field 'customer_code': unknown customer code 'CLI-999'" in capsys.readouterr().out
