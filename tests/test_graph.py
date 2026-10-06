@@ -107,8 +107,14 @@ def test_replay_mode_forces_tracing_off(monkeypatch):
         get_env_var.cache_clear()
 
 
-def test_resume_needs_a_known_thread(tmp_path, monkeypatch, capsys):
+def test_resume_needs_a_known_thread(tmp_path, monkeypatch, capsys, request):
+    from langsmith.utils import get_env_var
+
     monkeypatch.setattr(cli, "load_dotenv", lambda: None)
+    # The CLI turns tracing off for replay; restore the variables and the LangSmith cache afterwards.
+    for name in ("LANGSMITH_TRACING_V2", "LANGCHAIN_TRACING_V2", "LANGSMITH_TRACING", "LANGCHAIN_TRACING"):
+        monkeypatch.delenv(name, raising=False)
+    request.addfinalizer(get_env_var.cache_clear)
     base = ["--db", str(tmp_path / "business.db"), "demo", "--resume", "--checkpoints", str(tmp_path / "cp.db")]
     with pytest.raises(SystemExit) as stopped:
         cli.main(base)

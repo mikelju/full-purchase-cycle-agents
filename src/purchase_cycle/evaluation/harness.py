@@ -216,23 +216,21 @@ def load_baseline(path: Path) -> dict | None:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
 
-def save_baseline(path: Path, mode: str, split: str, summary: dict, results: list[dict]) -> float | None:
-    meets = all(summary[m]["value"] >= DEFAULT_THRESHOLD for m in METRICS)
-    threshold = DEFAULT_THRESHOLD if meets else None
+def save_baseline(path: Path, mode: str, split: str, summary: dict, results: list[dict]) -> None:
+    """Store the baseline; it is only called once both metrics reach the default threshold."""
     payload = {
         "model": MODEL_ID,
         "dataset_version": DATASET_VERSION,
         "measured_at": date.today().isoformat(),
         "mode": mode,
         "split": split,
-        "threshold": threshold,
+        "threshold": DEFAULT_THRESHOLD,
         "threshold_rule": "95% if both metrics reach 95% on the test split; otherwise the owner decides (deviation)",
         "metrics": {m: {k: summary[m][k] for k in ("value", "low", "high", "hits", "n")} for m in METRICS},
         "cases": {r["id"]: {"sku": r["sku"], "quantity": r["quantity"], **{m: r[m] for m in METRICS}} for r in results},
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=1, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
-    return threshold
 
 
 def evaluate(

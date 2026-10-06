@@ -37,27 +37,42 @@ This file is the durable state: a new session resumes from here and from Git.
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
 | 1 | clean-context subagent | `main..085cb68` | correctness, tests, security, documentation | 16: 12 fixed, 4 deferred | closed |
+| 2 | clean-context subagent | `085cb68..5e35f30` | correctness, tests, security, documentation | 5 minor: 4 fixed, 1 accepted as a limitation | closed |
+
+Severities follow the sdd-review scale: blocking, important, minor; security findings map Critical and High to blocking, Medium to important and Low to minor.
 
 Round 1 findings:
 
 | # | Severity | Finding | Decision | Where |
 |---|---|---|---|---|
-| 1 | High | README claimed the owner audit was already done | fixed | `README.md` |
-| 2 | High | The regression gate always failed with `--split dev` | fixed: skipped when the split differs from the baseline split | `evaluation/harness.py`, `tests/test_eval.py` |
-| 3 | Medium | Empty `PURCHASE_CYCLE_DB` or `PURCHASE_CYCLE_CHECKPOINTS` broke sqlite | fixed: falls back to the default path | `config.py`, `tests/test_config.py` |
-| 4 | High | `LANGSMITH_TRACING=false` had no effect because of `lru_cache`, and the contrast set was traced in live mode | fixed: `tracing_context` and cache clear | `config.py`, `evaluation/harness.py`, `tests/test_eval.py` |
-| 5 | High | C13 marked met despite the 429 answers | fixed: met with limitation | this plan, Results |
-| 6 | Low | `demo --resume` without `--thread-id` ended in a traceback | fixed: argument error and missing checkpoint message | `cli.py` |
-| 7 | High | `--set-baseline` accepted live mode and overwrote the baseline when the threshold failed | fixed: record mode only, baseline kept on failure | `evaluation/harness.py`, `tests/test_eval.py` |
-| 8 | Medium | `evaluate` swallowed target exceptions behind a misleading message | fixed: errors reported apart from missing cases | `evaluation/harness.py`, `tests/test_eval.py` |
-| 9 | Medium | `eval-upload` did not compare the remote content | fixed: compares case ids | `evaluation/harness.py`, `tests/test_eval.py` |
-| 10 | Low | Placeholder description in `pyproject.toml` | fixed | `pyproject.toml` |
-| 11 | Low | `.claude/relevo/` was not ignored | fixed | `.gitignore` |
-| 12 | Medium | No tests of `report_audit` or of dataset and sentence batch coherence | fixed | `tests/test_audit.py`, `tests/test_dataset.py` |
-| 13 | Low | Synthetic phone numbers use a realistic Spanish format | deferred (SEC-001) | `docs/security.md` |
-| 14 | Low | The owner's personal email appears in `pyproject.toml` authors | deferred (SEC-002) | `docs/security.md` |
-| 15 | Low | Recordings are never pruned | deferred | `evals/recordings/` |
-| 16 | Low | Empty "no write" assertion in `tests/test_llm.py` until phase 02 adds writes | deferred to phase 02 | `tests/test_llm.py` |
+| 1 | blocking | README claimed the owner audit was already done | fixed | `README.md` |
+| 2 | blocking | The regression gate always failed with `--split dev` | fixed: skipped when the split differs from the baseline split | `evaluation/harness.py`, `tests/test_eval.py` |
+| 3 | important | Empty `PURCHASE_CYCLE_DB` or `PURCHASE_CYCLE_CHECKPOINTS` broke sqlite | fixed: falls back to the default path | `config.py`, `tests/test_config.py` |
+| 4 | blocking | `LANGSMITH_TRACING=false` had no effect because of `lru_cache`, and the contrast set was traced in live mode | fixed: `tracing_context` and cache clear | `config.py`, `evaluation/harness.py`, `tests/test_eval.py` |
+| 5 | blocking | C13 marked met despite the 429 answers | fixed: met with limitation | this plan, Results |
+| 6 | minor | `demo --resume` without `--thread-id` ended in a traceback | fixed: argument error and missing checkpoint message | `cli.py` |
+| 7 | blocking | `--set-baseline` accepted live mode and overwrote the baseline when the threshold failed | fixed: record mode only, baseline kept on failure | `evaluation/harness.py`, `tests/test_eval.py` |
+| 8 | important | `evaluate` swallowed target exceptions behind a misleading message | fixed: errors reported apart from missing cases | `evaluation/harness.py`, `tests/test_eval.py` |
+| 9 | important | `eval-upload` did not compare the remote content | fixed: compares case ids | `evaluation/harness.py`, `tests/test_eval.py` |
+| 10 | minor | Placeholder description in `pyproject.toml` | fixed | `pyproject.toml` |
+| 11 | minor | `.claude/relevo/` was not ignored | fixed | `.gitignore` |
+| 12 | important | No tests of `report_audit` or of dataset and sentence batch coherence | fixed | `tests/test_audit.py`, `tests/test_dataset.py` |
+| 13 | minor | Synthetic phone numbers use a realistic Spanish format | deferred (SEC-001) | `docs/security.md` |
+| 14 | minor | The owner's personal email appears in `pyproject.toml` authors | deferred (SEC-002) | `docs/security.md` |
+| 15 | minor | Recordings are never pruned | deferred | `evals/recordings/` |
+| 16 | minor | Empty "no write" assertion in `tests/test_llm.py` until phase 02 adds writes | deferred to phase 02 | `tests/test_llm.py` |
+
+Round 2 findings (0 blocking, 0 important):
+
+| # | Severity | Finding | Decision | Where |
+|---|---|---|---|---|
+| 1 | minor | The round 1 table used High, Medium and Low instead of the review scale | fixed | this plan |
+| 2 | minor | `docs/security.md` did not use the required table | fixed | `docs/security.md` |
+| 3 | minor | `save_baseline` kept a dead null-threshold branch after the caller started checking the threshold | fixed | `evaluation/harness.py` |
+| 4 | minor | `test_resume_needs_a_known_thread` leaked the tracing variables written by `configure_tracing` | fixed: variables restored by `monkeypatch` and LangSmith cache cleared | `tests/test_graph.py` |
+| 5 | minor | `eval-upload` compares only case ids, so a changed sentence without a `DATASET_VERSION` bump leaves stale remote content | accepted as a documented limitation | `evaluation/harness.py` |
+
+Not confirmed at runtime: that `tracing_context(enabled=False)` silences LangChain tracers inside graph nodes; it was verified by reading code only.
 
 ## Results
 Per criterion: command or path run, observed result and pointer to the evidence.
