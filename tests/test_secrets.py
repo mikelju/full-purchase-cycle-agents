@@ -41,7 +41,7 @@ def test_example_lists_every_variable_without_values():
 def test_tracked_files_and_recordings_hold_no_keys():
     for name in _tracked():
         path = ROOT / name
-        if path.suffix in {".png", ".jpg", ".ico"} or not path.is_file():
+        if path.suffix in {".png", ".jpg", ".ico"} or not path.is_file() or path == Path(__file__):
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
         assert not SECRET_PATTERNS.search(text), f"possible secret in {name}"
