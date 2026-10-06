@@ -83,9 +83,9 @@ def cmd_web_form_demo(args) -> int:
         graph_input = None
     else:
         try:
-            with open(args.submission, encoding="utf-8") as fh:
+            with open(args.submission, encoding="utf-8-sig") as fh:
                 graph_input = {"submission": json.load(fh)}
-        except (OSError, json.JSONDecodeError) as error:
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
             print(f"Error: cannot read submission file {args.submission}: {error}", file=sys.stderr)
             return 1
     try:
@@ -131,7 +131,7 @@ def main(argv=None) -> int:
     demo.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
 
     web = sub.add_parser("web-form-demo", help="run the web form order subgraph on a submission file")
-    web.add_argument("submission", nargs="?", default=str(DEMO_SUBMISSION))
+    web.add_argument("submission", nargs="?", help=f"submission JSON file (default: {DEMO_SUBMISSION.name})")
     web.add_argument("--mode", choices=config.MODES, default="replay")
     web.add_argument("--thread-id", help="checkpoint thread to start or resume")
     web.add_argument("--resume", action="store_true", help="continue the thread from its last checkpoint")
@@ -146,6 +146,10 @@ def main(argv=None) -> int:
         demo.error("--resume needs --thread-id of the thread to continue")
     if args.command == "web-form-demo" and args.resume and not args.thread_id:
         web.error("--resume needs --thread-id of the thread to continue")
+    if args.command == "web-form-demo":
+        if args.resume and args.submission:
+            web.error("--resume continues the stored submission of the thread; do not pass a submission file")
+        args.submission = args.submission or str(DEMO_SUBMISSION)
     config.configure_tracing(getattr(args, "mode", "replay"))
     handlers = {"seed": cmd_seed, "demo": cmd_demo, "web-form-demo": cmd_web_form_demo}
     return (handlers.get(args.command) or args.handler)(args)

@@ -9,6 +9,7 @@ import os
 import sys
 import tempfile
 from collections import defaultdict
+from contextvars import ContextVar
 from datetime import date
 from pathlib import Path
 
@@ -27,6 +28,7 @@ SUITE = "web_form_matching"
 BASELINE_PATH = EVALS_DIR / "baselines" / "web_form_matching.json"
 METRIC = "product_accuracy"
 DETERMINISTIC_CATEGORIES = wf.SCRIPT_CATEGORIES
+_submission_calls: ContextVar[list[int]] = ContextVar("submission_calls")
 
 
 def langsmith_dataset_name(split: str) -> str:
@@ -54,16 +56,34 @@ def to_form(submission: dict) -> dict:
     }
 
 
-def run_submission(graph, submission: dict) -> list[dict]:
+class _CountingClient:
+    """Delegates to the model client and counts the calls of the submission running in this context."""
+
+    def __init__(self, client: ModelClient):
+        self._client = client
+
+    def extract(self, *args, **kwargs):
+        counter = _submission_calls.get(None)
+        if counter is not None:
+            counter[0] += 1
+        return self._client.extract(*args, **kwargs)
+
+
+def run_submission(graph, submission: dict) -> tuple[list[dict], int]:
+    """Grade the lines of one submission; the int counts the model calls of a submission whose answer the schema rejected."""
+    counter = [0]
+    token = _submission_calls.set(counter)
     try:
         state = graph.invoke({"submission": to_form(submission)})
     except InvalidModelOutput as error:
-        return [grade(line, None, None, str(error)) for line in submission["lines"]]
+        return [grade(line, None, None, str(error)) for line in submission["lines"]], counter[0]
+    finally:
+        _submission_calls.reset(token)
     if state.get("errors"):
-        return [grade(line, None, None, "; ".join(state["errors"])) for line in submission["lines"]]
+        return [grade(line, None, None, "; ".join(state["errors"])) for line in submission["lines"]], 0
     return [
         grade(line, got["sku"], got["source"]) for line, got in zip(submission["lines"], state["lines"], strict=True)
-    ]
+    ], 0
 
 
 def _new_graph(mode: str, recordings_path: Path, db_path: Path):
@@ -71,28 +91,30 @@ def _new_graph(mode: str, recordings_path: Path, db_path: Path):
     db.seed(conn)
     client = ModelClient(mode, db.catalog_rows(conn), recordings_path, task=MATCHING)
     conn.close()
-    return client, build_web_form_graph(client, db_path)
+    return client, build_web_form_graph(_CountingClient(client), db_path)
 
 
-def run_submissions(graph, subs: list[dict], workers: int) -> list[dict]:
+def run_submissions(graph, subs: list[dict], workers: int) -> tuple[list[dict], int]:
     with ContextThreadPoolExecutor(max_workers=workers) as pool:
-        return [r for rows in pool.map(lambda s: run_submission(graph, s), subs) for r in rows]
+        graded = list(pool.map(lambda s: run_submission(graph, s), subs))
+    return [r for rows, _ in graded for r in rows], sum(calls for _, calls in graded)
 
 
-def run_experiment(graph, subs: list[dict], split: str, mode: str, workers: int) -> tuple[list[dict], str]:
+def run_experiment(graph, subs: list[dict], split: str, mode: str, workers: int) -> tuple[list[dict], str, int]:
     """Run the submissions through LangSmith `evaluate` so the run is logged as an experiment."""
     from langsmith import Client
 
     by_id = {s["submission_id"]: s for s in subs}
-    results, errors = {}, {}
+    results, errors, invalid_calls = {}, {}, {}
 
     def target(inputs: dict) -> dict:
         try:
-            rows = run_submission(graph, by_id[inputs["submission_id"]])
+            rows, calls = run_submission(graph, by_id[inputs["submission_id"]])
         except Exception as error:
             errors[inputs["submission_id"]] = repr(error)
             raise
         results[inputs["submission_id"]] = rows
+        invalid_calls[inputs["submission_id"]] = calls
         return {"skus": [r["sku"] for r in rows], "errors": [r["error"] for r in rows]}
 
     def line_accuracy(outputs: dict, reference_outputs: dict) -> dict:
@@ -122,7 +144,8 @@ def run_experiment(graph, subs: list[dict], split: str, mode: str, workers: int)
         )
     if problems:
         raise RuntimeError("; ".join(problems))
-    return [r for s in subs for r in results[s["submission_id"]]], experiment.experiment_name
+    rows = [r for s in subs for r in results[s["submission_id"]]]
+    return rows, experiment.experiment_name, sum(invalid_calls.values())
 
 
 def rate(hits: int, n: int) -> dict:
@@ -266,10 +289,10 @@ def evaluate(
         experiment = None
         try:
             if log_experiment:
-                results, experiment = run_experiment(graph, subs, split, mode, workers)
+                results, experiment, invalid_calls = run_experiment(graph, subs, split, mode, workers)
             else:
                 with tracing_context(enabled=False):
-                    results = run_submissions(graph, subs, workers)
+                    results, invalid_calls = run_submissions(graph, subs, workers)
         except MissingRecording as error:
             print(f"Error: {error}", file=sys.stderr)
             return 2
@@ -297,9 +320,15 @@ def evaluate(
             f"tokens: calls={len(client.usage)}  uncached_input={total['input_tokens']}  cache_read={total['cache_read']}  cache_write={total['cache_creation']}  output={total['output_tokens']}"
         )
 
+    if invalid_calls:
+        print(f"model calls in submissions with a schema-invalid answer: {invalid_calls}")
+
     failures = absolute_gates(summary, calls, threshold) + (regression[0] if regression else [])
-    if sum(calls.values()) != client.calls:
-        failures.append(f"the report counts {sum(calls.values())} model calls but the client made {client.calls}")
+    attributed = sum(calls.values()) + invalid_calls
+    if attributed != client.calls:
+        failures.append(
+            f"the client made {client.calls} model calls but {attributed} are attributed to a graded line or an invalid answer"
+        )
     if set_baseline and not meets:
         print(
             "STOP: Haiku did not reach 95% line product accuracy; the stored baseline was not changed and the owner decides the threshold or another model (deviation)."

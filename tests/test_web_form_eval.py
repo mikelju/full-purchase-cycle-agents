@@ -115,3 +115,41 @@ def test_submission_accuracy_needs_every_line_right():
     summary = web_form_eval.summarise(results)
     assert (summary["submission_accuracy"]["hits"], summary["submission_accuracy"]["n"]) == (1, 2)
     assert (summary["product_accuracy"]["hits"], summary["product_accuracy"]["n"]) == (2, 3)
+
+
+def test_unattributed_model_calls_fail_the_gate(monkeypatch, capsys):
+    # One model call of the run is missing from the report, as a hidden call would be.
+    count = web_form_eval.model_calls
+    monkeypatch.setattr(
+        web_form_eval, "model_calls", lambda results: {**count(results), "typo": count(results)["typo"] - 1}
+    )
+    assert web_form_eval.evaluate("replay", "test") == 1
+    out = capsys.readouterr().out
+    assert (
+        "GATE FAILED: the client made 312 model calls but 311 are attributed to a graded line or an invalid answer"
+        in out
+    )
+
+
+def test_schema_invalid_answer_does_not_trip_the_call_gate(baseline_copy, tmp_path, capsys):
+    texts = {line["product_text"] for line in wf.load_dataset() if line["split"] == "test"}
+    rows = [json.loads(line) for line in MATCHING_RECORDINGS_PATH.read_text(encoding="utf-8").splitlines() if line]
+    row = next(r for r in rows if r["sentence"] in texts)
+    row["answer"] = {"bogus": 1}
+    invalid = tmp_path / "invalid.jsonl"
+    invalid.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    web_form_eval.evaluate("replay", "test", recordings_path=invalid, baseline_path=baseline_copy(threshold=0.0))
+    out = capsys.readouterr().out
+    assert "rejected by schema" in out
+    assert "model calls in submissions with a schema-invalid answer:" in out
+    assert "GATE FAILED: the client made" not in out
+
+
+def test_upload_command_uploads_both_suites_and_keeps_the_worst_exit(monkeypatch):
+    from purchase_cycle.cli import main
+
+    uploaded = []
+    monkeypatch.setattr(harness, "upload_datasets", lambda: uploaded.append("order_line_extraction") or 0)
+    monkeypatch.setattr(web_form_eval, "upload_datasets", lambda: uploaded.append("web_form_matching") or 1)
+    assert main(["eval-upload"]) == 1
+    assert uploaded == ["order_line_extraction", "web_form_matching"]

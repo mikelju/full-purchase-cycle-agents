@@ -269,3 +269,50 @@ def test_demo_command_reports_unreadable_files_and_missing_threads(tmp_path, cap
     assert "cannot read submission file" in capsys.readouterr().err
     assert main([*base, "--thread-id", "none", "--resume", "--checkpoints", str(tmp_path / "c.db")]) == 1
     assert "no checkpoint found for thread none" in capsys.readouterr().err
+
+
+def test_demo_command_reports_missing_and_non_utf8_files(tmp_path, capsys):
+    from purchase_cycle.cli import main
+
+    utf16 = tmp_path / "utf16.json"
+    utf16.write_text(json.dumps(SUBMISSION), encoding="utf-16")
+    base = ["--db", str(tmp_path / "b.db"), "web-form-demo"]
+    for path in (tmp_path / "missing.json", utf16):
+        assert main([*base, str(path), "--checkpoints", str(tmp_path / "c.db")]) == 1
+        assert f"Error: cannot read submission file {path}" in capsys.readouterr().err
+
+
+def test_demo_command_accepts_a_utf8_file_with_bom(tmp_path, capsys):
+    from purchase_cycle.cli import DEMO_SUBMISSION, main
+
+    bom = tmp_path / "bom.json"
+    bom.write_text(DEMO_SUBMISSION.read_text(encoding="utf-8"), encoding="utf-8-sig")
+    code = main(["--db", str(tmp_path / "b.db"), "web-form-demo", str(bom), "--checkpoints", str(tmp_path / "c.db")])
+    assert code == 0, capsys.readouterr()
+    assert "stored order: 1" in capsys.readouterr().out
+
+
+def test_demo_command_rejects_resume_with_a_submission_file(tmp_path, capsys):
+    from purchase_cycle.cli import DEMO_SUBMISSION, main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main(["web-form-demo", str(DEMO_SUBMISSION), "--thread-id", "T1", "--resume"])
+    assert exit_info.value.code == 2
+    assert "do not pass a submission file" in capsys.readouterr().err
+
+
+def test_demo_command_saves_recordings_when_the_run_fails(tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import main
+    from purchase_cycle.llm import MissingRecording
+
+    saved = []
+
+    def missing(*args, **kwargs):
+        raise MissingRecording("no recording")
+
+    monkeypatch.setattr(ModelClient, "extract", missing)
+    monkeypatch.setattr(ModelClient, "save_recordings", lambda self: saved.append(self) or 0)
+    code = main(["--db", str(tmp_path / "b.db"), "web-form-demo", "--checkpoints", str(tmp_path / "c.db")])
+    assert code == 1
+    assert "Error: no recording" in capsys.readouterr().err
+    assert len(saved) == 1

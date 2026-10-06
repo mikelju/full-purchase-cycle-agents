@@ -59,7 +59,7 @@ uv run purchase-cycle demo "Could you send 6 bottles of 70% alcohol, 250 ml?" --
 The minimal graph has two nodes: `extract` asks Claude Haiku 4.5 for the product SKU and quantity, validated by a Pydantic schema, and `match` loads the product from the database.
 The default `--mode replay` answers from stored recordings; `--mode live` calls the model and `--mode record` also stores the answer.
 The catalog part of the prompt is cached, and the demo prints the cached tokens it read.
-Every run is checkpointed in `data/checkpoints.db` under a `thread_id`; `--thread-id <id> --resume` continues a stopped run from its last checkpoint without calling the model again.
+Every run is checkpointed in `data/checkpoints.db` under a `thread_id`; `--thread-id <id> --resume` continues a run stopped after a node completed, for example after `extract`, from that checkpoint without calling the model again; a run stopped inside `extract` calls the model again.
 With the LangSmith variables set, live runs appear in LangSmith with one span per node; replay runs never send traces.
 
 ## Run the web form demo
@@ -80,7 +80,8 @@ The `web_form_order` subgraph has four nodes:
 
 The demo prints, per line, the matched SKU and whether it came from deterministic matching or the model, then the stored order number and the reply.
 `--mode replay` (the default) needs no key, because the sample file reuses texts of the evaluation dataset; `--mode live` calls the model and prints the cached tokens.
-Every run is checkpointed in `data/checkpoints.db` under a `thread_id`; `--thread-id <id> --resume` continues a stopped run from its last checkpoint, so the order is stored once and the lines already matched are not sent to the model again.
+Every run is checkpointed in `data/checkpoints.db` under a `thread_id`; `--thread-id <id> --resume` continues a run stopped after a node completed, for example after `match`, from that checkpoint, so the order is stored once and the matched lines are not sent to the model again.
+A run stopped inside `match` (an API error, a missing recording or Ctrl+C) re-runs `match` on resume and sends its model lines again.
 
 ## Run the tests
 
