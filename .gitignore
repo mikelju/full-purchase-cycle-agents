@@ -1,0 +1,12 @@
+.evidence/
+.runtime/
+.lavish/
+.claude/settings.local.json
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.env
+.env.*
+!.env.example

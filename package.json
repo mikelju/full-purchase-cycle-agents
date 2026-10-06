@@ -1,0 +1,17 @@
+{
+  "name": "full-purchase-cycle-agents",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lavish": "lavish-axi",
+    "github": "gh-axi",
+    "check": "npm ls --depth=0 && node .claude/hooks/test-hooks.mjs"
+  },
+  "devDependencies": {
+    "gh-axi": "0.1.35",
+    "lavish-axi": "0.1.76"
+  }
+}

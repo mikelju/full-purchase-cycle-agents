@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Titulo corto: lo que se decide, no "Informe" -->
+<title>Cambio NNN - Decisiones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Copia de .agents/skills/lavish/references/estilo.css junto a este archivo -->
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<main>
+  <p class="antetitulo">Cambio NNN · rama <code>cambio-NNN-nombre</code></p>
+  <h1>Qué hay que decidir</h1>
+  <p class="lead">Una o dos frases de contexto. El detalle largo va en el chat o en el documento del cambio, no aquí.</p>
+
+  <!-- Opcional: hasta tres cifras que resumen el estado. Cada una se entiende sola:
+       titulo que dice que se cuenta y valor con su unidad ("3 de 5 pasos"), nunca "3 / 5" suelto. -->
+  <section class="cifras">
+    <div class="tarjeta"><div class="cifra-t">Pasos del plan terminados</div><div class="cifra-v">3 de 5</div><div class="cifra-d">faltan la revisión y la PR</div></div>
+    <div class="tarjeta"><div class="cifra-t">Pruebas</div><div class="cifra-v">Todas pasan</div><div class="cifra-d">273 casos</div></div>
+    <div class="tarjeta"><div class="cifra-t">Preguntas para ti</div><div class="cifra-v">2</div><div class="cifra-d">en esta página</div></div>
+  </section>
+
+  <!-- Opcional: estado en filas con etiqueta; colores: e-verde hecho, e-rojo retirado o fallo, e-ambar pendiente, e-azul informativo, e-gris neutro -->
+  <h2>Estado</h2>
+  <div class="tarjeta">
+    <div class="fila"><div>Elemento<small>Una línea de explicación.</small></div><span class="etiqueta e-verde">hecho</span></div>
+    <div class="fila"><div>Otro elemento<small>Una línea de explicación.</small></div><span class="etiqueta e-ambar">pendiente</span></div>
+  </div>
+
+  <!-- Una pregunta por tarjeta: opción recomendada primero y marcada; un botón que añade la respuesta -->
+  <h2>Tus decisiones</h2>
+  <p class="suave">Marca una opción y pulsa «Añadir respuesta» en cada pregunta; al final, <b>Send to Agent</b> en el panel de Lavish.</p>
+
+  <!-- El titulo y los value deben entenderse sin ver la pagina: llegan al agente tal cual.
+       Para elegir varias opciones, usa checkbox con el mismo name: se envian todas las marcadas. -->
+  <form class="tarjeta pregunta" data-lavish-question="p1" onsubmit="responder(event, 'p1', 'La pregunta, en una frase')">
+    <h3>1. La pregunta, en una frase</h3>
+    <p class="suave">Por qué importa y qué cambia según la respuesta.</p>
+    <label class="opcion"><input type="radio" name="p1" value="Opción A: qué implica" checked><span><b>Opción A</b><span class="recomendada">Recomendada</span><small>Qué implica.</small></span></label>
+    <label class="opcion"><input type="radio" name="p1" value="Opción B: qué implica"><span><b>Opción B</b><small>Qué implica.</small></span></label>
+    <textarea name="nota" placeholder="Comentario opcional"></textarea>
+    <div class="acciones"><span class="en-cola" hidden>Añadida al panel</span><button type="submit">Añadir respuesta</button></div>
+  </form>
+
+  <p class="pie">Página temporal: lo que decidas queda en el documento del cambio.</p>
+</main>
+<script>
+// Añade (o sustituye, por queueKey) la respuesta de una pregunta a la cola de Lavish.
+// El aviso solo dice que se añadio desde esta pagina: lo que va en cola lo muestra el panel de Lavish.
+function responder(event, id, titulo) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const datos = new FormData(form);
+  const valor = datos.getAll(id).join("; ");
+  const nota = (datos.get("nota") || "").trim();
+  if (!valor) return;
+  const texto = `${titulo}: ${valor}${nota ? ` (${nota})` : ""}`;
+  window.lavish.queuePrompt(texto, { tag: "choice", text: texto, element: form, queueKey: id, data: { question: id, answer: valor, nota } });
+  form.querySelector(".en-cola").hidden = false;
+}
+// Cambiar la selección tras añadirla: el aviso se oculta hasta volver a añadir.
+document.addEventListener("change", (e) => {
+  const form = e.target.closest("form.pregunta");
+  if (form) form.querySelector(".en-cola").hidden = true;
+});
+</script>
+</body>
+</html>

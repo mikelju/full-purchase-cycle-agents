@@ -1,0 +1,141 @@
+/* Estilo de SDD Lite para las paginas de Lavish (aprobado por el usuario el 2026-09-24).
+   Claro, moderno y legible: fondo gris muy claro, tarjetas blancas, texto gris oscuro y
+   etiquetas de color. Se copia junto al HTML en .lavish/ y se enlaza con href="estilo.css".
+   Todo texto, etiquetas incluidas, supera un contraste de 4,5:1. Sin red, las fuentes caen a las del sistema. */
+
+:root {
+  --fondo: #f6f7f9;
+  --tarjeta: #ffffff;
+  --texto: #1f2933;
+  --suave: #52606d;
+  --borde: #e4e7eb;
+  --acento: #3b5bdb;
+  --acento-suave: #edf2ff;
+  --verde: #237032; --verde-f: #ebfbee;
+  --rojo: #c92a2a; --rojo-f: #fff5f5;
+  --ambar: #944c00; --ambar-f: #fff4e6;
+  --azul: #1864ab; --azul-f: #e7f5ff;
+  --gris: #495057; --gris-f: #f1f3f5;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+:where(.cifras, .fila, .opcion) > * { min-width: 0; }
+:where(p, li, td, th, h1, h2, h3) { overflow-wrap: anywhere; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 16px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main { max-width: 880px; margin: 0 auto; padding: 40px 16px 64px; }
+
+/* Cabecera */
+.antetitulo { color: var(--suave); font-size: 14px; margin: 0 0 6px; }
+h1 { font-size: 30px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.02em; }
+h2 { font-size: 19px; margin: 40px 0 14px; letter-spacing: -0.01em; }
+h3 { font-size: 17px; margin: 0 0 6px; }
+p { margin: 0 0 10px; }
+.lead { color: var(--suave); font-size: 17px; }
+.suave { color: var(--suave); }
+
+code {
+  font: 500 .86em "JetBrains Mono", ui-monospace, Consolas, monospace;
+  background: var(--gris-f);
+  padding: 1px 6px;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+
+/* Tarjetas */
+.tarjeta {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 4px 12px rgba(16, 24, 40, .05);
+  padding: 22px 24px;
+}
+.tarjeta + .tarjeta { margin-top: 14px; }
+
+/* Cifras destacadas */
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 28px; }
+.cifras .tarjeta { padding: 18px 20px; margin: 0; }
+.cifra-t { color: var(--suave); font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+.cifra-v { font-size: 28px; font-weight: 700; margin: 4px 0 2px; }
+.cifra-d { color: var(--suave); font-size: 14px; }
+
+/* Filas: elemento a la izquierda, etiqueta a la derecha */
+.fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 20px;
+  padding: 14px 0;
+  border-top: 1px solid var(--borde);
+  align-items: start;
+}
+.fila:first-child { border-top: 0; padding-top: 0; }
+.fila:last-child { padding-bottom: 0; }
+.fila small { display: block; color: var(--suave); font-size: 14px; }
+
+/* Etiquetas */
+.etiqueta { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.e-verde { color: var(--verde); background: var(--verde-f); }
+.e-rojo { color: var(--rojo); background: var(--rojo-f); }
+.e-ambar { color: var(--ambar); background: var(--ambar-f); }
+.e-azul { color: var(--azul); background: var(--azul-f); }
+.e-gris { color: var(--gris); background: var(--gris-f); }
+
+/* Tablas */
+.tabla { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th { text-align: left; font-size: 13px; font-weight: 600; color: var(--suave); text-transform: uppercase; letter-spacing: .03em; }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+
+/* Preguntas */
+.pregunta + .pregunta { margin-top: 16px; }
+.opcion {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  margin-top: 10px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.opcion:hover { border-color: #c5cbd3; }
+.opcion:has(input:checked) { border-color: var(--acento); background: var(--acento-suave); }
+.opcion input { margin-top: 5px; accent-color: var(--acento); }
+.opcion small { display: block; color: var(--suave); font-size: 14px; }
+.recomendada { color: var(--acento); font-size: 12.5px; font-weight: 600; margin-left: 6px; }
+textarea {
+  width: 100%;
+  margin-top: 12px;
+  min-height: 70px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--texto);
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+textarea:focus { outline: 2px solid var(--acento-suave); border-color: var(--acento); }
+.acciones { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 14px; }
+.en-cola { color: var(--verde); font-size: 14px; font-weight: 600; }
+button {
+  font: 600 15px Inter, system-ui, sans-serif;
+  color: #fff;
+  background: var(--acento);
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+
+.pie { color: var(--suave); font-size: 14px; margin-top: 36px; }

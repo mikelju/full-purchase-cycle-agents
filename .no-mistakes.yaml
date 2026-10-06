@@ -1,0 +1,29 @@
+agent: codex
+disable_project_settings: true
+no_ci: true
+commands:
+  prepare: npm ci --ignore-scripts --no-audit --no-fund
+  test: npm run check
+auto_fix:
+  rebase: 1
+  review: 1
+  test: 1
+  document: 1
+  lint: 1
+  ci: 1
+ci:
+  rerun_transient: 0
+  revalidate_repairs: true
+pr:
+  publish_intent: false
+test:
+  instructions: |
+    This is a workflow template, not a product. Check changed instructions, local links and tool contracts across the full change against its base.
+    Dependency checks do not prove product behavior or successful pipeline integration.
+    Do not invoke the coordinator or start another No Mistakes run from inside this gate.
+  evidence:
+    store_in_repo: false
+    attach_media: false
+providers:
+  github:
+    draft_pull_requests: true
