@@ -1,6 +1,8 @@
-# SDD Lite
+# Full Purchase Cycle Agents
 
-Plantilla vacía para proyectos grandes con agentes: plan maestro, fases con criterios congelados, ejecución autónoma y revisión adversarial.
+Portfolio público de orquestación multiagente con LangGraph (Python) sobre el ciclo de compra de una empresa: pedidos de clientes multicanal, presupuestos de proveedores y conciliación de facturas.
+Cada módulo es un subgrafo con demo, pruebas, evaluación y trazas; una base de datos común los une y un grafo orquestador los compone.
+Se trabaja con SDD Lite: plan maestro, fases con criterios congelados, ejecución autónoma y revisión adversarial.
 
 ## Siempre
 - Actúa como interlocutor único; para desarrollar carga `.agents/skills/sdd-lite/SKILL.md`.
@@ -28,4 +30,5 @@ Plantilla vacía para proyectos grandes con agentes: plan maestro, fases con cri
 - Skills en `.agents/skills/`: flujo, enrutado y delegación en `sdd-lite`; revisión en `sdd-review`; entrega y No Mistakes en `sdd-delivery`.
 - Plan maestro y fases: `docs/plans/`; cambios sueltos: `docs/changes/`; plantillas: `docs/templates/`.
 - Garantías: `.claude/settings.json` y `.claude/hooks/`; comprobaciones: `npm run check`.
-- Instalación, copia de la plantilla y límites: `README.md`. Entorno probado: Windows, Node.js 22, Git y GitHub CLI.
+- Producto, instalación y límites: `README.md`. Entorno: Windows, Python 3.13 con uv, Node.js 22 (solo herramientas del marco), Git y GitHub CLI.
+- Código Python en `src/`, pruebas en `tests/`, casos de evaluación en `evals/` (se crean en la fase 01).
