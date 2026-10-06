@@ -4,7 +4,7 @@ import socket
 import pytest
 
 from purchase_cycle import db
-from purchase_cycle.llm import build_system_prompt, recording_key
+from purchase_cycle.llm import EXTRACTION, build_system_prompt, recording_key
 
 SENTENCE = "Please send 40 boxes of powder-free nitrile gloves, size M"
 
@@ -23,9 +23,9 @@ def seeded_db(tmp_path):
 def write_recording(tmp_path):
     """Store one recorded answer for a sentence and return the recordings path."""
 
-    def _write(catalog, sentence, answer, case_id="TEST-1"):
+    def _write(catalog, sentence, answer, case_id="TEST-1", task=EXTRACTION):
         path = tmp_path / "recordings.jsonl"
-        key = recording_key(build_system_prompt(catalog), sentence)
+        key = recording_key(build_system_prompt(catalog, task), sentence, task)
         row = {"key": key, "case_id": case_id, "sentence": sentence, "answer": answer}
         with path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(row) + "\n")

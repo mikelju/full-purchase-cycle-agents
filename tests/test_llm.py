@@ -1,11 +1,12 @@
-"""C4 and C5: schema validation of model answers and replay without network."""
+"""C4 and C5 (phase 01) and C4 (phase 02): schema validation of model answers and replay without network."""
 
 import pytest
 
 from conftest import SENTENCE
 from purchase_cycle import db
 from purchase_cycle.graph import build_graph
-from purchase_cycle.llm import InvalidModelOutput, MissingRecording, ModelClient
+from purchase_cycle.llm import EXTRACTION, MATCHING, InvalidModelOutput, MissingRecording, ModelClient, recording_key
+from purchase_cycle.web_form import build_web_form_graph
 
 
 def test_valid_recorded_answer_is_parsed(seeded_db, write_recording, no_network):
@@ -36,6 +37,40 @@ def test_invalid_answer_is_rejected_before_any_write(seeded_db, write_recording,
     conn = db.connect(db_path)
     counts = db.row_counts(conn)
     assert (counts["orders"], counts["order_lines"]) == (0, 0)
+
+
+@pytest.mark.parametrize(
+    ("answer", "field"),
+    [({"sku": 7}, "sku"), ({}, "sku"), ({"sku": "ALC70-250", "quantity": 3}, "quantity")],
+)
+def test_invalid_matching_answer_is_rejected_before_any_write(seeded_db, write_recording, answer, field):
+    # The web form subgraph writes orders, so this is where "nothing is written" has teeth.
+    db_path, catalog = seeded_db
+    path = write_recording(catalog, "alcohol 70 250ml", answer, task=MATCHING)
+    graph = build_web_form_graph(ModelClient("replay", catalog, path, task=MATCHING), db_path)
+    submission = {
+        "submission_id": "WF-TEST",
+        "customer_code": "CLI-001",
+        "lines": [{"product": "GLV-NIT-M", "quantity": 2}, {"product": "alcohol 70 250ml", "quantity": 1}],
+    }
+    with pytest.raises(InvalidModelOutput) as raised:
+        graph.invoke({"submission": submission})
+    assert field in raised.value.fields
+    conn = db.connect(db_path)
+    counts = db.row_counts(conn)
+    assert (counts["orders"], counts["order_lines"]) == (0, 0)
+
+
+def test_tasks_keep_separate_prompts_and_recordings(seeded_db):
+    _, catalog = seeded_db
+    extraction = ModelClient("live", catalog)
+    matching = ModelClient("live", catalog, task=MATCHING)
+    assert extraction.recordings_path.name == "order_line_extraction.jsonl"
+    assert matching.recordings_path.name == "web_form_matching.jsonl"
+    assert recording_key(extraction.system_prompt, "x", EXTRACTION) != recording_key(
+        matching.system_prompt, "x", MATCHING
+    )
+    assert len(matching.system_prompt) / 4 > 4096
 
 
 def test_replay_without_recording_fails_offline(seeded_db, tmp_path, no_network):
