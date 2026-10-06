@@ -1,0 +1,41 @@
+[project]
+name = "purchase-cycle"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "mikelju", email = "mikelju@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "langchain-anthropic>=1.7.5",
+    "langgraph>=1.2.14",
+    "langgraph-checkpoint-sqlite>=3.1.1",
+    "langsmith>=0.14.4",
+    "pydantic>=2.13.5",
+    "python-dotenv>=1.2.4",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
+
+[project.scripts]
+purchase-cycle = "purchase_cycle.cli:main"
+
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP"]
+ignore = ["E501"]  # the formatter wraps code; long data rows and prompt lines stay readable
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

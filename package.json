@@ -8,7 +8,12 @@
   "scripts": {
     "lavish": "lavish-axi",
     "github": "gh-axi",
-    "check": "npm ls --depth=0 && node .claude/hooks/test-hooks.mjs"
+    "check": "npm ls --depth=0 && node .claude/hooks/test-hooks.mjs && npm run --silent check:python && npm run --silent eval",
+    "check:puerta": "node .claude/hooks/test-hooks.mjs && npm run --silent check:python",
+    "check:python": "uv run --quiet ruff check && uv run --quiet ruff format --check && uv run --quiet pytest -q",
+    "format": "uv run --quiet ruff format --quiet",
+    "eval": "uv run --quiet purchase-cycle eval --mode replay --split test",
+    "eval:live": "uv run --quiet purchase-cycle eval --mode live --split test"
   },
   "devDependencies": {
     "gh-axi": "0.1.35",
