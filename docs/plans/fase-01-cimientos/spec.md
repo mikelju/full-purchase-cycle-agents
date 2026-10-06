@@ -1,7 +1,7 @@
 # Phase 01 - Foundations: specification
 
-Status: draft
-Approved by the owner: pending
+Status: approved
+Approved by the owner: 2026-10-06
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
