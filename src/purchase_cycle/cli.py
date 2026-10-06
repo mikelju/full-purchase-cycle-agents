@@ -51,7 +51,7 @@ def cmd_demo(args) -> int:
         print("catalog: no matching product")
     for usage in client.usage:
         print(
-            f"tokens: input={usage['input_tokens']}  cache_read={usage['cache_read']}  cache_write={usage['cache_creation']}  output={usage['output_tokens']}"
+            f"tokens: uncached_input={usage['input_tokens']}  cache_read={usage['cache_read']}  cache_write={usage['cache_creation']}  output={usage['output_tokens']}"
         )
     if saved:
         print(f"recordings saved: {saved}")

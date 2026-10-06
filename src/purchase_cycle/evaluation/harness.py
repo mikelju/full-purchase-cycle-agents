@@ -267,7 +267,7 @@ def evaluate(
     if client.usage:
         total = {k: sum(u[k] for u in client.usage) for k in client.usage[0]}
         print(
-            f"tokens: calls={len(client.usage)}  input={total['input_tokens']}  cache_read={total['cache_read']}  cache_write={total['cache_creation']}  output={total['output_tokens']}"
+            f"tokens: calls={len(client.usage)}  uncached_input={total['input_tokens']}  cache_read={total['cache_read']}  cache_write={total['cache_creation']}  output={total['output_tokens']}"
         )
 
     failures = absolute_gate(summary, threshold) + regression[0]

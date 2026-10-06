@@ -110,13 +110,13 @@ class ModelClient:
         )
         message = self._model().invoke([system, HumanMessage(content=sentence)])
         args = message.tool_calls[0]["args"] if message.tool_calls else {}
-        meta = message.usage_metadata or {}
-        details = meta.get("input_token_details") or {}
+        # Raw API usage: input_tokens excludes the cached part, unlike LangChain's usage_metadata.
+        raw = message.response_metadata.get("usage") or {}
         usage = {
-            "input_tokens": meta.get("input_tokens", 0),
-            "output_tokens": meta.get("output_tokens", 0),
-            "cache_read": details.get("cache_read", 0),
-            "cache_creation": details.get("cache_creation", 0),
+            "input_tokens": raw.get("input_tokens", 0),
+            "output_tokens": raw.get("output_tokens", 0),
+            "cache_read": raw.get("cache_read_input_tokens", 0),
+            "cache_creation": raw.get("cache_creation_input_tokens", 0),
         }
         return args, usage
 
