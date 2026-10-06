@@ -40,6 +40,7 @@ Only the owner adds, removes or reorders phases; the agent proposes.
 | 2026-10-06 | LangSmith for tracing | Owner decision: native to LangGraph and new hands-on experience for the CV | Langfuse, local logs only |
 | 2026-10-06 | The evaluation in `npm run check` runs with no cost and no network | Owner decision; the mechanism is fixed in the phase 01 spec | Calling the real model on every `check` |
 | 2026-10-06 | Product documents and code in English; conversation with the owner in Spanish | Owner decision: public portfolio | Spanish documents |
+| 2026-10-06 | Fictional Spanish distributor of medical supplies and parapharmacy products selling to clinics, care homes and pharmacies, with a catalog of common products | Owner decision: close to companies that could hire the owner, with simple vocabulary | Industrial supplies, hospitality food, office supplies, drugs (too hard vocabulary) |
 | 2026-10-06 | Public GitHub repository under the MIT license | Owner decision | Private until finished; no license |
 
 ## Pending

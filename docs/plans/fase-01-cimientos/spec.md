@@ -56,14 +56,14 @@ Categories, with examples from a fictional catalog:
 
 | Category | Input sentence | Expected SKU | Expected quantity |
 |---|---|---|---|
-| Exact name | "Please send 40 units of M8 hex bolt zinc plated" | BOLT-M8-ZN | 40 |
-| Synonym or abbreviation | "I need 12 pairs of nitrile gloves size L" | GLOVE-NIT-L | 12 |
-| Quantity in words | "Could you ship two hundred cable ties, 300 mm?" | TIE-300 | 200 |
-| Unit expressions | "Two dozen safety glasses, clear lens" | GLASS-CLR | 24 |
-| Noise around the order | "Hi Laura, hope all is well. For the Bilbao site we'd need 5 safety helmets, white. Thanks!" | HELMET-WH | 5 |
-| Typo | "6 rols of duct tape grey" | TAPE-DUCT-GR | 6 |
-| Near-miss product | "30 hex bolts M10, zinc" (catalog has M8 and M10) | BOLT-M10-ZN | 30 |
-| Not in catalog | "Do you have 3 hydraulic excavators?" | null | 3 |
+| Exact name | "Please send 40 boxes of powder-free nitrile gloves, size M" | GLV-NIT-M | 40 |
+| Synonym or abbreviation | "We need 10 boxes of latex-free gloves, large" | GLV-NIT-L | 10 |
+| Quantity in words | "Could you ship twenty-five bottles of 70% alcohol, 500 ml?" | ALC70-500 | 25 |
+| Unit expressions | "Two dozen digital thermometers" | THERM-DIG | 24 |
+| Noise around the order | "Hi Laura, hope all is well. For the Bilbao care home we'd need 5 boxes of sterile gauze pads. Thanks!" | GAUZE-ST | 5 |
+| Typo | "6 boxs of FFP2 maks" | MASK-FFP2 | 6 |
+| Near-miss product | "12 bottles of 70% alcohol, the small 250 ml ones" (catalog has 250 ml and 500 ml) | ALC70-250 | 12 |
+| Not in catalog | "Do you have 3 hospital beds?" | null | 3 |
 
 ### Metrics and graders
 - Product accuracy: share of cases where the returned SKU equals the expected one, null included.
@@ -127,7 +127,9 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 
 ## Assumptions
 - The model id `claude-haiku-4-5` is kept in one configuration module.
-- Catalog and customers belong to a fictional Spanish industrial supplies company; all data, product names and sentences are in English.
+- Catalog and customers belong to a fictional Spanish distributor of medical supplies and parapharmacy products that sells to clinics, care homes and pharmacies.
+- The catalog holds 30 to 40 common, easily recognised products (gloves, masks, gauze, syringes, alcohol, thermometers, creams); no drug or active-ingredient names. Difficulty comes from how customers write, not from rare products.
+- All data, product names and sentences are in English.
 - `npm run check` keeps the existing hooks suite and adds ruff, pytest and the replay evaluation; replaying 2,000 cases takes seconds.
 - Recordings of about 2,000 answers (a few megabytes) are versioned in the repository.
 
