@@ -1,7 +1,7 @@
 # Phase 02 - Web form orders: specification
 
-Status: draft, pending owner approval
-Approved by the owner: -
+Status: approved
+Approved by the owner: 2026-10-06
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
@@ -109,15 +109,12 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 - Product texts and replies are in English, like the rest of the data.
 - Recordings for the new evaluation go to their own file under `evals/recordings/`.
 - `npm run check` stays fast: replaying both evaluations takes seconds.
+- Owner decisions of 2026-10-06:
+  - The customer types the product name by hand in the form, so the model only acts on names with no exact match.
+  - The form is simulated as a file holding the submitted data; no web page or server is built.
+  - When some lines are not recognised, the order is stored with the rest and the reply lists the missing lines.
+  - The owner reviews a sample of 60 lines of the new evaluation set (C10).
+  - The LangSmith check (C13) waits for the monthly trace quota to renew; the phase can be ready locally but does not close until the trace and the experiment are seen.
 
 ## Open decisions
-1. ¿El cliente escribe el nombre del producto a mano en el formulario, en vez de elegirlo de una lista cerrada?
-   Recomendado: Sí. Consecuencia: el modelo solo actúa con nombres que no coinciden exactamente; con una lista cerrada no haría falta IA y la fase no tendría evaluación del modelo.
-2. ¿Basta con simular el formulario como un archivo con los datos enviados, sin construir una página web?
-   Recomendado: Sí. Consecuencia: sin dependencias nuevas ni servidor; una página real podría llegar con la fase 11.
-3. ¿Si alguna línea no se reconoce, se guarda el pedido con el resto y la respuesta indica qué líneas faltan?
-   Recomendado: Sí. Consecuencia: el cliente recibe lo reconocido sin esperar, y preguntarle llega en la fase 04; con No, se rechaza el formulario entero.
-4. ¿Revisas tú una muestra de 60 líneas del nuevo conjunto de evaluación, unos 15 minutos?
-   Recomendado: Sí. Consecuencia: las etiquetas quedan avaladas por una persona, como en la fase 01; con No, solo queda la revisión automática y se retira C10.
-5. ¿Aceptas que la comprobación en LangSmith espere a que se renueve la cuota mensual de trazas?
-   Recomendado: Sí. Consecuencia: la fase puede quedar terminada en local, pero no se cierra hasta ver la traza y el experimento; con No, C13 sale de esta fase.
+None.
