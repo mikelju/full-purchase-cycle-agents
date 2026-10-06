@@ -7,8 +7,10 @@ import sys
 import textwrap
 import warnings
 
+import pytest
+
 from conftest import SENTENCE
-from purchase_cycle import config
+from purchase_cycle import cli, config
 from purchase_cycle.graph import build_graph
 from purchase_cycle.llm import ModelClient
 
@@ -91,6 +93,26 @@ def test_no_tracing_without_langsmith_variables(seeded_db, write_recording, monk
 
 
 def test_replay_mode_forces_tracing_off(monkeypatch):
-    monkeypatch.setenv("LANGSMITH_TRACING", "true")
-    config.configure_tracing("replay")
-    assert os.environ["LANGSMITH_TRACING"] == "false"
+    from langsmith.utils import get_env_var, tracing_is_enabled
+
+    for name in ("LANGSMITH_TRACING_V2", "LANGCHAIN_TRACING_V2", "LANGSMITH_TRACING", "LANGCHAIN_TRACING"):
+        monkeypatch.setenv(name, "true")
+    get_env_var.cache_clear()
+    try:
+        # LangSmith has already read and cached the variables before replay turns them off.
+        assert tracing_is_enabled() is True
+        config.configure_tracing("replay")
+        assert tracing_is_enabled() is False
+    finally:
+        get_env_var.cache_clear()
+
+
+def test_resume_needs_a_known_thread(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "load_dotenv", lambda: None)
+    base = ["--db", str(tmp_path / "business.db"), "demo", "--resume", "--checkpoints", str(tmp_path / "cp.db")]
+    with pytest.raises(SystemExit) as stopped:
+        cli.main(base)
+    assert stopped.value.code == 2
+    assert "--resume needs --thread-id" in capsys.readouterr().err
+    assert cli.main([*base, "--thread-id", "unknown"]) == 1
+    assert "no checkpoint found for thread unknown" in capsys.readouterr().err

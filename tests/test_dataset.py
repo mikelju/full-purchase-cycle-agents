@@ -84,3 +84,14 @@ def test_duplicate_sentences_are_rejected():
     plan = build_plan(SEED)[:2]
     _, rejected = ds.build_dataset(plan, {plan[0]["id"]: "Same text!", plan[1]["id"]: "same   TEXT"})
     assert any("duplicates" in e for e in rejected[plan[1]["id"]])
+
+
+def test_dataset_sentences_come_from_the_batches(cases):
+    ids = []
+    for path in sorted(ds.SENTENCES_DIR.glob("*.jsonl")):
+        ids += [row["id"] for row in read_jsonl(path)]
+    assert len(ids) == len(set(ids)), "a case is written in only one batch"
+    sentences = ds.load_sentences()
+    assert set(sentences) == {c["id"] for c in cases}
+    for case in cases:
+        assert case["sentence"] == sentences[case["id"]]

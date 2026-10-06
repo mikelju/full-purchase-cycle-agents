@@ -5,9 +5,11 @@ import os
 import sys
 import tempfile
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from pathlib import Path
+
+from langsmith import tracing_context
+from langsmith.utils import ContextThreadPoolExecutor
 
 from purchase_cycle import db
 from purchase_cycle.config import EVALS_DIR, MODEL_ID, RECORDINGS_PATH
@@ -58,7 +60,8 @@ def _new_graph(mode: str, recordings_path: Path, db_path: Path):
 
 
 def run_cases(graph, cases: list[dict], workers: int) -> list[dict]:
-    with ThreadPoolExecutor(max_workers=workers) as pool:
+    # The context-aware pool carries a surrounding `tracing_context` into the workers.
+    with ContextThreadPoolExecutor(max_workers=workers) as pool:
         return list(pool.map(lambda c: _run_one(graph, c), cases))
 
 
@@ -67,10 +70,15 @@ def run_experiment(graph, cases: list[dict], split: str, mode: str, workers: int
     from langsmith import Client
 
     by_id = {c["id"]: c for c in cases}
-    results = {}
+    results, errors = {}, {}
 
     def target(inputs: dict) -> dict:
-        result = _run_one(graph, by_id[inputs["case_id"]])
+        try:
+            result = _run_one(graph, by_id[inputs["case_id"]])
+        except Exception as error:
+            # `evaluate` logs target exceptions and carries on, so keep them for the final message.
+            errors[inputs["case_id"]] = repr(error)
+            raise
         results[inputs["case_id"]] = result
         return {"sku": result["sku"], "quantity": result["quantity"], "error": result["error"]}
 
@@ -96,10 +104,17 @@ def run_experiment(graph, cases: list[dict], split: str, mode: str, workers: int
         blocking=True,
     )
     missing = set(by_id) - set(results)
-    if missing:
-        raise RuntimeError(
-            f"LangSmith dataset {langsmith_dataset_name(split)} lacks {len(missing)} local cases; run eval-upload"
+    raised = sorted(missing & set(errors))
+    absent = missing - set(errors)
+    problems = []
+    if raised:
+        problems.append(f"{len(raised)} cases raised in the target, first {raised[0]}: {errors[raised[0]]}")
+    if absent:
+        problems.append(
+            f"LangSmith dataset {langsmith_dataset_name(split)} lacks {len(absent)} local cases; run eval-upload"
         )
+    if problems:
+        raise RuntimeError("; ".join(problems))
     return [results[c["id"]] for c in cases], experiment.experiment_name
 
 
@@ -158,6 +173,8 @@ def print_report(mode, split, summary, results, threshold, regression, baseline,
         print(f"{m:<20}{_pct(s['value']):<8}{ci:<16}{thr:<11}{result}")
     if baseline is None:
         print("regression vs baseline: no baseline stored")
+    elif regression is None:
+        print(f"regression vs baseline: skipped (the baseline holds the {baseline['split']} split, not {split})")
     else:
         parts = ", ".join(f"{m} lost {t['lost']} gained {t['gained']} p={t['p']:.2f}" for m, t in regression[1].items())
         verdict = "FAIL" if regression[0] else "no significant drop"
@@ -235,9 +252,6 @@ def evaluate(
     contrast_cases = read_jsonl(contrast_path) if contrast_path.exists() and split != "dev" else []
     if log_experiment is None:
         log_experiment = mode != "replay" and split == "test" and bool(os.environ.get("LANGSMITH_API_KEY"))
-    if mode != "replay" and not log_experiment:
-        # Development tuning stays out of LangSmith to respect the free trace allowance.
-        os.environ["LANGSMITH_TRACING"] = "false"
 
     with tempfile.TemporaryDirectory() as tmp:
         client, graph = _new_graph(mode, recordings_path, Path(tmp) / "eval.db")
@@ -246,10 +260,12 @@ def evaluate(
             if log_experiment:
                 results, experiment = run_experiment(graph, cases, split, mode, workers)
             else:
-                results = run_cases(graph, cases, workers)
+                # Development tuning stays out of LangSmith to respect the free trace allowance.
+                with tracing_context(enabled=False):
+                    results = run_cases(graph, cases, workers)
             # The contrast set is reported apart and never logged as an experiment.
-            os.environ["LANGSMITH_TRACING"] = "false"
-            contrast = run_cases(graph, contrast_cases, workers) if contrast_cases else None
+            with tracing_context(enabled=False):
+                contrast = run_cases(graph, contrast_cases, workers) if contrast_cases else None
         except MissingRecording as error:
             print(f"Error: {error}", file=sys.stderr)
             return 2
@@ -258,11 +274,18 @@ def evaluate(
 
     summary = summarise(results)
     baseline = load_baseline(baseline_path)
-    if set_baseline:
-        threshold = save_baseline(baseline_path, mode, split, summary, results)
+    meets = all(summary[m]["value"] >= DEFAULT_THRESHOLD for m in METRICS)
+    if set_baseline and meets:
+        save_baseline(baseline_path, mode, split, summary, results)
         baseline = load_baseline(baseline_path)
     threshold = baseline["threshold"] if baseline else None
-    regression = regression_gate(results, baseline) if baseline else (["no baseline stored"], {})
+    if not baseline:
+        regression = (["no baseline stored"], {})
+    elif baseline["split"] == split:
+        regression = regression_gate(results, baseline)
+    else:
+        # The stored per-case results only cover the baseline split; the threshold gate still applies.
+        regression = None
     print_report(mode, split, summary, results, threshold, regression, baseline, contrast, experiment)
     if client.usage:
         total = {k: sum(u[k] for u in client.usage) for k in client.usage[0]}
@@ -270,10 +293,10 @@ def evaluate(
             f"tokens: calls={len(client.usage)}  uncached_input={total['input_tokens']}  cache_read={total['cache_read']}  cache_write={total['cache_creation']}  output={total['output_tokens']}"
         )
 
-    failures = absolute_gate(summary, threshold) + regression[0]
-    if set_baseline and threshold is None:
+    failures = absolute_gate(summary, threshold) + (regression[0] if regression else [])
+    if set_baseline and not meets:
         print(
-            "STOP: Haiku did not reach 95% on both metrics; the owner chooses a 90% threshold or another model (deviation)."
+            "STOP: Haiku did not reach 95% on both metrics; the stored baseline was not changed and the owner chooses a 90% threshold or another model (deviation)."
         )
         return 3
     for failure in failures:
@@ -290,8 +313,15 @@ def upload_datasets(dataset_path: Path = ds.DATASET_PATH) -> int:
         name = langsmith_dataset_name(split)
         rows = [c for c in cases if c["split"] == split]
         if client.has_dataset(dataset_name=name):
-            count = sum(1 for _ in client.list_examples(dataset_name=name))
-            print(f"{name}: already uploaded with {count} examples")
+            remote = [e.inputs.get("case_id") for e in client.list_examples(dataset_name=name)]
+            if sorted(remote) != sorted(c["id"] for c in rows):
+                print(
+                    f"Error: {name} already exists in LangSmith with {len(remote)} examples whose case ids differ "
+                    f"from the {len(rows)} local cases; bump the dataset version or delete the remote dataset",
+                    file=sys.stderr,
+                )
+                return 1
+            print(f"{name}: already uploaded with {len(remote)} examples")
             continue
         dataset = client.create_dataset(
             name, description=f"Order line extraction golden dataset v{DATASET_VERSION}, {split} split (synthetic)"
@@ -325,7 +355,7 @@ def add_run_commands(sub, modes) -> None:
 
 
 def cmd_eval(args) -> int:
-    if args.set_baseline and (args.mode == "replay" or args.split != "test"):
+    if args.set_baseline and (args.mode != "record" or args.split != "test"):
         print("Error: a baseline is measured on the test split with the real model (--mode record)", file=sys.stderr)
         return 2
     return evaluate(args.mode, args.split, set_baseline=args.set_baseline, workers=args.workers)

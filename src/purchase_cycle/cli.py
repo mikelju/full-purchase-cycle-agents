@@ -32,6 +32,9 @@ def cmd_demo(args) -> int:
     thread_id = args.thread_id or uuid.uuid4().hex[:12]
     run_config = {"configurable": {"thread_id": thread_id}, "run_name": "order_line_extraction"}
     graph_input = None if args.resume else {"sentence": args.sentence}
+    if args.resume and not graph.get_state(run_config).values:
+        print(f"Error: no checkpoint found for thread {thread_id}", file=sys.stderr)
+        return 1
     try:
         state = graph.invoke(graph_input, run_config)
     except (MissingRecording, InvalidModelOutput) as error:
@@ -78,6 +81,8 @@ def main(argv=None) -> int:
     add_eval_commands(sub)
 
     args = parser.parse_args(argv)
+    if args.command == "demo" and args.resume and not args.thread_id:
+        demo.error("--resume needs --thread-id of the thread to continue")
     config.configure_tracing(getattr(args, "mode", "replay"))
     handlers = {"seed": cmd_seed, "demo": cmd_demo}
     return (handlers.get(args.command) or args.handler)(args)

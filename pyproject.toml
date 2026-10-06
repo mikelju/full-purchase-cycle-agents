@@ -1,7 +1,7 @@
 [project]
 name = "purchase-cycle"
 version = "0.1.0"
-description = "Add your description here"
+description = "Multi-agent orchestration with LangGraph over the full purchase cycle of a fictional company"
 readme = "README.md"
 authors = [
     { name = "mikelju", email = "mikelju@gmail.com" }

@@ -36,6 +36,28 @@ This file is the durable state: a new session resumes from here and from Git.
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | clean-context subagent | `main..085cb68` | correctness, tests, security, documentation | 16: 12 fixed, 4 deferred | closed |
+
+Round 1 findings:
+
+| # | Severity | Finding | Decision | Where |
+|---|---|---|---|---|
+| 1 | High | README claimed the owner audit was already done | fixed | `README.md` |
+| 2 | High | The regression gate always failed with `--split dev` | fixed: skipped when the split differs from the baseline split | `evaluation/harness.py`, `tests/test_eval.py` |
+| 3 | Medium | Empty `PURCHASE_CYCLE_DB` or `PURCHASE_CYCLE_CHECKPOINTS` broke sqlite | fixed: falls back to the default path | `config.py`, `tests/test_config.py` |
+| 4 | High | `LANGSMITH_TRACING=false` had no effect because of `lru_cache`, and the contrast set was traced in live mode | fixed: `tracing_context` and cache clear | `config.py`, `evaluation/harness.py`, `tests/test_eval.py` |
+| 5 | High | C13 marked met despite the 429 answers | fixed: met with limitation | this plan, Results |
+| 6 | Low | `demo --resume` without `--thread-id` ended in a traceback | fixed: argument error and missing checkpoint message | `cli.py` |
+| 7 | High | `--set-baseline` accepted live mode and overwrote the baseline when the threshold failed | fixed: record mode only, baseline kept on failure | `evaluation/harness.py`, `tests/test_eval.py` |
+| 8 | Medium | `evaluate` swallowed target exceptions behind a misleading message | fixed: errors reported apart from missing cases | `evaluation/harness.py`, `tests/test_eval.py` |
+| 9 | Medium | `eval-upload` did not compare the remote content | fixed: compares case ids | `evaluation/harness.py`, `tests/test_eval.py` |
+| 10 | Low | Placeholder description in `pyproject.toml` | fixed | `pyproject.toml` |
+| 11 | Low | `.claude/relevo/` was not ignored | fixed | `.gitignore` |
+| 12 | Medium | No tests of `report_audit` or of dataset and sentence batch coherence | fixed | `tests/test_audit.py`, `tests/test_dataset.py` |
+| 13 | Low | Synthetic phone numbers use a realistic Spanish format | deferred (SEC-001) | `docs/security.md` |
+| 14 | Low | The owner's personal email appears in `pyproject.toml` authors | deferred (SEC-002) | `docs/security.md` |
+| 15 | Low | Recordings are never pruned | deferred | `evals/recordings/` |
+| 16 | Low | Empty "no write" assertion in `tests/test_llm.py` until phase 02 adds writes | deferred to phase 02 | `tests/test_llm.py` |
 
 ## Results
 Per criterion: command or path run, observed result and pointer to the evidence.
@@ -46,7 +68,7 @@ Pending items, limitations and what could not be checked, stated plainly.
 | C1 | met | Clean clone at `201eecf` with Anthropic and LangSmith variables stripped and no `.env`: `uv sync` and `npm run check` exit 0 (`.evidence/fase-01/clean-clone-check.txt`, step 3). |
 | C2 | met | `tests/test_seed.py`; two `uv run purchase-cycle seed` runs print 50 customers, 303 products, 303 stock rows, 0 orders, 0 order lines (`.evidence/fase-01/seed.txt`). |
 | C3 | met | Replay demo extracts GLV-NIT-M x 40 and prints the catalog item (`.evidence/fase-01/demo-replay.txt`); live demo against Claude Haiku 4.5 gives the same result with 8,402 cached tokens (`.evidence/fase-01/demo-live-langsmith.txt`). |
-| C4 | met | `tests/test_llm.py::test_invalid_answer_is_rejected_before_any_write`; 35 pytest tests pass (`.evidence/fase-01/pytest.txt`). |
+| C4 | met | `tests/test_llm.py::test_invalid_answer_is_rejected_before_any_write`; 50 pytest tests pass (`.evidence/fase-01/pytest.txt`). |
 | C5 | met | `tests/test_llm.py::test_replay_without_recording_fails_offline` with networking blocked; the clean-clone demo shows the error naming the sentence and the `--mode record` command. |
 | C6 | met | `tests/test_graph.py::test_resume_in_new_process_skips_the_model`. |
 | C7 | pending owner | Unset case: `tests/test_graph.py::test_no_tracing_without_langsmith_variables`. Set case: the live demo trace was verified through the LangSmith API and its URL is recorded in `.evidence/fase-01/demo-live-langsmith.txt`; the owner's own link or screenshot is still missing. |
@@ -55,7 +77,7 @@ Pending items, limitations and what could not be checked, stated plainly.
 | C10 | pending owner | `evals/audit/audit-v1.0.csv` holds 150 random cases and the 60 contrast sentences; the verdict column is empty, so no label error rate exists yet. |
 | C11 | met | `npm run eval` reports both metrics with Wilson intervals globally, per category and for the contrast set, exit 0 (`.evidence/fase-01/eval-replay.txt`); `tests/test_eval.py` forces each gate to fail and checks the non-zero exit and the wiring into `check`. |
 | C12 | met | Baseline in `evals/baselines/order_line_extraction.json`: product 99.5% [99.0, 99.7], quantity 99.5% [99.0, 99.7] on 1,500 test cases, both at least 95%, so the threshold is 95%; contrast set product 98.3%, quantity 100.0%; dev split 99.6% and 99.8% (`.evidence/fase-01/eval-test-baseline.txt`, `eval-dev-record.txt`). |
-| C13 | met | Splits `order-line-extraction-v1.0-dev` (500) and `-test` (1,500) uploaded (`.evidence/fase-01/eval-upload.txt`); `npm run eval:live` logged experiment `order-line-extraction-claude-haiku-4-5-c58f4350`, product 99.5%, quantity 99.5%, no significant regression vs the baseline experiment `order-line-extraction-claude-haiku-4-5-bedb57ca` (McNemar p=1.00 on both) (`.evidence/fase-01/eval-live.txt`). Limitation: during that run LangSmith returned 429 "Monthly unique traces usage limit exceeded", so some traces of the experiment were not ingested. |
+| C13 | met with limitation | Splits `order-line-extraction-v1.0-dev` (500) and `-test` (1,500) uploaded (`.evidence/fase-01/eval-upload.txt`); the test baseline experiment `order-line-extraction-claude-haiku-4-5-bedb57ca` is complete in LangSmith. `npm run eval:live` measured product 99.5%, quantity 99.5%, no significant regression vs that baseline (McNemar p=1.00 on both) and logged experiment `order-line-extraction-claude-haiku-4-5-c58f4350` (`.evidence/fase-01/eval-live.txt`). Limitation: during that run LangSmith answered 429 "Monthly unique traces usage limit exceeded" 199 times, so the live experiment is incomplete in LangSmith; the local report covers all 1,500 cases. |
 | C14 | met | `.env` is ignored by `.gitignore` and not tracked; `tests/test_secrets.py` checks `.env.example` and scans tracked files and recordings for keys. |
 | C15 | met | README sections for setup, seed, demo, tests, dataset and evaluation; it states the dataset is synthetic. The offline path was followed in the clean clone (`.evidence/fase-01/clean-clone-check.txt`, step 4). Live steps were run in the working copy, not the clean clone, and dataset generation was not re-run. Without a key, `demo --mode live` exits 1 with a raw traceback instead of a short message. |
 
