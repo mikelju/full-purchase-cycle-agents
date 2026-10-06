@@ -76,14 +76,27 @@ def cmd_web_form_demo(args) -> int:
     graph = build_web_form_graph(client, args.db, checkpointer=sqlite_checkpointer(args.checkpoints))
     thread_id = args.thread_id or uuid.uuid4().hex[:12]
     run_config = {"configurable": {"thread_id": thread_id}, "run_name": "web_form_order"}
-    submission = json.loads(open(args.submission, encoding="utf-8").read())
+    if args.resume:
+        if not graph.get_state(run_config).values:
+            print(f"Error: no checkpoint found for thread {thread_id}", file=sys.stderr)
+            return 1
+        graph_input = None
+    else:
+        try:
+            with open(args.submission, encoding="utf-8") as fh:
+                graph_input = {"submission": json.load(fh)}
+        except (OSError, json.JSONDecodeError) as error:
+            print(f"Error: cannot read submission file {args.submission}: {error}", file=sys.stderr)
+            return 1
     try:
-        state = graph.invoke({"submission": submission}, run_config)
+        state = graph.invoke(graph_input, run_config)
     except (MissingRecording, InvalidModelOutput) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
-    saved = client.save_recordings()
-    print(f"mode={args.mode}  thread_id={thread_id}  submission={args.submission}")
+    finally:
+        saved = client.save_recordings()
+    source = "resumed from its last checkpoint" if args.resume else f"submission={args.submission}"
+    print(f"mode={args.mode}  thread_id={thread_id}  {source}")
     if state["errors"]:
         print("submission rejected, nothing stored:")
         for error in state["errors"]:
@@ -120,7 +133,8 @@ def main(argv=None) -> int:
     web = sub.add_parser("web-form-demo", help="run the web form order subgraph on a submission file")
     web.add_argument("submission", nargs="?", default=str(DEMO_SUBMISSION))
     web.add_argument("--mode", choices=config.MODES, default="replay")
-    web.add_argument("--thread-id", help="checkpoint thread of the run")
+    web.add_argument("--thread-id", help="checkpoint thread to start or resume")
+    web.add_argument("--resume", action="store_true", help="continue the thread from its last checkpoint")
     web.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
 
     from purchase_cycle.evaluation.cli import add_eval_commands
@@ -130,6 +144,8 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     if args.command == "demo" and args.resume and not args.thread_id:
         demo.error("--resume needs --thread-id of the thread to continue")
+    if args.command == "web-form-demo" and args.resume and not args.thread_id:
+        web.error("--resume needs --thread-id of the thread to continue")
     config.configure_tracing(getattr(args, "mode", "replay"))
     handlers = {"seed": cmd_seed, "demo": cmd_demo, "web-form-demo": cmd_web_form_demo}
     return (handlers.get(args.command) or args.handler)(args)

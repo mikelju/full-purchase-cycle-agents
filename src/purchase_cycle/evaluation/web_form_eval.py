@@ -18,6 +18,7 @@ from langsmith.utils import ContextThreadPoolExecutor
 from purchase_cycle import db
 from purchase_cycle.config import EVALS_DIR, MATCHING_RECORDINGS_PATH, MODEL_ID
 from purchase_cycle.evaluation import web_form_dataset as wf
+from purchase_cycle.evaluation.harness import ALPHA, DEFAULT_THRESHOLD
 from purchase_cycle.evaluation.stats import mcnemar_exact, wilson_interval
 from purchase_cycle.llm import MATCHING, InvalidModelOutput, MissingRecording, ModelClient
 from purchase_cycle.web_form import build_web_form_graph
@@ -25,8 +26,6 @@ from purchase_cycle.web_form import build_web_form_graph
 SUITE = "web_form_matching"
 BASELINE_PATH = EVALS_DIR / "baselines" / "web_form_matching.json"
 METRIC = "product_accuracy"
-DEFAULT_THRESHOLD = 0.95
-ALPHA = 0.05
 DETERMINISTIC_CATEGORIES = wf.SCRIPT_CATEGORIES
 
 
@@ -119,7 +118,7 @@ def run_experiment(graph, subs: list[dict], split: str, mode: str, workers: int)
     if absent:
         problems.append(
             f"LangSmith dataset {langsmith_dataset_name(split)} lacks {len(absent)} local submissions; "
-            "run web-form-eval-upload"
+            "run eval-upload --suite web_form_matching"
         )
     if problems:
         raise RuntimeError("; ".join(problems))
@@ -299,6 +298,8 @@ def evaluate(
         )
 
     failures = absolute_gates(summary, calls, threshold) + (regression[0] if regression else [])
+    if sum(calls.values()) != client.calls:
+        failures.append(f"the report counts {sum(calls.values())} model calls but the client made {client.calls}")
     if set_baseline and not meets:
         print(
             "STOP: Haiku did not reach 95% line product accuracy; the stored baseline was not changed and the owner decides the threshold or another model (deviation)."

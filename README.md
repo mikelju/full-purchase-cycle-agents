@@ -69,7 +69,7 @@ uv run purchase-cycle web-form-demo
 uv run purchase-cycle web-form-demo examples/web_form_submission.json --mode live
 ```
 
-The web form is simulated as a JSON submission file: a submission id, a customer code and 1 to 20 lines, each with the product text the customer typed and a quantity in catalog sale units.
+The web form is simulated as a JSON submission file: a submission id, a customer code and 1 to 20 lines, each with the product text the customer typed (up to 200 characters) and a quantity in catalog sale units.
 The default file is `examples/web_form_submission.json`.
 The `web_form_order` subgraph has four nodes:
 
@@ -80,7 +80,7 @@ The `web_form_order` subgraph has four nodes:
 
 The demo prints, per line, the matched SKU and whether it came from deterministic matching or the model, then the stored order number and the reply.
 `--mode replay` (the default) needs no key, because the sample file reuses texts of the evaluation dataset; `--mode live` calls the model and prints the cached tokens.
-Every run is checkpointed in `data/checkpoints.db` under a `thread_id`; a test interrupts the subgraph after `match` and restarts it in a new process with the same `thread_id`, and the order is stored once with no new model call.
+Every run is checkpointed in `data/checkpoints.db` under a `thread_id`; `--thread-id <id> --resume` continues a stopped run from its last checkpoint, so the order is stored once and the lines already matched are not sent to the model again.
 
 ## Run the tests
 
@@ -140,8 +140,8 @@ The gates are:
 `uv run purchase-cycle eval --suite web_form_matching` runs only the new evaluation (`--suite order_line_extraction` only the first one; the default is `all`).
 The Claude Haiku 4.5 baseline on the web form test split is 99.6% line product accuracy (95% interval 98.5% to 99.9%, 2 failures in 468 lines), so its threshold is 95%.
 
-`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload --suite <name>` uploads the splits of one evaluation once).
-Other useful forms: `uv run purchase-cycle eval --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
+`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of both evaluations once; `--suite <name>` uploads one).
+Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
 Recordings in `evals/recordings/` are tied to the exact prompt and model: changing either needs a new recording and a new comparison against the baseline.
 
 ## Limits

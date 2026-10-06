@@ -19,13 +19,15 @@ from purchase_cycle.llm import ModelClient
 CHANNEL = "web_form"
 STATUS = "received"
 MAX_LINES = 20
+MAX_PRODUCT_TEXT = 200  # bounds what one line can send to the model
+MAX_QUANTITY = 2**63 - 1  # largest integer SQLite stores
 
 
 class FormLine(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    product: str = Field(min_length=1, description="Product as the customer typed it")
-    quantity: int = Field(gt=0, strict=True, description="Quantity in catalog sale units")
+    product: str = Field(min_length=1, max_length=MAX_PRODUCT_TEXT, description="Product as the customer typed it")
+    quantity: int = Field(gt=0, le=MAX_QUANTITY, strict=True, description="Quantity in catalog sale units")
 
 
 class Submission(BaseModel):

@@ -350,8 +350,8 @@ def add_run_commands(sub, modes) -> None:
     )
     run.set_defaults(handler=cmd_eval)
     upload = sub.add_parser("eval-upload", help="upload the dataset splits to LangSmith")
-    upload.add_argument("--suite", choices=SUITES, default="order_line_extraction")
-    upload.set_defaults(handler=lambda args: _suite(args.suite).upload_datasets())
+    upload.add_argument("--suite", choices=(*SUITES, "all"), default="all", help="splits to upload (default: all)")
+    upload.set_defaults(handler=cmd_upload)
 
 
 SUITES = ("order_line_extraction", "web_form_matching")
@@ -363,6 +363,11 @@ def _suite(name: str):
 
         return web_form_eval
     return sys.modules[__name__]
+
+
+def cmd_upload(args) -> int:
+    names = SUITES if args.suite == "all" else (args.suite,)
+    return max(_suite(name).upload_datasets() for name in names)
 
 
 def cmd_eval(args) -> int:

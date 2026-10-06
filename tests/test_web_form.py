@@ -8,8 +8,9 @@ import textwrap
 import pytest
 
 from purchase_cycle import db
+from purchase_cycle.graph import sqlite_checkpointer
 from purchase_cycle.llm import MATCHING, ModelClient
-from purchase_cycle.web_form import MAX_LINES, build_web_form_graph, catalog_index, match_key
+from purchase_cycle.web_form import MAX_LINES, MAX_PRODUCT_TEXT, build_web_form_graph, catalog_index, match_key
 
 ALCOHOL = "alcohol 70 250ml"
 BED = "hospital bed"
@@ -74,6 +75,8 @@ def _submission(**changes):
         (_submission(lines=[{"product": "GLV-NIT-M", "quantity": -2}]), "lines.0.quantity"),
         (_submission(lines=[{"product": "GLV-NIT-M", "quantity": 2.5}]), "lines.0.quantity"),
         (_submission(lines=[{"product": "GLV-NIT-M", "quantity": "3"}]), "lines.0.quantity"),
+        (_submission(lines=[{"product": "x" * (MAX_PRODUCT_TEXT + 1), "quantity": 1}]), "lines.0.product"),
+        (_submission(lines=[{"product": "GLV-NIT-M", "quantity": 2**63}]), "lines.0.quantity"),
     ],
 )
 def test_invalid_submission_is_rejected_without_model_or_rows(seeded_db, recordings, submission, field):
@@ -153,6 +156,16 @@ def test_store_is_one_transaction(seeded_db, recordings):
     assert _rows(seeded_db[0]) == ([], [])
 
 
+def test_model_sku_outside_the_catalog_is_not_matched(seeded_db, write_recording):
+    _, catalog = seeded_db
+    write_recording(catalog, ALCOHOL, {"sku": "ALC70-250"}, task=MATCHING)
+    path = write_recording(catalog, BED, {"sku": "BED-HOSP-01"}, task=MATCHING)
+    _, graph = _graph(seeded_db, path)
+    state = graph.invoke({"submission": SUBMISSION})
+    assert [line["sku"] for line in state["lines"]] == ["GLV-NIT-M", "ALC70-250", None]
+    assert [line["sku"] for line in _rows(seeded_db[0])[1]] == ["GLV-NIT-M", "ALC70-250"]
+
+
 def test_reply_uses_stored_rows_and_database_prices(seeded_db, recordings):
     _, graph = _graph(seeded_db, recordings)
     assert graph.invoke({"submission": SUBMISSION})["reply"] == EXPECTED_REPLY
@@ -219,3 +232,40 @@ def test_demo_command_reports_a_rejected_submission(tmp_path, capsys):
     code = main(["--db", str(tmp_path / "b.db"), "web-form-demo", str(bad), "--checkpoints", str(tmp_path / "c.db")])
     assert code == 1
     assert "field 'customer_code': unknown customer code 'CLI-999'" in capsys.readouterr().out
+
+
+def test_demo_command_resumes_a_thread_without_model_calls(tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import DEMO_SUBMISSION, main
+
+    db_path, checkpoints = tmp_path / "b.db", tmp_path / "c.db"
+    conn = db.connect(db_path)
+    db.seed(conn)
+    client = ModelClient("replay", db.catalog_rows(conn), task=MATCHING)
+    conn.close()
+    graph = build_web_form_graph(client, db_path, sqlite_checkpointer(checkpoints), interrupt_after=["match"])
+    submission = json.loads(DEMO_SUBMISSION.read_text(encoding="utf-8"))
+    graph.invoke({"submission": submission}, {"configurable": {"thread_id": "T1"}})
+    assert client.calls == 4
+
+    def no_model(*args, **kwargs):
+        raise AssertionError("the resumed run called the model")
+
+    monkeypatch.setattr(ModelClient, "extract", no_model)
+    args = ["--db", str(db_path), "web-form-demo", "--thread-id", "T1", "--resume", "--checkpoints", str(checkpoints)]
+    assert main(args) == 0
+    out = capsys.readouterr().out
+    assert "resumed from its last checkpoint" in out
+    assert "stored order: 1" in out
+    assert len(_rows(db_path)[0]) == 1
+
+
+def test_demo_command_reports_unreadable_files_and_missing_threads(tmp_path, capsys):
+    from purchase_cycle.cli import main
+
+    bad = tmp_path / "bad.json"
+    bad.write_text("{not json", encoding="utf-8")
+    base = ["--db", str(tmp_path / "b.db"), "web-form-demo"]
+    assert main([*base, str(bad), "--checkpoints", str(tmp_path / "c.db")]) == 1
+    assert "cannot read submission file" in capsys.readouterr().err
+    assert main([*base, "--thread-id", "none", "--resume", "--checkpoints", str(tmp_path / "c.db")]) == 1
+    assert "no checkpoint found for thread none" in capsys.readouterr().err

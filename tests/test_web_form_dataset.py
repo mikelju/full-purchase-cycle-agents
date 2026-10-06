@@ -74,7 +74,9 @@ def test_dataset_lines_pass_validation_and_labels_come_from_the_plan():
         }
 
 
-def test_second_pass_review_covers_every_written_line():
-    written = {line["id"] for line in wf.load_dataset() if line["category"] in wf.WRITTEN_CATEGORIES}
-    reviewed = {row["id"] for row in read_jsonl(wf.REVIEW_PATH)}
-    assert written == reviewed
+def test_second_pass_review_covers_and_agrees_with_every_written_line():
+    written = {line["id"]: line for line in wf.load_dataset() if line["category"] in wf.WRITTEN_CATEGORIES}
+    reviews = read_jsonl(wf.REVIEW_PATH)
+    assert {row["id"] for row in reviews} == set(written)
+    disagreements = [r["id"] for r in reviews if r["ambiguous"] or r["sku"] != written[r["id"]]["expected_sku"]]
+    assert disagreements == []

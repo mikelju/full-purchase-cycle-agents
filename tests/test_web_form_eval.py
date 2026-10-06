@@ -5,9 +5,11 @@ import json
 
 import pytest
 
+from purchase_cycle import db, web_form
 from purchase_cycle.config import MATCHING_RECORDINGS_PATH
 from purchase_cycle.evaluation import harness, web_form_eval
 from purchase_cycle.evaluation import web_form_dataset as wf
+from purchase_cycle.llm import MATCHING, build_system_prompt, recording_key
 
 
 @pytest.fixture
@@ -29,8 +31,10 @@ def test_replay_evaluation_passes_and_reports(capsys):
     for text in ("line_product_accuracy", "submission_accuracy", "95% CI", "per category:", "regression vs baseline"):
         assert text in out
     # C3: the deterministic categories never reach the model.
-    for category in wf.SCRIPT_CATEGORIES:
-        assert "model calls 0" in next(line for line in out.splitlines() if line.strip().startswith(category))
+    for category in wf.CATEGORIES:
+        row = next(line for line in out.splitlines() if line.strip().startswith(category))
+        expected = 0 if category in wf.SCRIPT_CATEGORIES else 78
+        assert row.endswith(f"model calls {expected}")
 
 
 def test_absolute_gate_failure_exits_non_zero(baseline_copy, capsys):
@@ -43,6 +47,27 @@ def test_model_calls_in_deterministic_categories_fail_the_gate():
     summary = {"product_accuracy": {"value": 1.0}}
     failures = web_form_eval.absolute_gates(summary, {"exact_name": 0, "sku_typed": 2, "typo": 30}, 0.95)
     assert failures == ["sku_typed made 2 model calls; deterministic categories must make none"]
+
+
+def test_deterministic_lines_sent_to_the_model_fail_the_evaluation(tmp_path, monkeypatch, capsys):
+    # Break deterministic matching and record the right SKU for every script line, so only the call gate can fail.
+    monkeypatch.setattr(web_form, "catalog_index", lambda catalog: {})
+    conn = db.connect(tmp_path / "catalog.db")
+    db.seed(conn)
+    prompt = build_system_prompt(db.catalog_rows(conn), MATCHING)
+    conn.close()
+    rows = MATCHING_RECORDINGS_PATH.read_text(encoding="utf-8")
+    for line in wf.load_dataset():
+        if line["split"] == "test" and line["category"] in wf.SCRIPT_CATEGORIES:
+            key = recording_key(prompt, line["product_text"], MATCHING)
+            row = {"key": key, "sentence": line["product_text"], "answer": {"sku": line["expected_sku"]}}
+            rows += json.dumps(row) + "\n"
+    recordings = tmp_path / "recordings.jsonl"
+    recordings.write_text(rows, encoding="utf-8")
+    assert web_form_eval.evaluate("replay", "test", recordings_path=recordings) == 1
+    out = capsys.readouterr().out
+    assert "GATE FAILED: exact_name made 78 model calls; deterministic categories must make none" in out
+    assert "GATE FAILED: sku_typed made 78 model calls" in out
 
 
 def test_regression_gate_failure_exits_non_zero(baseline_copy, tmp_path, capsys):
