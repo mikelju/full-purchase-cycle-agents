@@ -5,13 +5,13 @@ Approved by the owner: pending
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
-Leave a runnable Python project where the cross-cutting mechanisms every later phase relies on already work end to end: shared database, LLM client, persistent graph state, tracing and evaluation.
+Leave a runnable Python project where the cross-cutting mechanisms every later phase relies on already work end to end: shared database, LLM client, persistent graph state, tracing and a professional evaluation harness.
 A minimal graph proves them together, so phases 02 onwards only add business logic.
-It is needed now because every module depends on these pieces and they are cheaper to get right once, on a small graph.
+The evaluation harness and the synthetic golden dataset generator built here are reused by every later module.
 
 ## Scope
 In:
-- Python 3.13 project managed with uv (`pyproject.toml`, `uv.lock`), package under `src/`, tests under `tests/`, evaluation cases under `evals/`.
+- Python 3.13 project managed with uv (`pyproject.toml`, `uv.lock`), package under `src/`, tests under `tests/`, evaluation assets under `evals/`.
 - Shared SQLite database with the tables the orders module needs: customers, products (catalog), stock, orders and order lines.
 - Seed command with fictional data: at least 30 products and 10 customers, idempotent on re-run.
 - One configuration point for the model: Claude Haiku 4.5 through `langchain-anthropic`, with structured output validated by Pydantic.
@@ -19,15 +19,77 @@ In:
 - Minimal graph "order line extraction": free text in, structured line (product and quantity) out, matched against the catalog in the database.
 - LangGraph checkpoints in SQLite (`langgraph-checkpoint-sqlite`), so a run identified by `thread_id` can be inspected and resumed.
 - LangSmith tracing enabled by environment variables; without them everything works and nothing is sent.
-- Evaluation harness: cases in a versioned file, metrics, thresholds and a readable report; runs in replay mode inside `npm run check` and in live mode on demand.
-- `.env.example` documenting every variable, and README sections for setup, demo, tests and evaluation.
+- Synthetic golden dataset of about 2,000 cases, generated with Claude Opus 5.5 with labels fixed by construction, validated automatically and audited by the owner on a random sample.
+- Evaluation harness: deterministic graders, Wilson confidence intervals, per-category results, an absolute threshold gate and a regression gate against a stored baseline; replay mode inside `npm run check`, live mode on demand.
+- LangSmith Datasets and Experiments: the dataset splits are uploaded and every live evaluation is logged as an experiment.
+- `.env.example` documenting every variable, and README sections for setup, demo, tests, dataset generation and evaluation.
 - Python tooling: pytest for tests and ruff for lint and format, wired into `npm run check` and the `format` script.
 
 Out:
 - Real input channels (web form, email, WhatsApp) and replies to customers: phases 02 to 05.
 - Questions to the customer, human approvals and interrupts: phase 04 onwards.
 - Retry and failure-recovery policies beyond checkpoint resumption: phase 05.
-- Graphical interface, CI on GitHub Actions and LangSmith hosted datasets or experiments.
+- LLM-as-judge graders: they come with free-text outputs in later phases.
+- Graphical interface and CI on GitHub Actions.
+
+## Evaluation design
+
+### Task under evaluation
+An `extract` node sends the customer sentence and the catalog (SKU, name and sale unit of every product) to the model, which returns `sku` (or null when nothing in the catalog fits) and `quantity` in catalog sale units.
+A `match` node checks that the SKU exists in the database and loads the catalog item.
+
+### Golden dataset
+- Size: at least 2,000 cases, in eight categories of at least 200 cases each.
+- Split: a fixed, stratified split of 500 development cases and 1,500 test cases.
+  Development cases may be inspected while tuning the prompt; test cases are not inspected case by case during tuning.
+  Published figures always come from the test split.
+- Labels by construction: the generator first picks the expected SKU (or an out-of-catalog item) and the quantity, then asks Claude Opus 5.5 to write a sentence for that pair with the category's trap.
+  The expected answer is therefore decided before the sentence exists.
+- Every case records its id, category, split, sentence, expected SKU, expected quantity and the generator version.
+- Automatic validation rejects and regenerates a case when the expected SKU does not exist, the quantity is not a positive integer, the sentence duplicates another one after normalisation, or a category rule fails (for example, a digit in a "quantity in words" case).
+- Owner audit: 150 cases drawn at random are reviewed by the owner in a review file; the observed label error rate and its Wilson interval are reported.
+- Contrast set: 60 hand-curated sentences written outside the generator pipeline and reviewed by the owner in the same audit; reported separately, with no threshold, to show the gap between synthetic and hand-written cases.
+- The README states that the dataset is synthetic and how it was built.
+
+Categories, with examples from a fictional catalog:
+
+| Category | Input sentence | Expected SKU | Expected quantity |
+|---|---|---|---|
+| Exact name | "Please send 40 units of M8 hex bolt zinc plated" | BOLT-M8-ZN | 40 |
+| Synonym or abbreviation | "I need 12 pairs of nitrile gloves size L" | GLOVE-NIT-L | 12 |
+| Quantity in words | "Could you ship two hundred cable ties, 300 mm?" | TIE-300 | 200 |
+| Unit expressions | "Two dozen safety glasses, clear lens" | GLASS-CLR | 24 |
+| Noise around the order | "Hi Laura, hope all is well. For the Bilbao site we'd need 5 safety helmets, white. Thanks!" | HELMET-WH | 5 |
+| Typo | "6 rols of duct tape grey" | TAPE-DUCT-GR | 6 |
+| Near-miss product | "30 hex bolts M10, zinc" (catalog has M8 and M10) | BOLT-M10-ZN | 30 |
+| Not in catalog | "Do you have 3 hydraulic excavators?" | null | 3 |
+
+### Metrics and graders
+- Product accuracy: share of cases where the returned SKU equals the expected one, null included.
+- Quantity accuracy: share of cases where the returned quantity equals the expected one exactly.
+- Both are graded deterministically by exact match and reported with a 95% Wilson interval, globally and per category, plus the list of failures grouped by category.
+
+### Gates
+- Absolute gate: each metric on the test split must reach the threshold.
+  The threshold is set from the baseline measured in this phase: 95% if both metrics reach at least 95% on the test split; otherwise execution stops and the owner chooses between a 90% threshold or another model, recorded as a deviation.
+- Regression gate: per-case results are compared with the stored baseline using an exact McNemar test; a statistically significant drop (p < 0.05) on either metric fails.
+- In replay mode both gates give the same result on every run; they break when code changes how answers are parsed or matched, or when new recordings are worse than the baseline.
+
+### Report
+Printed by `npm run eval` (illustrative numbers):
+
+```
+order_line_extraction  mode=replay  split=test  cases=1500
+metric              value   95% CI          threshold  result
+product_accuracy    96.1%   [95.0, 97.0]    95.0%      PASS
+quantity_accuracy   98.4%   [97.6, 98.9]    95.0%      PASS
+regression vs baseline 2026-10-xx: no significant change (McNemar p=0.62)
+per category (product_accuracy):
+  near_miss          91.2%  [86.9, 94.2]
+  typo               95.6%  [92.0, 97.6]
+  ...
+contrast set (hand-curated, n=60): product 93.3%, quantity 96.7%
+```
 
 ## Acceptance criteria
 Frozen on approval. Changing them requires a deviation approved by the owner.
@@ -41,59 +103,30 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 | C5 | In `replay` mode a call with no recording fails with an error that names the case and how to record it, and makes no network call | Pytest test with networking blocked |
 | C6 | A run interrupted after the extraction node and restarted in a new process with the same `thread_id` continues from the checkpoint without calling the model again | Pytest test that runs the graph in two separate processes and counts model calls |
 | C7 | With the LangSmith variables set, a live run appears in the configured LangSmith project with one span per graph node; with them unset, no tracing request is made and no warning is printed | Owner checks the trace in LangSmith (link or screenshot as evidence); pytest test for the unset case |
-| C8 | `npm run eval` runs at least 15 cases in replay mode, covering the six categories listed in "Evaluation design", prints per-metric results against thresholds and exits non-zero if any metric is below its threshold; it is part of `npm run check` | Run the command; a test with a deliberately wrong expected value proves the non-zero exit |
-| C9 | Evaluation metrics and thresholds: product match accuracy at least 90% and exact quantity accuracy at least 90%, measured on the recorded answers of the real model | Report printed by `npm run eval`, saved as evidence |
-| C10 | `npm run eval:live` runs the same cases against the real model and prints the same report | One run with the owner's key; output saved as evidence |
-| C11 | No secret is versioned: `.env` is ignored, `.env.example` lists every variable with no values, and recordings contain no keys or auth headers | `git ls-files` review and a pytest test that scans the recordings |
-| C12 | The README explains in English how to set up, seed, run the demo, run tests and run the evaluation in replay and live mode | Follow the README step by step in a clean clone |
-
-## Evaluation design
-What the minimal graph does: an `extract` node sends the customer sentence and the catalog (SKU and name of every product) to the model, which returns a structured answer with `sku` (or null when nothing in the catalog fits) and `quantity`; a `match` node checks that the SKU exists in the database and loads the catalog item.
-
-Each case in `evals/order_line_extraction.jsonl` holds an id, a category, the input sentence and the expected result.
-Example cases, with fictional catalog items:
-
-| Category | Input sentence | Expected SKU | Expected quantity |
-|---|---|---|---|
-| Exact name | "Please send 40 units of M8 hex bolt zinc plated" | BOLT-M8-ZN | 40 |
-| Synonym or abbreviation | "I need 12 pairs of nitrile gloves size L" | GLOVE-NIT-L | 12 |
-| Quantity in words | "Could you ship two hundred cable ties, 300 mm?" | TIE-300 | 200 |
-| Noise around the order | "Hi Laura, hope all is well. For the Bilbao site we'd need 5 safety helmets, white. Thanks!" | HELMET-WH | 5 |
-| Typo | "6 rols of duct tape grey" | TAPE-DUCT-GR | 6 |
-| Not in catalog | "Do you have 3 hydraulic excavators?" | null | 3 |
-
-Metrics, computed over all cases:
-- Product accuracy: share of cases where the returned SKU equals the expected one, null included; threshold 90%.
-- Quantity accuracy: share of cases where the returned quantity equals the expected one exactly; threshold 90%.
-With 15 cases, 90% means at most one miss per metric.
-
-Report printed by `npm run eval` (illustrative numbers):
-
-```
-order_line_extraction  mode=replay  cases=15
-metric               value   threshold  result
-product_accuracy     93.3%   90.0%      PASS
-quantity_accuracy   100.0%   90.0%      PASS
-failures:
-  case-05 typo: expected TAPE-DUCT-GR, got null
-```
-
-The process exits with code 1 if any metric fails, so `npm run check` fails too.
-In replay mode the answers are the recorded real answers, so the result is the same on every run and costs nothing; it breaks when code changes how answers are parsed or matched, and a prompt change without re-recording fails with the missing-recording error of C5.
-`npm run eval:live` measures the model again on the same cases; `record` mode refreshes the recordings after a deliberate prompt or model change.
-Later phases grow this dataset and add their own ones.
+| C8 | The versioned golden dataset holds at least 2,000 cases in the eight categories, at least 200 per category, with a fixed stratified split of 500 development and 1,500 test cases, and every case passes the automatic validation | Pytest test over the dataset file; generator command output saved as evidence |
+| C9 | The generator fixes the expected SKU and quantity before the sentence is written, and re-running it with the same seed and recorded generator answers reproduces the same dataset | Pytest test on a small generation in replay mode; code review of the generation order |
+| C10 | The owner audit of 150 random cases finds at most 2 wrong labels, and the report shows the observed label error rate with its Wilson interval | Review file completed by the owner and the computed rate, saved as evidence |
+| C11 | `npm run eval` in replay mode reports both metrics with 95% Wilson intervals on the test split, globally and per category, plus the contrast set, and exits non-zero when the absolute gate or the regression gate fails; it is part of `npm run check` | Run the command; pytest tests that force each gate to fail prove the non-zero exit |
+| C12 | The baseline of Claude Haiku 4.5 on the test split is measured, stored with its per-case results, and the threshold is set by the rule in "Gates" | Stored baseline file and the report of the live run, saved as evidence |
+| C13 | `npm run eval:live` runs the cases against the real model, prints the same report and logs an experiment in LangSmith against the uploaded dataset splits | One run with the owner's keys; LangSmith dataset and experiment links as evidence |
+| C14 | No secret is versioned: `.env` is ignored, `.env.example` lists every variable with no values, and recordings contain no keys or auth headers | `git ls-files` review and a pytest test that scans the recordings |
+| C15 | The README explains in English how to set up, seed, run the demo, run tests, generate the dataset and run the evaluation in replay and live mode, and states that the dataset is synthetic | Follow the README step by step in a clean clone |
 
 ## Constraints and risks
-- New dependencies, approved with this spec: `langgraph`, `langchain-anthropic`, `langgraph-checkpoint-sqlite`, `pydantic`, `langsmith`, `python-dotenv`, `pytest` and `ruff`; any other one is asked first.
-- Recording answers and C3, C7 and C10 need the owner's Anthropic and LangSmith API keys in `.env`; the agent never reads that file. Expected cost of recording and live runs: well under one euro.
-- Replay recordings are tied to the exact prompt and model; changing either requires re-recording, and the evaluation then measures the new answers.
-- Thresholds in C9 are set before seeing real results; if the real model falls below them, it is a deviation for the owner, not a silent change.
+- New dependencies, approved with this spec: `langgraph`, `langchain-anthropic`, `anthropic`, `langgraph-checkpoint-sqlite`, `pydantic`, `langsmith`, `python-dotenv`, `pytest` and `ruff`; Wilson intervals and the McNemar test are computed without extra libraries; any other dependency is asked first.
+- Generation, recording and live runs need the owner's Anthropic and LangSmith API keys in `.env`; the agent never reads that file.
+- Expected cost of the phase: under 20 USD (generation with Opus 5.5 once, recording 2,000 Haiku answers, a few live runs); the Message Batches API halves the cost where latency allows.
+- The owner's audit takes about 45 minutes and blocks C10.
+- Generator and evaluated model belong to the same family; categories and traps are defined by us, not by the generator, and the contrast set shows the gap.
+- Replay recordings are tied to the exact prompt and model; changing either requires re-recording and a new comparison against the baseline.
+- If Haiku does not reach 95% on the test split, execution stops for the owner's decision; thresholds are never lowered silently.
 - Windows is the reference environment; paths and process handling must work there.
 
 ## Assumptions
-- The model id used is the current Anthropic id for Claude Haiku 4.5, kept in one configuration constant.
-- Catalog and customers belong to a fictional Spanish industrial supplies company; all data, product names and evaluation sentences are in English.
-- `npm run check` keeps the existing hooks suite and adds ruff, pytest and the replay evaluation.
+- Model ids are kept in one configuration module: `claude-haiku-4-5` for extraction and `claude-opus-5-5` for generation.
+- Catalog and customers belong to a fictional Spanish industrial supplies company; all data, product names and sentences are in English.
+- `npm run check` keeps the existing hooks suite and adds ruff, pytest and the replay evaluation; replaying 2,000 cases takes seconds.
+- Recordings of about 2,000 answers (a few megabytes) are versioned in the repository.
 
 ## Open decisions
-None blocking. The owner provides the two API keys before execution.
+None blocking. The owner provides the two API keys before execution and completes the audit when the dataset is ready.
