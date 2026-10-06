@@ -17,14 +17,14 @@ Base: branch `fase-01-cimientos`, commit `ac3c83a` plus the merge of `main` with
 Each increment leaves the product working and covers concrete criteria.
 This file is the durable state: a new session resumes from here and from Git.
 
-- [ ] 1. uv project, ruff, pytest and `npm run check` wiring; `.env.example` (C1, C14) - evidence:
-- [ ] 2. SQLite schema and idempotent seed with 300+ products in about 30 families and 50+ customers (C2) - evidence:
-- [ ] 3. Model client: schema, cached catalog prompt, live, record and replay modes (C4, C5) - evidence:
-- [ ] 4. Extraction graph with SQLite checkpoints, demo command and tracing switch (C3, C6, C7) - evidence:
-- [ ] 5. Seeded dataset planner and automatic validation (C8, C9) - evidence:
-- [ ] 6. Sentences written in batches, dataset build and second-pass label review (C8) - evidence:
-- [ ] 7. Contrast set, owner audit file and audit report (C10) - evidence:
-- [ ] 8. Evaluation harness: graders, Wilson, McNemar, gates, report, replay inside `check` (C11) - evidence:
+- [x] 1. uv project, ruff, pytest and `npm run check` wiring; `.env.example` (C1, C14) - evidence: `npm run check:python` green; `tests/test_secrets.py`.
+- [x] 2. SQLite schema and idempotent seed with 300+ products in about 30 families and 50+ customers (C2) - evidence: `tests/test_seed.py`; two seed runs print 303 products, 50 customers, 303 stock rows (`.evidence/fase-01/seed.txt`).
+- [x] 3. Model client: schema, cached catalog prompt, live, record and replay modes (C4, C5) - evidence: `tests/test_llm.py`; live calls read 8,402 cached tokens per call (raw API usage).
+- [x] 4. Extraction graph with SQLite checkpoints, demo command and tracing switch (C3, C6, C7) - evidence: `tests/test_graph.py`; replay demo in `.evidence/fase-01/demo-replay.txt`; live demo extracted GLV-NIT-M x 40. LangSmith trace pending (EU endpoint).
+- [x] 5. Seeded dataset planner and automatic validation (C8, C9) - evidence: `tests/test_dataset.py`.
+- [x] 6. Sentences written in batches, dataset build and second-pass label review (C8) - evidence: 4 writer batches of 500 passed `dataset check`; build rejected 1 duplicate (OLX-1996), rewritten; blind relabelling of all 2,000 cases by 4 clean-context agents agreed on every case (`second_pass_review.jsonl`), and their transcripts show no access to labelled files.
+- [ ] 7. Contrast set, owner audit file and audit report (C10) - evidence: contrast set of 60 written by hand; `evals/audit/audit-v1.0.csv` created; waiting for the owner's verdicts.
+- [ ] 8. Evaluation harness: graders, Wilson, McNemar, gates, report, replay inside `check` (C11) - evidence: `tests/test_stats.py`; dev split recorded: product 99.6%, quantity 99.8% (`.evidence/fase-01/eval-dev-record.txt`); gate tests need the test baseline.
 - [ ] 9. Prompt tuning on dev, recordings, Haiku baseline on test and threshold rule (C12) - evidence:
 - [ ] 10. LangSmith datasets and experiments, `eval:live` (C13, C7) - evidence:
 - [ ] 11. README, secret scan and fresh-clone run (C1, C14, C15) - evidence:
