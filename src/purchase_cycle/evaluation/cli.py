@@ -52,6 +52,15 @@ def add_eval_commands(sub) -> None:
     build = dsub.add_parser("build", help="join plan and sentences, validate and write the dataset")
     build.set_defaults(handler=cmd_dataset_build)
 
+    from purchase_cycle.evaluation import audit
+
+    audit_parser = sub.add_parser("audit", help="owner audit of dataset labels")
+    asub = audit_parser.add_subparsers(dest="audit_command", required=True)
+    asub.add_parser("create", help="write the review file").set_defaults(handler=lambda args: audit.create_audit())
+    asub.add_parser("report", help="compute the label error rate").set_defaults(
+        handler=lambda args: audit.report_audit()
+    )
+
     from purchase_cycle.evaluation.harness import add_run_commands
 
     add_run_commands(sub, MODES)
