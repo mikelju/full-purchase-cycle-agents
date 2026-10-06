@@ -31,3 +31,7 @@ Product setup will be documented in phase 01.
 
 - Data, customers, suppliers and channels are fictional or simulated; there is no integration with real email, WhatsApp or ERP systems.
 - For now `npm run check` only verifies the method's dependencies and hooks, not product behaviour.
+
+## License
+
+[MIT](LICENSE)
