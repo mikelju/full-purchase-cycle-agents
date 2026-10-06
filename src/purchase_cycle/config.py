@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT / "data"
 EVALS_DIR = ROOT / "evals"
 RECORDINGS_PATH = EVALS_DIR / "recordings" / "order_line_extraction.jsonl"
+MATCHING_RECORDINGS_PATH = EVALS_DIR / "recordings" / "web_form_matching.jsonl"
 
 MODES = ("live", "record", "replay")
 
