@@ -23,9 +23,9 @@ Each increment leaves the product working and covers concrete criteria.
 This file is the durable state: a new session resumes from here and from Git.
 
 - [x] 1. Model client serves a second task with its own prompt, schema and recordings file; phase 01 replay unchanged (C4) - evidence: `npm run check:python` green (50 passed); `uv run purchase-cycle eval --mode replay --split test` exits 0 with the phase 01 recordings untouched.
-- [x] 2. Web form subgraph: schema, validation, deterministic and model matching, single-transaction store, template reply, checkpoints (C2, C3, C4, C5, C6, C8) - evidence: `tests/test_web_form.py` (rejections with zero model calls and zero rows, deterministic matching, store, single transaction, exact reply, resumption in a second process with 0 calls and 1 order) and `tests/test_llm.py::test_invalid_matching_answer_is_rejected_before_any_write`; 76 pytest tests pass.
+- [x] 2. Web form subgraph: schema, validation, deterministic and model matching, single-transaction store, template reply, checkpoints (C2, C3, C4, C5, C6, C8) - evidence: `tests/test_web_form.py` (rejections with zero model calls and zero rows, deterministic matching, store, single transaction, exact reply, resumption in a second process with 0 calls and 1 order) and `tests/test_llm.py::test_invalid_matching_answer_is_rejected_before_any_write`; 74 pytest tests pass.
 - [ ] 3. Demo command and sample submission file (C7) - evidence:
-- [ ] 4. Seeded planner of the `web_form_matching` dataset, automatic validation and dataset commands (C9) - evidence:
+- [x] 4. Seeded planner of the `web_form_matching` dataset, automatic validation and dataset commands (C9) - evidence: `uv run purchase-cycle web-form-dataset plan` writes 624 lines in 225 submissions (104 per category, 26 dev and 78 test each), every product appears once or twice and all 32 families appear; plan and validation tests in `tests/test_web_form_dataset.py` pass.
 - [ ] 5. Agent-written texts, dataset build and second-pass label review (C9) - evidence:
 - [ ] 6. Owner audit sample of 60 agent-written lines and audit report command (C10) - evidence:
 - [ ] 7. Evaluation harness for `web_form_matching`: graders, model calls per category, gates, report, both suites inside `check` (C3, C11) - evidence:
