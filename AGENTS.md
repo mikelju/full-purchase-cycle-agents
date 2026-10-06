@@ -1,34 +1,35 @@
 # Full Purchase Cycle Agents
 
-Portfolio público de orquestación multiagente con LangGraph (Python) sobre el ciclo de compra de una empresa: pedidos de clientes multicanal, presupuestos de proveedores y conciliación de facturas.
-Cada módulo es un subgrafo con demo, pruebas, evaluación y trazas; una base de datos común los une y un grafo orquestador los compone.
-Se trabaja con SDD Lite: plan maestro, fases con criterios congelados, ejecución autónoma y revisión adversarial.
+Public portfolio of multi-agent orchestration with LangGraph (Python) over a company's purchase cycle: multichannel customer orders, supplier quotes and invoice reconciliation.
+Each module is a subgraph with its demo, tests, evaluation and traces; a shared database joins them and an orchestrator graph composes them.
+Work follows SDD Lite: master plan, phases with frozen criteria, autonomous execution and adversarial review.
 
-## Siempre
-- Actúa como interlocutor único; para desarrollar carga `.agents/skills/sdd-lite/SKILL.md`.
-- Declara suposiciones y dudas antes de programar; pregunta cuando cambien el resultado.
-- Haz lo mínimo que cumpla el criterio: sin funciones, abstracciones ni configuración no pedidas.
-- Cambios quirúrgicos: toca solo lo que exige la petición y respeta el estilo existente.
-- Trabaja contra criterios observables; reproduce fallos en el recorrido real del usuario antes de corregirlos.
-- Cada resultado lleva evidencia vigente; corrige defectos claros relacionados y registra los ajenos.
-- Lee solo el contexto necesario; la exploración amplia va a subagentes que devuelven resúmenes.
-- Guion simple; en Markdown largo, una oración por línea; salidas Python sin símbolos especiales.
-- Una fuente por decisión; los aprendizajes reutilizables van al archivo más específico.
-- Este archivo tiene un tope de 5.000 tokens y no se edita a mitad de sesión; una regla nueva exige evidencia y, si no cabe, otra sale.
+## Always
+- Act as the single point of contact; to develop, load `.agents/skills/sdd-lite/SKILL.md`.
+- State assumptions and doubts before coding; ask when they change the outcome.
+- Do the minimum that meets the criterion: no unrequested features, abstractions or configuration.
+- Surgical changes: touch only what the request needs and respect the existing style.
+- Work against observable criteria; reproduce failures in the real user path before fixing them.
+- Every result carries current evidence; fix clearly related defects and log unrelated ones.
+- Read only the context you need; broad exploration goes to subagents that return summaries.
+- Plain hyphen; in long Markdown, one sentence per line; Python output without special symbols.
+- Repository documents, code and data in English; talk to the owner in Spanish.
+- One source per decision; reusable learnings go to the most specific file.
+- This file is capped at 5,000 tokens and is not edited mid-session; a new rule needs evidence and, if it does not fit, another one leaves.
 
-## Pregunta antes
-- Decisiones pendientes del usuario, costes o dependencias nuevas y cambios a criterios congelados.
-- Publicar fuera de la entrega: la autorización vale para ese destino y ese contenido; respeta confidencialidad y permisos heredados.
-  La entrega incluye push de la rama de trabajo y PR a `main` en el remoto `origin` del proyecto.
+## Ask first
+- Pending owner decisions, new costs or dependencies, and changes to frozen criteria.
+- Publishing outside delivery: authorization covers that destination and that content; respect confidentiality and inherited permissions.
+  Delivery includes pushing the work branch and opening a PR to `main` on the project's `origin` remote.
 
-## Nunca
-- Rebajar criterios u ocultar pruebas fallidas o no ejecutadas.
-- Fusionar, aprobar tu propio trabajo o escribir en la rama por defecto; los hooks de `.claude/` lo bloquean.
-- Editar archivos generados o CHANGELOG.md a mano, ni añadir al agente como coautor de commits.
+## Never
+- Lower criteria or hide failed or unrun tests.
+- Merge, approve your own work or write to the default branch; the `.claude/` hooks block it.
+- Hand-edit generated files or CHANGELOG.md, or add the agent as a commit co-author.
 
-## Mapa
-- Skills en `.agents/skills/`: flujo, enrutado y delegación en `sdd-lite`; revisión en `sdd-review`; entrega y No Mistakes en `sdd-delivery`.
-- Plan maestro y fases: `docs/plans/`; cambios sueltos: `docs/changes/`; plantillas: `docs/templates/`.
-- Garantías: `.claude/settings.json` y `.claude/hooks/`; comprobaciones: `npm run check`.
-- Producto, instalación y límites: `README.md`. Entorno: Windows, Python 3.13 con uv, Node.js 22 (solo herramientas del marco), Git y GitHub CLI.
-- Código Python en `src/`, pruebas en `tests/`, casos de evaluación en `evals/` (se crean en la fase 01).
+## Map
+- Skills in `.agents/skills/` (written in Spanish): flow, routing and delegation in `sdd-lite`; review in `sdd-review`; delivery and No Mistakes in `sdd-delivery`.
+- Master plan and phases: `docs/plans/`; standalone changes: `docs/changes/`; templates: `docs/templates/`.
+- Guardrails: `.claude/settings.json` and `.claude/hooks/`; checks: `npm run check`.
+- Product, setup and limits: `README.md`. Environment: Windows, Python 3.13 with uv, Node.js 22 (method tooling only), Git and GitHub CLI.
+- Python code in `src/`, tests in `tests/`, evaluation assets in `evals/` (created in phase 01).
