@@ -17,7 +17,7 @@ Phases 01 to 05 complete the orders module; quotes, reconciliation and the orche
 | Phase | One-sentence goal | Depends on | Status |
 |---|---|---|---|
 | 01 | Foundations: Python project with uv, schema and seed of the shared database (catalog, customers, stock, orders), configurable LLM client, tracing and an evaluation harness inside `npm run check`, proven by a minimal graph | - | integrated |
-| 02 | Web form orders: structured-input subgraph, catalog matching, order stored in the database and reply to the customer | 01 | in progress |
+| 02 | Web form orders: structured-input subgraph, catalog matching, order stored in the database and reply to the customer | 01 | ready locally (delivered as PR; C13 pending: LangSmith trace quota exhausted) |
 | 03 | Email orders: email intake agent and extractor agent for plain text, PDF and Excel, with field-level extraction evaluation | 02 | pending |
 | 04 | Exceptions: an ambiguous or unknown product or a doubtful quantity leads to a question to the customer, a pause with saved state and resumption when the answer arrives, even after a process restart | 03 | pending |
 | 05 | Orders module wrap-up: simulated WhatsApp, channel router, failure recovery (retries, invalid model output, crash mid-flow) and full module demo | 04 | pending |
