@@ -1,44 +1,46 @@
-# Plan maestro - Full Purchase Cycle Agents
+# Master plan - Full Purchase Cycle Agents
 
-Estado: aprobado (índice vivo: se revisa con el usuario según lo que descubra cada fase)
-Aprobado por el usuario: 2026-10-06
+Status: approved (living index: reviewed with the owner as each phase reveals new information)
+Approved by the owner: 2026-10-06
 
-## Visión
-Portfolio público que demuestra orquestación multiagente con LangGraph (Python) sobre el ciclo de compra de una empresa ficticia.
-Tres módulos independientes (pedidos de clientes multicanal, presupuestos a proveedores y conciliación de facturas) comparten una base de datos y los compone un grafo orquestador.
-Debe hacer visibles, con código y evidencia, cinco capacidades: estado persistente, human-in-the-loop, recuperación de fallos, observabilidad y evaluación estructurada.
-Se sabrá que funciona porque cada módulo tiene una demo reproducible con un comando, pruebas y una evaluación con métricas y umbrales que corre en `npm run check`.
-La latencia no es crítica; la claridad del código y la reproducibilidad sí.
+## Vision
+Public portfolio project that demonstrates multi-agent orchestration with LangGraph (Python) over the full purchase cycle of a fictional company.
+Three independent modules (multichannel customer orders, supplier quotes and invoice reconciliation) share one database and are composed by an orchestrator graph.
+It must make five capabilities visible, with code and evidence: persistent state, human-in-the-loop, failure recovery, observability and structured evaluation.
+It works when every module has a one-command reproducible demo, tests and an evaluation with metrics and thresholds that runs in `npm run check`.
+Latency is not critical; code clarity and reproducibility are.
 
-## Fases
-Cada fase deja algo ejecutable con su demo, sus pruebas y sus casos de evaluación.
-Las fases 01 a 05 completan el módulo de pedidos; después vienen presupuestos, conciliación y orquestador.
+## Phases
+Every phase leaves something runnable, with its demo, tests and evaluation cases.
+Phases 01 to 05 complete the orders module; quotes, reconciliation and the orchestrator follow.
 
-| Fase | Objetivo en una frase | Depende de | Estado |
+| Phase | One-sentence goal | Depends on | Status |
 |---|---|---|---|
-| 01 | Cimientos: proyecto Python con uv, esquema y semilla de la base de datos común (catálogo, clientes, stock, pedidos), cliente LLM configurable, trazas y arnés de evaluación integrado en `npm run check`, con un grafo mínimo que lo demuestra | - | pendiente |
-| 02 | Pedidos por formulario web: subgrafo de entrada estructurada, correspondencia con catálogo, alta del pedido en la base de datos y respuesta al cliente | 01 | pendiente |
-| 03 | Pedidos por correo: agente de entrada de correo y agente extractor para texto, PDF y Excel, con evaluación de la extracción campo a campo | 02 | pendiente |
-| 04 | Excepciones: producto ambiguo, inexistente o cantidad dudosa lleva a pregunta al cliente, pausa con estado guardado y reanudación al llegar la respuesta, aunque el proceso se haya reiniciado | 03 | pendiente |
-| 05 | Cierre del módulo de pedidos: WhatsApp simulado, enrutador de canales, recuperación de fallos (reintentos, salida inválida del modelo, caída a mitad de flujo) y demo completa del módulo | 04 | pendiente |
-| 06 | Presupuestos, petición y espera: detección de falta de stock, petición de ofertas a varios proveedores y espera de días con estado guardado, con reloj simulado y recordatorios | 05 | pendiente |
-| 07 | Presupuestos, decisión: extracción y comparación de ofertas, aprobación humana y alta del pedido de compra | 06 | pendiente |
-| 08 | Conciliación, detección: cruce de factura de proveedor con pedido de compra y albarán y clasificación de diferencias (precio, cantidad, línea sobrante o faltante) | 07 | pendiente |
-| 09 | Conciliación, reclamación: borrador de reclamación al proveedor con aprobación, edición o rechazo humano | 08 | pendiente |
-| 10 | Orquestador: grafo superior que compone los tres subgrafos sobre la base de datos común, con demo de extremo a extremo y panel de métricas de evaluación | 09 | pendiente |
-| 11 | Escaparate del portfolio: README orientado a CV con diagramas de grafos, trazas de ejemplo, resultados de evaluación e integración continua en GitHub Actions | 10 | pendiente |
+| 01 | Foundations: Python project with uv, schema and seed of the shared database (catalog, customers, stock, orders), configurable LLM client, tracing and an evaluation harness inside `npm run check`, proven by a minimal graph | - | pending |
+| 02 | Web form orders: structured-input subgraph, catalog matching, order stored in the database and reply to the customer | 01 | pending |
+| 03 | Email orders: email intake agent and extractor agent for plain text, PDF and Excel, with field-level extraction evaluation | 02 | pending |
+| 04 | Exceptions: an ambiguous or unknown product or a doubtful quantity leads to a question to the customer, a pause with saved state and resumption when the answer arrives, even after a process restart | 03 | pending |
+| 05 | Orders module wrap-up: simulated WhatsApp, channel router, failure recovery (retries, invalid model output, crash mid-flow) and full module demo | 04 | pending |
+| 06 | Quotes, request and wait: out-of-stock detection, quote requests to several suppliers and a multi-day wait with saved state, using a simulated clock and reminders | 05 | pending |
+| 07 | Quotes, decision: offer extraction and comparison, human approval and creation of the purchase order | 06 | pending |
+| 08 | Reconciliation, detection: match the supplier invoice against the purchase order and delivery note and classify differences (price, quantity, extra or missing line) | 07 | pending |
+| 09 | Reconciliation, claim: draft claim to the supplier with human approval, editing or rejection | 08 | pending |
+| 10 | Orchestrator: top-level graph composing the three subgraphs over the shared database, with an end-to-end demo and an evaluation metrics dashboard | 09 | pending |
+| 11 | Portfolio showcase: CV-oriented README with graph diagrams, sample traces, evaluation results and continuous integration on GitHub Actions | 10 | pending |
 
-Estados: pendiente, spec en revisión, spec aprobada, en curso, bloqueada, lista localmente, integrada.
-Solo el usuario añade, quita o reordena fases; el agente propone.
+Statuses: pending, spec in review, spec approved, in progress, blocked, ready locally, integrated.
+Only the owner adds, removes or reorders phases; the agent proposes.
 
-## Decisiones estratégicas
-| Fecha | Decisión | Motivo | Alternativa descartada |
+## Strategic decisions
+| Date | Decision | Reason | Discarded alternative |
 |---|---|---|---|
-| 2026-10-06 | LangGraph (Python) como framework de orquestación | Requisito del proyecto | Orquestación artesanal |
-| 2026-10-06 | Claude Haiku 4.5 (Anthropic) para extraer pedidos | Decisión del usuario: coste bajo y buena extracción | OpenAI, modelo local |
-| 2026-10-06 | SQLite para datos de negocio y checkpoints de LangGraph | Decisión del usuario: cero instalación y reproducible | PostgreSQL en Docker |
-| 2026-10-06 | LangSmith para trazas | Decisión del usuario: nativo de LangGraph y experiencia nueva para el CV | Langfuse, solo registro local |
-| 2026-10-06 | La evaluación de `npm run check` corre sin coste ni red | Decisión del usuario; el mecanismo concreto se fija en la spec de la fase 01 | Llamar al modelo real en cada `check` |
+| 2026-10-06 | LangGraph (Python) as orchestration framework | Project requirement | Hand-made orchestration |
+| 2026-10-06 | Claude Haiku 4.5 (Anthropic) to extract orders | Owner decision: low cost and good extraction | OpenAI, local model |
+| 2026-10-06 | SQLite for business data and LangGraph checkpoints | Owner decision: zero setup and reproducible | PostgreSQL in Docker |
+| 2026-10-06 | LangSmith for tracing | Owner decision: native to LangGraph and new hands-on experience for the CV | Langfuse, local logs only |
+| 2026-10-06 | The evaluation in `npm run check` runs with no cost and no network | Owner decision; the mechanism is fixed in the phase 01 spec | Calling the real model on every `check` |
+| 2026-10-06 | Product documents and code in English; conversation with the owner in Spanish | Owner decision: public portfolio | Spanish documents |
+| 2026-10-06 | Public GitHub repository | Owner decision | Private until finished |
 
-## Pendiente
-Fuera de alcance, criterios globales, otras decisiones y hitos se redactan con el usuario fase a fase.
+## Pending
+Out of scope, global criteria, further decisions and milestones are written with the owner phase by phase.

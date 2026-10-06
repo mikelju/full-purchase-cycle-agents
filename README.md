@@ -1,33 +1,33 @@
 # Full Purchase Cycle Agents
 
-Proyecto de portfolio que demuestra orquestación multiagente con [LangGraph](https://github.com/langchain-ai/langgraph) (Python) sobre el ciclo de compra completo de una empresa ficticia.
-Estado: plan maestro en borrador; todavía no hay código.
+Portfolio project that demonstrates multi-agent orchestration with [LangGraph](https://github.com/langchain-ai/langgraph) (Python) over the full purchase cycle of a fictional company.
+Status: master plan approved; no code yet.
 
-## Qué hace
+## What it does
 
-| Módulo | Flujo | Rasgos que demuestra |
+| Module | Flow | Capabilities shown |
 |---|---|---|
-| Pedidos de clientes | Correo (texto, PDF, Excel), formulario web y WhatsApp simulado; extracción, correspondencia con catálogo, excepciones y respuesta | Subgrafos por canal, pausa hasta la respuesta del cliente, base de datos |
-| Presupuestos a proveedores | Falta de stock, petición de ofertas, espera de días con estado guardado, comparación y aprobación humana | Estado persistente, human-in-the-loop, reanudación |
-| Conciliación de facturas | Factura contra pedido de compra y albarán, diferencias y borrador de reclamación aprobado por una persona | Validación estructurada, human-in-the-loop |
-| Orquestador | Grafo superior que compone los tres módulos sobre la base de datos común | Composición de subgrafos, recuperación de fallos |
+| Customer orders | Email (text, PDF, Excel), web form and simulated WhatsApp; extraction, catalog matching, exceptions and reply | Per-channel subgraphs, pause until the customer answers, database |
+| Supplier quotes | Out of stock, quote requests, multi-day wait with saved state, comparison and human approval | Persistent state, human-in-the-loop, resumption |
+| Invoice reconciliation | Invoice against purchase order and delivery note, differences and a claim draft approved by a person | Structured validation, human-in-the-loop |
+| Orchestrator | Top-level graph composing the three modules over the shared database | Subgraph composition, failure recovery |
 
-Cada módulo tendrá demo ejecutable, pruebas, evaluación con métricas sobre un conjunto de casos y trazas.
-El plan y las fases están en [docs/plans/0_plan_maestro.md](docs/plans/0_plan_maestro.md).
+Every module will have a runnable demo, tests, an evaluation with metrics over a set of cases, and traces in LangSmith.
+The plan and its phases live in [docs/plans/0_plan_maestro.md](docs/plans/0_plan_maestro.md).
 
-## Cómo se trabaja
+## How it is built
 
-El proyecto se desarrolla con el método SDD Lite: plan maestro, fases con criterios congelados, ejecución autónoma por agentes y revisión adversarial.
-Guía de uso en [docs/como-trabajar.md](docs/como-trabajar.md).
-`npm run check` agrupa las comprobaciones; las garantías del marco viven en `.claude/settings.json` y `.claude/hooks/`.
+The project is developed with the SDD Lite method: a master plan, phases with frozen acceptance criteria, autonomous agent execution and adversarial review.
+The method guide (in Spanish) is [docs/como-trabajar.md](docs/como-trabajar.md).
+`npm run check` groups all checks; the method's guardrails live in `.claude/settings.json` and `.claude/hooks/`.
 
-## Requisitos
+## Requirements
 
-Windows, Python 3.13 con uv, Node.js 22 (herramientas del marco), Git y GitHub CLI.
-Instalación de las herramientas del marco: `npm ci --ignore-scripts --no-audit --no-fund`.
-La instalación del producto se documentará en la fase 01.
+Windows, Python 3.13 with uv, Node.js 22 (method tooling), Git and GitHub CLI.
+Method tooling install: `npm ci --ignore-scripts --no-audit --no-fund`.
+Product setup will be documented in phase 01.
 
-## Límites
+## Limits
 
-- Datos, clientes, proveedores y canales son ficticios o simulados; no hay integración con correo, WhatsApp ni ERP reales.
-- `npm run check` comprueba por ahora solo dependencias y hooks del marco, no comportamiento de producto.
+- Data, customers, suppliers and channels are fictional or simulated; there is no integration with real email, WhatsApp or ERP systems.
+- For now `npm run check` only verifies the method's dependencies and hooks, not product behaviour.
