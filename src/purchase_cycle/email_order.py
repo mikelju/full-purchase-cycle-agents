@@ -53,13 +53,14 @@ class EmailOrderState(TypedDict, total=False):
 
 
 class _HTMLText(HTMLParser):
-    BLOCKS = {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "table", "ul", "ol"}  # set off by empty lines
+    BLOCKS = {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "table", "ul", "ol", "pre"}  # set off by empty lines
     LINES = {"br", "tr", "li"}  # start a new line
 
     def __init__(self):
         super().__init__()
         self.parts: list[str] = []
         self._skip = 0
+        self._pre = 0  # open <pre> elements, whose source line breaks are kept
         self._cells = 0  # cells opened in the current line
 
     def _new_line(self):
@@ -70,6 +71,7 @@ class _HTMLText(HTMLParser):
         if tag in ("script", "style"):
             self._skip += 1
         elif tag in self.BLOCKS or tag in self.LINES:
+            self._pre += tag == "pre"
             self._new_line()
         elif tag in ("td", "th"):
             if self._cells:  # tabs only between cells, so an empty first cell keeps its column
@@ -80,10 +82,16 @@ class _HTMLText(HTMLParser):
         if tag in ("script", "style"):
             self._skip = max(0, self._skip - 1)
         elif tag in self.BLOCKS:
+            if tag == "pre":
+                self._pre = max(0, self._pre - 1)
             self._new_line()
 
     def handle_data(self, data):
-        if not self._skip:  # a line break in the HTML source is only a space
+        if self._skip:
+            return
+        if self._pre:  # preformatted text keeps its source line breaks
+            self.parts.append(data.replace("\r\n", "\n").replace("\r", "\n"))
+        else:  # elsewhere a line break in the HTML source is only a space
             self.parts.append(data.replace("\r", " ").replace("\n", " "))
 
 
@@ -205,19 +213,27 @@ def _parse_message(data: bytes) -> tuple[EmailMessage, str]:
 
 
 def _subject(message: EmailMessage) -> str:
-    """The decoded subject on one line: control characters such as CR and LF become spaces."""
-    return re.sub(r"[\x00-\x1f\x7f]", " ", str(message["Subject"] or "")).strip()
+    """The decoded subject on one line: control characters and Unicode line breaks (NEL, LS, PS) become spaces."""
+    return re.sub(r"[\x00-\x1f\x7f\x85  ]", " ", str(message["Subject"] or "")).strip()
+
+
+def _walk(part: EmailMessage):
+    """Like walk, but an attached email (message/rfc822) is one part: its body and attachments stay inside it."""
+    yield part
+    if part.is_multipart() and part.get_content_maintype() != "message":
+        for sub in part.iter_parts():
+            yield from _walk(sub)
 
 
 def _attachment_parts(message: EmailMessage) -> list[EmailMessage]:
     """The attachments, plus any part with a file name that the standard library took as a body candidate."""
     parts = list(message.iter_attachments())
     seen = {id(part) for part in parts}
-    extra = [p for p in message.walk() if not p.is_multipart() and p.get_filename() and id(p) not in seen]
+    extra = [p for p in _walk(message) if not p.is_multipart() and p.get_filename() and id(p) not in seen]
     if not extra:
         return parts
     seen |= {id(part) for part in extra}
-    return [p for p in message.walk() if id(p) in seen]
+    return [p for p in _walk(message) if id(p) in seen]
 
 
 def _body(message: EmailMessage, attachments: list[EmailMessage]) -> str:
@@ -232,7 +248,7 @@ def _body(message: EmailMessage, attachments: list[EmailMessage]) -> str:
     taken = {id(p) for p in attachments}
     candidates = [
         p
-        for p in message.walk()
+        for p in _walk(message)
         if not p.is_multipart()
         and id(p) not in taken
         and not p.get_filename()

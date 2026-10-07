@@ -1,5 +1,7 @@
 """C2 and C3 (phase 03): email parsing, attachment text, ignored attachments and deterministic rejections."""
 
+import base64
+
 import pytest
 
 from conftest import make_email, text_pdf, xlsx_bytes
@@ -219,3 +221,51 @@ def test_over_long_attachment_stops_extraction_early(tmp_path, business_db, monk
     with pytest.raises(EmailRejected, match=f"above the limit of {MAX_EMAIL_TEXT}"):
         read_email(path, business_db)
     assert len(seen) < 2 * len(rows)
+
+
+def test_forwarded_email_is_one_ignored_attachment_and_its_attachments_stay_inside(tmp_path):
+    content = f"""From: {SENDER}
+Subject: Order
+Content-Type: multipart/mixed; boundary="b"
+
+--b
+Content-Type: text/plain
+
+40 gloves M
+--b
+Content-Type: message/rfc822
+
+From: old@example.org
+Subject: Old order
+Content-Type: multipart/mixed; boundary="c"
+
+--c
+Content-Type: text/plain
+
+old body
+--c
+Content-Type: text/plain
+Content-Disposition: attachment; filename="old.txt"
+
+999 gloves
+--c--
+--b--
+""".encode()
+    email = _parse(_raw(tmp_path / "a.eml", content))
+    assert email["body"] == "40 gloves M"
+    assert email["attachments"] == []
+    assert email["ignored"] == ["attachment-1"]
+
+
+def test_pre_keeps_its_source_line_breaks(tmp_path):
+    html = "<p>Order\nbelow</p><pre>40 gloves M\r\n12 alcohol 70%\n3 masks</pre>"
+    email = _parse(make_email(tmp_path / "a.eml", SENDER, body=None, html=html))
+    assert email["body"] == "Order below\n\n40 gloves M\n12 alcohol 70%\n3 masks"
+
+
+def test_subject_unicode_line_breaks_become_spaces(tmp_path):
+    subject = "Order\x85a\u2028b\u2029c\x0bd\x0ce\x1cf\x1dg\x1eh"
+    content = f"From: {SENDER}\nSubject: =?utf-8?b?{base64.b64encode(subject.encode()).decode()}?=\n\n40 gloves M\n"
+    result = _parse(_raw(tmp_path / "a.eml", content.encode()))["subject"]
+    assert result == "Order a b c d e f g h"
+    assert len(result.splitlines()) == 1
