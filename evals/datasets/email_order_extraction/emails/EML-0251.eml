@@ -1,0 +1,34 @@
+From: Begona Larrea <begona.res-001@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Residencia Los Robles
+Date: Fri, 13 Nov 2026 13:23:00 +0000
+Message-ID: <eml-0251@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0251-boundary=="
+
+--==EML-0251-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+I attach the order for the residence. Thank you.
+
+Begona
+Residencia Los Robles
+
+--==EML-0251-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0251.txt"
+MIME-Version: 1.0
+
+8 tubes repairing hand cream 100 ml
+seventeen bags round cotton pads
+nine bags gauze bandage roll 7.5 cm x 4 m
+one dozen boxes disposable syringe 2 ml, luer slip
+17 rolls coton wool roll 100 g
+eleven packs sterile gauze swabs 7.5 x 7.5 cm, 8 ply
+100 refills surface disinfectant wipes, alcohol-free
+
+--==EML-0251-boundary==--

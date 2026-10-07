@@ -1,0 +1,55 @@
+From: Ines Martin <ines.far-012@example.com>
+To: orders@purchase-cycle.example
+Subject: Plaza Mayor order (PDF form)
+Date: Sun, 01 Nov 2026 14:30:00 +0000
+Message-ID: <eml-0210@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0210-boundary=="
+
+--==EML-0210-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Buenos dias,
+
+You will find our order in the attached form. We open at nine, any time after=
+ that is fine for delivery.
+
+Un saludo,
+Ines Martin
+
+--==EML-0210-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0210.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDM5NQo+PgpzdHJlYW0KeJx9
+kttu2kAURd/zFfuxleBkrvaYt4SCqkoJFJwPmJghcuILGkxD8vU1GGJqKr+OZq991pwR+HXDSId4
+v7mPcTvl4IoYQ7zGJD4cSU7cQCtDOkC8wrf502L88245wWzxY7L4jvj1dPN2KsDZ/8IiJGaO4fFu
+W5W58yNMrc9tklrMM/tp8WA/Sn8BOyUPvCY58yvn4d3aeVckboT5bMgEZ1cZFUliYdOWVh8jLG1m
+c1sk9p9ZOaJ2VGFIaqgwICGgDCcTYcgjMqpuxBItPJAUsOYdfLnaJdUZehhVqDPDaGKqi9D8ONkF
+4/fOFlU95Bck0iTMGcIVp1BeUSJDnF9Snoq06uzh2k0HJE2/m5IUNjsee7dxeLbFyr64AVxmt1Wa
+DMA1khx7KNLIu+ZNQ69528C7yk26X7mNb2zyhnKNdv8nTRmQVv2aQlIkjpTHtPJp5uD2Nk8LW6Vl
+gZes/OO2A2zK9/rDDdfe1Q+wTT9rRle46eoVbru4Zl3lJt+v3AKey31j/MX5C9YA4zkKZW5kc3Ry
+ZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5n
+IC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2
+IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5n
+Ci9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8
+PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFn
+ZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0F1dGhvciAoRmFybWFjaWEgUGxhemEg
+TWF5b3IpCi9DcmVhdGlvbkRhdGUgKEQ6MjAyNjA5MDEwODAwMDBaKQovVGl0bGUgKHB1cmNoYXNl
+LW9yZGVyLTAyMTAucGRmKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAow
+MDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIgMDAwMDAgbiAKMDAwMDAwMDIwNSAwMDAwMCBu
+IAowMDAwMDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA3NTIgMDAwMDAgbiAKMDAwMDAwMDg1NCAwMDAw
+MCBuIAowMDAwMDAwOTUxIDAwMDAwIG4gCjAwMDAwMDEwNDggMDAwMDAgbiAKdHJhaWxlcgo8PAov
+U2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDczODNFRDk5QjFGOTdBQkMyRTAy
+RjNDMzI5RTVCQkU1Pjw3MzgzRUQ5OUIxRjk3QUJDMkUwMkYzQzMyOUU1QkJFNT5dCj4+CnN0YXJ0
+eHJlZgoxMTY3CiUlRU9GCg==
+
+--==EML-0210-boundary==--

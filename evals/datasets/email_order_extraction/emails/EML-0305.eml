@@ -1,0 +1,29 @@
+From: Xabier Lasa <xabier.res-004@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Residencia Aiete
+Date: Sun, 29 Nov 2026 07:05:00 +0000
+Message-ID: <eml-0305@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0305-boundary=="
+
+--==EML-0305-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Egun on,
+
+Attached is our order, thanks.
+
+Xabier
+Residencia Aiete
+
+--==EML-0305-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0305.txt"
+MIME-Version: 1.0
+
+24 boxes medium powder-free vinyl gloves
+200 pen needles 31G x 8 mm
+
+--==EML-0305-boundary==--

@@ -1,0 +1,31 @@
+From: Noelia Varela <noelia.cli-015@example.com>
+To: orders@purchase-cycle.example
+Subject: Order attached
+Date: Thu, 17 Sep 2026 16:08:00 +0000
+Message-ID: <eml-0056@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0056-boundary=="
+
+--==EML-0056-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Dear team,
+
+Please process the attached order for the eye clinic.
+
+Thank you,
+Noelia
+Clinica Oftalmologica Riazor
+
+--==EML-0056-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0056.txt"
+MIME-Version: 1.0
+
+12 boxes sterile wooden tongue depressors, individually wrapped
+3 dozen boxes alcohol prep pads, single-use, box of 200
+2 reusable hot and cold gel packs 15 x 25 cm
+
+--==EML-0056-boundary==--

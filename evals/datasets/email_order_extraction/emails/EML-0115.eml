@@ -1,0 +1,29 @@
+From: Unai Elorza <unai.far-002@example.com>
+To: orders@purchase-cycle.example
+Subject: Hand cream order
+Date: Sun, 04 Oct 2026 21:55:00 +0000
+Message-ID: <eml-0115@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0115-boundary=="
+
+--==EML-0115-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+A small order, see the attached file.
+
+Best regards,
+Unai
+Farmacia Casco Viejo
+
+--==EML-0115-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0115.txt"
+MIME-Version: 1.0
+
+nine tubes repairing hand cream 50 ml
+
+--==EML-0115-boundary==--

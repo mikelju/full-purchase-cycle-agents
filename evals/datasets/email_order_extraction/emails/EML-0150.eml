@@ -1,0 +1,19 @@
+From: Iker Zubiri <iker.cli-002@example.com>
+To: orders@purchase-cycle.example
+Subject: Alcohol order
+Date: Thu, 15 Oct 2026 02:30:00 +0000
+Message-ID: <eml-0150@dataset.purchase-cycle.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+Hi,
+
+Please send us:
+
+15 jerrycans of 70% ethyl alcohol, 5 L
+
+Regards.
+
+Iker
+Centro Medico Indautxu

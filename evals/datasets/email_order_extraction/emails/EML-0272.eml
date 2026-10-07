@@ -1,0 +1,33 @@
+From: Adrian Menendez <adrian.res-014@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Valle Verde
+Date: Thu, 19 Nov 2026 16:56:00 +0000
+Message-ID: <eml-0272@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0272-boundary=="
+
+--==EML-0272-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Order attached, thank you.
+
+Adrian
+Residencia Valle Verde
+
+--==EML-0272-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0272.txt"
+MIME-Version: 1.0
+
+14 boxes FFP3 respirator mask with exhalation valve
+8 face shield visors, reusable frame
+11 boxes disposable syring 1 ml, luer slip
+13 boxes neoprene sterile surgical gloves, latex-free, size 8.5
+2 rolls disposable tourniquet strips
+24 packs CPR face shield with one-way valve
+
+--==EML-0272-boundary==--

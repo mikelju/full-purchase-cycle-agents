@@ -1,0 +1,31 @@
+From: Diego Herrera <diego.far-007@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Arguelles (attached)
+Date: Tue, 24 Nov 2026 22:50:00 +0000
+Message-ID: <eml-0290@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0290-boundary=="
+
+--==EML-0290-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Please find attached our order.
+
+Diego
+Farmacia Arguelles
+
+--==EML-0290-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0290.txt"
+MIME-Version: 1.0
+
+10 lancet pen devices
+twenty-five tubes repairing hand cream 100 ml
+17 eye wash station bottles 500 ml
+eighteen packs adult incontinence briefs, night, size L
+
+--==EML-0290-boundary==--

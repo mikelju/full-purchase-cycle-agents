@@ -1,0 +1,32 @@
+From: Raquel Pastor <raquel.res-013@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Sol de Levante
+Date: Sat, 28 Nov 2026 03:13:00 +0000
+Message-ID: <eml-0301@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0301-boundary=="
+
+--==EML-0301-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+Please process the attached order for our residence.
+
+Regards,
+Raquel
+Residencia Sol de Levante
+
+--==EML-0301-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0301.txt"
+MIME-Version: 1.0
+
+15 packs pre-moistened wash gloves
+12 boxes hypodermic needle 18G x 40 mm
+13 pairs compression thigh-high stockings class I, size S
+thirty-five bags gauze bandage roll 10 cm x 4 m
+
+--==EML-0301-boundary==--

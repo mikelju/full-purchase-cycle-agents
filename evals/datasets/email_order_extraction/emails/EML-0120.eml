@@ -1,0 +1,36 @@
+From: Nerea Ochoa <nerea.res-003@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Residencia San Prudencio
+Date: Tue, 06 Oct 2026 08:00:00 +0000
+Message-ID: <eml-0120@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0120-boundary=="
+
+--==EML-0120-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+The attached file contains our order for October.
+
+Kind regards,
+Nerea
+Residencia San Prudencio
+
+--==EML-0120-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0120.txt"
+MIME-Version: 1.0
+
+18 massage tables
+13 wrist supports, elastic, medium
+eighteen boxes transparent film dressing 10 x 12 cm
+seven bottles children's sunscreen SPF 50+, 200 ml
+11 boxes nitrile examination gloves, size XXL
+seventeen pick-up grabber tools, 80 cm
+18 oxygen cylinders
+200 cotton wool balls
+
+--==EML-0120-boundary==--

@@ -1,0 +1,56 @@
+From: Montse Vidal <montse.res-007@example.com>
+To: orders@purchase-cycle.example
+Subject: Order for nursing - Mar Blava
+Date: Mon, 26 Oct 2026 11:57:00 +0000
+Message-ID: <eml-0189@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0189-boundary=="
+
+--==EML-0189-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+The nursing team has prepared the attached order. Please send it with the nex=
+t route.
+
+Thank you,
+Montse Vidal
+
+--==EML-0189-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0189.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ1Ngo+PgpzdHJlYW0KeJx9
+k11vmzAUQN/7K+7jJi23vv4Ipo9V6NZpzdaETtqjE5yKLQEErGv//SBAYE7mN8vSOb4+Bg6frxiq
+AP5c3cZwfUdAEhmDeAdR3G4JQtKgpEY1hziBd4voy/33aPUDll/jCGawih6fonUcLeA+jh7W7yH+
+2aPXdxyIXbLxAJnubHafvtgS6vwGVrZKE5ttUwMPpoTbvXkxHyA2ZWme88xMzL2mlXeaZV5byH4f
+Nra8gcVyxkiH/0xCEI6DcI1CgQwFcgGSo+IwoxC1hNLCGk4HSM1wTscDVnY3+AKGOjjRSqCSLh4I
+DNgUX9hqW6ZFnebZoFFcoqTB00kdTduJy6nnsX478aFCrgeeJGEgzgShRqKp4ClLa+eJzsM044vQ
+G2bOMAiOQnKy9Kwvywh/eivyxJaHdAuZtcneAp9/hFcgAYeDG6oze0NNxpq7nTrc32nkN/kr5Lvm
+82WDp2/TXkx520iGoThKuNOmZ31tRvhCG962EexCm87sbTOaSbhtOtzfZuT/20Y0dyBvG07DHyuc
+Nj3razPC30o7q3JT2ASStCryymyaPs0ie7aV26Yze9uM5vM2He5vM/KF2f5q46hTm7/P9jvuCmVu
+ZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYS1Cb2xkCi9FbmNv
+ZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRv
+YmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lFbmNv
+ZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0Zv
+bnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYgL1RleHQgL0ltYWdlQiAv
+SW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9BdXRob3IgKFJlc2lkZW5jaWEg
+TWFyIEJsYXZhKQovQ3JlYXRpb25EYXRlIChEOjIwMjYwOTAxMDgwMDAwWikKL1RpdGxlIChkZWxp
+dmVyeS1ub3RlLTAxODkucGRmKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBm
+IAowMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIgMDAwMDAgbiAKMDAwMDAwMDIwNSAwMDAw
+MCBuIAowMDAwMDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA4MTMgMDAwMDAgbiAKMDAwMDAwMDkxNSAw
+MDAwMCBuIAowMDAwMDAxMDEyIDAwMDAwIG4gCjAwMDAwMDExMDkgMDAwMDAgbiAKdHJhaWxlcgo8
+PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDEwOEU4MzREMDI4MkUzNkUz
+MTk3NzdGQkQ5RUU1NDczPjwxMDhFODM0RDAyODJFMzZFMzE5Nzc3RkJEOUVFNTQ3Mz5dCj4+CnN0
+YXJ0eHJlZgoxMjI3CiUlRU9GCg==
+
+--==EML-0189-boundary==--

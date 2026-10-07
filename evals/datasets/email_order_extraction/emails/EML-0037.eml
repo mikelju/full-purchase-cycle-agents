@@ -1,0 +1,21 @@
+From: Irene Saenz <irene.cli-020@example.com>
+To: orders@purchase-cycle.example
+Subject: Order request
+Date: Sat, 12 Sep 2026 03:01:00 +0000
+Message-ID: <eml-0037@dataset.purchase-cycle.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+Hi,
+
+We need the following for the clinic:
+
+- 18 bottles contact lens solution
+- 18 reusable washable bed pads 75 x 90 cm
+- 19 boxes surgical gloves size 9
+
+Please send the invoice by email.
+
+Irene
+Clinica de Rehabilitacion Logrono

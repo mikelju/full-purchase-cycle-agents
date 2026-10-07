@@ -266,3 +266,18 @@ def test_validation_rejects_traps_that_name_the_catalog_product(plan):
             name = PRODUCT_BY_SKU[line["expected_sku"]].name
             assert any("exact catalog name" in e for e in ed.validate_line(planned, line, name))
             break
+
+
+# ---------- versioned texts, emails and dataset (increment 7) ----------
+
+
+def test_versioned_dataset_is_the_build_of_the_versioned_texts(plan):
+    rows, files, rejected = ed.build_dataset(plan, ed.load_texts())
+    assert rejected == {}
+    assert ed.load_dataset() == rows
+    assert sorted(p.name for p in ed.EMAILS_DIR.glob("*.eml")) == sorted(f"{i}.eml" for i in files)
+    for email_id, data in files.items():
+        assert (ed.EMAILS_DIR / f"{email_id}.eml").read_bytes() == data, email_id
+    counts = Counter((row["category"], row["split"]) for row in rows)
+    assert all(counts[(c, "dev")] == ed.DEV_PER_CATEGORY for c in ed.CATEGORIES)
+    assert all(counts[(c, "test")] == ed.EMAILS_PER_CATEGORY - ed.DEV_PER_CATEGORY for c in ed.CATEGORIES)

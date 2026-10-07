@@ -1,0 +1,53 @@
+From: Unai Elorza <unai.far-002@example.com>
+To: orders@purchase-cycle.example
+Subject: Single item order
+Date: Sun, 11 Oct 2026 07:41:00 +0000
+Message-ID: <eml-0137@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0137-boundary=="
+
+--==EML-0137-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Please see the attached document for a single item we need.
+
+Best,
+Unai Elorza
+
+--==EML-0137-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0137.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDMzMwo+PgpzdHJlYW0KeJx9
+0c1qwkAUhuG9V3GWLdTj/DoTlzYjWKpFHYUuo440kjgS05befdUYk8biNvA+c/jC4KVFUCr4bvUt
+dAYUqEBCwG7A2NMnTpFqkEKj7IJdw0NoXocLM32H8Zs10IapmczNzJoQhtaMZo9gt5e0M2BAyX8a
+U0h0obkk/nIZ5L4HgyhLo1UcwXN0WHlYxG7rn6AfJ8vI19iLcZILY+xzB7vPdOmyHoTjNqFc/TmD
+QlBdwTRyCSLgyDgIhpJBmwaoBWQOZnB9QGiCXXp+YOo2pacIanWtJUcpmrniqEg9D91hlcX7PPa7
+kpFMoKClU6AN5jQSE3Vnkv9c+0Ai02VPBUXFb4BAI6V1YL6L88b/uR3meD4P7g7TJajUGaSNWS7t
+vVmqeBQnazh8ROnee5DHM9KkOU/h3Z2n8lRznKK+P06VL32eJ640fgEgL7aCCmVuZHN0cmVhbQpl
+bmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYS1Cb2xkCi9FbmNvZGluZyAvV2lu
+QW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNiAwIG9i
+ago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3Vi
+dHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0ZvbnQgPDwvRjEg
+NSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9J
+bWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9BdXRob3IgKEZhcm1hY2lhIENhc2NvIFZpZWpv
+KQovQ3JlYXRpb25EYXRlIChEOjIwMjYwOTAxMDgwMDAwWikKL1RpdGxlIChkZWxpdmVyeS1ub3Rl
+LTAxMzcucGRmKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAw
+MDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIgMDAwMDAgbiAKMDAwMDAwMDIwNSAwMDAwMCBuIAowMDAw
+MDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA2OTAgMDAwMDAgbiAKMDAwMDAwMDc5MiAwMDAwMCBuIAow
+MDAwMDAwODg5IDAwMDAwIG4gCjAwMDAwMDA5ODYgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5
+Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPEI2NTU2QzQ3MjA3OUFERjBEODcxM0NFMkY2
+RDFFNjUyPjxCNjU1NkM0NzIwNzlBREYwRDg3MTNDRTJGNkQxRTY1Mj5dCj4+CnN0YXJ0eHJlZgox
+MTA0CiUlRU9GCg==
+
+--==EML-0137-boundary==--

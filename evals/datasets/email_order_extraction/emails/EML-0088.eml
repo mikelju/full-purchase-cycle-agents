@@ -1,0 +1,35 @@
+From: Garazi Otegi <garazi.far-004@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Farmacia Gros - attachment
+Date: Sun, 27 Sep 2026 00:04:00 +0000
+Message-ID: <eml-0088@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0088-boundary=="
+
+--==EML-0088-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Kaixo,
+
+Our order is in the attached txt file. Please deliver before Thursday.
+
+Thanks,
+Garazi
+Farmacia Gros
+
+--==EML-0088-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0088.txt"
+MIME-Version: 1.0
+
+50 packs non-sterile gauze swabs 5 x 5 cm, 12 ply
+30 boxes adhesive island dressing 9 x 25 cm
+16 packs sterile gauze swabs 7.5 x 7.5 cm, 8 ply
+13 knee supports, elastic, large
+4 dozen packs plastic medicine cups 30 ml
+20 pairs compression knee-high stockings class I, size S
+11 bottles aloe vera after-sun gel 200 ml
+
+--==EML-0088-boundary==--

@@ -1,0 +1,35 @@
+From: Encarna Sanchez <encarna.res-015@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Residencia Las Acacias
+Date: Sat, 21 Nov 2026 03:01:00 +0000
+Message-ID: <eml-0277@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0277-boundary=="
+
+--==EML-0277-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Our monthly order is attached.
+
+Thank you,
+Encarna
+Residencia Las Acacias
+
+--==EML-0277-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0277.txt"
+MIME-Version: 1.0
+
+4 dozen boxes wooden tongue depressors, children
+19 jerrycans gentle liquid soap 5 litre refill
+1 box hypodermic needle 27G x 13 mm
+200 disposable sheaths for digital thermometer
+a dozen handheld pulse oxymeters with probe
+75 pairs compression thigh-high stockings class I, size S
+11 packs adult pull-up pants, size L
+
+--==EML-0277-boundary==--

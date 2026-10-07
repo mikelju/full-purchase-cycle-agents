@@ -1,0 +1,20 @@
+From: Irene Saenz <irene.cli-020@example.com>
+To: orders@purchase-cycle.example
+Subject: Duplicate invoice?
+Date: Wed, 21 Oct 2026 05:03:00 +0000
+Message-ID: <eml-0171@dataset.purchase-cycle.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hello,
+
+We seem to have received two invoices for the same delivery, numbers 2026-090=
+2 and 2026-0907, with identical amounts and dates. Could you check whether on=
+e of them was issued by mistake and cancel it?
+
+We do not want to pay twice.
+
+Kind regards,
+Irene Saenz
+Clinica de Rehabilitacion Logrono

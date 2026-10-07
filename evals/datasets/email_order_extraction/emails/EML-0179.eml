@@ -1,0 +1,33 @@
+From: Garazi Otegi <garazi.far-004@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Farmacia Gros
+Date: Fri, 23 Oct 2026 13:47:00 +0000
+Message-ID: <eml-0179@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0179-boundary=="
+
+--==EML-0179-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello again,
+
+Here is another order, attached as a text file.
+
+Best,
+Garazi
+Farmacia Gros
+
+--==EML-0179-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0179.txt"
+MIME-Version: 1.0
+
+25 boxes children's adhesive plasters with drawings
+14 packs rinse-free shampoo cap
+six boxes sterile latex surgical gloves, size 8
+4 sharps containers 0.6 litre
+1 bottle saline solution 0.9% for irrigation 1 litre
+
+--==EML-0179-boundary==--

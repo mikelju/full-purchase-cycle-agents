@@ -1,0 +1,56 @@
+From: Paula Gutierrez <paula.cli-018@example.com>
+To: orders@purchase-cycle.example
+Subject: Santander aesthetics - order
+Date: Tue, 01 Dec 2026 08:36:00 +0000
+Message-ID: <eml-0312@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0312-boundary=="
+
+--==EML-0312-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Good afternoon,
+
+Attached you will find our latest order. We would appreciate delivery this we=
+ek.
+
+Kind regards,
+Paula Gutierrez
+
+--==EML-0312-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0312.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ1OQo+PgpzdHJlYW0KeJx9
+lF1vmzAUQN/7K+7jJi23vv4I0McNKnVaMjXQSXskidN6IhCBu49/vxAgZu7kJxDSOdccGzh8vmGo
+Ivh187GA23sCksgYFAfIiv6RIKQYlIxRLaHYw7s0+/LwLdt8h/XXIoMFbLLHpywvshQeimyVv4fi
+x4je3nMg9j8bj5DFg01X5qduwTZ38EnXtm1gryHrrLZmV8JK7/tLXta2rPe6/eBuZ4NGaz9rsK4b
+q6F+PW51ewfpesEE8X8WRpC4dfEYhQKZCOQCJEfFYUEJxhJaDTlcB8iY4ZIuAzb6MPkihnF0pZVA
+JX08EhixOZ7qbteakzVNPWkUlyhp8gxST9Nn43LuebR/rnyikMcTT5IwEm8ESYxEc8FTbay3Y2/D
+nJcvkmCYJcMougjJyzKyoSwOzl/K9tTBrjlvsanPp4IYVMa2uvMrDdpgJaeVfqOBDjdy+Ous0Vik
+fx0VLCIZJuKCc6/IyIaKOHhVdl35rKExFajzvhwrv8SgC5ZwOkr8FAMeTuH4bWNtpb0Y4rxoCsbg
+NH2YwosxsqEYDk7Ns7FlBfZFt8fmqG3/PzhU+rfZVhqsOfltBnuwjbMT89sMeLiN4+fH5C8QODv/
+CmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYS1Cb2xkCi9F
+bmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+Pgpl
+bmRvYmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lF
+bmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjcgMCBvYmoKPDwK
+L0ZvbnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYgL1RleHQgL0ltYWdl
+QiAvSW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9BdXRob3IgKENlbnRybyBk
+ZSBFc3RldGljYSBNZWRpY2EgU2FudGFuZGVyKQovQ3JlYXRpb25EYXRlIChEOjIwMjYwOTAxMDgw
+MDAwWikKL1RpdGxlIChkZWxpdmVyeS1ub3RlLTAzMTIucGRmKQo+PgplbmRvYmoKeHJlZgowIDkK
+MDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIgMDAwMDAg
+biAKMDAwMDAwMDIwNSAwMDAwMCBuIAowMDAwMDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA4MTYgMDAw
+MDAgbiAKMDAwMDAwMDkxOCAwMDAwMCBuIAowMDAwMDAxMDE1IDAwMDAwIG4gCjAwMDAwMDExMTIg
+MDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBb
+PDQwMTkwODUzNjVDMzVCM0M3OEYxNzI0N0FDNjY1MDc5Pjw0MDE5MDg1MzY1QzM1QjNDNzhGMTcy
+NDdBQzY2NTA3OT5dCj4+CnN0YXJ0eHJlZgoxMjQ1CiUlRU9GCg==
+
+--==EML-0312-boundary==--

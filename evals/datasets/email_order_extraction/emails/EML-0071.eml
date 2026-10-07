@@ -1,0 +1,31 @@
+From: Oier Bengoa <oier.far-005@example.com>
+To: orders@purchase-cycle.example
+Subject: Order attached - Lakua
+Date: Tue, 22 Sep 2026 01:23:00 +0000
+Message-ID: <eml-0071@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0071-boundary=="
+
+--==EML-0071-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+Here is a short order in the attached file.
+
+Cheers,
+Oier
+Farmacia Lakua
+
+--==EML-0071-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0071.txt"
+MIME-Version: 1.0
+
+10 scrubs uniforms, size M
+8 boxes Foley catheter 2-way, 100% silicon, 12 Fr
+80 elastic ankle supports, size S
+
+--==EML-0071-boundary==--

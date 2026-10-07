@@ -1,0 +1,57 @@
+From: Jon Arrieta <jon.cli-004@example.com>
+To: orders@purchase-cycle.example
+Subject: Order for the surgery unit
+Date: Tue, 06 Oct 2026 15:13:00 +0000
+Message-ID: <eml-0121@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0121-boundary=="
+
+--==EML-0121-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Kaixo,
+
+Attached is the order from our minor surgery unit. Delivery to the main entra=
+nce please.
+
+Eskerrik asko,
+Jon Arrieta
+Policlinica Gipuzkoa Norte
+
+--==EML-0121-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0121.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ0Mwo+PgpzdHJlYW0KeJx9
+k81ymzAUhfd5irtsZ+Ib/YLIrkmddrqoU0O6l7HwKCWSB0T+nr4QjHFxhx3DcL57Px3E4McFQRnD
+y8VNBld3FKhAQiArYJl1rzhFqkAKhTKCbAuf7h/Wt9+/pEtYrb8u158hezx8eXXHgJL/hVmMRH2E
+b5s6+CdTXcO9L21eWmdzDd/svnn/4zX89FUwJ8hDvqP2+VW1NRVUpjCVcblpMasFoYyeZUTCkcT9
+TBveriHVDlKz0XWw2v2zNYVkXJop5BJEHCFjIBRFlcCCJqhEOxVSGAdEHCPSn0jlt00eBmi3LhMD
+Q0kkYoqQ9GO7E8avRrvQLnqEJBKZGiBUUIz5GSVRSOkp5cHZMGnk3E1GyNW8m+AY922nwVS2NLC1
+9d7XetM+1rku96YE5xGonFr39FnrkR5Ndfv0vO4Y3/hX8EX70w2YgyGPUIp5Q8YxYUN7weTBPhvY
++d2uNPUldF0sCr+byvXgWbkRTMXUro/P24355qTMgxiNMCbzYkQMd+W3dW8lmFf9ZJ0O1jvYlf65
+09v7l/YaLYrKmEuo7XtLmJr2k2ZNx0l8Ktqn50XH+LHGY49/AdK6GK4KZW5kc3RyZWFtCmVuZG9i
+ago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNp
+RW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8
+Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBl
+IC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAg
+UgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdl
+SV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0F1dGhvciAoUG9saWNsaW5pY2EgR2lwdXprb2EgTm9y
+dGUpCi9DcmVhdGlvbkRhdGUgKEQ6MjAyNjA5MDEwODAwMDBaKQovVGl0bGUgKHB1cmNoYXNlLW9y
+ZGVyLTAxMjEucGRmKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAw
+MDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIgMDAwMDAgbiAKMDAwMDAwMDIwNSAwMDAwMCBuIAow
+MDAwMDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA4MDAgMDAwMDAgbiAKMDAwMDAwMDkwMiAwMDAwMCBu
+IAowMDAwMDAwOTk5IDAwMDAwIG4gCjAwMDAwMDEwOTYgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6
+ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDNBOThFN0U2NDM3QUVFN0IyMzgwMzc5
+MjJDNjJCNDY5PjwzQTk4RTdFNjQzN0FFRTdCMjM4MDM3OTIyQzYyQjQ2OT5dCj4+CnN0YXJ0eHJl
+ZgoxMjIxCiUlRU9GCg==
+
+--==EML-0121-boundary==--

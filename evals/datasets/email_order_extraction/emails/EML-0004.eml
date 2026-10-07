@@ -1,0 +1,34 @@
+From: Sara Lopez <sara.cli-013@example.com>
+To: orders@purchase-cycle.example
+Subject: Order attached - Clinica de Fisioterapia Centro
+Date: Wed, 02 Sep 2026 12:52:00 +0000
+Message-ID: <eml-0004@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0004-boundary=="
+
+--==EML-0004-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+Please find our order in the attached text file. Delivery to the usual addres=
+s.
+
+Thanks,
+Sara
+Clinica de Fisioterapia Centro
+
+--==EML-0004-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0004.txt"
+MIME-Version: 1.0
+
+seven packs incontinence pads, regular absorbency (28)
+6 pill crushers
+12 boxes 20G x 40 mm hypodermic needles
+75 bottles dermatological shower gel 750 ml
+3 pairs compression thigh-high stockings class I, size L
+
+--==EML-0004-boundary==--

@@ -1,0 +1,31 @@
+From: Nuria Roca <nuria.far-008@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Farmacia Sants
+Date: Sun, 15 Nov 2026 14:54:00 +0000
+Message-ID: <eml-0258@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0258-boundary=="
+
+--==EML-0258-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Attached is our order for next week.
+
+Thanks,
+Nuria
+Farmacia Sants
+
+--==EML-0258-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0258.txt"
+MIME-Version: 1.0
+
+5 boxes nitrile examination gloves, powder-free, value pack, size M
+120 boxes skin closure strips 3 x 75 mm
+25 bottles ethyl alcohol 96% 100 ml
+
+--==EML-0258-boundary==--

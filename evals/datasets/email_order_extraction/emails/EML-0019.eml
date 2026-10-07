@@ -1,0 +1,31 @@
+From: Carlos Ruiz <carlos.cli-006@example.com>
+To: orders@purchase-cycle.example
+Subject: Purchase order
+Date: Sun, 06 Sep 2026 21:07:00 +0000
+Message-ID: <eml-0019@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0019-boundary=="
+
+--==EML-0019-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+Attached is this week's order list.
+
+Regards,
+Carlos
+Centro Medico Salamanca
+
+--==EML-0019-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0019.txt"
+MIME-Version: 1.0
+
+4 boxes sterile disposable scalpel no. 11
+20 boxes hypodermic needle 19G x 40 mm
+5 elbow crutches, adult
+
+--==EML-0019-boundary==--

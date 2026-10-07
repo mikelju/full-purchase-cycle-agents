@@ -1,0 +1,29 @@
+From: Oier Bengoa <oier.far-005@example.com>
+To: orders@purchase-cycle.example
+Subject: Alcohol and cotton - Lakua
+Date: Fri, 27 Nov 2026 20:00:00 +0000
+Message-ID: <eml-0300@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0300-boundary=="
+
+--==EML-0300-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+Short order in the attachment.
+
+Oier
+Farmacia Lakua
+
+--==EML-0300-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0300.txt"
+MIME-Version: 1.0
+
+4 dozen bottles ethil alcohol 96% 500 ml
+one hundred and twenty rolls cotton wool 100 g
+
+--==EML-0300-boundary==--

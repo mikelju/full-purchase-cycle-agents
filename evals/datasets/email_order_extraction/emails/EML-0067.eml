@@ -1,0 +1,20 @@
+From: Diego Herrera <diego.far-007@example.com>
+To: orders@purchase-cycle.example
+Subject: Order request Farmacia Arguelles
+Date: Sun, 20 Sep 2026 21:31:00 +0000
+Message-ID: <eml-0067@dataset.purchase-cycle.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+Good afternoon,
+
+We would like to order:
+
+- 12 packs X-ray film 24 x 30 cm
+- 50 oxygen cylinders, 2 litre
+
+Please confirm price and availability.
+
+Diego
+Farmacia Arguelles

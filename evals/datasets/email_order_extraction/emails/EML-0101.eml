@@ -1,0 +1,33 @@
+From: Oier Bengoa <oier.far-005@example.com>
+To: orders@purchase-cycle.example
+Subject: Large order Lakua (file attached)
+Date: Wed, 30 Sep 2026 19:53:00 +0000
+Message-ID: <eml-0101@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0101-boundary=="
+
+--==EML-0101-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi again,
+
+This is a bigger order, all lines are in the attached file. One invoice pleas=
+e.
+
+Oier
+Farmacia Lakua
+
+--==EML-0101-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0101.txt"
+MIME-Version: 1.0
+
+11 adjustable aluminium walking sticks
+100 boxes latex sterile surgical gloves size 8.5
+16 boxes disposable syringe 5 ml, luer lock
+three hundred boxes blue detectable plasters for food handlers
+80 x hydroalcoholic hand sanitser gel 5 litre jerrycan
+
+--==EML-0101-boundary==--

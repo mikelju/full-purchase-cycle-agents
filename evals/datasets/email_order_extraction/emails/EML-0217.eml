@@ -1,0 +1,57 @@
+From: Alberto Sanz <alberto.cli-019@example.com>
+To: orders@purchase-cycle.example
+Subject: Valladolid clinic - supplies order
+Date: Tue, 03 Nov 2026 15:01:00 +0000
+Message-ID: <eml-0217@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0217-boundary=="
+
+--==EML-0217-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Good morning,
+
+Please find our supplies order attached. One item is for the ultrasound room;=
+ leave it out if it is not in your catalogue.
+
+Best regards,
+Alberto Sanz
+
+--==EML-0217-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0217.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDUyMAo+PgpzdHJlYW0KeJx9
+k11vmzAUQN/7K+7jJiWurz8C9HELnTqtmZqQSntk4ExuHcjA2db9+kIgMXMnP/EhnePLsWHw+YoS
+GcHvqw8ZXN8ioCCUQraDNOtfcSQYgxQxkQvISni3TL/cPabrb7D6mqUwh3X6sE03WbqEuyy937yH
+7GlEr28ZIP2fjUWExoNNGf1LNWDrG/hodKWLHO5V2V8ec2Pysja6nE3uJ/5R1i8xyFa1VVAd999V
+cwPL1ZwyjP6ZByFx47CYcAki4YRxEIxIBnNMSCygUbCBywIipmSBpwXWanf2RZTE0YWWnEjh4xEn
+EZ3iS9UWjT5YXVdnjWSCCDx7Bqmn6WsxMfU82JcLn0jC4jOPAknE3wiSmCBOBdtKW2+j3obpxudJ
+MMyCkig6CdHLMrKhLA7+pCprFBj986hLaOv8ALJ7sh3QqJ02xo812IOxJqNRv9WAh1s5/kk1zUuR
+X3ZsrNN/mgzWEZQk/KRgXp2RDdVxcGry1uoCniuloD0eDnVjZ9Dqvx3ghxnEwTBOjNwPM+DhMI4/
+Tg7RGIV3w2MwCsPzz8q9KCMbiuLgjTbPYPODAiRMQrGHP90JRtj7RQZrsIizitgvMuDhIo7vi7Re
+EuQkXgSTUOzHOK3vJRnZUBIHb41t8rY+ViX8UGZ2+YWKurK5rlTjpxnswTTOjn6ZgQ6Xcfj0rLwC
+Qi98FQplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9s
+ZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQK
+Pj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5B
+bnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2Jq
+Cjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9J
+bWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQXV0aG9yIChDbGlu
+aWNhIE1lZGljYSBWYWxsYWRvbGlkKQovQ3JlYXRpb25EYXRlIChEOjIwMjYwOTAxMDgwMDAwWikK
+L1RpdGxlIChkZWxpdmVyeS1ub3RlLTAyMTcucGRmKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAw
+MDAwMCA2NTUzNSBmIAowMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIgMDAwMDAgbiAKMDAw
+MDAwMDIwNSAwMDAwMCBuIAowMDAwMDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA4NzcgMDAwMDAgbiAK
+MDAwMDAwMDk3OSAwMDAwMCBuIAowMDAwMDAxMDc2IDAwMDAwIG4gCjAwMDAwMDExNzMgMDAwMDAg
+biAKdHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPEI1N0Y2
+NDI2RjVBQTAxMTJBQTAwODYxQjY3MEQxNDVGPjxCNTdGNjQyNkY1QUEwMTEyQUEwMDg2MUI2NzBE
+MTQ1Rj5dCj4+CnN0YXJ0eHJlZgoxMjk2CiUlRU9GCg==
+
+--==EML-0217-boundary==--

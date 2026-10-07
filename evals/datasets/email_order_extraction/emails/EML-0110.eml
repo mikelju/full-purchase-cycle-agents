@@ -1,0 +1,31 @@
+From: Jordi Ferrer <jordi.cli-010@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Centre Medic Eixample
+Date: Sat, 03 Oct 2026 10:50:00 +0000
+Message-ID: <eml-0110@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0110-boundary=="
+
+--==EML-0110-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Order attached as usual.
+
+Thanks,
+Jordi
+Centre Medic Eixample
+
+--==EML-0110-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0110.txt"
+MIME-Version: 1.0
+
+15 boxes latex examination gloves, powder-free, size M
+14 boxes disposable syringe 10 ml, luer slipp
+12 boxes hypodermic needle 27G x 13 mm
+
+--==EML-0110-boundary==--

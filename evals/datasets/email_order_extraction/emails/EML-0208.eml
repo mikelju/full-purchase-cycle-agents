@@ -1,0 +1,56 @@
+From: Paula Gutierrez <paula.cli-018@example.com>
+To: orders@purchase-cycle.example
+Subject: Santander centre - order attached
+Date: Sun, 01 Nov 2026 00:04:00 +0000
+Message-ID: <eml-0208@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0208-boundary=="
+
+--==EML-0208-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+Attached is a short order for the centre. Please deliver it with any pending =
+items.
+
+Thanks,
+Paula Gutierrez
+Centro de Estetica Medica Santander
+
+--==EML-0208-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0208.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDM3OQo+PgpzdHJlYW0KeJx9
+kttOwkAURd/9ivOoCRzm2k55UywxRgNC+YBCh1jFlsxMvX29vYAlhfRpksnsdfbqKYPHK4LSh6+r
+uwhGUwpUICEQbSGMqitOkSqQQqH0IErger5aTB5ulyHMFvfh4gait8PL0ZQBJZfCzEei6vCksC7/
+0GYME505k0OiIbROu3QTw7NOqmMZZy7OEm1O2AdQhW9AM1M+AKO32uhso8cwnw0JI+osIwKOxG+G
+p+5nfBFfeQdtc6aQSxC+h4yBUBRVAEMaoBLlRFhCC/c4eqT5LCZPio07QquqTBwZSiIRXYSkdbMT
+xktRditL/kMCiUwdIVRQ9PkZJVBI6SlllaWus5ZzN+khV/1ugqPfrHwar026gTh51Tb91LDfxeXO
+jB1AbG1unE7Apr/aduWbIb3y7RBKu9pNvF+7za/zb8i35R9IjpyDKvdQin5VxjFgNSWs1CrX7H2n
+wRb7fek3qPXgqevXkHv9WjKVpCvY5PsFW0Bxstc/iFbkowplbmRzdHJlYW0KZW5kb2JqCjUgMCBv
+YmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGlu
+ZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VG
+b250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUx
+Ci9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2
+IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+Pgpl
+bmRvYmoKOCAwIG9iago8PAovQXV0aG9yIChDZW50cm8gZGUgRXN0ZXRpY2EgTWVkaWNhIFNhbnRh
+bmRlcikKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDkwMTA4MDAwMFopCi9UaXRsZSAocHVyY2hhc2Ut
+b3JkZXItMDIwOC5wZGYpCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAw
+MDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBuIAowMDAwMDAwMjA1IDAwMDAwIG4g
+CjAwMDAwMDAyODUgMDAwMDAgbiAKMDAwMDAwMDczNiAwMDAwMCBuIAowMDAwMDAwODM4IDAwMDAw
+IG4gCjAwMDAwMDA5MzUgMDAwMDAgbiAKMDAwMDAwMTAzMiAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9T
+aXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8MDQ0ODY2RjdCNjY5ODQ1NDRCNDA3
+NzhCQ0E5OUJERjc+PDA0NDg2NkY3QjY2OTg0NTQ0QjQwNzc4QkNBOTlCREY3Pl0KPj4Kc3RhcnR4
+cmVmCjExNjYKJSVFT0YK
+
+--==EML-0208-boundary==--

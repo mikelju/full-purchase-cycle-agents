@@ -1,0 +1,33 @@
+From: Antonio Diaz <antonio.res-006@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Santa Clara (attached)
+Date: Fri, 09 Oct 2026 13:23:00 +0000
+Message-ID: <eml-0131@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0131-boundary=="
+
+--==EML-0131-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Our order is attached. Delivery to the back entrance as always.
+
+Thanks,
+Antonio
+Residencia Santa Clara
+
+--==EML-0131-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0131.txt"
+MIME-Version: 1.0
+
+3 boxes urine drainage bag 2 litres with tap
+three hundred packs patient hygiene wet wipes for body washing
+100 hot water bottles 2 litres
+10 massage tables, folding
+10 boxes children's surgical face mask
+
+--==EML-0131-boundary==--

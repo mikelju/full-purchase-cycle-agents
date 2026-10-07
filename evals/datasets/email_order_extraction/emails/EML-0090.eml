@@ -1,0 +1,57 @@
+From: Beatriz Fernandez <beatriz.res-011@example.com>
+To: orders@purchase-cycle.example
+Subject: Order for the Camino residence
+Date: Sun, 27 Sep 2026 14:30:00 +0000
+Message-ID: <eml-0090@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0090-boundary=="
+
+--==EML-0090-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Dear team,
+
+Please find attached our order for the coming weeks. The residence reception =
+will receive the delivery.
+
+Best wishes,
+Beatriz Fernandez
+Residencia Camino de Santiago
+
+--==EML-0090-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0090.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ0OQo+PgpzdHJlYW0KeJx9
+k11vmzAUQN/7K+7LpE1aXH8G08ctROqUZS2hlfpIwGndEhwRd1P//UhNcOpUfkU65957AAq/LjAS
+Cfy7+FHA5ZwA4QhjKDaQFYdHjCAiQXCJxBSKGr7OssX1fZY/wPJPkcEE8uz2LlsV2Qyui+z36hsU
+zwN6OadA8Gc2miAsnU01+q/qwJoryNVe16qtdAk/y61uDdQKVmVrdflovsNCmfbEPqgOA5xqaayC
+9nW7Vt0VzJYTjFP8YRsCqV+GSsQE8JQhyoBTJChMSIokh64fCuMALjGakvcBudocfQlGMhlpwZDg
+IZ4wlOBTfKb2Vad3VvszBOWIk6PHSQPNoRXlp55b+zbyqUBUHnnCCUrYmSCViJBTwV2rbfCazsP0
+67M0GmaKUZK8C0mQZWBjWTycm9e2hspYa1rYlfU+jONs0TjeRnHYxuHxNp5fl49gNiBHzZDjcIuI
+5uAYpcztEOQY2FgODy/0DtZls4XVzRyICGM4VzSGd5GwhaPjLTy+t7p6CTqwfl8S7UDJ8YdkQYeB
+jXXwcGaf3hoom8o8maY/+AsQaLTtVFjEWaNFvPWsiKPjRTy+7r/SZtzgP6pMMDEKZW5kc3RyZWFt
+CmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9X
+aW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAg
+b2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9T
+dWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9G
+MSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMg
+L0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0F1dGhvciAoUmVzaWRlbmNpYSBDYW1pbm8g
+ZGUgU2FudGlhZ28pCi9DcmVhdGlvbkRhdGUgKEQ6MjAyNjA5MDEwODAwMDBaKQovVGl0bGUgKGRl
+bGl2ZXJ5LW5vdGUtMDA5MC5wZGYpCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1
+IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBuIAowMDAwMDAwMjA1IDAw
+MDAwIG4gCjAwMDAwMDAyODUgMDAwMDAgbiAKMDAwMDAwMDgwNiAwMDAwMCBuIAowMDAwMDAwOTA4
+IDAwMDAwIG4gCjAwMDAwMDEwMDUgMDAwMDAgbiAKMDAwMDAwMTEwMiAwMDAwMCBuIAp0cmFpbGVy
+Cjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8NDdBQ0ZBOTA4MTI2QjhD
+NUQ3NEM0NjY1ODM0M0E2QTM+PDQ3QUNGQTkwODEyNkI4QzVENzRDNDY2NTgzNDNBNkEzPl0KPj4K
+c3RhcnR4cmVmCjEyMjkKJSVFT0YK
+
+--==EML-0090-boundary==--

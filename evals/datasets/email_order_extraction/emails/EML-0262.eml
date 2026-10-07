@@ -1,0 +1,32 @@
+From: Noelia Varela <noelia.cli-015@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Riazor (txt attached)
+Date: Mon, 16 Nov 2026 18:46:00 +0000
+Message-ID: <eml-0262@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0262-boundary=="
+
+--==EML-0262-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good afternoon,
+
+Please find our order in the attachment.
+
+Kind regards,
+Noelia
+Clinica Oftalmologica Riazor
+
+--==EML-0262-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0262.txt"
+MIME-Version: 1.0
+
+18 disposable protective coveralls, size L
+11 boxes insuline syringe 1 ml with fixed needle
+4 dozen handheld pulse oximeters with probe
+2 boxes FFP1 masks
+
+--==EML-0262-boundary==--

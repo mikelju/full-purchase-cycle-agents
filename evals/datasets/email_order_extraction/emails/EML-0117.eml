@@ -1,0 +1,37 @@
+From: Ane Goikoetxea <ane.cli-003@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Clinica Fisioterapia Deusto
+Date: Mon, 05 Oct 2026 11:21:00 +0000
+Message-ID: <eml-0117@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0117-boundary=="
+
+--==EML-0117-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Egun on,
+
+We attach our order for the physiotherapy units. Please call if anything is o=
+ut of stock.
+
+Thank you,
+Ane
+Clinica Fisioterapia Deusto
+
+--==EML-0117-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0117.txt"
+MIME-Version: 1.0
+
+thirty-five aneroid sphygmomanometers with stethoscope
+6 boxes insulin syringes 2 ml
+19 bottles ethyl alcohol 70% 100 ml
+17 packs examination couch paper roll 60 cm x 50 m
+18 tubes moisturising body cream 100 ml
+9 first aid kits, small, for vehicles
+5 first aid kit refil packs
+19 packs non-sterile gauze swabs 10 x 10 cm, 12 ply
+
+--==EML-0117-boundary==--

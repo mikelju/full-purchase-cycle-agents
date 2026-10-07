@@ -1,0 +1,29 @@
+From: Encarna Sanchez <encarna.res-015@example.com>
+To: orders@purchase-cycle.example
+Subject: Plasters order
+Date: Thu, 15 Oct 2026 09:43:00 +0000
+Message-ID: <eml-0151@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0151-boundary=="
+
+--==EML-0151-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Please see the attached order file.
+
+Regards,
+Encarna
+Residencia Las Acacias
+
+--==EML-0151-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0151.txt"
+MIME-Version: 1.0
+
+19 boxes waterproof adhesive plasters, assorted sizes
+
+--==EML-0151-boundary==--

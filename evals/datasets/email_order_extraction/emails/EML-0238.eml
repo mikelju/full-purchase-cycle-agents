@@ -1,0 +1,14 @@
+From: Alvaro Benitez <alvaro.far-011@example.com>
+To: orders@purchase-cycle.example
+Subject: VAT rate on invoice 2026-0933
+Date: Mon, 09 Nov 2026 18:34:00 +0000
+Message-ID: <eml-0238@dataset.purchase-cycle.example>
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<html><body><p>Hello,</p><p>Invoice 2026-0933 applies the general VAT rate to=
+ the face masks, but our accountant believes they should carry the reduced ra=
+te. Could you check which rate is correct and, if needed, send a corrected in=
+voice?</p><p>Kind regards,<br>Alvaro Benitez<br>Farmacia del Puerto</p></body=
+></html>

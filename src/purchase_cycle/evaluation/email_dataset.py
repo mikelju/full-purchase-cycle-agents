@@ -282,11 +282,21 @@ def render_pdf(planned: dict, text: dict) -> bytes:
 
 
 def _fixed_zip(data: bytes) -> bytes:
-    """Rewrite a zip archive with fixed entry dates so the bytes do not depend on the clock."""
+    """Rewrite a zip archive with fixed entry dates so the bytes do not depend on the clock.
+
+    openpyxl stamps `dcterms:modified` with the save time, so it is reset to the creation date.
+    """
     out = io.BytesIO()
     with zipfile.ZipFile(io.BytesIO(data)) as source, zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as target:
         for info in source.infolist():
-            target.writestr(zipfile.ZipInfo(info.filename, date_time=FILE_DATE), source.read(info.filename))
+            content = source.read(info.filename)
+            if info.filename == "docProps/core.xml":
+                content = re.sub(
+                    rb"(<dcterms:modified[^>]*>)[^<]*(</dcterms:modified>)",
+                    rb"\g<1>" + BASE_DATE.strftime("%Y-%m-%dT%H:%M:%SZ").encode() + rb"\g<2>",
+                    content,
+                )
+            target.writestr(zipfile.ZipInfo(info.filename, date_time=FILE_DATE), content)
     return out.getvalue()
 
 

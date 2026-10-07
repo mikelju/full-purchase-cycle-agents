@@ -1,0 +1,29 @@
+From: Laura Etxeberria <laura.cli-001@example.com>
+To: orders@purchase-cycle.example
+Subject: Order - Clinica Dental Arenal
+Date: Tue, 15 Sep 2026 08:24:00 +0000
+Message-ID: <eml-0048@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0048-boundary=="
+
+--==EML-0048-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+One item this time, details in the attachment.
+
+Best,
+Laura
+Clinica Dental Arenal
+
+--==EML-0048-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0048.txt"
+MIME-Version: 1.0
+
+75 boxes 31G pen needles, 8 mm length
+
+--==EML-0048-boundary==--
