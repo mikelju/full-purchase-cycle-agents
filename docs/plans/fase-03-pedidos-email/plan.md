@@ -69,7 +69,9 @@ This file is the durable state: a new session resumes from here and from Git.
   EML-0031: "alcohol prep pads" did not say box of 100 or 200, the line now says "boxes of 100"; EML-0118: subject and body asked for a quote, they now place an order; labels unchanged, `email-dataset check` 0 rejected and `email-dataset build` changed only those two `.eml` files and their dataset rows.
   13 agreeing emails carry the annotators' uncertainty notes (unit readings such as "75 underpads" as packs), kept in the file; the readings match the labels, so no change.
   New test `test_versioned_second_pass_review_covers_every_email_and_decides_every_disagreement` recomputes the disagreements and requires a decision for each.
-- [ ] 9. Audit sample of 40 random emails and audit report command with Wilson interval (C10) - check: `email-audit create` writes `evals/audit/email_order_extraction-audit-v1.0.csv`; tests for create and report on a temporary file.
+- [x] 9. Audit sample of 40 random emails and audit report command with Wilson interval (C10) - check: `email-audit create` writes `evals/audit/email_order_extraction-audit-v1.0.csv`; tests for create and report on a temporary file.
+  Evidence (2026-10-07): the owner reviewed the 40 sampled emails and marked all 40 `ok`, no comments; `uv run purchase-cycle email-audit report` gives n=40, 0 wrong labels, error rate 0.0%, 95% Wilson CI [0.0%, 8.8%], exit 0; output in `.evidence/fase-03/audit-report.txt`.
+  Tests `test_audit_create_samples_forty_seeded_emails_and_never_overwrites`, `test_audit_report_passes_with_at_most_one_wrong_label` and `test_audit_report_refuses_rows_without_a_verdict` cover create and report on temporary files.
   Owner action: the owner reviews the 40 emails (about 20 minutes, Lavish page as in phase 02); the executor stops this increment after creating the file and leaves it pending until the verdicts are in, then runs `email-audit report` and saves `.evidence/fase-03/audit-report.txt`.
   Pass: at most 1 wrong label; more than 1 stops the phase for an owner decision.
   State (2026-10-07): audit file created, waiting for owner.
