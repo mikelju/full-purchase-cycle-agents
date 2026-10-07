@@ -1,4 +1,5 @@
 import copy
+import csv
 from collections import Counter
 
 import pytest
@@ -6,6 +7,8 @@ import pytest
 from purchase_cycle.catalog import PRODUCTS
 from purchase_cycle.email_order import parse_email
 from purchase_cycle.evaluation import email_dataset as ed
+from purchase_cycle.evaluation.planning import read_jsonl
+from purchase_cycle.evaluation.stats import wilson_interval
 
 PRODUCT_BY_SKU = {p.sku: p for p in PRODUCTS}
 
@@ -281,3 +284,115 @@ def test_versioned_dataset_is_the_build_of_the_versioned_texts(plan):
     counts = Counter((row["category"], row["split"]) for row in rows)
     assert all(counts[(c, "dev")] == ed.DEV_PER_CATEGORY for c in ed.CATEGORIES)
     assert all(counts[(c, "test")] == ed.EMAILS_PER_CATEGORY - ed.DEV_PER_CATEGORY for c in ed.CATEGORIES)
+
+
+# ---------- second-pass review (increment 8) ----------
+
+
+def _labelled_email():
+    lines = [
+        {
+            "line_id": "E-L1",
+            "text": "3 boxes of nitrile gloves size M",
+            "expected_sku": "GLV-NIT-M",
+            "expected_quantity": 3,
+        },
+        {"line_id": "E-L2", "text": "10 patient lifts", "expected_sku": None, "expected_quantity": 10},
+    ]
+    return {"id": "E", "is_order": True, "lines": lines}
+
+
+def _reading(**changes):
+    lines = [
+        {"text": "nitrile gloves M 3 boxes", "sku": "GLV-NIT-M", "quantity": 3},
+        {"text": "10 patient lifts", "sku": None, "quantity": 10},
+    ]
+    return {"id": "E", "is_order": True, "lines": lines, "notes": ""} | changes
+
+
+def test_review_finds_no_disagreement_when_the_reading_matches_the_labels():
+    assert ed.review_disagreements(_labelled_email(), _reading()) == []
+
+
+def test_review_reports_each_kind_of_disagreement():
+    email = _labelled_email()
+    wrong_sku = _reading(
+        lines=[{"text": "nitrile gloves M", "sku": "GLV-NIT-L", "quantity": 4}, _reading()["lines"][1]]
+    )
+    assert [(d["field"], d["label"], d["read"]) for d in ed.review_disagreements(email, wrong_sku)] == [
+        ("sku", "GLV-NIT-M", "GLV-NIT-L"),
+        ("quantity", 3, 4),
+    ]
+    missing_and_extra = _reading(
+        is_order=False, lines=[_reading()["lines"][0], {"text": "a box of plasters", "sku": None, "quantity": 1}]
+    )
+    found = [(d["field"], d.get("line_id")) for d in ed.review_disagreements(email, missing_and_extra)]
+    assert found == [("is_order", None), ("line", "E-L2"), ("line", None)]
+
+
+def test_review_keeps_earlier_decisions_and_leaves_new_disagreements_pending():
+    email = _labelled_email()
+    disagreeing = _reading(is_order=False)
+    previous = [{"id": "E", "decision": "annotator_wrong", "justification": "the email says order"}]
+    assert ed.build_review([email], [disagreeing], previous)[0]["decision"] == "annotator_wrong"
+    assert ed.build_review([email], [disagreeing], [])[0]["decision"] == "pending"
+    assert ed.build_review([email], [_reading()], previous)[0]["decision"] == "agree"
+
+
+def test_versioned_second_pass_review_covers_every_email_and_decides_every_disagreement():
+    dataset = {e["id"]: e for e in ed.load_dataset()}
+    records = read_jsonl(ed.REVIEW_PATH)
+    assert [r["id"] for r in records] == list(dataset)
+    for record in records:
+        reading = {"is_order": record["read"]["is_order"], "lines": record["read"]["lines"]}
+        assert ed.review_disagreements(dataset[record["id"]], reading) == record["disagreements"]
+        assert record["decision"] in ed.REVIEW_DECISIONS
+        assert (record["decision"] == "agree") == (record["disagreements"] == [])
+        assert record["decision"] == "agree" or record["justification"].strip()
+
+
+# ---------- owner audit (increment 9) ----------
+
+
+def _audit_file(path, wrong: int, pending: int = 0):
+    rows = []
+    for i in range(ed.AUDIT_SIZE):
+        verdict = "" if i < pending else "wrong" if i < pending + wrong else "ok"
+        rows.append(dict.fromkeys(ed.AUDIT_COLUMNS, "") | {"id": f"EML-{i:04d}", "verdict": verdict})
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=ed.AUDIT_COLUMNS, delimiter=";")
+        writer.writeheader()
+        writer.writerows(rows)
+    return path
+
+
+@pytest.mark.parametrize(("wrong", "code"), [(0, 0), (1, 0), (2, 1)])
+def test_audit_report_passes_with_at_most_one_wrong_label(tmp_path, capsys, wrong, code):
+    assert ed.MAX_WRONG == 1
+    assert ed.report_audit(_audit_file(tmp_path / "audit.csv", wrong)) == code
+    low, high = wilson_interval(wrong, ed.AUDIT_SIZE)
+    out = capsys.readouterr().out
+    assert f"wrong labels={wrong} " in out
+    assert f"95% CI [{low:.1%}, {high:.1%}]" in out
+
+
+def test_audit_report_refuses_rows_without_a_verdict(tmp_path):
+    assert ed.report_audit(_audit_file(tmp_path / "audit.csv", 0, pending=1)) == 2
+
+
+def test_audit_create_samples_forty_seeded_emails_and_never_overwrites(tmp_path):
+    path = tmp_path / "audit.csv"
+    assert ed.create_audit(path) == 0
+    with path.open(encoding="utf-8-sig", newline="") as fh:
+        rows = list(csv.DictReader(fh, delimiter=";"))
+    dataset = {e["id"]: e for e in ed.load_dataset()}
+    assert len(rows) == ed.AUDIT_SIZE == 40
+    assert [r["id"] for r in rows] == sorted({r["id"] for r in rows})
+    assert all(r["verdict"] == "" and r["email_text"].startswith("Subject: ") for r in rows)
+    assert all(r["is_order"] == ("yes" if dataset[r["id"]]["is_order"] else "no") for r in rows)
+    first = path.read_bytes()
+    assert ed.create_audit(path) == 1 and path.read_bytes() == first
+    second = tmp_path / "again.csv"
+    ed.create_audit(second)
+    assert second.read_bytes() == first
+    assert ed.AUDIT_PATH.read_bytes() == first

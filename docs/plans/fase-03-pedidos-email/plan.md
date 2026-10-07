@@ -1,6 +1,6 @@
 # Phase 03 - Email orders: plan and results
 
-Status: in execution; batches A and B done, batch C next
+Status: in execution; batches A and B done, batch C done except the owner audit of increment 9, batch D next
 Spec: `spec.md` (frozen)
 Base: branch `fase-03-pedidos-email` from `main` at commit `d335905`; the spec was frozen in `d283f99`.
 
@@ -63,10 +63,18 @@ This file is the durable state: a new session resumes from here and from Git.
   Evidence (2026-10-07): six writer files in `texts/` (52 emails each), each `uv run purchase-cycle email-dataset check <file>` 52 checked, 0 rejected; `uv run purchase-cycle email-dataset build` exit 0, output in `.evidence/fase-03/dataset-build.txt`: 312 `.eml` files in `emails/` and `dataset.jsonl` with 312 emails and 923 expected lines, 52 per category, 13 dev and 39 test per category (78 dev and 234 test emails, 273 dev and 650 test lines).
   The first build showed that openpyxl stamps `dcterms:modified` with the save time, so `.xlsx` bytes changed between runs; `_fixed_zip` now resets it to the creation date.
   New test `test_versioned_dataset_is_the_build_of_the_versioned_texts` rebuilds from the versioned texts and compares `dataset.jsonl`, every `.eml` byte for byte and the split; `uv run pytest -q tests/test_email_dataset.py` 29 passed.
-- [ ] 8. Second-pass review of every written email by clean-context subagents that see only the catalog and the rendered text, compared with the plan (C9) - check: `second_pass_review.jsonl` versioned, disagreements fixed or justified, counts recorded here.
+- [x] 8. Second-pass review of every written email by clean-context subagents that see only the catalog and the rendered text, compared with the plan (C9) - check: `second_pass_review.jsonl` versioned, disagreements fixed or justified, counts recorded here.
+  Evidence (2026-10-07): four clean-context annotators read the catalog and `model_text(parse_email(...))` of 78 emails each, never the labels; `uv run purchase-cycle email-dataset review <four annotation files>` pairs each labelled line with the read line of the same SKU, else the most similar text, and writes `second_pass_review.jsonl` (one record per email with the reading, its disagreements, the decision and the justification; earlier decisions are kept on a re-run).
+  Counts: 312 emails, 310 agree and 2 disagree (EML-0031 SKU of one line; EML-0118 order or not and its line); 923 labelled lines, 921 agree on SKU and quantity; 2 fixed by text, 0 justified as annotator wrong.
+  EML-0031: "alcohol prep pads" did not say box of 100 or 200, the line now says "boxes of 100"; EML-0118: subject and body asked for a quote, they now place an order; labels unchanged, `email-dataset check` 0 rejected and `email-dataset build` changed only those two `.eml` files and their dataset rows.
+  13 agreeing emails carry the annotators' uncertainty notes (unit readings such as "75 underpads" as packs), kept in the file; the readings match the labels, so no change.
+  New test `test_versioned_second_pass_review_covers_every_email_and_decides_every_disagreement` recomputes the disagreements and requires a decision for each.
 - [ ] 9. Audit sample of 40 random emails and audit report command with Wilson interval (C10) - check: `email-audit create` writes `evals/audit/email_order_extraction-audit-v1.0.csv`; tests for create and report on a temporary file.
   Owner action: the owner reviews the 40 emails (about 20 minutes, Lavish page as in phase 02); the executor stops this increment after creating the file and leaves it pending until the verdicts are in, then runs `email-audit report` and saves `.evidence/fase-03/audit-report.txt`.
   Pass: at most 1 wrong label; more than 1 stops the phase for an owner decision.
+  State (2026-10-07): audit file created, waiting for owner.
+  `uv run purchase-cycle email-audit create` wrote 40 emails (seed 40, sorted by id) to `evals/audit/email_order_extraction-audit-v1.0.csv`, semicolon-separated with a BOM; columns `id`, `category`, `file`, `email_text` (the text the model sees), `is_order`, `expected_lines` (one per line: text, SKU and product or NOT IN CATALOG, quantity and sale unit), `verdict` (`ok` or `wrong`) and `comment`.
+  Tests on temporary files: create (40 seeded rows, same bytes on a second run, never overwrites) and report (0 and 1 wrong pass, 2 fail, a missing verdict exits 2, Wilson interval printed); `uv run pytest -q tests/test_email_dataset.py` 38 passed.
 
 ### Batch D - Evaluation, recordings and baseline
 - [ ] 10. Evaluation `email_order_extraction`: deterministic graders, intake accuracy, line recall, line precision, field accuracy, out-of-catalog detection, email exact match, Wilson intervals globally, per category and per source, failures by category, absolute and McNemar regression gates, third suite in `npm run eval` and `eval-upload` (C11) - check: `tests/test_email_eval.py` forces each new gate (intake accuracy, line recall, line precision, both regression tests) to fail and proves a non-zero exit; the two existing suites still pass with their gates.

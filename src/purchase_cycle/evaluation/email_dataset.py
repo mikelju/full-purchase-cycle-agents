@@ -8,6 +8,7 @@ texts; this module validates them and renders deterministic `.eml` files whose
 attachments are built from the plan, so attachment contents match the labels.
 """
 
+import csv
 import html
 import io
 import random
@@ -22,7 +23,7 @@ from pathlib import Path
 
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
 from purchase_cycle.config import EVALS_DIR
-from purchase_cycle.email_order import EmailRejected, parse_email
+from purchase_cycle.email_order import EmailRejected, model_text, parse_email
 from purchase_cycle.evaluation.planning import (
     GENERIC_QUANTITIES,
     OUT_OF_CATALOG_ITEMS,
@@ -32,6 +33,7 @@ from purchase_cycle.evaluation.planning import (
     read_jsonl,
     write_jsonl,
 )
+from purchase_cycle.evaluation.stats import wilson_interval
 from purchase_cycle.web_form import match_key
 
 DATASET_VERSION = "1.0"
@@ -104,6 +106,15 @@ PLAN_PATH = DATASET_DIR / "plan.jsonl"
 TEXTS_DIR = DATASET_DIR / "texts"
 EMAILS_DIR = DATASET_DIR / "emails"
 DATASET_PATH = DATASET_DIR / "dataset.jsonl"
+REVIEW_PATH = DATASET_DIR / "second_pass_review.jsonl"
+REVIEW_DECISIONS = ("agree", "label_fixed", "annotator_wrong")
+MIN_LINE_SIMILARITY = 0.5
+AUDIT_PATH = EVALS_DIR / "audit" / f"email_order_extraction-audit-v{DATASET_VERSION}.csv"
+AUDIT_SEED = 40
+AUDIT_SIZE = 40
+MAX_WRONG = 1
+AUDIT_COLUMNS = ("id", "category", "file", "email_text", "is_order", "expected_lines", "verdict", "comment")
+VERDICTS = ("ok", "wrong")
 
 PRODUCT_BY_SKU = {p.sku: p for p in PRODUCTS}
 CUSTOMER_BY_CODE = {c.code: c for c in CUSTOMERS}
@@ -534,6 +545,150 @@ def load_dataset(path: Path = DATASET_PATH) -> list[dict]:
     return read_jsonl(path)
 
 
+# ---------- second-pass review ----------
+
+
+def _line_similarity(label_text: str, read_text: str) -> float:
+    a, b = match_key(label_text), match_key(read_text)
+    if a and b and (a in b or b in a):
+        return 1.0
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def review_disagreements(email: dict, review: dict) -> list[dict]:
+    """Differences between the labels of one email and a blind annotator's reading of it.
+
+    Each labelled line is paired with the read line of the same SKU, else with
+    the most similar read text (at least MIN_LINE_SIMILARITY); unpaired lines on
+    either side are disagreements too.
+    """
+    found = []
+    if review["is_order"] != email["is_order"]:
+        found.append({"field": "is_order", "label": email["is_order"], "read": review["is_order"]})
+    unpaired = list(review["lines"])
+    for line in email["lines"]:
+        pair = next((r for r in unpaired if r["sku"] and r["sku"] == line["expected_sku"]), None)
+        if pair is None and unpaired:
+            score, pair = max(((_line_similarity(line["text"], r["text"]), r) for r in unpaired), key=lambda t: t[0])
+            if score < MIN_LINE_SIMILARITY:
+                pair = None
+        if pair is None:
+            found.append({"field": "line", "line_id": line["line_id"], "label": line["expected_sku"], "read": None})
+            continue
+        unpaired.remove(pair)
+        for field, label_key, read_key in (
+            ("sku", "expected_sku", "sku"),
+            ("quantity", "expected_quantity", "quantity"),
+        ):
+            if pair[read_key] != line[label_key]:
+                found.append(
+                    {"field": field, "line_id": line["line_id"], "label": line[label_key], "read": pair[read_key]}
+                )
+    found += [{"field": "line", "line_id": None, "label": None, "read": r["text"]} for r in unpaired]
+    return found
+
+
+def build_review(dataset: list[dict], reviews: list[dict], previous: list[dict]) -> list[dict]:
+    """One record per email: the blind reading, its disagreements with the labels and the decision.
+
+    Decisions and justifications of an earlier review file are kept; a new
+    disagreement starts as `pending` until it is fixed or justified by hand.
+    """
+    by_id = {r["id"]: r for r in reviews}
+    kept = {r["id"]: r for r in previous}
+    records = []
+    for email in dataset:
+        review = by_id[email["id"]]
+        found = review_disagreements(email, review)
+        old = kept.get(email["id"], {})
+        decision = old.get("decision", "pending") if found else "agree"
+        records.append(
+            {
+                "id": email["id"],
+                "read": {"is_order": review["is_order"], "lines": review["lines"]},
+                "notes": review.get("notes", ""),
+                "disagreements": found,
+                "decision": decision,
+                "justification": old.get("justification", "") if found else "",
+            }
+        )
+    return records
+
+
+def cmd_review(args) -> int:
+    reviews = [row for path in args.annotations for row in read_jsonl(Path(path))]
+    previous = read_jsonl(REVIEW_PATH) if REVIEW_PATH.exists() else []
+    records = build_review(load_dataset(), reviews, previous)
+    write_jsonl(REVIEW_PATH, records)
+    counts = Counter(r["decision"] for r in records)
+    print(f"Reviewed {len(records)} emails -> {REVIEW_PATH}")
+    print("  " + ", ".join(f"{d} {counts[d]}" for d in (*REVIEW_DECISIONS, "pending")))
+    return 1 if counts["pending"] else 0
+
+
+# ---------- owner audit ----------
+
+
+def _expected_lines(email: dict) -> str:
+    out = []
+    for line in email["lines"]:
+        product = PRODUCT_BY_SKU.get(line["expected_sku"])
+        target = f"{product.sku} {product.name}" if product else "NOT IN CATALOG"
+        unit = f" ({line['sale_unit']})" if product else ""
+        out.append(f"{line['line_id']}: {line['text']} -> {target} x {line['expected_quantity']}{unit}")
+    return "\n".join(out)
+
+
+def create_audit(path: Path = AUDIT_PATH, dataset_path: Path = DATASET_PATH) -> int:
+    if path.exists():
+        print(f"{path} already exists; it may hold the owner's verdicts, so it is not overwritten")
+        return 1
+    dataset = load_dataset(dataset_path)
+    sample = sorted(random.Random(AUDIT_SEED).sample(dataset, AUDIT_SIZE), key=lambda e: e["id"])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Semicolons and a BOM so a Spanish-locale Excel opens the columns directly, as in phases 01 and 02.
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=AUDIT_COLUMNS, delimiter=";")
+        writer.writeheader()
+        for email in sample:
+            data = (dataset_path.parent / email["file"]).read_bytes()
+            writer.writerow(
+                {
+                    "id": email["id"],
+                    "category": email["category"],
+                    "file": email["file"],
+                    "email_text": model_text(parse_email(data)),
+                    "is_order": "yes" if email["is_order"] else "no",
+                    "expected_lines": _expected_lines(email),
+                    "verdict": "",
+                    "comment": "",
+                }
+            )
+    print(f"Wrote {len(sample)} emails -> {path}")
+    return 0
+
+
+def report_audit(path: Path = AUDIT_PATH) -> int:
+    with path.open(encoding="utf-8-sig", newline="") as fh:
+        rows = list(csv.DictReader(fh, delimiter=";"))
+    pending = [r["id"] for r in rows if r["verdict"].strip().lower() not in VERDICTS]
+    if pending:
+        print(f"{len(pending)} rows still without a verdict (ok or wrong), first: {', '.join(pending[:5])}")
+        return 2
+    wrong = [r for r in rows if r["verdict"].strip().lower() == "wrong"]
+    low, high = wilson_interval(len(wrong), len(rows))
+    print(
+        f"email_order_extraction audit n={len(rows)} wrong labels={len(wrong)} "
+        f"error rate={len(wrong) / len(rows):.1%}  95% CI [{low:.1%}, {high:.1%}]"
+    )
+    for r in wrong:
+        print(f"  {r['id']}: {r['comment'] or 'no comment'}")
+    if len(wrong) > MAX_WRONG:
+        print(f"FAILED: more than {MAX_WRONG} wrong label in the audit sample")
+        return 1
+    return 0
+
+
 # ---------- commands ----------
 
 
@@ -592,3 +747,10 @@ def add_commands(sub) -> None:
     dsub.add_parser("build", help="validate, render the .eml files and write the dataset").set_defaults(
         handler=cmd_build
     )
+    review = dsub.add_parser("review", help="compare blind second-pass annotations with the labels")
+    review.add_argument("annotations", nargs="+", help="JSONL files with one blind reading per email")
+    review.set_defaults(handler=cmd_review)
+    audit = sub.add_parser("email-audit", help="owner audit of the email order extraction labels")
+    asub = audit.add_subparsers(dest="email_audit_command", required=True)
+    asub.add_parser("create", help="write the review file").set_defaults(handler=lambda args: create_audit())
+    asub.add_parser("report", help="compute the label error rate").set_defaults(handler=lambda args: report_audit())
