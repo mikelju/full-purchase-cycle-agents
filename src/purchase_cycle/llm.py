@@ -78,6 +78,8 @@ EMAIL_INTAKE_INSTRUCTIONS = """You read one email received by the orders mailbox
 
 An email is an order when the customer asks to buy or to be sent one or more products, in the body or in an attached order form or spreadsheet.
 It is not an order when it only asks a question, makes a complaint, asks for a quote or a catalog, confirms or chases a previous delivery, or is a newsletter or advertising.
+It is still an order when some or all requested products are not in the catalog: whether a product is in the catalog never changes the decision.
+It is still an order when the customer asks to check availability and then to process the request as an order, or adds a question or remark next to the order.
 
 Return is_order and a short reason of one sentence naming what the email asks for.
 The catalog below only helps you recognise product names.
@@ -103,10 +105,17 @@ Spreadsheet rows are tab-separated cells.
 Return one line per product the customer orders, with:
 - source: "body" when the line is in the body, or the attachment file name exactly as written after "Attachment: ".
 - source_text: the text of that line exactly as the customer wrote it.
-- sku: the catalog SKU whose name and variant (size, volume, pack size, latex or latex-free, sterile or non-sterile) match the request, or null when the catalog does not carry that product or variant. Never guess a different variant.
-- quantity: a positive whole number of catalog sale units. Convert words such as "a dozen" to numbers, and when the customer counts individual items and the sale unit is a pack or box, convert to sale units.
+- sku: the catalog SKU whose name and variant (size, volume, pack size, material such as latex, silicone-coated latex (a latex product) or 100% silicone, sterile or non-sterile) match the request, or null when the catalog does not carry that product or variant. Never guess a different variant.
+- quantity: a positive whole number of catalog sale units.
+
+Quantity rules:
+- Write number words as digits; "a dozen" is 12, "half a dozen" is 6, "four dozen X" is 48 X and "3 dozen boxes" is 36 boxes.
+- A number followed by a container word (box, pack, roll, refill, canister, bottle, tube) or written as "N x <product>" already counts sale units: use it unchanged, even when it is large. "17 x FFP3 respirator mask" is 17 and "80 x wipes refill" is 80.
+- In a table, the number in the quantity column is counted in the unit written in the unit column. When that unit is the catalog sale unit, such as "box of 100" or "box of 20", use the number unchanged: "150 | box of 100" is 150 and "120 | box of 20" is 120.
+- Divide by the pack size only when the customer counts individual items of a product sold in packs or boxes: "80 foam dressings" sold in boxes of 10 is 8, "10 masks" sold in boxes of 10 is 1, "100 pairs" of gloves sold in boxes of 50 pairs is 2, and a table row whose unit column says "units" or "pairs" for a product sold in packs counts items, so "10 | units" of a pack of 10 is 1.
 
 Rules:
+- Return every ordered product, including the ones the catalog does not carry (sku null); never drop a requested line.
 - Ignore greetings, signatures, questions and any text that is not an ordered product.
 - When the same order appears in the body and in an attachment, take it from the attachment and do not repeat it.
 

@@ -84,7 +84,13 @@ This file is the durable state: a new session resumes from here and from Git.
   `tests/test_email_eval.py` (11 tests) runs a 16-email test subset through the subgraph with stub recorded answers and proves exit 1 for the intake accuracy, line recall and line precision gates and both McNemar gates, exit 2 for missing recordings and exit 3 for a baseline under 95%.
   `npm run check` exit 0 with 196 tests; output in `.evidence/fase-03/check-increment-10.txt`.
   Until the recordings and baseline of increments 11 and 12 exist, `npm run eval` names the two existing suites with `--suite`; increment 12 restores the plain command so it replays the three suites.
-- [ ] 11. Recordings on the dev split and prompt tuning on dev only (C12) - needs the owner's key: `uv run purchase-cycle eval --suite email_order_extraction --mode record --split dev` with tracing off; output in `.evidence/fase-03/eval-dev.txt`.
+- [x] 11. Recordings on the dev split and prompt tuning on dev only (C12) - needs the owner's key: `uv run purchase-cycle eval --suite email_order_extraction --mode record --split dev` with tracing off; output in `.evidence/fase-03/eval-dev.txt`.
+  Evidence: three record runs on the dev split (78 emails, 245 expected catalog lines) with Haiku 4.5 and tracing off; two tuning rounds, only on `EMAIL_INTAKE_INSTRUCTIONS` and `EMAIL_EXTRACTION_INSTRUCTIONS` in `llm.py`.
+  Round 0 (initial prompts): intake accuracy 97.4% [91.1, 99.3], line recall 94.7% [91.1, 96.9], line precision 95.5% [92.1, 97.5]; failures were out-of-catalog orders taken as non-orders, dropped out-of-catalog lines, "dozen" not multiplied, and quantities already in sale units divided by the pack size.
+  Round 1 added the intake rule for out-of-catalog products and quantity rules; round 2 (final) made the table unit column and "N x" rules explicit and the intake rule for side questions.
+  Final dev: intake accuracy 100.0% [95.3, 100.0] (n=78), line recall 98.8% [96.5, 99.6] (n=245), line precision 98.8% [96.5, 99.6] (n=245), email exact match 95.4%.
+  Recordings `evals/recordings/email_intake.jsonl` (78) and `evals/recordings/email_order_extraction.jsonl` (65) hold only the final-prompt answers; no key strings found; phase 01 and 02 recordings untouched.
+  Output in `.evidence/fase-03/eval-dev.txt`; `npm run check` exit 0 with 196 tests in `.evidence/fase-03/check-increment-11.txt`.
 - [ ] 12. Haiku 4.5 baseline on the test split, stored with per-email and per-line results, thresholds by the spec rule (C12) - needs the owner's key: `--mode record --split test --set-baseline`; baseline in `evals/baselines/email_order_extraction.json`; output in `.evidence/fase-03/eval-test-baseline.txt`; then `npm run check` replays the three suites.
   If intake accuracy, line recall or line precision is under 95%, the executor stops, writes deviation `03.1` with the measured figures and leaves the threshold to the owner.
 
