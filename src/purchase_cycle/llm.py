@@ -1,7 +1,7 @@
 """Model client for catalog tasks with live, record and replay modes.
 
-Each task (phase 01 order line extraction, phase 02 web form matching) has its
-own prompt, tool, answer schema and recordings file. The model answers through
+Each task (phase 01 order line extraction, phase 02 web form matching, phase 03
+email intake and email order extraction) has its own prompt, tool, answer schema and recordings file. The model answers through
 one forced tool call. Its arguments are validated
 by Pydantic in every mode, so a recorded answer goes through the same checks
 as a live one.
@@ -15,7 +15,16 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from purchase_cycle.config import MATCHING_RECORDINGS_PATH, MAX_TOKENS, MODEL_ID, MODES, RECORDINGS_PATH
+from purchase_cycle.config import (
+    EMAIL_EXTRACTION_MAX_TOKENS,
+    EMAIL_EXTRACTION_RECORDINGS_PATH,
+    EMAIL_INTAKE_RECORDINGS_PATH,
+    MATCHING_RECORDINGS_PATH,
+    MAX_TOKENS,
+    MODEL_ID,
+    MODES,
+    RECORDINGS_PATH,
+)
 
 TOOL_NAME = "record_order_line"
 
@@ -65,6 +74,63 @@ class MatchedProduct(BaseModel):
     sku: str | None = Field(description="Catalog SKU, or null when the product is not in the catalog")
 
 
+EMAIL_INTAKE_INSTRUCTIONS = """You read one email received by the orders mailbox of a medical supplies distributor and decide whether it is an order.
+
+An email is an order when the customer asks to buy or to be sent one or more products, in the body or in an attached order form or spreadsheet.
+It is not an order when it only asks a question, makes a complaint, asks for a quote or a catalog, confirms or chases a previous delivery, or is a newsletter or advertising.
+
+Return is_order and a short reason of one sentence naming what the email asks for.
+The catalog below only helps you recognise product names.
+
+Catalog (SKU | name | sale unit):
+"""
+
+
+class IntakeDecision(BaseModel):
+    """Structured answer of the email intake node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    is_order: bool = Field(strict=True, description="True when the email places an order")
+    reason: str = Field(min_length=1, max_length=500, description="One sentence naming what the email asks for")
+
+
+EMAIL_EXTRACTION_INSTRUCTIONS = """You extract the order lines of one customer email sent to a medical supplies distributor.
+
+The email text has a subject, a body and, for each attachment, a line "Attachment: <file name>" followed by its text.
+Spreadsheet rows are tab-separated cells.
+
+Return one line per product the customer orders, with:
+- source: "body" when the line is in the body, or the attachment file name exactly as written after "Attachment: ".
+- source_text: the text of that line exactly as the customer wrote it.
+- sku: the catalog SKU whose name and variant (size, volume, pack size, latex or latex-free, sterile or non-sterile) match the request, or null when the catalog does not carry that product or variant. Never guess a different variant.
+- quantity: a positive whole number of catalog sale units. Convert words such as "a dozen" to numbers, and when the customer counts individual items and the sale unit is a pack or box, convert to sale units.
+
+Rules:
+- Ignore greetings, signatures, questions and any text that is not an ordered product.
+- When the same order appears in the body and in an attachment, take it from the attachment and do not repeat it.
+
+Catalog (SKU | name | sale unit):
+"""
+
+
+class EmailLine(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source: str = Field(min_length=1, description='"body" or the attachment file name')
+    source_text: str = Field(min_length=1, description="The line as the customer wrote it")
+    sku: str | None = Field(description="Catalog SKU, or null when the product is not in the catalog")
+    quantity: int = Field(gt=0, strict=True, description="Quantity in catalog sale units")
+
+
+class EmailLines(BaseModel):
+    """Structured answer of the email extraction node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    lines: list[EmailLine] = Field(description="Every ordered product, in the order the customer wrote them")
+
+
 @dataclass(frozen=True)
 class Task:
     """What the model is asked to do and where its recorded answers live."""
@@ -75,6 +141,7 @@ class Task:
     tool_description: str
     answer: type[BaseModel]
     recordings_path: Path
+    max_tokens: int = MAX_TOKENS
 
 
 EXTRACTION = Task(
@@ -92,6 +159,23 @@ MATCHING = Task(
     "Record the catalog product that matches the description, or null.",
     MatchedProduct,
     MATCHING_RECORDINGS_PATH,
+)
+EMAIL_INTAKE = Task(
+    "email_intake",
+    EMAIL_INTAKE_INSTRUCTIONS,
+    "record_email_intake",
+    "Record whether the email is an order and why.",
+    IntakeDecision,
+    EMAIL_INTAKE_RECORDINGS_PATH,
+)
+EMAIL_EXTRACTION = Task(
+    "email_order_extraction",
+    EMAIL_EXTRACTION_INSTRUCTIONS,
+    "record_email_order_lines",
+    "Record every order line found in the email.",
+    EmailLines,
+    EMAIL_EXTRACTION_RECORDINGS_PATH,
+    EMAIL_EXTRACTION_MAX_TOKENS,
 )
 
 
@@ -154,7 +238,7 @@ class ModelClient:
         if self._llm is None:
             from langchain_anthropic import ChatAnthropic
 
-            llm = ChatAnthropic(model=MODEL_ID, max_tokens=MAX_TOKENS, temperature=0, max_retries=6)
+            llm = ChatAnthropic(model=MODEL_ID, max_tokens=self.task.max_tokens, temperature=0, max_retries=6)
             self._llm = llm.bind_tools(
                 [tool_definition(self.task)], tool_choice={"type": "tool", "name": self.task.tool_name}
             )
