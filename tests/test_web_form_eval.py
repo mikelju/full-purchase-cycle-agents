@@ -7,7 +7,7 @@ import pytest
 
 from purchase_cycle import db, web_form
 from purchase_cycle.config import MATCHING_RECORDINGS_PATH
-from purchase_cycle.evaluation import harness, web_form_eval
+from purchase_cycle.evaluation import email_eval, harness, web_form_eval
 from purchase_cycle.evaluation import web_form_dataset as wf
 from purchase_cycle.llm import MATCHING, build_system_prompt, recording_key
 
@@ -94,6 +94,7 @@ def test_missing_recordings_exit_with_error(tmp_path, capsys):
 def test_eval_command_runs_both_suites_and_keeps_the_worst_exit(monkeypatch, capsys):
     monkeypatch.setattr(harness, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(web_form_eval, "evaluate", lambda *args, **kwargs: 1)
+    monkeypatch.setattr(email_eval, "evaluate", lambda *args, **kwargs: 0)
     args = argparse.Namespace(suite="all", mode="replay", split="test", set_baseline=False, workers=1)
     assert harness.cmd_eval(args) == 1
     args.suite = "order_line_extraction"

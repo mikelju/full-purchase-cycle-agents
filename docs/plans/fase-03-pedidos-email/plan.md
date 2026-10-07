@@ -1,6 +1,6 @@
 # Phase 03 - Email orders: plan and results
 
-Status: in execution; batches A and B done, batch C done except the owner audit of increment 9, batch D next
+Status: in execution; batches A and B done, batch C done except the owner audit of increment 9, increment 10 done, increments 11 and 12 wait for the owner's key
 Spec: `spec.md` (frozen)
 Base: branch `fase-03-pedidos-email` from `main` at commit `d335905`; the spec was frozen in `d283f99`.
 
@@ -77,7 +77,11 @@ This file is the durable state: a new session resumes from here and from Git.
   Tests on temporary files: create (40 seeded rows, same bytes on a second run, never overwrites) and report (0 and 1 wrong pass, 2 fail, a missing verdict exits 2, Wilson interval printed); `uv run pytest -q tests/test_email_dataset.py` 38 passed.
 
 ### Batch D - Evaluation, recordings and baseline
-- [ ] 10. Evaluation `email_order_extraction`: deterministic graders, intake accuracy, line recall, line precision, field accuracy, out-of-catalog detection, email exact match, Wilson intervals globally, per category and per source, failures by category, absolute and McNemar regression gates, third suite in `npm run eval` and `eval-upload` (C11) - check: `tests/test_email_eval.py` forces each new gate (intake accuracy, line recall, line precision, both regression tests) to fail and proves a non-zero exit; the two existing suites still pass with their gates.
+- [x] 10. Evaluation `email_order_extraction`: deterministic graders, intake accuracy, line recall, line precision, field accuracy, out-of-catalog detection, email exact match, Wilson intervals globally, per category and per source, failures by category, absolute and McNemar regression gates, third suite in `npm run eval` and `eval-upload` (C11) - check: `tests/test_email_eval.py` forces each new gate (intake accuracy, line recall, line precision, both regression tests) to fail and proves a non-zero exit; the two existing suites still pass with their gates.
+  Evidence: `src/purchase_cycle/evaluation/email_eval.py` registered as the third entry of `SUITES`, so `eval --suite email_order_extraction` and `eval-upload --suite email_order_extraction` work.
+  `tests/test_email_eval.py` (11 tests) runs a 16-email test subset through the subgraph with stub recorded answers and proves exit 1 for the intake accuracy, line recall and line precision gates and both McNemar gates, exit 2 for missing recordings and exit 3 for a baseline under 95%.
+  `npm run check` exit 0 with 196 tests; output in `.evidence/fase-03/check-increment-10.txt`.
+  Until the recordings and baseline of increments 11 and 12 exist, `npm run eval` names the two existing suites with `--suite`; increment 12 restores the plain command so it replays the three suites.
 - [ ] 11. Recordings on the dev split and prompt tuning on dev only (C12) - needs the owner's key: `uv run purchase-cycle eval --suite email_order_extraction --mode record --split dev` with tracing off; output in `.evidence/fase-03/eval-dev.txt`.
 - [ ] 12. Haiku 4.5 baseline on the test split, stored with per-email and per-line results, thresholds by the spec rule (C12) - needs the owner's key: `--mode record --split test --set-baseline`; baseline in `evals/baselines/email_order_extraction.json`; output in `.evidence/fase-03/eval-test-baseline.txt`; then `npm run check` replays the three suites.
   If intake accuracy, line recall or line precision is under 95%, the executor stops, writes deviation `03.1` with the measured figures and leaves the threshold to the owner.

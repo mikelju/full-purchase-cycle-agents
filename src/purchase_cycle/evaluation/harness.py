@@ -354,10 +354,14 @@ def add_run_commands(sub, modes) -> None:
     upload.set_defaults(handler=cmd_upload)
 
 
-SUITES = ("order_line_extraction", "web_form_matching")
+SUITES = ("order_line_extraction", "web_form_matching", "email_order_extraction")
 
 
 def _suite(name: str):
+    if name == "email_order_extraction":
+        from purchase_cycle.evaluation import email_eval
+
+        return email_eval
     if name == "web_form_matching":
         from purchase_cycle.evaluation import web_form_eval
 
