@@ -395,4 +395,7 @@ def test_audit_create_samples_forty_seeded_emails_and_never_overwrites(tmp_path)
     second = tmp_path / "again.csv"
     ed.create_audit(second)
     assert second.read_bytes() == first
-    assert ed.AUDIT_PATH.read_bytes() == first
+    # Git stores the versioned file with LF endings, so compare its parsed rows, not its bytes.
+    with ed.AUDIT_PATH.open(encoding="utf-8-sig", newline="") as fh:
+        versioned = list(csv.DictReader(fh, delimiter=";"))
+    assert versioned == rows
