@@ -1,6 +1,6 @@
 # Phase 03 - Email orders: plan and results
 
-Status: in execution; batches A, B, C and D done (owner audit of increment 9 done in `5720389`), batch E done except increment 17 (blocked until about 2026-11-05)
+Status: delivered for review; ready locally after two review rounds; C13 pending (increment 17, LangSmith trace quota until about 2026-11-05), so the phase does not close yet
 Spec: `spec.md` (frozen)
 Base: branch `fase-03-pedidos-email` from `main` at commit `d335905`; the spec was frozen in `d283f99`.
 
@@ -134,6 +134,7 @@ The phase can be ready locally with C10 or C13 pending, but it does not close un
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
 | 1 | local | `d335905..b3d5e2f` | correctness, security, evidence, scope | 13 confirmed, all fixed in the commit "Phase 03: review round 1 fixes"; detail below. `model_text` of the 316 dataset and sample emails hashes the same before and after the parser changes, so every recording is still found; `npm run check` exit 0 and `npm run eval` replay with lost 0, gained 0 against both baselines; output in `.evidence/fase-03/check-review-1.txt`. | Fixed |
+| 2 | local | `b3d5e2f..7a1e6d6` | correctness, security | 3 confirmed (1 Medium, 2 Low), all fixed in `6da206e` "Phase 03: review round 2 fixes"; detail below. `model_text` and the full parsed result of the 316 dataset and sample emails hash the same before and after the changes; `npm run check` exit 0 with 214 passed and `npm run eval` replay with no missing recordings and lost 0, gained 0 against the baselines; output in `.evidence/fase-03/check-review-2.txt`. | Fixed; not re-reviewed (two-round cap), covered by regression tests |
 
 Round 1 findings:
 | # | Lens | Severity | Finding | Status | Regression test |
@@ -152,9 +153,44 @@ Round 1 findings:
 | 12 | evidence | Low | Stale "waiting for owner" note in increment 9 | Fixed: audit done, 40 of 40 `ok` (`5720389`) | - |
 | 13 | security | Low | Customer identity from the `From` header only, with no SPF, DKIM or `Authentication-Results` check | Logged as SEC-007, open until mailbox ingestion | - |
 
+Round 2 findings (re-review of `7a1e6d6`):
+| # | Lens | Severity | Finding | Status | Regression test |
+|---|---|---|---|---|---|
+| 1 | correctness | Medium | `_attachment_parts` walked into an attached `message/rfc822` part, so the attachments of a forwarded email were read as attachments of the current order | Fixed: the walk does not descend into attached emails; a forwarded email is again one ignored attachment, as before round 1 (the body fallback uses the same walk) | `test_forwarded_email_is_one_ignored_attachment_and_its_attachments_stay_inside` |
+| 2 | correctness | Low | The round 1 newline-to-space change also flattened `<pre>` content | Fixed: `<pre>` keeps its source line breaks and is set off as a block | `test_pre_keeps_its_source_line_breaks` |
+| 3 | security | Low | Subject sanitising removed C0 controls and DEL but not Unicode line breaks (U+0085, U+2028, U+2029) | Fixed: every character `str.splitlines()` splits on becomes a space | `test_subject_unicode_line_breaks_become_spaces` |
+
 ## Results
 Per criterion: command or path run, observed result and evidence reference.
 Pending items, limitations and what could not be checked, stated plainly.
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| C1 | Pass: fresh clone at `1fcf5a7`, Anthropic and LangSmith variables unset and no `.env`; `uv sync`, `npm ci` and `npm run check` exit 0, 199 passed; the three suites replay in 16 s | `.evidence/fase-03/fresh-clone.txt` |
+| C2 | Pass: unknown sender, unparseable, broken MIME and over-long emails rejected with a reason, 0 model calls and 0 rows | `tests/test_email_intake.py`; `tests/test_email_order.py::test_rejected_email_makes_no_model_call_and_writes_nothing` |
+| C3 | Pass: plain and HTML body, `.txt`, text `.pdf` and `.xlsx` attachments become text; other attachments, scanned PDFs and attached emails are listed as ignored | `tests/test_email_intake.py` (increment 1 and review rounds 1 and 2) |
+| C4 | Pass: a non-order stores nothing, makes no extractor call and keeps the intake decision and reason | `tests/test_email_order.py::test_not_an_order_stores_nothing_and_skips_the_extractor` |
+| C5 | Pass: extraction in live, record and replay through the existing client; a SKU not in the catalog or a schema-invalid answer stops before any write; prompt cache read 8397 tokens (intake) and 9004 (extraction) in the live demo | `tests/test_llm.py`; `tests/test_email_order.py::test_invalid_extraction_stops_before_any_write`; `.evidence/fase-03/demo-live.txt` |
+| C6 | Pass: one order with channel `email`, status `received` and the sender's customer code, lines in one transaction; no order when no line matches | `tests/test_email_order.py` (increment 4) |
+| C7 | Pass: reply to the sender, quoting the subject, with the phase 02 order and line details and the unmatched lines | `tests/test_email_order.py::test_reply_is_addressed_to_the_sender_and_quotes_the_subject` |
+| C8 | Pass: `email-demo` in replay with no key (orders 1 to 3, exit 0) and live with tracing off (four correct intake decisions, exit 0) | `tests/test_email_order.py::test_email_demo_command_prints_intake_lines_order_and_reply`; `.evidence/fase-03/demo-replay.txt`; `.evidence/fase-03/demo-live.txt` |
+| C9 | Pass: 312 emails, 52 per category in six categories, 923 expected lines, stratified split by email, every email passes validation; the build is deterministic; second pass fixed 2 of 312 | `tests/test_email_dataset.py`; `.evidence/fase-03/dataset-build.txt`; `evals/datasets/email_order_extraction/second_pass_review.jsonl` |
+| C10 | Pass: owner audit 40 of 40 `ok`, 0 wrong labels, error rate 0.0%, 95% Wilson CI [0.0%, 8.8%] | `.evidence/fase-03/audit-report.txt` |
+| C11 | Pass: `npm run eval` replays the three suites; the email suite reports every metric with Wilson intervals globally, per category and per source; forced gate failures exit non-zero | `tests/test_email_eval.py`; `.evidence/fase-03/check-review-2.txt` |
+| C12 | Pass: Haiku 4.5 test baseline intake accuracy 98.7% [96.3, 99.6] (n=234), line recall 96.9% [95.2, 98.0] (n=586), line precision 99.0% [97.7, 99.5] (n=574), threshold 95% | `evals/baselines/email_order_extraction.json`; `.evidence/fase-03/eval-test-baseline.txt` |
+| C13 | PENDING: blocked by the exhausted LangSmith trace quota until about 2026-11-05 (owner decision 6); increment 17 runs when it resets and the phase does not close until then | - |
+| C14 | Pass: recordings, sample emails, dataset, audit and baseline files tracked and scanned, decoded attachment text included | `tests/test_secrets.py::test_phase_03_files_are_tracked_and_their_decoded_text_holds_no_keys` |
+| C15 | Pass: README email sections followed in the clean clone at `1fcf5a7`; `email-demo` replay and `eval --suite email_order_extraction` exit 0 | `README.md`; `.evidence/fase-03/fresh-clone.txt` |
+
+`npm run check` on the round 2 fixes: exit 0, 214 passed, the three replay evaluations PASS with no missing recordings and no change against the baselines (`.evidence/fase-03/check-review-2.txt`).
+Live spend: about 2.35 USD for increments 11 and 12 plus the live demo.
+
+Open items and limitations:
+- SEC-007: customer identity comes from the `From` header only, open in `docs/security.md` until mailbox ingestion.
+- An unreadable supported attachment rejects the whole email; accepted choice.
+- `load_dotenv()` searches upward, so a worktree inside the repository may load the parent `.env`; earlier `npm run check` runs may have uploaded the email datasets to LangSmith, not verified.
+- The formatter hook `.claude/hooks/format.mjs` rewrites JSONL files in the scratchpad and errors on `.lavish/` HTML; to fix in a separate change.
+- No upper bound on `EmailLine.quantity`, because the tool definition is part of the recording key; `email-demo` handles the failure per email.
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
