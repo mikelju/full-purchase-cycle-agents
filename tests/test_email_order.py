@@ -1,4 +1,4 @@
-"""C2, C4, C5, C6 and C7 (phase 03): the email order subgraph with recorded answers."""
+"""C2, C4, C5, C6, C7 and C8 (phase 03): the email order subgraph with recorded answers and its demo command."""
 
 import pytest
 
@@ -173,3 +173,39 @@ def test_run_is_checkpointed_per_email_thread(tmp_path, run, email_path):
     saved = graph.get_state({"configurable": {"thread_id": email_path.stem}})
     assert saved.values["reply"] == state["reply"]
     assert saved.next == ()
+
+
+def test_email_demo_command_prints_intake_lines_order_and_reply(tmp_path, no_network, capsys):
+    from purchase_cycle.cli import main
+
+    code = main(["--db", str(tmp_path / "b.db"), "email-demo", "--checkpoints", str(tmp_path / "c.db")])
+    out = capsys.readouterr().out
+    assert code == 0, out
+    assert "emails=4" in out
+    assert "intake: not an order - " in out
+    assert "nothing extracted or stored" in out
+    assert out.count("intake: order - ") == 3
+    assert '2. "Adjustable lumbar support belt 16 unit" x 16 -> SUP-LUMBAR  (delivery-note-0001.pdf)' in out
+    assert '3. "Saline 0.9% irrigation, 500 ml bottles | 5 | bottle" x 5 -> SAL-500  (order-0012.xlsx)' in out
+    assert '1. "13 boxes of surgical gloves in size 9" x 13 -> no match  (body)' in out
+    assert '2. "eighteen non-contact infrared forehead thermometers" x 18 -> THERM-IR  (body)' in out
+    assert [line for line in out.splitlines() if line.startswith("stored order:")] == [
+        "stored order: 1",
+        "stored order: 2",
+        "stored order: 3",
+    ]
+    assert "Subject: Re: Second order this month - nursing wing" in out
+    assert "Order total: 1417.80 EUR" in out
+    assert 'Your email order "Larger glove sizes and thermometers" is registered as order 3:' in out
+    assert '- "13 boxes of surgical gloves in size 9" (13)' in out
+    assert no_network == []
+
+
+def test_email_demo_command_reports_an_empty_folder(tmp_path, capsys):
+    from purchase_cycle.cli import main
+
+    assert (
+        main(["--db", str(tmp_path / "b.db"), "email-demo", str(tmp_path), "--checkpoints", str(tmp_path / "c.db")])
+        == 1
+    )
+    assert "no .eml files" in capsys.readouterr().err

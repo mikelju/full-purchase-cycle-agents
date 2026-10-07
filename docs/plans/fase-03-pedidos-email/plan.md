@@ -1,6 +1,6 @@
 # Phase 03 - Email orders: plan and results
 
-Status: in execution; batches A and B done, batch C done except the owner audit of increment 9, increment 10 done, increments 11 and 12 done
+Status: in execution; batches A, B, C and D done (owner audit of increment 9 done in `5720389`), batch E in progress
 Spec: `spec.md` (frozen)
 Base: branch `fase-03-pedidos-email` from `main` at commit `d335905`; the spec was frozen in `d283f99`.
 
@@ -102,8 +102,13 @@ This file is the durable state: a new session resumes from here and from Git.
   Live spend of increments 11 and 12: 851 model calls, about 2.35 USD at Haiku 4.5 prices from the printed token counts.
 
 ### Batch E - Demo, README, secrets and fresh clone
-- [ ] 13. Sample folder `examples/email_orders/` with one body order, one PDF order, one Excel order and one non-order email, copied from dataset emails so the replay recordings already cover them, and the command `purchase-cycle email-demo` (C8) - check: a pytest runs the command in replay and asserts the printed intake decision, each line with its source, the order number and the reply; replay output in `.evidence/fase-03/demo-replay.txt`.
+- [x] 13. Sample folder `examples/email_orders/` with one body order, one PDF order, one Excel order and one non-order email, copied from dataset emails so the replay recordings already cover them, and the command `purchase-cycle email-demo` (C8) - check: a pytest runs the command in replay and asserts the printed intake decision, each line with its source, the order number and the reply; replay output in `.evidence/fase-03/demo-replay.txt`.
   Needs the owner's key: one live run with tracing off, output with cached tokens in `.evidence/fase-03/demo-live.txt` (C5, C8).
+  Evidence: `examples/email_orders/` holds four test-split emails whose recorded answers are fully correct in the baseline: `EML-0024.eml` (body, one out-of-catalog line), `EML-0001.eml` (PDF delivery note), `EML-0012.eml` (Excel) and `EML-0002.eml` (not an order).
+  `purchase-cycle email-demo [folder] --mode --checkpoints` runs each email in its own checkpoint thread and prints the intake decision with its reason, each line with its source text, SKU and source, the stored order number and the reply.
+  `test_email_demo_command_prints_intake_lines_order_and_reply` runs it in replay with the network blocked and asserts those outputs; replay output with no key in `.evidence/fase-03/demo-replay.txt` (orders 1 to 3, exit 0).
+  `npm run check` exit 0 with 198 tests (`.evidence/fase-03/check-increment-13.txt`).
+  Live run pending: it needs the owner's key.
 - [ ] 14. README sections for the email demo in replay and live mode, how the dataset was built, how to run the new evaluation, and the catalog-in-prompt limitation with no retrieval (C15) - check: follow the sections in the clean clone of increment 16.
 - [ ] 15. Secret scan covering the new recordings, sample emails, dataset and baseline files, including decoded attachment text (C14) - check: `tests/test_secrets.py` gains a phase 03 test that also asserts the files are tracked.
 - [ ] 16. `npm run check` and fresh-clone run with the Anthropic and LangSmith variables unset (C1) - check: `uv sync` and `npm run check` in a clean clone, three evaluations in replay, output in `.evidence/fase-03/fresh-clone.txt`; record the replay time of the three suites.

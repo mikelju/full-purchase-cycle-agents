@@ -1,0 +1,59 @@
+From: Ruben Alvarez <ruben.cli-017@example.com>
+To: orders@purchase-cycle.example
+Subject: Order attached - Gijon clinic
+Date: Tue, 01 Sep 2026 15:13:00 +0000
+Message-ID: <eml-0001@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0001-boundary=="
+
+--==EML-0001-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+Please find our order attached as a PDF. Delivery to the clinic in the mornin=
+g if possible.
+
+Thanks,
+Ruben Alvarez
+Clinica Dental Gijon Centro
+
+--==EML-0001-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0001.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDU1MAo+PgpzdHJlYW0KeJx9
+lF2PmkAUQN/3V9zHNtHZ+UJg39qVbWxam1W2TR9BRotFIDBU3V9fcMBhx828mGByzr0cBih8vcPI
+ceF49zmE+ycChCOMIdxCEHZ/MYKIBw73kDODMIEP8+Db4mew+g3LH2EAU1gFzy/BOgzmsAiD7+uP
+EO579P6JAsHv2aiLsKdsIkv/iQpk8QCPWZqnmwjmIpdRBl/SfZHDY3tRFRN1NZL3ps6vTMtCCsib
+QyyqB5gvpxhj8mYZAr7ehXqIOcB9higDTpFDYUp85HGoBKzhOoB7GM3IZcBKbAefi5HnXmmHIYeb
+uMuQi8f4XNSbKi1lqm/DoRxxMniU1NB0qSgfe57l+cr7DqLewBNOkMtuBL6HCBkLXvJUGk/pNky7
+PvOtYWYYue5FSIwsPWvLouFlkU9rKao0E7CLmlcB9TGKa3CRA6fL7+YwAUKhzM5mNzXI2k0PomY1
+RdurabyMNn+h2LYHGg+iPlV3n441FcfIZ2+X6FP1rC2Vhj8l+6aWUdyWytpzHlVQN2VZVBJikUkz
+jlJb42g1mZl1FG6vo/lmdKb6LKxdn1izUDK8u8zI0rO2LBpe5HXTfjmgPldpvhOAEYNDBsdU/oFt
+ehIJ5EIkmTADqSHWQHrI6LEPhRRvL6QFcXF6//gQhryZtRMm3TKdhBudetbWScO/iiIRefulzXeN
+gESUlajroqonECXN7flRbmse7WZmHEXb42j8Ns5/Wa6GrAplbmRzdHJlYW0KZW5kb2JqCjUgMCBv
+YmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGlu
+ZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VG
+b250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUx
+Ci9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2
+IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+Pgpl
+bmRvYmoKOCAwIG9iago8PAovQXV0aG9yIChDbGluaWNhIERlbnRhbCBHaWpvbiBDZW50cm8pCi9D
+cmVhdGlvbkRhdGUgKEQ6MjAyNjA5MDEwODAwMDBaKQovVGl0bGUgKGRlbGl2ZXJ5LW5vdGUtMDAw
+MS5wZGYpCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUg
+MDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBuIAowMDAwMDAwMjA1IDAwMDAwIG4gCjAwMDAwMDAy
+ODUgMDAwMDAgbiAKMDAwMDAwMDkwNyAwMDAwMCBuIAowMDAwMDAxMDA5IDAwMDAwIG4gCjAwMDAw
+MDExMDYgMDAwMDAgbiAKMDAwMDAwMTIwMyAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jv
+b3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8RjdGODYxNzUyQ0VCOEEzM0VCM0Y4OUZFMkNGMzMy
+ODE+PEY3Rjg2MTc1MkNFQjhBMzNFQjNGODlGRTJDRjMzMjgxPl0KPj4Kc3RhcnR4cmVmCjEzMjgK
+JSVFT0YK
+
+--==EML-0001-boundary==--

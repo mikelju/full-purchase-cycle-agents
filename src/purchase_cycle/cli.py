@@ -4,16 +4,26 @@ import argparse
 import json
 import sys
 import uuid
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 from purchase_cycle import config, db
+from purchase_cycle.email_order import InvalidExtraction, build_email_order_graph
 from purchase_cycle.graph import build_graph, sqlite_checkpointer
-from purchase_cycle.llm import MATCHING, InvalidModelOutput, MissingRecording, ModelClient
+from purchase_cycle.llm import (
+    EMAIL_EXTRACTION,
+    EMAIL_INTAKE,
+    MATCHING,
+    InvalidModelOutput,
+    MissingRecording,
+    ModelClient,
+)
 from purchase_cycle.web_form import build_web_form_graph
 
 DEMO_SENTENCE = "Hi Laura, could you send us 40 boxes of powder-free nitrile gloves, size M? Thanks, Begona"
 DEMO_SUBMISSION = config.ROOT / "examples" / "web_form_submission.json"
+DEMO_EMAILS = config.ROOT / "examples" / "email_orders"
 
 
 def cmd_seed(args) -> int:
@@ -115,6 +125,62 @@ def cmd_web_form_demo(args) -> int:
     return 0
 
 
+def cmd_email_demo(args) -> int:
+    paths = sorted(Path(args.folder).glob("*.eml"))
+    if not paths:
+        print(f"Error: no .eml files in {args.folder}", file=sys.stderr)
+        return 1
+    conn = db.connect(args.db)
+    db.seed(conn)
+    catalog = db.catalog_rows(conn)
+    conn.close()
+    intake = ModelClient(args.mode, catalog, task=EMAIL_INTAKE)
+    extraction = ModelClient(args.mode, catalog, task=EMAIL_EXTRACTION)
+    graph = build_email_order_graph(intake, extraction, args.db, checkpointer=sqlite_checkpointer(args.checkpoints))
+    run_id = uuid.uuid4().hex[:12]
+    print(f"mode={args.mode}  folder={args.folder}  emails={len(paths)}")
+    code = 0
+    for path in paths:
+        thread_id = f"{run_id}-{path.stem}"
+        run_config = {"configurable": {"thread_id": thread_id}, "run_name": "email_order"}
+        print()
+        print(f"== {path.name}  thread_id={thread_id}")
+        try:
+            state = graph.invoke({"email_path": str(path)}, run_config)
+        except (MissingRecording, InvalidModelOutput, InvalidExtraction) as error:
+            print(f"Error: {error}", file=sys.stderr)
+            code = 1
+            continue
+        if state["errors"]:
+            print("email rejected, nothing stored:")
+            for error in state["errors"]:
+                print(f"  {error}")
+            code = 1
+            continue
+        email = state["email"]
+        print(f"from: {email['sender']}  subject: {email['subject']}")
+        print(f"intake: {'order' if state['is_order'] else 'not an order'} - {state['reason']}")
+        if not state["is_order"]:
+            print("nothing extracted or stored")
+            continue
+        print("lines:")
+        for n, line in enumerate(state["lines"], start=1):
+            print(
+                f'  {n}. "{line["source_text"]}" x {line["quantity"]} -> {line["sku"] or "no match"}  ({line["source"]})'
+            )
+        order = state["order_id"]
+        print(f"stored order: {order if order is not None else 'none (no line matched)'}")
+        print("reply:")
+        print(state["reply"])
+    saved = intake.save_recordings() + extraction.save_recordings()
+    print()
+    for client in (intake, extraction):
+        _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return code
+
+
 def main(argv=None) -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(prog="purchase-cycle")
@@ -137,6 +203,16 @@ def main(argv=None) -> int:
     web.add_argument("--resume", action="store_true", help="continue the thread from its last checkpoint")
     web.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
 
+    email = sub.add_parser("email-demo", help="run the email order subgraph on a folder of .eml files")
+    email.add_argument(
+        "folder",
+        nargs="?",
+        default=str(DEMO_EMAILS),
+        help=f"folder of .eml files (default: examples/{DEMO_EMAILS.name})",
+    )
+    email.add_argument("--mode", choices=config.MODES, default="replay")
+    email.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+
     from purchase_cycle.evaluation.cli import add_eval_commands
 
     add_eval_commands(sub)
@@ -151,7 +227,7 @@ def main(argv=None) -> int:
             web.error("--resume continues the stored submission of the thread; do not pass a submission file")
         args.submission = args.submission or str(DEMO_SUBMISSION)
     config.configure_tracing(getattr(args, "mode", "replay"))
-    handlers = {"seed": cmd_seed, "demo": cmd_demo, "web-form-demo": cmd_web_form_demo}
+    handlers = {"seed": cmd_seed, "demo": cmd_demo, "web-form-demo": cmd_web_form_demo, "email-demo": cmd_email_demo}
     return (handlers.get(args.command) or args.handler)(args)
 
 
