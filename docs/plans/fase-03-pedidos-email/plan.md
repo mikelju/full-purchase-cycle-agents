@@ -1,6 +1,6 @@
 # Phase 03 - Email orders: plan and results
 
-Status: in execution; batches A and B done, batch C done except the owner audit of increment 9, increment 10 done, increments 11 and 12 wait for the owner's key
+Status: in execution; batches A and B done, batch C done except the owner audit of increment 9, increment 10 done, increments 11 and 12 done
 Spec: `spec.md` (frozen)
 Base: branch `fase-03-pedidos-email` from `main` at commit `d335905`; the spec was frozen in `d283f99`.
 
@@ -91,8 +91,15 @@ This file is the durable state: a new session resumes from here and from Git.
   Final dev: intake accuracy 100.0% [95.3, 100.0] (n=78), line recall 98.8% [96.5, 99.6] (n=245), line precision 98.8% [96.5, 99.6] (n=245), email exact match 95.4%.
   Recordings `evals/recordings/email_intake.jsonl` (78) and `evals/recordings/email_order_extraction.jsonl` (65) hold only the final-prompt answers; no key strings found; phase 01 and 02 recordings untouched.
   Output in `.evidence/fase-03/eval-dev.txt`; `npm run check` exit 0 with 196 tests in `.evidence/fase-03/check-increment-11.txt`.
-- [ ] 12. Haiku 4.5 baseline on the test split, stored with per-email and per-line results, thresholds by the spec rule (C12) - needs the owner's key: `--mode record --split test --set-baseline`; baseline in `evals/baselines/email_order_extraction.json`; output in `.evidence/fase-03/eval-test-baseline.txt`; then `npm run check` replays the three suites.
+- [x] 12. Haiku 4.5 baseline on the test split, stored with per-email and per-line results, thresholds by the spec rule (C12) - needs the owner's key: `--mode record --split test --set-baseline`; baseline in `evals/baselines/email_order_extraction.json`; output in `.evidence/fase-03/eval-test-baseline.txt`; then `npm run check` replays the three suites.
   If intake accuracy, line recall or line precision is under 95%, the executor stops, writes deviation `03.1` with the measured figures and leaves the threshold to the owner.
+  Evidence: one record run on the test split (234 emails, 586 expected catalog lines) with the final prompts of increment 11 and tracing off, exit 0.
+  Test baseline: intake accuracy 98.7% [96.3, 99.6] (n=234), line recall 96.9% [95.2, 98.0] (n=586), line precision 99.0% [97.7, 99.5] (n=574); field SKU 97.3%, field quantity 99.6%, out-of-catalog detection 96.4%, email exact match 94.4%; 11 failing emails listed in the output.
+  All three gated metrics reach 95%, so the threshold is 95% by the spec rule and no deviation is needed.
+  `evals/baselines/email_order_extraction.json` stores the metrics, the threshold rule, 234 per-email and 586 per-line results; no key strings in it or in the recordings (312 intake and 257 extraction answers for dev and test).
+  Output in `.evidence/fase-03/eval-test-baseline.txt`.
+  `npm run eval` is the plain command again and replays the three suites with every gate passing in about 15 s (`.evidence/fase-03/eval-replay-increment-12.txt`); `npm run check` exit 0 with 196 tests (`.evidence/fase-03/check-increment-12.txt`).
+  Live spend of increments 11 and 12: 851 model calls, about 2.35 USD at Haiku 4.5 prices from the printed token counts.
 
 ### Batch E - Demo, README, secrets and fresh clone
 - [ ] 13. Sample folder `examples/email_orders/` with one body order, one PDF order, one Excel order and one non-order email, copied from dataset emails so the replay recordings already cover them, and the command `purchase-cycle email-demo` (C8) - check: a pytest runs the command in replay and asserts the printed intake decision, each line with its source, the order number and the reply; replay output in `.evidence/fase-03/demo-replay.txt`.

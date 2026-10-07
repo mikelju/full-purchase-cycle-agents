@@ -1,0 +1,8191 @@
+{
+ "dataset_version": "1.0",
+ "emails": {
+  "EML-0001": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 2,
+     "sku": "GAUZE-NS-7-12",
+     "source": "delivery-note-0001.pdf"
+    },
+    {
+     "quantity": 16,
+     "sku": "SUP-LUMBAR",
+     "source": "delivery-note-0001.pdf"
+    },
+    {
+     "quantity": 100,
+     "sku": "SYR-INS-03",
+     "source": "delivery-note-0001.pdf"
+    },
+    {
+     "quantity": 3,
+     "sku": "TONGUE-AD",
+     "source": "delivery-note-0001.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0002": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0004": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "INC-PAD-NORMAL",
+     "source": "order-0004.txt"
+    },
+    {
+     "quantity": 6,
+     "sku": "PILL-CRUSH",
+     "source": "order-0004.txt"
+    },
+    {
+     "quantity": 12,
+     "sku": "NDL-20G",
+     "source": "order-0004.txt"
+    },
+    {
+     "quantity": 75,
+     "sku": "SHOWER-GEL-750",
+     "source": "order-0004.txt"
+    },
+    {
+     "quantity": 3,
+     "sku": "STOCK-THIGH-L",
+     "source": "order-0004.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0005": {
+   "email_exact_match": false,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "GEL-1000",
+     "source": "delivery-note-0005.pdf"
+    },
+    {
+     "quantity": 20,
+     "sku": "GEL-100",
+     "source": "delivery-note-0005.pdf"
+    },
+    {
+     "quantity": 7,
+     "sku": "SCALPEL-10",
+     "source": "delivery-note-0005.pdf"
+    },
+    {
+     "quantity": 4,
+     "sku": "GLV-SURG-NEO-7",
+     "source": "delivery-note-0005.pdf"
+    },
+    {
+     "quantity": 1,
+     "sku": "COT-APPL",
+     "source": "delivery-note-0005.pdf"
+    },
+    {
+     "quantity": 5,
+     "sku": "INC-BRF-NIGHT-L",
+     "source": "delivery-note-0005.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0006": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0007": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "SUP-KNEE-L",
+     "source": "body"
+    },
+    {
+     "quantity": 4,
+     "sku": "LIP-BALM",
+     "source": "body"
+    },
+    {
+     "quantity": 24,
+     "sku": "GLV-VIN-XL",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0008": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0009": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "BPM-CUFF-M",
+     "source": "body"
+    },
+    {
+     "quantity": 3,
+     "sku": "OIL-MASSAGE",
+     "source": "body"
+    },
+    {
+     "quantity": 12,
+     "sku": "GLV-SURG-LTX-6.5",
+     "source": "body"
+    },
+    {
+     "quantity": 9,
+     "sku": "GLV-LTX-M",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0010": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 30,
+     "sku": "INC-BRF-L",
+     "source": "body"
+    },
+    {
+     "quantity": 6,
+     "sku": "BND-ELA-10",
+     "source": "body"
+    },
+    {
+     "quantity": 24,
+     "sku": "ALC70-100",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0011": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0012": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "GOWN-ISO-XL",
+     "source": "order-0012.xlsx"
+    },
+    {
+     "quantity": 17,
+     "sku": "URN-BAG-LEG",
+     "source": "order-0012.xlsx"
+    },
+    {
+     "quantity": 5,
+     "sku": "SAL-500",
+     "source": "order-0012.xlsx"
+    },
+    {
+     "quantity": 15,
+     "sku": "DRS-FILM-10x12",
+     "source": "order-0012.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0013": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": null,
+     "source": "order-0013.xlsx"
+    },
+    {
+     "quantity": 10,
+     "sku": "SOAP-LIQ-500",
+     "source": "order-0013.xlsx"
+    },
+    {
+     "quantity": 19,
+     "sku": null,
+     "source": "order-0013.xlsx"
+    },
+    {
+     "quantity": 40,
+     "sku": "DRS-EYE",
+     "source": "order-0013.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0015": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0016": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0019": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 4,
+     "sku": "SCALPEL-11",
+     "source": "order-0019.txt"
+    },
+    {
+     "quantity": 20,
+     "sku": "NDL-19G",
+     "source": "order-0019.txt"
+    },
+    {
+     "quantity": 5,
+     "sku": "CRUTCH-ADULT",
+     "source": "order-0019.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0020": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 30,
+     "sku": "GAUZE-ST-10",
+     "source": "order-0020.xlsx"
+    },
+    {
+     "quantity": 18,
+     "sku": "SUP-ELBOW-M",
+     "source": "order-0020.xlsx"
+    },
+    {
+     "quantity": 15,
+     "sku": "TOOTHBRUSH-SOFT",
+     "source": "order-0020.xlsx"
+    },
+    {
+     "quantity": 6,
+     "sku": "STOCK-KNEE-S",
+     "source": "order-0020.xlsx"
+    },
+    {
+     "quantity": 12,
+     "sku": "BPM-ARM",
+     "source": "order-0020.xlsx"
+    },
+    {
+     "quantity": 1,
+     "sku": "CREAM-MOIST-500",
+     "source": "order-0020.xlsx"
+    },
+    {
+     "quantity": 14,
+     "sku": "BND-ELA-7",
+     "source": "order-0020.xlsx"
+    },
+    {
+     "quantity": 2,
+     "sku": "WIPE-WASHGLV",
+     "source": "order-0020.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0021": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": null,
+     "source": "order-0021.xlsx"
+    },
+    {
+     "quantity": 50,
+     "sku": "DRS-NONADH-10",
+     "source": "order-0021.xlsx"
+    },
+    {
+     "quantity": 10,
+     "sku": "ALC70-100",
+     "source": "order-0021.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0023": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 2,
+     "sku": "PILL-CUP",
+     "source": "body"
+    },
+    {
+     "quantity": 16,
+     "sku": "MASK-II",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "GLV-VIN-S",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0024": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 18,
+     "sku": "THERM-IR",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0026": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0027": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0028": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 200,
+     "sku": "CREAM-FOOT",
+     "source": "purchase-order-0028.pdf"
+    },
+    {
+     "quantity": 8,
+     "sku": "PEN-31-5",
+     "source": "purchase-order-0028.pdf"
+    },
+    {
+     "quantity": 19,
+     "sku": "WHEELCHAIR-CUSH",
+     "source": "purchase-order-0028.pdf"
+    },
+    {
+     "quantity": 2,
+     "sku": "MOUTHWASH-500",
+     "source": "purchase-order-0028.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0029": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 80,
+     "sku": "MASK-IIR-TIE",
+     "source": "purchase-order-0029.pdf"
+    },
+    {
+     "quantity": 7,
+     "sku": null,
+     "source": "purchase-order-0029.pdf"
+    },
+    {
+     "quantity": 18,
+     "sku": null,
+     "source": "purchase-order-0029.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0032": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "DRS-ISL-9x15",
+     "source": "delivery-note-0032.pdf"
+    },
+    {
+     "quantity": 4,
+     "sku": "SUN-FACE-50-50",
+     "source": "delivery-note-0032.pdf"
+    },
+    {
+     "quantity": 11,
+     "sku": "THERM-DIG",
+     "source": "delivery-note-0032.pdf"
+    },
+    {
+     "quantity": 150,
+     "sku": "BND-TRI",
+     "source": "delivery-note-0032.pdf"
+    },
+    {
+     "quantity": 4,
+     "sku": "TOOTHBRUSH-SOFT",
+     "source": "delivery-note-0032.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0033": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "PLST-ASST",
+     "source": "purchase-order-0033.pdf"
+    },
+    {
+     "quantity": 2,
+     "sku": "STITCH-CUT",
+     "source": "purchase-order-0033.pdf"
+    },
+    {
+     "quantity": 5,
+     "sku": "BND-ELA-7",
+     "source": "purchase-order-0033.pdf"
+    },
+    {
+     "quantity": 6,
+     "sku": "SUP-WRIST-S",
+     "source": "purchase-order-0033.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0034": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0035": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "SAL-250",
+     "source": "body"
+    },
+    {
+     "quantity": 5,
+     "sku": "DRS-NONADH-10",
+     "source": "body"
+    },
+    {
+     "quantity": 6,
+     "sku": "SUP-ELBOW-L",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0036": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "BND-ELA-5",
+     "source": "body"
+    },
+    {
+     "quantity": 120,
+     "sku": "TAPE-ZNC-25",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "BPM-ARM",
+     "source": "body"
+    },
+    {
+     "quantity": 5,
+     "sku": "GEL-PACK-L",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0037": {
+   "email_exact_match": false,
+   "error": null,
+   "intake_accuracy": false,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": false
+  },
+  "EML-0038": {
+   "email_exact_match": false,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 48,
+     "sku": "LAN-200",
+     "source": "order-0038.txt"
+    },
+    {
+     "quantity": 25,
+     "sku": "MASK-FFP3",
+     "source": "order-0038.txt"
+    },
+    {
+     "quantity": 3,
+     "sku": "PAD-40x60",
+     "source": "order-0038.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0039": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0040": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0041": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "SUP-ANKLE-L",
+     "source": "order-0041.xlsx"
+    },
+    {
+     "quantity": 4,
+     "sku": "THERM-DIG-FLEX",
+     "source": "order-0041.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0042": {
+   "email_exact_match": false,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "LAN-200",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "SUN-30-50",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": false
+  },
+  "EML-0043": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "URN-CUP-60",
+     "source": "delivery-note-0043.pdf"
+    },
+    {
+     "quantity": 16,
+     "sku": "GLV-LTX-L",
+     "source": "delivery-note-0043.pdf"
+    },
+    {
+     "quantity": 6,
+     "sku": "GLV-LTXP-M",
+     "source": "delivery-note-0043.pdf"
+    },
+    {
+     "quantity": 3,
+     "sku": "CATH-FOL-12",
+     "source": "delivery-note-0043.pdf"
+    },
+    {
+     "quantity": 80,
+     "sku": "BND-ELA-5",
+     "source": "delivery-note-0043.pdf"
+    },
+    {
+     "quantity": 8,
+     "sku": null,
+     "source": "delivery-note-0043.pdf"
+    },
+    {
+     "quantity": 200,
+     "sku": "BND-COH-7",
+     "source": "delivery-note-0043.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0044": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 60,
+     "sku": "TAPE-PAP-12",
+     "source": "body"
+    },
+    {
+     "quantity": 250,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0045": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "PLST-WP",
+     "source": "order-0045.xlsx"
+    },
+    {
+     "quantity": 6,
+     "sku": "STOCK-THIGH-M",
+     "source": "order-0045.xlsx"
+    },
+    {
+     "quantity": 3,
+     "sku": "PEN-31-8",
+     "source": "order-0045.xlsx"
+    },
+    {
+     "quantity": 40,
+     "sku": null,
+     "source": "order-0045.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "NDL-23G",
+     "source": "order-0045.xlsx"
+    },
+    {
+     "quantity": 10,
+     "sku": "PAD-60x90",
+     "source": "order-0045.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "SUP-KNEE-S",
+     "source": "order-0045.xlsx"
+    },
+    {
+     "quantity": 15,
+     "sku": "URN-BAG-2L",
+     "source": "order-0045.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0046": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "MASK-IIR",
+     "source": "body"
+    },
+    {
+     "quantity": 6,
+     "sku": "STOCK-THIGH-M",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0047": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 30,
+     "sku": "GLV-SURG-LTX-8",
+     "source": "body"
+    },
+    {
+     "quantity": 24,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 19,
+     "sku": "STITCH-CUT",
+     "source": "body"
+    },
+    {
+     "quantity": 17,
+     "sku": "PLST-KIDS",
+     "source": "body"
+    },
+    {
+     "quantity": 9,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0048": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 75,
+     "sku": "PEN-31-8",
+     "source": "order-0048.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0049": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 2,
+     "sku": "CANE-FOLD",
+     "source": "purchase-order-0049.pdf"
+    },
+    {
+     "quantity": 16,
+     "sku": "GLV-VIN-L",
+     "source": "purchase-order-0049.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0052": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": null,
+     "source": "delivery-note-0052.pdf"
+    },
+    {
+     "quantity": 18,
+     "sku": "COUCH-50",
+     "source": "delivery-note-0052.pdf"
+    },
+    {
+     "quantity": 8,
+     "sku": "GAUZE-NS-5",
+     "source": "delivery-note-0052.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0053": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 2,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 3,
+     "sku": "PLST-SPOT",
+     "source": "body"
+    },
+    {
+     "quantity": 2,
+     "sku": "MOUTHWASH-500",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0054": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "GLV-NIT200-S",
+     "source": "body"
+    },
+    {
+     "quantity": 150,
+     "sku": "BND-TUB-C",
+     "source": "body"
+    },
+    {
+     "quantity": 11,
+     "sku": "INC-PAD-LIGHT",
+     "source": "body"
+    },
+    {
+     "quantity": 6,
+     "sku": "SCALPEL-10",
+     "source": "body"
+    },
+    {
+     "quantity": 1,
+     "sku": "BND-ELA-7",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0055": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "PLST-BLUE",
+     "source": "body"
+    },
+    {
+     "quantity": 18,
+     "sku": "DRS-FILM-10x12",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0056": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "TONGUE-ST",
+     "source": "order-0056.txt"
+    },
+    {
+     "quantity": 36,
+     "sku": "WIPE-PAD-200",
+     "source": "order-0056.txt"
+    },
+    {
+     "quantity": 2,
+     "sku": "GEL-PACK-L",
+     "source": "order-0056.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0057": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0058": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 48,
+     "sku": "BND-TUB-E",
+     "source": "body"
+    },
+    {
+     "quantity": 36,
+     "sku": "SHOWER-GEL-750",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0059": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0060": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "WIPE-WET-80",
+     "source": "order-0060.xlsx"
+    },
+    {
+     "quantity": 6,
+     "sku": "SOAP-LIQ-5000",
+     "source": "order-0060.xlsx"
+    },
+    {
+     "quantity": 10,
+     "sku": "DRS-ISL-9x25",
+     "source": "order-0060.xlsx"
+    },
+    {
+     "quantity": 50,
+     "sku": "SYR-LL-20",
+     "source": "order-0060.xlsx"
+    },
+    {
+     "quantity": 9,
+     "sku": "BND-COH-10",
+     "source": "order-0060.xlsx"
+    },
+    {
+     "quantity": 7,
+     "sku": "DRS-ISL-9x10",
+     "source": "order-0060.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "GEL-PACK-S",
+     "source": "order-0060.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0061": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 200,
+     "sku": "SAL-30",
+     "source": "order-0061.txt"
+    },
+    {
+     "quantity": 12,
+     "sku": "PEN-32-6",
+     "source": "order-0061.txt"
+    },
+    {
+     "quantity": 11,
+     "sku": "SHARPS-2",
+     "source": "order-0061.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0065": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "PEN-31-5",
+     "source": "body"
+    },
+    {
+     "quantity": 7,
+     "sku": "SUP-WRIST-M",
+     "source": "body"
+    },
+    {
+     "quantity": 24,
+     "sku": "SUN-30-50",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0067": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 50,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0068": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 200,
+     "sku": "OIL-MASSAGE",
+     "source": "order-0068.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "SUP-WRIST-S",
+     "source": "order-0068.xlsx"
+    },
+    {
+     "quantity": 19,
+     "sku": "GLV-LTXP-L",
+     "source": "order-0068.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0070": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 120,
+     "sku": "COT-ROLL-500",
+     "source": "order-0070.txt"
+    },
+    {
+     "quantity": 11,
+     "sku": "GLV-NIT-L",
+     "source": "order-0070.txt"
+    },
+    {
+     "quantity": 19,
+     "sku": "GLV-VIN-M",
+     "source": "order-0070.txt"
+    },
+    {
+     "quantity": 14,
+     "sku": null,
+     "source": "order-0070.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0071": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": null,
+     "source": "order-0071.txt"
+    },
+    {
+     "quantity": 8,
+     "sku": "CATH-SIL-12",
+     "source": "order-0071.txt"
+    },
+    {
+     "quantity": 80,
+     "sku": "SUP-ANKLE-S",
+     "source": "order-0071.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0072": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "BURN-GEL",
+     "source": "purchase-order-0072.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0074": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "SUN-50-50",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0076": {
+   "email_exact_match": false,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 8,
+     "sku": null,
+     "source": "purchase-order-0076.pdf"
+    },
+    {
+     "quantity": 5,
+     "sku": "SYR-2",
+     "source": "purchase-order-0076.pdf"
+    },
+    {
+     "quantity": 15,
+     "sku": "SWAB-TRANS",
+     "source": "purchase-order-0076.pdf"
+    },
+    {
+     "quantity": 10,
+     "sku": "COT-BUDS",
+     "source": "purchase-order-0076.pdf"
+    },
+    {
+     "quantity": 20,
+     "sku": "FORCEPS-DISP",
+     "source": "purchase-order-0076.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0077": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 25,
+     "sku": "PLST-WP",
+     "source": "body"
+    },
+    {
+     "quantity": 9,
+     "sku": "STOCK-KNEE-M",
+     "source": "body"
+    },
+    {
+     "quantity": 12,
+     "sku": "SOAP-LIQ-500",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0078": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "WIPE-PAD-200",
+     "source": "order-0078.xlsx"
+    },
+    {
+     "quantity": 7,
+     "sku": "BND-ELA-5",
+     "source": "order-0078.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "GAUZE-NS-10",
+     "source": "order-0078.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0079": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "BPM-CUFF-S",
+     "source": "body"
+    },
+    {
+     "quantity": 36,
+     "sku": "GLV-LTX-L",
+     "source": "body"
+    },
+    {
+     "quantity": 6,
+     "sku": "CATH-SIL-12",
+     "source": "body"
+    },
+    {
+     "quantity": 80,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0081": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "BURN-GEL",
+     "source": "order-0081.xlsx"
+    },
+    {
+     "quantity": 30,
+     "sku": "CATH-SIL-12",
+     "source": "order-0081.xlsx"
+    },
+    {
+     "quantity": 19,
+     "sku": "ALC96-250",
+     "source": "order-0081.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0083": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0085": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 17,
+     "sku": "CATH-FOL-18",
+     "source": "order-0085.txt"
+    },
+    {
+     "quantity": 12,
+     "sku": "TAPE-TR-25",
+     "source": "order-0085.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0087": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "GLV-SURG-NEO-8",
+     "source": "body"
+    },
+    {
+     "quantity": 19,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 18,
+     "sku": "ALC70-500",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "GLV-NITX-M",
+     "source": "body"
+    },
+    {
+     "quantity": 17,
+     "sku": "GLV-SURG-LTX-8.5",
+     "source": "body"
+    },
+    {
+     "quantity": 4,
+     "sku": "ALC96-500",
+     "source": "body"
+    },
+    {
+     "quantity": 12,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0091": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0092": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 19,
+     "sku": "SHARPS-1",
+     "source": "delivery-note-0092.pdf"
+    },
+    {
+     "quantity": 3,
+     "sku": "ALC96-100",
+     "source": "delivery-note-0092.pdf"
+    },
+    {
+     "quantity": 16,
+     "sku": "INC-BRF-L",
+     "source": "delivery-note-0092.pdf"
+    },
+    {
+     "quantity": 150,
+     "sku": "SUP-KNEE-L",
+     "source": "delivery-note-0092.pdf"
+    },
+    {
+     "quantity": 120,
+     "sku": "APRON-PE",
+     "source": "delivery-note-0092.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0093": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0094": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0095": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": "PILL-CUP",
+     "source": "order-0095.xlsx"
+    },
+    {
+     "quantity": 40,
+     "sku": "GAUZE-NS-10-12",
+     "source": "order-0095.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0096": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "SUP-ELBOW-L",
+     "source": "purchase-order-0096.pdf"
+    },
+    {
+     "quantity": 15,
+     "sku": "BPM-CUFF-M",
+     "source": "purchase-order-0096.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0097": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 40,
+     "sku": "WIPE-WET-80",
+     "source": "body"
+    },
+    {
+     "quantity": 20,
+     "sku": "STETH-DUAL",
+     "source": "body"
+    },
+    {
+     "quantity": 18,
+     "sku": "SYR-3",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0100": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "URN-CUP-100",
+     "source": "body"
+    },
+    {
+     "quantity": 4,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0101": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "CANE-ADJ",
+     "source": "order-0101.txt"
+    },
+    {
+     "quantity": 100,
+     "sku": "GLV-SURG-LTX-8.5",
+     "source": "order-0101.txt"
+    },
+    {
+     "quantity": 16,
+     "sku": "SYR-LL-5",
+     "source": "order-0101.txt"
+    },
+    {
+     "quantity": 300,
+     "sku": "PLST-BLUE",
+     "source": "order-0101.txt"
+    },
+    {
+     "quantity": 80,
+     "sku": "GEL-5000",
+     "source": "order-0101.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0102": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 14,
+     "sku": "SYR-LL-50",
+     "source": "purchase-order-0102.pdf"
+    },
+    {
+     "quantity": 9,
+     "sku": "INC-BRF-L",
+     "source": "purchase-order-0102.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0103": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": null,
+     "source": "order-0103.xlsx"
+    },
+    {
+     "quantity": 17,
+     "sku": "GLV-VIN-XL",
+     "source": "order-0103.xlsx"
+    },
+    {
+     "quantity": 13,
+     "sku": "GLV-SURG-LTX-6.5",
+     "source": "order-0103.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "GLV-SURG-LTX-8",
+     "source": "order-0103.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0104": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": null,
+     "source": "order-0104.xlsx"
+    },
+    {
+     "quantity": 1,
+     "sku": "GOGGLES",
+     "source": "order-0104.xlsx"
+    },
+    {
+     "quantity": 1,
+     "sku": "SHARPS-2",
+     "source": "order-0104.xlsx"
+    },
+    {
+     "quantity": 7,
+     "sku": "BPM-CUFF-L",
+     "source": "order-0104.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0107": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 24,
+     "sku": "TAPE-PAP-25",
+     "source": "body"
+    },
+    {
+     "quantity": 48,
+     "sku": "GEL-1000",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0108": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "BPM-CUFF-L",
+     "source": "delivery-note-0108.pdf"
+    },
+    {
+     "quantity": 14,
+     "sku": "INC-PANT-L",
+     "source": "delivery-note-0108.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0110": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "GLV-LTX-M",
+     "source": "order-0110.txt"
+    },
+    {
+     "quantity": 14,
+     "sku": "SYR-10",
+     "source": "order-0110.txt"
+    },
+    {
+     "quantity": 12,
+     "sku": "NDL-27G",
+     "source": "order-0110.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0111": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "SAL-500",
+     "source": "body"
+    },
+    {
+     "quantity": 20,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0113": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0114": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0115": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "CREAM-HAND-50",
+     "source": "order-0115.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0116": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "DRS-ISL-5x7",
+     "source": "purchase-order-0116.pdf"
+    },
+    {
+     "quantity": 17,
+     "sku": "SYR-INS-05",
+     "source": "purchase-order-0116.pdf"
+    },
+    {
+     "quantity": 4,
+     "sku": "ALC70-5000",
+     "source": "purchase-order-0116.pdf"
+    },
+    {
+     "quantity": 12,
+     "sku": "SUP-KNEE-M",
+     "source": "purchase-order-0116.pdf"
+    },
+    {
+     "quantity": 20,
+     "sku": "DRS-FOAM-10",
+     "source": "purchase-order-0116.pdf"
+    },
+    {
+     "quantity": 4,
+     "sku": "SAL-250",
+     "source": "purchase-order-0116.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0118": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": null,
+     "source": "order-0118.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0119": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 48,
+     "sku": "THERM-DIG",
+     "source": "body"
+    },
+    {
+     "quantity": 6,
+     "sku": "GLV-LTXP-M",
+     "source": "body"
+    },
+    {
+     "quantity": 3,
+     "sku": "SHARPS-5",
+     "source": "body"
+    },
+    {
+     "quantity": 19,
+     "sku": "WIPE-PAD-200",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0120": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": null,
+     "source": "order-0120.txt"
+    },
+    {
+     "quantity": 13,
+     "sku": "SUP-WRIST-M",
+     "source": "order-0120.txt"
+    },
+    {
+     "quantity": 18,
+     "sku": "DRS-FILM-10x12",
+     "source": "order-0120.txt"
+    },
+    {
+     "quantity": 7,
+     "sku": "SUN-KIDS-50-200",
+     "source": "order-0120.txt"
+    },
+    {
+     "quantity": 11,
+     "sku": null,
+     "source": "order-0120.txt"
+    },
+    {
+     "quantity": 17,
+     "sku": "GRAB-REACH",
+     "source": "order-0120.txt"
+    },
+    {
+     "quantity": 18,
+     "sku": null,
+     "source": "order-0120.txt"
+    },
+    {
+     "quantity": 2,
+     "sku": "COT-BALL",
+     "source": "order-0120.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0121": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "SCALPEL-15",
+     "source": "purchase-order-0121.pdf"
+    },
+    {
+     "quantity": 14,
+     "sku": "GOGGLES",
+     "source": "purchase-order-0121.pdf"
+    },
+    {
+     "quantity": 3,
+     "sku": "GLV-VIN-S",
+     "source": "purchase-order-0121.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0122": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 80,
+     "sku": "COT-ROLL-500",
+     "source": "order-0122.xlsx"
+    },
+    {
+     "quantity": 13,
+     "sku": null,
+     "source": "order-0122.xlsx"
+    },
+    {
+     "quantity": 1,
+     "sku": "INC-PANT-M",
+     "source": "order-0122.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0124": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": "GRAB-REACH",
+     "source": "body"
+    },
+    {
+     "quantity": 36,
+     "sku": "SHARPS-2",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0125": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 45,
+     "sku": "NDL-30G",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0127": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 2,
+     "sku": "GEL-5000",
+     "source": "order-0127.xlsx"
+    },
+    {
+     "quantity": 12,
+     "sku": null,
+     "source": "order-0127.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0129": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 19,
+     "sku": "COVERALL-XL",
+     "source": "order-0129.xlsx"
+    },
+    {
+     "quantity": 12,
+     "sku": null,
+     "source": "order-0129.xlsx"
+    },
+    {
+     "quantity": 15,
+     "sku": "GLV-LTXP-M",
+     "source": "order-0129.xlsx"
+    },
+    {
+     "quantity": 80,
+     "sku": "GLV-NITX-M",
+     "source": "order-0129.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0130": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 8,
+     "sku": "SLING-ARM",
+     "source": "order-0130.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0131": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "URN-BAG-2L",
+     "source": "order-0131.txt"
+    },
+    {
+     "quantity": 300,
+     "sku": "WIPE-WET-80",
+     "source": "order-0131.txt"
+    },
+    {
+     "quantity": 100,
+     "sku": "HOT-WATER-BOTTLE",
+     "source": "order-0131.txt"
+    },
+    {
+     "quantity": 10,
+     "sku": null,
+     "source": "order-0131.txt"
+    },
+    {
+     "quantity": 10,
+     "sku": "MASK-KIDS",
+     "source": "order-0131.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0132": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "PEN-32-4",
+     "source": "purchase-order-0132.pdf"
+    },
+    {
+     "quantity": 2,
+     "sku": null,
+     "source": "purchase-order-0132.pdf"
+    },
+    {
+     "quantity": 13,
+     "sku": "DRS-FILM-6x7",
+     "source": "purchase-order-0132.pdf"
+    },
+    {
+     "quantity": 17,
+     "sku": "COUCH-60-SMOOTH",
+     "source": "purchase-order-0132.pdf"
+    },
+    {
+     "quantity": 30,
+     "sku": "KIDNEY-DISH",
+     "source": "purchase-order-0132.pdf"
+    },
+    {
+     "quantity": 25,
+     "sku": null,
+     "source": "purchase-order-0132.pdf"
+    },
+    {
+     "quantity": 150,
+     "sku": "GLV-NITX-XL",
+     "source": "purchase-order-0132.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0134": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "SUN-50-50",
+     "source": "order-0134.txt"
+    },
+    {
+     "quantity": 5,
+     "sku": "SUP-ANKLE-M",
+     "source": "order-0134.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0135": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 100,
+     "sku": "PLST-BLUE",
+     "source": "order-0135.xlsx"
+    },
+    {
+     "quantity": 13,
+     "sku": "GEL-500",
+     "source": "order-0135.xlsx"
+    },
+    {
+     "quantity": 3,
+     "sku": "GLV-SURG-NEO-7",
+     "source": "order-0135.xlsx"
+    },
+    {
+     "quantity": 50,
+     "sku": "SUN-30-50",
+     "source": "order-0135.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0136": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 50,
+     "sku": "DRS-FILM-6x7",
+     "source": "body"
+    },
+    {
+     "quantity": 6,
+     "sku": "SUN-KIDS-50-200",
+     "source": "body"
+    },
+    {
+     "quantity": 16,
+     "sku": "BND-COH-7",
+     "source": "body"
+    },
+    {
+     "quantity": 9,
+     "sku": "INC-PAD-MAXI",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0137": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "SHAMPOO-500",
+     "source": "delivery-note-0137.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0138": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 200,
+     "sku": "MASK-KIDS",
+     "source": "body"
+    },
+    {
+     "quantity": 80,
+     "sku": "TOOTHBRUSH-SOFT",
+     "source": "body"
+    },
+    {
+     "quantity": 9,
+     "sku": "SUN-FACE-50-50",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0139": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "BPM-CUFF-L",
+     "source": "body"
+    },
+    {
+     "quantity": 6,
+     "sku": "CATH-FOL-16",
+     "source": "body"
+    },
+    {
+     "quantity": 15,
+     "sku": "SYR-LL-5",
+     "source": "body"
+    },
+    {
+     "quantity": 25,
+     "sku": "SYR-LL-50",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0140": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 24,
+     "sku": "KIT-FA-WALL",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "GLV-SURG-NEO-7",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0142": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0143": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 17,
+     "sku": "DRS-FOAM-15",
+     "source": "body"
+    },
+    {
+     "quantity": 1,
+     "sku": "SYR-LL-10",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0144": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 45,
+     "sku": "COUCH-60-SMOOTH",
+     "source": "body"
+    },
+    {
+     "quantity": 14,
+     "sku": "SLING-ARM",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0146": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 4,
+     "sku": "FORCEPS-DISP",
+     "source": "body"
+    },
+    {
+     "quantity": 19,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 1,
+     "sku": "RAZOR-DISP",
+     "source": "body"
+    },
+    {
+     "quantity": 19,
+     "sku": "SCALPEL-11",
+     "source": "body"
+    },
+    {
+     "quantity": 25,
+     "sku": "SHAMPOO-500",
+     "source": "body"
+    },
+    {
+     "quantity": 70,
+     "sku": "COT-ROLL-1000",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0147": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "MASK-II",
+     "source": "order-0147.xlsx"
+    },
+    {
+     "quantity": 50,
+     "sku": "CATH-SIL-18",
+     "source": "order-0147.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0149": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 24,
+     "sku": "TAPE-TR-12",
+     "source": "order-0149.txt"
+    },
+    {
+     "quantity": 18,
+     "sku": "OXI-FING",
+     "source": "order-0149.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0150": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "ALC70-5000",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0151": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 19,
+     "sku": "PLST-WP",
+     "source": "order-0151.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0152": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0153": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "STRIP-6x100",
+     "source": "body"
+    },
+    {
+     "quantity": 75,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0154": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 36,
+     "sku": "OXI-FING",
+     "source": "body"
+    },
+    {
+     "quantity": 2,
+     "sku": "GLV-LTX-S",
+     "source": "body"
+    },
+    {
+     "quantity": 4,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0155": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0156": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "GEL-1000",
+     "source": "order-0156.xlsx"
+    },
+    {
+     "quantity": 6,
+     "sku": "GLV-SURG-NEO-8",
+     "source": "order-0156.xlsx"
+    },
+    {
+     "quantity": 4,
+     "sku": "SYR-LL-10",
+     "source": "order-0156.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0157": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 48,
+     "sku": "EYE-WASH-500",
+     "source": "body"
+    },
+    {
+     "quantity": 17,
+     "sku": "TONGUE-AD",
+     "source": "body"
+    },
+    {
+     "quantity": 2,
+     "sku": "STOCK-KNEE-S",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0158": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "GOWN-ISO",
+     "source": "body"
+    },
+    {
+     "quantity": 6,
+     "sku": "SCALPEL-15",
+     "source": "body"
+    },
+    {
+     "quantity": 4,
+     "sku": "GAUZE-ST-5",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0159": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 60,
+     "sku": "SHARPS-06",
+     "source": "order-0159.xlsx"
+    },
+    {
+     "quantity": 7,
+     "sku": "GRAB-REACH",
+     "source": "order-0159.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0160": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "GOWN-ISO",
+     "source": "order-0160.xlsx"
+    },
+    {
+     "quantity": 3,
+     "sku": "LAN-100",
+     "source": "order-0160.xlsx"
+    },
+    {
+     "quantity": 1,
+     "sku": "ALC70-5000",
+     "source": "order-0160.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0163": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0164": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "INC-PANT-XL",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0165": {
+   "email_exact_match": false,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 200,
+     "sku": "SYR-LL-20",
+     "source": "body"
+    },
+    {
+     "quantity": 13,
+     "sku": "LAN-200",
+     "source": "body"
+    },
+    {
+     "quantity": 4,
+     "sku": "TAPE-ZNC-50",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0168": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0169": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "SUN-50-200",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0170": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "ALC70-250",
+     "source": "order-0170.xlsx"
+    },
+    {
+     "quantity": 10,
+     "sku": "NDL-19G",
+     "source": "order-0170.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0172": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "TAPE-SILK-25",
+     "source": "body"
+    },
+    {
+     "quantity": 9,
+     "sku": "SWAB-TRANS",
+     "source": "body"
+    },
+    {
+     "quantity": 14,
+     "sku": "SUP-ELBOW-M",
+     "source": "body"
+    },
+    {
+     "quantity": 18,
+     "sku": "SYR-1",
+     "source": "body"
+    },
+    {
+     "quantity": 4,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 5,
+     "sku": "PLST-ASST",
+     "source": "body"
+    },
+    {
+     "quantity": 16,
+     "sku": "PLST-ROLL-6",
+     "source": "body"
+    },
+    {
+     "quantity": 50,
+     "sku": "CATH-FOL-12",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0173": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0175": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 25,
+     "sku": "URN-BAG-LEG",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0179": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 25,
+     "sku": "PLST-KIDS",
+     "source": "order-0179.txt"
+    },
+    {
+     "quantity": 14,
+     "sku": "WIPE-WASH-CAP",
+     "source": "order-0179.txt"
+    },
+    {
+     "quantity": 6,
+     "sku": "GLV-SURG-LTX-8",
+     "source": "order-0179.txt"
+    },
+    {
+     "quantity": 4,
+     "sku": "SHARPS-06",
+     "source": "order-0179.txt"
+    },
+    {
+     "quantity": 1,
+     "sku": "SAL-1000",
+     "source": "order-0179.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0180": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "THERM-COVER",
+     "source": "body"
+    },
+    {
+     "quantity": 20,
+     "sku": "CREAM-HAND-50",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0181": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0182": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "GLV-LTXP-S",
+     "source": "order-0182.xlsx"
+    },
+    {
+     "quantity": 3,
+     "sku": "NDL-21G",
+     "source": "order-0182.xlsx"
+    },
+    {
+     "quantity": 2,
+     "sku": "NDL-20G",
+     "source": "order-0182.xlsx"
+    },
+    {
+     "quantity": 6,
+     "sku": "GLV-SURG-NEO-8.5",
+     "source": "order-0182.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0183": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 150,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 25,
+     "sku": "WHEELCHAIR-CUSH",
+     "source": "body"
+    },
+    {
+     "quantity": 18,
+     "sku": "CREAM-FOOT",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0184": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0185": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 14,
+     "sku": "CREAM-MOIST-100",
+     "source": "body"
+    },
+    {
+     "quantity": 13,
+     "sku": "GEL-500",
+     "source": "body"
+    },
+    {
+     "quantity": 18,
+     "sku": "NDL-22G",
+     "source": "body"
+    },
+    {
+     "quantity": 24,
+     "sku": "PAD-60x90",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "WIPE-SURF-100",
+     "source": "body"
+    },
+    {
+     "quantity": 20,
+     "sku": "SHOE-COVER",
+     "source": "body"
+    },
+    {
+     "quantity": 3,
+     "sku": "INC-BRF-NIGHT-M",
+     "source": "body"
+    },
+    {
+     "quantity": 16,
+     "sku": "GOWN-SURG-ST",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0186": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 4,
+     "sku": "APRON-PE",
+     "source": "delivery-note-0186.pdf"
+    },
+    {
+     "quantity": 14,
+     "sku": "ALC70-500",
+     "source": "delivery-note-0186.pdf"
+    },
+    {
+     "quantity": 20,
+     "sku": "INC-PAD-LIGHT",
+     "source": "delivery-note-0186.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0187": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 36,
+     "sku": "COT-ROLL-250",
+     "source": "order-0187.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0191": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 40,
+     "sku": "GAUZE-NS-7-12",
+     "source": "body"
+    },
+    {
+     "quantity": 18,
+     "sku": "PILL-BOX-7",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0192": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "WIPE-SURF-100",
+     "source": "order-0192.xlsx"
+    },
+    {
+     "quantity": 3,
+     "sku": "AFTERSUN-200",
+     "source": "order-0192.xlsx"
+    },
+    {
+     "quantity": 10,
+     "sku": null,
+     "source": "order-0192.xlsx"
+    },
+    {
+     "quantity": 15,
+     "sku": "SUP-KNEE-M",
+     "source": "order-0192.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "THERM-EAR",
+     "source": "order-0192.xlsx"
+    },
+    {
+     "quantity": 14,
+     "sku": "OXI-PAED",
+     "source": "order-0192.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0193": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "BPM-WRIST",
+     "source": "body"
+    },
+    {
+     "quantity": 36,
+     "sku": "GLV-NITX-L",
+     "source": "body"
+    },
+    {
+     "quantity": 8,
+     "sku": "INC-BRF-S",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0195": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "GLV-NIT-L",
+     "source": "delivery-note-0195.pdf"
+    },
+    {
+     "quantity": 4,
+     "sku": "ALC70-500",
+     "source": "delivery-note-0195.pdf"
+    },
+    {
+     "quantity": 18,
+     "sku": "THERM-IR",
+     "source": "delivery-note-0195.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0196": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0197": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "SUP-LUMBAR",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0198": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "SYR-INS-03",
+     "source": "order-0198.xlsx"
+    },
+    {
+     "quantity": 9,
+     "sku": "SUP-WRIST-L",
+     "source": "order-0198.xlsx"
+    },
+    {
+     "quantity": 1,
+     "sku": "INC-PANT-L",
+     "source": "order-0198.xlsx"
+    },
+    {
+     "quantity": 15,
+     "sku": "GLV-VIN-S",
+     "source": "order-0198.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0201": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": null,
+     "source": "order-0201.xlsx"
+    },
+    {
+     "quantity": 7,
+     "sku": "PEN-32-6",
+     "source": "order-0201.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0202": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "NDL-25G",
+     "source": "body"
+    },
+    {
+     "quantity": 5,
+     "sku": "GAUZE-NS-10-12",
+     "source": "body"
+    },
+    {
+     "quantity": 16,
+     "sku": "SAL-1000",
+     "source": "body"
+    },
+    {
+     "quantity": 25,
+     "sku": "GLV-NIT-L",
+     "source": "body"
+    },
+    {
+     "quantity": 7,
+     "sku": "TAPE-KIN",
+     "source": "body"
+    },
+    {
+     "quantity": 11,
+     "sku": "BLANKET-FOIL",
+     "source": "body"
+    },
+    {
+     "quantity": 2,
+     "sku": "SHARPS-06",
+     "source": "body"
+    },
+    {
+     "quantity": 17,
+     "sku": "OXI-PAED",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0203": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "SYR-INS-10",
+     "source": "body"
+    },
+    {
+     "quantity": 16,
+     "sku": "SYR-10",
+     "source": "body"
+    },
+    {
+     "quantity": 48,
+     "sku": "THERM-DIG-FLEX",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0205": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0206": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 80,
+     "sku": "SHARPS-5",
+     "source": "order-0206.txt"
+    },
+    {
+     "quantity": 15,
+     "sku": "CATH-SIL-18",
+     "source": "order-0206.txt"
+    },
+    {
+     "quantity": 200,
+     "sku": "SUP-KNEE-XL",
+     "source": "order-0206.txt"
+    },
+    {
+     "quantity": 10,
+     "sku": "GLV-LTXP-L",
+     "source": "order-0206.txt"
+    },
+    {
+     "quantity": 19,
+     "sku": "SUP-ELBOW-M",
+     "source": "order-0206.txt"
+    },
+    {
+     "quantity": 3,
+     "sku": "MASK-IIR",
+     "source": "order-0206.txt"
+    },
+    {
+     "quantity": 75,
+     "sku": "INC-PAD-MAXI",
+     "source": "order-0206.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0207": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 14,
+     "sku": "GLV-VIN-XL",
+     "source": "order-0207.txt"
+    },
+    {
+     "quantity": 1,
+     "sku": "WIPE-PAD-100",
+     "source": "order-0207.txt"
+    },
+    {
+     "quantity": 15,
+     "sku": "BND-ELA-10",
+     "source": "order-0207.txt"
+    },
+    {
+     "quantity": 19,
+     "sku": "CREAM-BARRIER",
+     "source": "order-0207.txt"
+    },
+    {
+     "quantity": 24,
+     "sku": "DRS-FOAM-15",
+     "source": "order-0207.txt"
+    },
+    {
+     "quantity": 8,
+     "sku": null,
+     "source": "order-0207.txt"
+    },
+    {
+     "quantity": 7,
+     "sku": "ICE-INSTANT",
+     "source": "order-0207.txt"
+    },
+    {
+     "quantity": 8,
+     "sku": "GLV-SURG-NEO-6.5",
+     "source": "order-0207.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0208": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "PLST-FAB",
+     "source": "purchase-order-0208.pdf"
+    },
+    {
+     "quantity": 150,
+     "sku": "SUP-ANKLE-L",
+     "source": "purchase-order-0208.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0209": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 8,
+     "sku": "GEL-WALL",
+     "source": "body"
+    },
+    {
+     "quantity": 8,
+     "sku": "CAP-BOUF",
+     "source": "body"
+    },
+    {
+     "quantity": 11,
+     "sku": "THERM-EAR",
+     "source": "body"
+    },
+    {
+     "quantity": 2,
+     "sku": "STOCK-KNEE-L",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0211": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": "GAUZE-ST-5",
+     "source": "purchase-order-0211.pdf"
+    },
+    {
+     "quantity": 17,
+     "sku": "NDL-21G",
+     "source": "purchase-order-0211.pdf"
+    },
+    {
+     "quantity": 9,
+     "sku": "COVERALL-XL",
+     "source": "purchase-order-0211.pdf"
+    },
+    {
+     "quantity": 19,
+     "sku": "GOWN-SURG-ST",
+     "source": "purchase-order-0211.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0212": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "CAP-BOUF",
+     "source": "order-0212.txt"
+    },
+    {
+     "quantity": 3,
+     "sku": "SUN-50-200",
+     "source": "order-0212.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0213": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "TOURNIQ",
+     "source": "order-0213.xlsx"
+    },
+    {
+     "quantity": 6,
+     "sku": "URN-CUP-60",
+     "source": "order-0213.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0214": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0215": {
+   "email_exact_match": false,
+   "error": "Extracted line 1: SKU 'SHARPS-15' is not in the catalog",
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [],
+   "out_of_catalog_detection": false
+  },
+  "EML-0220": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 4,
+     "sku": "INC-PANT-M",
+     "source": "delivery-note-0220.pdf"
+    },
+    {
+     "quantity": 5,
+     "sku": null,
+     "source": "delivery-note-0220.pdf"
+    },
+    {
+     "quantity": 6,
+     "sku": "TAPE-ZNC-25",
+     "source": "delivery-note-0220.pdf"
+    },
+    {
+     "quantity": 20,
+     "sku": "SHARPS-1",
+     "source": "delivery-note-0220.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0221": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 50,
+     "sku": "SUP-ANKLE-L",
+     "source": "body"
+    },
+    {
+     "quantity": 17,
+     "sku": "SYR-LL-20",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0223": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 150,
+     "sku": "PAD-60x90",
+     "source": "purchase-order-0223.pdf"
+    },
+    {
+     "quantity": 1,
+     "sku": "MASK-FFP2",
+     "source": "purchase-order-0223.pdf"
+    },
+    {
+     "quantity": 12,
+     "sku": "SAL-10",
+     "source": "purchase-order-0223.pdf"
+    },
+    {
+     "quantity": 7,
+     "sku": "GAUZE-ROLL-5",
+     "source": "purchase-order-0223.pdf"
+    },
+    {
+     "quantity": 3,
+     "sku": "GLV-NITX-L",
+     "source": "purchase-order-0223.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0225": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "COUCH-50",
+     "source": "body"
+    },
+    {
+     "quantity": 19,
+     "sku": "GAUZE-NS-5-12",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0227": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "PAD-60x60",
+     "source": "purchase-order-0227.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0228": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "SYR-INS-05",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "DRS-ISL-9x15",
+     "source": "body"
+    },
+    {
+     "quantity": 1,
+     "sku": "KIDNEY-DISH",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "COVERALL-XL",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0229": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 150,
+     "sku": "URN-CUP-100",
+     "source": "order-0229.xlsx"
+    },
+    {
+     "quantity": 1,
+     "sku": "SCALPEL-11",
+     "source": "order-0229.xlsx"
+    },
+    {
+     "quantity": 3,
+     "sku": "SYR-1",
+     "source": "order-0229.xlsx"
+    },
+    {
+     "quantity": 1,
+     "sku": "CATH-SIL-16",
+     "source": "order-0229.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0230": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "SUP-ELBOW-S",
+     "source": "body"
+    },
+    {
+     "quantity": 48,
+     "sku": "CATH-SIL-16",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0231": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 14,
+     "sku": "PLST-ROLL-8",
+     "source": "body"
+    },
+    {
+     "quantity": 13,
+     "sku": "GLV-LTX-XL",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0232": {
+   "email_exact_match": false,
+   "error": null,
+   "intake_accuracy": false,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": false
+  },
+  "EML-0233": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0234": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 75,
+     "sku": "PEN-32-6",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0235": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 120,
+     "sku": "BND-TUB-E",
+     "source": "purchase-order-0235.pdf"
+    },
+    {
+     "quantity": 1,
+     "sku": "STRIP-6x100",
+     "source": "purchase-order-0235.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0236": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 4,
+     "sku": "INC-BRF-M",
+     "source": "order-0236.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0237": {
+   "email_exact_match": false,
+   "error": "Extracted line 5: SKU 'SHARPS-15' is not in the catalog",
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [],
+   "out_of_catalog_detection": false
+  },
+  "EML-0239": {
+   "email_exact_match": false,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "CRUTCH-ADULT",
+     "source": "order-0239.xlsx"
+    },
+    {
+     "quantity": 5,
+     "sku": "BND-TUB-E",
+     "source": "order-0239.xlsx"
+    },
+    {
+     "quantity": 24,
+     "sku": "COT-ROLL-250",
+     "source": "order-0239.xlsx"
+    },
+    {
+     "quantity": 60,
+     "sku": "PEN-32-4",
+     "source": "order-0239.xlsx"
+    },
+    {
+     "quantity": 15,
+     "sku": "SYR-5",
+     "source": "order-0239.xlsx"
+    },
+    {
+     "quantity": 16,
+     "sku": "GLV-LTX-M",
+     "source": "order-0239.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": false
+  },
+  "EML-0241": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0242": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "STETH-PAED",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0243": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 30,
+     "sku": "GAUZE-ST-7",
+     "source": "order-0243.xlsx"
+    },
+    {
+     "quantity": 17,
+     "sku": "TAPE-ZNC-25",
+     "source": "order-0243.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "KIDNEY-DISH",
+     "source": "order-0243.xlsx"
+    },
+    {
+     "quantity": 19,
+     "sku": "GLV-NIT-XS",
+     "source": "order-0243.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0244": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "DRS-ISL-5x7",
+     "source": "order-0244.txt"
+    },
+    {
+     "quantity": 18,
+     "sku": "MASK-FFP2-V",
+     "source": "order-0244.txt"
+    },
+    {
+     "quantity": 4,
+     "sku": "NDL-20G",
+     "source": "order-0244.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0245": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 36,
+     "sku": "ALC96-1000",
+     "source": "body"
+    },
+    {
+     "quantity": 14,
+     "sku": "STOCK-THIGH-L",
+     "source": "body"
+    },
+    {
+     "quantity": 11,
+     "sku": "MASK-FFP2-BLK",
+     "source": "body"
+    },
+    {
+     "quantity": 16,
+     "sku": "LAN-PEN",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0246": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "CATH-FOL-14",
+     "source": "purchase-order-0246.pdf"
+    },
+    {
+     "quantity": 120,
+     "sku": "SYR-3",
+     "source": "purchase-order-0246.pdf"
+    },
+    {
+     "quantity": 12,
+     "sku": "BND-TUB-C",
+     "source": "purchase-order-0246.pdf"
+    },
+    {
+     "quantity": 8,
+     "sku": "INC-BRF-S",
+     "source": "purchase-order-0246.pdf"
+    },
+    {
+     "quantity": 5,
+     "sku": "THERM-EAR",
+     "source": "purchase-order-0246.pdf"
+    },
+    {
+     "quantity": 12,
+     "sku": "BND-COH-10",
+     "source": "purchase-order-0246.pdf"
+    },
+    {
+     "quantity": 20,
+     "sku": "DRS-NONADH-10",
+     "source": "purchase-order-0246.pdf"
+    },
+    {
+     "quantity": 18,
+     "sku": "GOWN-ISO-XL",
+     "source": "purchase-order-0246.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0247": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "GLU-STRIP-100",
+     "source": "order-0247.xlsx"
+    },
+    {
+     "quantity": 18,
+     "sku": "MASK-IIR",
+     "source": "order-0247.xlsx"
+    },
+    {
+     "quantity": 120,
+     "sku": "SHOWER-GEL-750",
+     "source": "order-0247.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0250": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0251": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 8,
+     "sku": "CREAM-HAND-100",
+     "source": "order-0251.txt"
+    },
+    {
+     "quantity": 17,
+     "sku": "COT-PADS",
+     "source": "order-0251.txt"
+    },
+    {
+     "quantity": 9,
+     "sku": "GAUZE-ROLL-7",
+     "source": "order-0251.txt"
+    },
+    {
+     "quantity": 12,
+     "sku": "SYR-2",
+     "source": "order-0251.txt"
+    },
+    {
+     "quantity": 17,
+     "sku": "COT-ROLL-100",
+     "source": "order-0251.txt"
+    },
+    {
+     "quantity": 11,
+     "sku": "GAUZE-ST-7",
+     "source": "order-0251.txt"
+    },
+    {
+     "quantity": 100,
+     "sku": "WIPE-SURF-200",
+     "source": "order-0251.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0252": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "INC-PAD-LIGHT",
+     "source": "order-0252.xlsx"
+    },
+    {
+     "quantity": 1,
+     "sku": "BND-TRI",
+     "source": "order-0252.xlsx"
+    },
+    {
+     "quantity": 4,
+     "sku": "EYE-WASH-500",
+     "source": "order-0252.xlsx"
+    },
+    {
+     "quantity": 4,
+     "sku": "BND-ELA-15",
+     "source": "order-0252.xlsx"
+    },
+    {
+     "quantity": 9,
+     "sku": "SYR-2",
+     "source": "order-0252.xlsx"
+    },
+    {
+     "quantity": 20,
+     "sku": "THERM-COVER",
+     "source": "order-0252.xlsx"
+    },
+    {
+     "quantity": 60,
+     "sku": "TAPE-ZNC-50",
+     "source": "order-0252.xlsx"
+    },
+    {
+     "quantity": 19,
+     "sku": "TAPE-TR-12",
+     "source": "order-0252.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0253": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "TAPE-SILK-12",
+     "source": "order-0253.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "STRIP-6x100",
+     "source": "order-0253.xlsx"
+    },
+    {
+     "quantity": 2,
+     "sku": "MOUTHWASH-500",
+     "source": "order-0253.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0256": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 19,
+     "sku": "ALC96-250",
+     "source": "delivery-note-0256.pdf"
+    },
+    {
+     "quantity": 2,
+     "sku": "DRS-ISL-9x10",
+     "source": "delivery-note-0256.pdf"
+    },
+    {
+     "quantity": 30,
+     "sku": null,
+     "source": "delivery-note-0256.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0258": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "GLV-NIT200-M",
+     "source": "order-0258.txt"
+    },
+    {
+     "quantity": 120,
+     "sku": "STRIP-3x75",
+     "source": "order-0258.txt"
+    },
+    {
+     "quantity": 25,
+     "sku": "ALC96-100",
+     "source": "order-0258.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0260": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "SUN-30-50",
+     "source": "purchase-order-0260.pdf"
+    },
+    {
+     "quantity": 15,
+     "sku": "DRS-EYE",
+     "source": "purchase-order-0260.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0261": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0263": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "STETH-DUAL",
+     "source": "delivery-note-0263.pdf"
+    },
+    {
+     "quantity": 2,
+     "sku": "SUP-WRIST-L",
+     "source": "delivery-note-0263.pdf"
+    },
+    {
+     "quantity": 30,
+     "sku": "THERM-COVER",
+     "source": "delivery-note-0263.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0264": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "SHARPS-30",
+     "source": "body"
+    },
+    {
+     "quantity": 2,
+     "sku": "GLV-NIT-M",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0265": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 8,
+     "sku": "ALC96-250",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": null,
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0266": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "URN-BAG-LEG",
+     "source": "purchase-order-0266.pdf"
+    },
+    {
+     "quantity": 13,
+     "sku": "WIPE-ALC-100",
+     "source": "purchase-order-0266.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0267": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0268": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "GLV-LTXP-L",
+     "source": "body"
+    },
+    {
+     "quantity": 14,
+     "sku": "INC-BRF-M",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0269": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "PAD-REUSE-75",
+     "source": "delivery-note-0269.pdf"
+    },
+    {
+     "quantity": 2,
+     "sku": "BPM-WRIST",
+     "source": "delivery-note-0269.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0270": {
+   "email_exact_match": false,
+   "error": null,
+   "intake_accuracy": false,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": false
+  },
+  "EML-0271": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "GLV-LTXP-S",
+     "source": "delivery-note-0271.pdf"
+    },
+    {
+     "quantity": 14,
+     "sku": null,
+     "source": "delivery-note-0271.pdf"
+    },
+    {
+     "quantity": 15,
+     "sku": "STRIP-6x75",
+     "source": "delivery-note-0271.pdf"
+    },
+    {
+     "quantity": 13,
+     "sku": "GLV-NIT-XS",
+     "source": "delivery-note-0271.pdf"
+    },
+    {
+     "quantity": 20,
+     "sku": "STOOL-CUP",
+     "source": "delivery-note-0271.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0272": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 14,
+     "sku": "MASK-FFP3-V",
+     "source": "order-0272.txt"
+    },
+    {
+     "quantity": 8,
+     "sku": "VISOR",
+     "source": "order-0272.txt"
+    },
+    {
+     "quantity": 11,
+     "sku": "SYR-1",
+     "source": "order-0272.txt"
+    },
+    {
+     "quantity": 13,
+     "sku": "GLV-SURG-NEO-8.5",
+     "source": "order-0272.txt"
+    },
+    {
+     "quantity": 2,
+     "sku": "TOURNIQ",
+     "source": "order-0272.txt"
+    },
+    {
+     "quantity": 24,
+     "sku": "CPR-MASK",
+     "source": "order-0272.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0273": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 14,
+     "sku": "GLU-STRIP-100",
+     "source": "body"
+    },
+    {
+     "quantity": 14,
+     "sku": "MASK-FFP2",
+     "source": "body"
+    },
+    {
+     "quantity": 25,
+     "sku": "TAPE-SILK-12",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "WIPE-ALC-100",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0274": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "RAZOR-DISP",
+     "source": "order-0274.txt"
+    },
+    {
+     "quantity": 6,
+     "sku": "SHOE-COVER",
+     "source": "order-0274.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0275": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 24,
+     "sku": "SYR-LL-20",
+     "source": "order-0275.txt"
+    },
+    {
+     "quantity": 7,
+     "sku": "OXI-PAED",
+     "source": "order-0275.txt"
+    },
+    {
+     "quantity": 14,
+     "sku": "GLV-LTX-S",
+     "source": "order-0275.txt"
+    },
+    {
+     "quantity": 17,
+     "sku": "GEL-500",
+     "source": "order-0275.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0277": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 48,
+     "sku": "TONGUE-KID",
+     "source": "order-0277.txt"
+    },
+    {
+     "quantity": 19,
+     "sku": "SOAP-LIQ-5000",
+     "source": "order-0277.txt"
+    },
+    {
+     "quantity": 1,
+     "sku": "NDL-27G",
+     "source": "order-0277.txt"
+    },
+    {
+     "quantity": 2,
+     "sku": "THERM-SHEATH",
+     "source": "order-0277.txt"
+    },
+    {
+     "quantity": 12,
+     "sku": "OXI-HAND",
+     "source": "order-0277.txt"
+    },
+    {
+     "quantity": 75,
+     "sku": "STOCK-THIGH-S",
+     "source": "order-0277.txt"
+    },
+    {
+     "quantity": 11,
+     "sku": "INC-PANT-L",
+     "source": "order-0277.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0278": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 75,
+     "sku": "TAPE-PAP-12",
+     "source": "order-0278.xlsx"
+    },
+    {
+     "quantity": 17,
+     "sku": "PILL-BOX-7",
+     "source": "order-0278.xlsx"
+    },
+    {
+     "quantity": 5,
+     "sku": "GAUZE-NS-7-12",
+     "source": "order-0278.xlsx"
+    },
+    {
+     "quantity": 17,
+     "sku": "COT-BALL",
+     "source": "order-0278.xlsx"
+    },
+    {
+     "quantity": 7,
+     "sku": "WIPE-ALC-100",
+     "source": "order-0278.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0279": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "GLV-VIN-L",
+     "source": "order-0279.xlsx"
+    },
+    {
+     "quantity": 16,
+     "sku": "PILL-CRUSH",
+     "source": "order-0279.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0280": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "CATH-FOL-16",
+     "source": "purchase-order-0280.pdf"
+    },
+    {
+     "quantity": 12,
+     "sku": null,
+     "source": "purchase-order-0280.pdf"
+    },
+    {
+     "quantity": 13,
+     "sku": null,
+     "source": "purchase-order-0280.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0281": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0282": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 2,
+     "sku": "TAPE-TR-25",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0283": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "PAD-40x60",
+     "source": "body"
+    },
+    {
+     "quantity": 11,
+     "sku": "PILL-CRUSH",
+     "source": "body"
+    },
+    {
+     "quantity": 48,
+     "sku": "GLV-VIN-L",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0284": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "CPR-MASK",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "CRUTCH-ADULT",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0285": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 120,
+     "sku": "CREAM-MOIST-500",
+     "source": "body"
+    },
+    {
+     "quantity": 10,
+     "sku": "GAUZE-NS-10",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0286": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "GLV-SURG-NEO-7.5",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0287": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0289": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 17,
+     "sku": "TONGUE-KID",
+     "source": "purchase-order-0289.pdf"
+    },
+    {
+     "quantity": 9,
+     "sku": "SYR-20",
+     "source": "purchase-order-0289.pdf"
+    },
+    {
+     "quantity": 7,
+     "sku": "TAPE-KIN",
+     "source": "purchase-order-0289.pdf"
+    },
+    {
+     "quantity": 24,
+     "sku": "GAUZE-NS-10",
+     "source": "purchase-order-0289.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0290": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "LAN-PEN",
+     "source": "order-0290.txt"
+    },
+    {
+     "quantity": 25,
+     "sku": "CREAM-HAND-100",
+     "source": "order-0290.txt"
+    },
+    {
+     "quantity": 17,
+     "sku": "EYE-WASH-500",
+     "source": "order-0290.txt"
+    },
+    {
+     "quantity": 18,
+     "sku": "INC-BRF-NIGHT-L",
+     "source": "order-0290.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0291": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "ALC70-250",
+     "source": "body"
+    },
+    {
+     "quantity": 17,
+     "sku": "SUP-KNEE-M",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0294": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "NDL-22G",
+     "source": "order-0294.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0296": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0297": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 120,
+     "sku": "CREAM-FOOT",
+     "source": "order-0297.xlsx"
+    },
+    {
+     "quantity": 15,
+     "sku": "SUN-50-50",
+     "source": "order-0297.xlsx"
+    },
+    {
+     "quantity": 8,
+     "sku": "BPM-WRIST",
+     "source": "order-0297.xlsx"
+    },
+    {
+     "quantity": 10,
+     "sku": "MASK-KIDS",
+     "source": "order-0297.xlsx"
+    },
+    {
+     "quantity": 7,
+     "sku": "COUCH-60",
+     "source": "order-0297.xlsx"
+    },
+    {
+     "quantity": 30,
+     "sku": null,
+     "source": "order-0297.xlsx"
+    },
+    {
+     "quantity": 14,
+     "sku": "NDL-26G",
+     "source": "order-0297.xlsx"
+    },
+    {
+     "quantity": 13,
+     "sku": "GLV-SURG-LTX-7.5",
+     "source": "order-0297.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0298": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "AFTERSUN-200",
+     "source": "body"
+    },
+    {
+     "quantity": 80,
+     "sku": "INC-BRF-XL",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0299": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0300": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 48,
+     "sku": "ALC96-500",
+     "source": "order-0300.txt"
+    },
+    {
+     "quantity": 120,
+     "sku": "COT-ROLL-100",
+     "source": "order-0300.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0301": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "WIPE-WASHGLV",
+     "source": "order-0301.txt"
+    },
+    {
+     "quantity": 12,
+     "sku": "NDL-18G",
+     "source": "order-0301.txt"
+    },
+    {
+     "quantity": 13,
+     "sku": "STOCK-THIGH-S",
+     "source": "order-0301.txt"
+    },
+    {
+     "quantity": 35,
+     "sku": "GAUZE-ROLL-10",
+     "source": "order-0301.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0302": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "DRS-FILM-6x7",
+     "source": "purchase-order-0302.pdf"
+    },
+    {
+     "quantity": 4,
+     "sku": "GLU-METER",
+     "source": "purchase-order-0302.pdf"
+    },
+    {
+     "quantity": 9,
+     "sku": "ALC96-1000",
+     "source": "purchase-order-0302.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0304": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 75,
+     "sku": "GLV-NIT200-L",
+     "source": "body"
+    },
+    {
+     "quantity": 15,
+     "sku": "DRS-ISL-9x10",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0305": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 24,
+     "sku": "GLV-VIN-M",
+     "source": "order-0305.txt"
+    },
+    {
+     "quantity": 2,
+     "sku": "PEN-31-8",
+     "source": "order-0305.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0307": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": false,
+   "lines": [],
+   "out_of_catalog_detection": true
+  },
+  "EML-0308": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "GOWN-ISO",
+     "source": "order-0308.txt"
+    },
+    {
+     "quantity": 20,
+     "sku": "THERM-SHEATH",
+     "source": "order-0308.txt"
+    },
+    {
+     "quantity": 15,
+     "sku": "BND-COH-5",
+     "source": "order-0308.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0309": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "DRS-FOAM-10",
+     "source": "order-0309.xlsx"
+    },
+    {
+     "quantity": 7,
+     "sku": "TAPE-PAP-25",
+     "source": "order-0309.xlsx"
+    },
+    {
+     "quantity": 19,
+     "sku": "SUP-KNEE-XL",
+     "source": "order-0309.xlsx"
+    },
+    {
+     "quantity": 7,
+     "sku": "SYR-LL-5",
+     "source": "order-0309.xlsx"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0310": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "BND-COH-10",
+     "source": "order-0310.txt"
+    },
+    {
+     "quantity": 6,
+     "sku": null,
+     "source": "order-0310.txt"
+    },
+    {
+     "quantity": 25,
+     "sku": "NDL-26G",
+     "source": "order-0310.txt"
+    },
+    {
+     "quantity": 200,
+     "sku": "STRIP-6x75",
+     "source": "order-0310.txt"
+    },
+    {
+     "quantity": 20,
+     "sku": "KIT-FA-SMALL",
+     "source": "order-0310.txt"
+    },
+    {
+     "quantity": 19,
+     "sku": "INC-PAD-NORMAL",
+     "source": "order-0310.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0311": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "MASK-FFP2-BLK",
+     "source": "order-0311.txt"
+    },
+    {
+     "quantity": 7,
+     "sku": "GLV-SURG-LTX-7",
+     "source": "order-0311.txt"
+    },
+    {
+     "quantity": 19,
+     "sku": "LAN-200",
+     "source": "order-0311.txt"
+    },
+    {
+     "quantity": 16,
+     "sku": "CATH-SIL-16",
+     "source": "order-0311.txt"
+    },
+    {
+     "quantity": 8,
+     "sku": "TAPE-SILK-25",
+     "source": "order-0311.txt"
+    }
+   ],
+   "out_of_catalog_detection": true
+  },
+  "EML-0312": {
+   "email_exact_match": true,
+   "error": null,
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 4,
+     "sku": "SHARPS-10",
+     "source": "delivery-note-0312.pdf"
+    },
+    {
+     "quantity": 19,
+     "sku": "OIL-MASSAGE",
+     "source": "delivery-note-0312.pdf"
+    },
+    {
+     "quantity": 10,
+     "sku": "THERM-DIG-FLEX",
+     "source": "delivery-note-0312.pdf"
+    }
+   ],
+   "out_of_catalog_detection": true
+  }
+ },
+ "lines": {
+  "EML-0001-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0001-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0001-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0001-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0004-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0004-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0004-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0004-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0004-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0005-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0005-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0005-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0005-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0005-L5": {
+   "field_quantity": false,
+   "field_sku": true,
+   "line_recall": false
+  },
+  "EML-0005-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0007-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0007-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0007-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0009-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0009-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0009-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0009-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0010-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0010-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0010-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0012-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0012-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0012-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0012-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0013-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0013-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0019-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0019-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0019-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0020-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0020-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0020-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0020-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0020-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0020-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0020-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0020-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0021-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0021-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0023-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0023-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0023-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0024-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0028-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0028-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0028-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0028-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0029-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0032-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0032-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0032-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0032-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0032-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0033-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0033-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0033-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0033-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0035-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0035-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0035-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0036-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0036-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0036-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0036-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0037-L2": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0038-L1": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0038-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0038-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0041-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0041-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0042-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0043-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0043-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0043-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0043-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0043-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0043-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0044-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0045-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0045-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0045-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0045-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0045-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0045-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0045-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0046-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0046-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0047-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0047-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0047-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0048-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0049-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0049-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0052-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0052-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0053-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0053-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0054-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0054-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0054-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0054-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0054-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0055-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0055-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0056-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0056-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0056-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0058-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0058-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0060-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0060-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0060-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0060-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0060-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0060-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0060-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0061-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0061-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0061-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0065-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0065-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0065-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0068-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0068-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0068-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0070-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0070-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0070-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0071-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0071-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0072-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0074-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0076-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0076-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0076-L4": {
+   "field_quantity": false,
+   "field_sku": true,
+   "line_recall": false
+  },
+  "EML-0076-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0077-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0077-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0077-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0078-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0078-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0078-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0079-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0079-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0079-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0081-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0081-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0081-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0085-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0085-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0087-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0087-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0087-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0087-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0087-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0092-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0092-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0092-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0092-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0092-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0095-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0095-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0096-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0096-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0097-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0097-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0097-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0100-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0101-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0101-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0101-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0101-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0101-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0102-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0102-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0103-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0103-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0103-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0104-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0104-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0104-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0107-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0107-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0108-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0108-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0110-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0110-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0110-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0111-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0115-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0116-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0116-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0116-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0116-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0116-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0116-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0119-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0119-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0119-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0119-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0120-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0120-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0120-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0120-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0120-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0121-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0121-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0121-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0122-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0122-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0124-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0124-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0125-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0127-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0129-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0129-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0129-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0130-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0131-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0131-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0131-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0131-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0132-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0132-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0132-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0132-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0132-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0134-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0134-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0135-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0135-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0135-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0135-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0136-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0136-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0136-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0136-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0137-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0138-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0138-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0138-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0139-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0139-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0139-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0139-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0140-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0140-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0143-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0143-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0144-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0144-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0146-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0146-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0146-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0146-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0146-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0147-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0147-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0149-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0149-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0150-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0151-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0153-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0154-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0154-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0156-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0156-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0156-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0157-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0157-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0157-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0158-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0158-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0158-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0159-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0159-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0160-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0160-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0160-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0164-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0165-L1": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0165-L2": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0165-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0169-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0170-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0170-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0172-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0172-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0172-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0172-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0172-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0172-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0172-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0175-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0179-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0179-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0179-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0179-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0179-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0180-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0180-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0182-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0182-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0182-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0182-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0183-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0183-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0185-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0185-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0185-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0185-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0185-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0185-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0185-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0185-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0186-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0186-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0186-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0187-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0191-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0191-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0192-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0192-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0192-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0192-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0192-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0193-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0193-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0193-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0195-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0195-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0195-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0197-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0198-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0198-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0198-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0198-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0201-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0202-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0202-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0202-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0202-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0202-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0202-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0202-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0202-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0203-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0203-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0203-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0206-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0206-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0206-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0206-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0206-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0206-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0206-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0207-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0207-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0207-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0207-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0207-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0207-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0207-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0208-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0208-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0209-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0209-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0209-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0209-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0211-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0211-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0211-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0211-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0212-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0212-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0213-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0213-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0215-L2": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0215-L3": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0215-L5": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0215-L6": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0215-L7": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0215-L8": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0220-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0220-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0220-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0221-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0221-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0223-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0223-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0223-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0223-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0223-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0225-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0225-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0227-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0228-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0228-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0228-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0228-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0229-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0229-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0229-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0229-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0230-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0230-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0231-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0231-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0234-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0235-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0235-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0236-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0237-L1": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0237-L2": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0237-L3": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0237-L4": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0237-L6": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0239-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0239-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0239-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0239-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0239-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0239-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0242-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0243-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0243-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0243-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0243-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0244-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0244-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0244-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0245-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0245-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0245-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0245-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0246-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0246-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0246-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0246-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0246-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0246-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0246-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0246-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0247-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0247-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0247-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0251-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0251-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0251-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0251-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0251-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0251-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0251-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0252-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0252-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0252-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0252-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0252-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0252-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0252-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0252-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0253-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0253-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0253-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0256-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0256-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0258-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0258-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0258-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0260-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0260-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0263-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0263-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0263-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0264-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0264-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0265-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0266-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0266-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0268-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0268-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0269-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0269-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0270-L1": {
+   "field_quantity": false,
+   "field_sku": false,
+   "line_recall": false
+  },
+  "EML-0271-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0271-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0271-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0271-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0272-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0272-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0272-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0272-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0272-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0272-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0273-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0273-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0273-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0273-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0274-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0274-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0275-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0275-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0275-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0275-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0277-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0277-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0277-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0277-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0277-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0277-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0277-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0278-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0278-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0278-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0278-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0278-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0279-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0279-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0280-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0282-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0283-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0283-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0283-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0284-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0284-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0285-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0285-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0286-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0289-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0289-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0289-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0289-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0290-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0290-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0290-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0290-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0291-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0291-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0294-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0297-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0297-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0297-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0297-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0297-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0297-L7": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0297-L8": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0298-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0298-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0300-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0300-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0301-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0301-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0301-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0301-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0302-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0302-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0302-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0304-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0304-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0305-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0305-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0308-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0308-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0308-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0309-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0309-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0309-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0309-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0310-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0310-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0310-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0310-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0310-L6": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0311-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0311-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0311-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0311-L4": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0311-L5": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0312-L1": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0312-L2": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  },
+  "EML-0312-L3": {
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
+  }
+ },
+ "measured_at": "2026-10-07",
+ "metrics": {
+  "email_exact_match": {
+   "high": 0.9682128153611747,
+   "hits": 184,
+   "low": 0.9018270698118831,
+   "n": 195,
+   "value": 0.9435897435897436
+  },
+  "field_quantity": {
+   "high": 0.9990372402188312,
+   "hits": 568,
+   "low": 0.9872979074074675,
+   "n": 570,
+   "value": 0.9964912280701754
+  },
+  "field_sku": {
+   "high": 0.9831248730825677,
+   "hits": 570,
+   "low": 0.956110563347496,
+   "n": 586,
+   "value": 0.9726962457337884
+  },
+  "intake_accuracy": {
+   "high": 0.9956304640096074,
+   "hits": 231,
+   "low": 0.9629913050062249,
+   "n": 234,
+   "value": 0.9871794871794872
+  },
+  "line_precision": {
+   "high": 0.9952007542867797,
+   "hits": 568,
+   "low": 0.9773843578077649,
+   "n": 574,
+   "value": 0.9895470383275261
+  },
+  "line_recall": {
+   "high": 0.9804833732855639,
+   "hits": 568,
+   "low": 0.9519705798489758,
+   "n": 586,
+   "value": 0.9692832764505119
+  },
+  "out_of_catalog_detection": {
+   "high": 0.982504436442586,
+   "hits": 188,
+   "low": 0.9277685070043703,
+   "n": 195,
+   "value": 0.9641025641025641
+  }
+ },
+ "mode": "record",
+ "model": "claude-haiku-4-5",
+ "split": "test",
+ "threshold": 0.95,
+ "threshold_rule": "95% if intake accuracy, line recall and line precision reach 95% on the test split; otherwise the owner decides (deviation)"
+}
