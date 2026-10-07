@@ -3,6 +3,7 @@
 Portfolio project that demonstrates multi-agent orchestration with [LangGraph](https://github.com/langchain-ai/langgraph) (Python) over the full purchase cycle of a fictional company.
 Status: phase 01 (foundations) built: shared database, model client, persistent graph state, tracing and the evaluation harness.
 Phase 02 (web form orders) built: the first order channel, from a form submission to a stored order and a reply.
+Phase 03 (email orders) in progress: the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
 
 ## What it does
 
@@ -83,13 +84,32 @@ The demo prints, per line, the matched SKU and whether it came from deterministi
 Every run is checkpointed in `data/checkpoints.db` under a `thread_id`; `--thread-id <id> --resume` continues a run stopped after a node completed, for example after `match`, from that checkpoint, so the order is stored once and the matched lines are not sent to the model again.
 A run stopped inside `match` (an API error, a missing recording or Ctrl+C) re-runs `match` on resume and sends its model lines again.
 
+## Run the email demo
+
+```
+uv run purchase-cycle email-demo
+uv run purchase-cycle email-demo examples/email_orders --mode live
+```
+
+The demo reads every `.eml` file of a folder; the default folder `examples/email_orders/` holds four emails: an order in the body (`EML-0024.eml`), an order in a PDF attachment (`EML-0001.eml`), an order in an Excel attachment (`EML-0012.eml`) and an email that is not an order (`EML-0002.eml`).
+The `email_order` subgraph has four nodes:
+
+- `intake` parses the email with the standard library, finds the customer by the sender address and reads the body and the `.txt`, `.pdf` and `.xlsx` attachments; an unknown sender, an unreadable file or an over-long text stops here with no model call; then Claude Haiku 4.5 decides whether the email is an order and gives a reason.
+- `extract` runs only for orders: the model returns every ordered line with the customer's text, a catalog SKU or null, the quantity in sale units and its source (`body` or the attachment name); a SKU outside the catalog, a non-positive quantity or an unknown source stops the run before anything is stored.
+- `store` writes one order with channel `email` and status `received` and one order line per matched line, in a single transaction; an email with no matched line stores no order.
+- `reply` fills the phase 02 template addressed to the sender, quoting the subject, with prices from the database and the lines that could not be matched.
+
+The demo prints, per email, the intake decision and its reason, each line with its text, SKU and source, the stored order number and the reply.
+`--mode replay` (the default) needs no key, because the sample emails are copied from the test split of the evaluation dataset and their recorded answers are reused; `--mode live` calls the model and prints the cached tokens of both calls.
+Each email runs in its own checkpoint thread in `data/checkpoints.db`.
+
 ## Run the tests
 
 ```
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and both evaluations in replay mode.
+Runs the method's hook tests, ruff, pytest and the three evaluations in replay mode.
 
 ## The golden dataset
 
@@ -123,6 +143,21 @@ It was built with the same method:
 5. The owner audited 60 random written lines: `uv run purchase-cycle web-form-audit create`, fill the `verdict` column of `evals/audit/web_form_matching-audit-v1.0.csv`, then `uv run purchase-cycle web-form-audit report`.
    The audit passes with at most 1 wrong label; version 1.0 had none (error rate 0.0%, 95% Wilson interval 0.0% to 6.0%).
 
+### Email order extraction dataset
+
+`evals/datasets/email_order_extraction/` holds 312 `.eml` files in six categories of 52 emails: list in the body, conversational body, `.txt` attachment, PDF attachment, Excel attachment and not an order.
+They carry 923 expected lines, 92 of them for products not in the catalog; the split is by email, stratified by category: 78 development and 234 test emails.
+PDF attachments use two layouts (order form and delivery note) and Excel attachments two more (header row and extra columns).
+
+It was built with the same method:
+
+1. `uv run purchase-cycle email-dataset plan` writes `plan.jsonl` from a fixed seed: the category, sender, order or not, and every line with its expected SKU or out-of-catalog item, quantity in sale units, unit expression, location and trap (typo or near-miss variant), before any text exists.
+2. The email bodies and line texts in `texts/` were written by the coding agent following the plan and checked with `uv run purchase-cycle email-dataset check <file>`.
+3. `uv run purchase-cycle email-dataset build` validates the texts (unknown SKU, non-positive quantity, duplicate text, a planned line missing from the rendered text, category rules), renders the `.eml` files and attachments deterministically and writes `dataset.jsonl`.
+4. A blind second pass by clean-context agents read only the catalog and the text the model sees and labelled every email again (`second_pass_review.jsonl`); 2 of 312 emails disagreed with the plan and their texts were fixed.
+5. The owner audited 40 random emails: `uv run purchase-cycle email-audit create`, fill the `verdict` column of `evals/audit/email_order_extraction-audit-v1.0.csv`, then `uv run purchase-cycle email-audit report`.
+   The audit passes with at most 1 wrong label; version 1.0 had none, 40 of 40 correct (error rate 0.0%, 95% Wilson interval 0.0% to 8.8%).
+
 ## Run the evaluation
 
 ```
@@ -130,7 +165,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the test split of both evaluations and exits non-zero when a gate of either fails.
+`npm run eval` replays the test split of the three evaluations and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:
@@ -140,6 +175,22 @@ The gates are:
 
 `uv run purchase-cycle eval --suite web_form_matching` runs only the new evaluation (`--suite order_line_extraction` only the first one; the default is `all`).
 The Claude Haiku 4.5 baseline on the web form test split is 99.6% line product accuracy (95% interval 98.5% to 99.9%, 2 failures in 468 lines), so its threshold is 95%.
+
+`uv run purchase-cycle eval --suite email_order_extraction` runs only the email evaluation through the `email_order` subgraph.
+It prints intake accuracy, line recall and line precision (the gated metrics), field accuracy for SKU and quantity, out-of-catalog detection and email exact match, with 95% Wilson intervals globally, per category and per source, and the failing emails by category.
+The Claude Haiku 4.5 baseline on the 234 test emails (`evals/baselines/email_order_extraction.json`):
+
+| Metric | Value | 95% interval |
+|---|---|---|
+| Intake accuracy (234 emails) | 98.7% | 96.3% to 99.6% |
+| Line recall (586 expected lines) | 96.9% | 95.2% to 98.0% |
+| Line precision (574 extracted lines) | 99.0% | 97.7% to 99.5% |
+| Field accuracy, SKU (586 expected lines) | 97.3% | 95.6% to 98.3% |
+| Field accuracy, quantity (570 lines with the right SKU) | 99.6% | 98.7% to 99.9% |
+| Out-of-catalog detection (195 order emails) | 96.4% | 92.8% to 98.3% |
+| Email exact match (195 order emails) | 94.4% | 90.2% to 96.8% |
+
+The three gated metrics reach 95%, so the threshold is 95%.
 
 `npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of both evaluations once; `--suite <name>` uploads one).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
@@ -151,6 +202,8 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - The dataset is synthetic and written by a model of the same family as the one evaluated; the contrast set shows the gap with hand-written messages.
 - Phase 01 extracts a single order line from free text; phase 02 adds the web form channel with multi-line orders and a template reply.
 - The web form is a JSON file, not a web page; the reply is printed, not sent; ambiguous products, stock checks and duplicate submissions come in later phases.
+- The email channel reads `.eml` files from a folder, not a mailbox; scanned PDFs, images and other attachment types are not read.
+- The email extractor sends the whole catalog in the prompt, so it only works while the catalog fits the model's context window; retrieval over the catalog is not implemented.
 
 ## License
 
