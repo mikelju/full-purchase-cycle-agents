@@ -150,3 +150,72 @@ def test_over_long_email_is_rejected(tmp_path, business_db):
     path = make_email(tmp_path / "a.eml", SENDER, "Order", "gloves " * (MAX_EMAIL_TEXT // 7 + 1))
     with pytest.raises(EmailRejected, match=f"above the limit of {MAX_EMAIL_TEXT}"):
         read_email(path, business_db)
+
+
+def _raw(path, content):
+    path.write_bytes(content.replace(b"\n", b"\r\n"))
+    return path
+
+
+def test_blank_plain_part_falls_back_to_html(tmp_path):
+    email = _parse(make_email(tmp_path / "a.eml", SENDER, body="  \n", html="<p>40 gloves M</p>"))
+    assert email["body"] == "40 gloves M"
+
+
+def test_inline_part_with_a_file_name_is_an_attachment_not_the_body(tmp_path):
+    content = f"""From: {SENDER}
+Subject: Order
+Content-Type: multipart/mixed; boundary="b"
+
+--b
+Content-Type: text/plain
+Content-Disposition: inline; filename="order.txt"
+
+12 x alcohol 70% 250 ml
+--b
+Content-Type: text/html
+
+<p>40 gloves M</p>
+--b--
+""".encode()
+    email = _parse(_raw(tmp_path / "a.eml", content))
+    assert email["body"] == "40 gloves M"
+    assert email["attachments"] == [{"name": "order.txt", "text": "12 x alcohol 70% 250 ml"}]
+
+
+def test_malformed_charset_falls_back_to_utf8(tmp_path):
+    content = f'From: {SENDER}\nSubject: Order\nContent-Type: text/plain; charset="utf-8\x00"\n\n40 gloves M\n'.encode()
+    assert _parse(_raw(tmp_path / "a.eml", content))["body"] == "40 gloves M"
+
+
+def test_subject_line_breaks_become_spaces(tmp_path):
+    content = f"From: {SENDER}\nSubject: =?utf-8?q?Order=0D=0ABcc:_x@example.org?=\n\n40 gloves M\n".encode()
+    assert _parse(_raw(tmp_path / "a.eml", content))["subject"] == "Order  Bcc: x@example.org"
+
+
+def test_html_source_line_breaks_and_empty_first_cells_are_kept_in_place(tmp_path):
+    html = "<p>Please send 40 boxes\nof gloves M</p><table><tr><td></td><td>12</td></tr><tr><td>Alcohol</td><td>3</td></tr></table>"
+    email = _parse(make_email(tmp_path / "a.eml", SENDER, body=None, html=html))
+    assert email["body"] == "Please send 40 boxes of gloves M\n\n\t12\nAlcohol\t3"
+
+
+def test_unknown_sender_is_rejected_before_attachments_are_read(tmp_path, business_db):
+    path = make_email(
+        tmp_path / "a.eml", "stranger@example.org", attachments=[("order.pdf", b"not a pdf", "application/pdf")]
+    )
+    with pytest.raises(EmailRejected, match="is not a known customer"):
+        read_email(path, business_db)
+
+
+def test_over_long_attachment_stops_extraction_early(tmp_path, business_db, monkeypatch):
+    from purchase_cycle import email_order
+
+    rows = [[f"Gloves size M row {n}", 40] for n in range(3000)]  # about 75,000 characters
+    seen = []
+    real = email_order._cell
+    monkeypatch.setattr(email_order, "_cell", lambda value: seen.append(value) or real(value))
+    attachment = ("order.xlsx", xlsx_bytes({"Order": rows}), "application/vnd.ms-excel")
+    path = make_email(tmp_path / "a.eml", SENDER, attachments=[attachment])
+    with pytest.raises(EmailRejected, match=f"above the limit of {MAX_EMAIL_TEXT}"):
+        read_email(path, business_db)
+    assert len(seen) < 2 * len(rows)

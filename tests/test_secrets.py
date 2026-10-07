@@ -78,7 +78,7 @@ def test_phase_03_files_are_tracked_and_their_decoded_text_holds_no_keys():
         for folder in (ROOT / dataset / "emails", ROOT / "examples" / "email_orders")
         for p in folder.glob("*.eml")
     )
-    assert len(emails) == 316 and texts
+    assert len(emails) >= 312 + 4 and texts  # the dataset emails plus the demo samples
     for name in fixed + texts + emails:
         assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
         assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name

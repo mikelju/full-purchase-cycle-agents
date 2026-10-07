@@ -74,7 +74,7 @@ This file is the durable state: a new session resumes from here and from Git.
   Tests `test_audit_create_samples_forty_seeded_emails_and_never_overwrites`, `test_audit_report_passes_with_at_most_one_wrong_label` and `test_audit_report_refuses_rows_without_a_verdict` cover create and report on temporary files.
   Owner action: the owner reviews the 40 emails (about 20 minutes, Lavish page as in phase 02); the executor stops this increment after creating the file and leaves it pending until the verdicts are in, then runs `email-audit report` and saves `.evidence/fase-03/audit-report.txt`.
   Pass: at most 1 wrong label; more than 1 stops the phase for an owner decision.
-  State (2026-10-07): audit file created, waiting for owner.
+  State (2026-10-07): audit done, 40 of 40 `ok` (commit `5720389`).
   `uv run purchase-cycle email-audit create` wrote 40 emails (seed 40, sorted by id) to `evals/audit/email_order_extraction-audit-v1.0.csv`, semicolon-separated with a BOM; columns `id`, `category`, `file`, `email_text` (the text the model sees), `is_order`, `expected_lines` (one per line: text, SKU and product or NOT IN CATALOG, quantity and sale unit), `verdict` (`ok` or `wrong`) and `comment`.
   Tests on temporary files: create (40 seeded rows, same bytes on a second run, never overwrites) and report (0 and 1 wrong pass, 2 fail, a missing verdict exits 2, Wilson interval printed); `uv run pytest -q tests/test_email_dataset.py` 38 passed.
 
@@ -133,6 +133,24 @@ The phase can be ready locally with C10 or C13 pending, but it does not close un
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | local | `d335905..b3d5e2f` | correctness, security, evidence, scope | 13 confirmed, all fixed in the commit "Phase 03: review round 1 fixes"; detail below. `model_text` of the 316 dataset and sample emails hashes the same before and after the parser changes, so every recording is still found; `npm run check` exit 0 and `npm run eval` replay with lost 0, gained 0 against both baselines; output in `.evidence/fase-03/check-review-1.txt`. | Fixed |
+
+Round 1 findings:
+| # | Lens | Severity | Finding | Status | Regression test |
+|---|---|---|---|---|---|
+| 1 | correctness | Medium | An empty `text/plain` part next to an HTML part gave an empty body | Fixed: a blank plain part gives way to HTML | `test_blank_plain_part_falls_back_to_html` |
+| 2 | correctness | Medium | Broken MIME (multipart without boundary) was parsed as an empty email and sent to the model | Fixed: boundary and multipart defects reject the email with a reason and no model call | `test_rejected_email_makes_no_model_call_and_writes_nothing[no-boundary]` |
+| 3 | correctness | Medium | An inline part with a file name was taken as the body, the HTML body was dropped and the file was not listed | Fixed: a part with a file name is always an attachment | `test_inline_part_with_a_file_name_is_an_attachment_not_the_body` |
+| 4 | correctness | Low | A malformed charset raised a plain `ValueError` out of intake | Fixed: treated as a decoding failure with the utf-8 fallback | `test_malformed_charset_falls_back_to_utf8` |
+| 5 | security | Low | A decoded subject with CR or LF entered the reply header block; "Re: " was repeated | Fixed: control characters become spaces; no "Re: " when the subject starts with "Re:" in any case | `test_subject_line_breaks_become_spaces`, `test_reply_does_not_repeat_re` |
+| 6 | security | Medium | The whole email, attachments included, was decoded before the sender lookup and the length limit | Fixed: sender looked up first; PDF pages and Excel rows stop once the text is above `MAX_EMAIL_TEXT` | `test_unknown_sender_is_rejected_before_attachments_are_read`, `test_over_long_attachment_stops_extraction_early` |
+| 7 | correctness | Medium | A slightly different attachment name in `source` aborted the whole email | Fixed: matched ignoring case and surrounding spaces, otherwise kept as returned | `test_line_source_is_matched_loosely_and_never_stops_the_email` |
+| 8 | correctness | Low | Duplicated quantity check; a huge quantity raised `OverflowError` and a traceback in `email-demo` | Fixed: check removed; `email-demo` names any per-email failure and goes on, exit 1. No schema bound: `MAX_QUANTITY` in `EmailLine` would change the tool definition inside the recording key and lose every recording | `test_huge_quantity_fails_the_email_without_a_partial_write`, `test_email_demo_command_names_a_failed_email_and_goes_on` |
+| 9 | correctness | Low | HTML source line breaks split one order line; an empty first table cell shifted the columns | Fixed: source line breaks are spaces; tabs only between cells and empty end cells kept for HTML | `test_html_source_line_breaks_and_empty_first_cells_are_kept_in_place` |
+| 10 | evidence | Low | README said `eval-upload` uploads both evaluations | Fixed: three evaluations | - |
+| 11 | evidence | Low | `test_secrets.py` hard-coded 316 emails | Fixed: lower bound of 312 dataset emails plus 4 samples | - |
+| 12 | evidence | Low | Stale "waiting for owner" note in increment 9 | Fixed: audit done, 40 of 40 `ok` (`5720389`) | - |
+| 13 | security | Low | Customer identity from the `From` header only, with no SPF, DKIM or `Authentication-Results` check | Logged as SEC-007, open until mailbox ingestion | - |
 
 ## Results
 Per criterion: command or path run, observed result and evidence reference.

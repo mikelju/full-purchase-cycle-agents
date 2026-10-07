@@ -151,6 +151,12 @@ def cmd_email_demo(args) -> int:
             print(f"Error: {error}", file=sys.stderr)
             code = 1
             continue
+        except (
+            Exception
+        ) as error:  # any other failure stops this email only, for example a quantity SQLite cannot store
+            print(f"Error: {path.name} failed: {type(error).__name__}: {error}", file=sys.stderr)
+            code = 1
+            continue
         if state["errors"]:
             print("email rejected, nothing stored:")
             for error in state["errors"]:

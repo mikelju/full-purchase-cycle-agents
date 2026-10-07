@@ -119,7 +119,6 @@ def _line(**changes):
     ("answer", "error", "message"),
     [
         (_line(sku="ALC70-999"), InvalidExtraction, "SKU 'ALC70-999' is not in the catalog"),
-        (_line(source="order.pdf"), InvalidExtraction, "source 'order.pdf' is not the body or a read attachment"),
         (_line(quantity=0), InvalidModelOutput, "lines.1.quantity"),
         (_line(quantity=-2), InvalidModelOutput, "lines.1.quantity"),
         ({"lines": [{"source": "body", "sku": "GLV-NIT-M", "quantity": 40}]}, InvalidModelOutput, "source_text"),
@@ -129,6 +128,28 @@ def test_invalid_extraction_stops_before_any_write(seeded_db, run, answer, error
     with pytest.raises(error, match=message):
         run(lines_answer=answer)
     assert _rows(seeded_db[0]) == ([], [])
+
+
+@pytest.mark.parametrize(
+    ("source", "stored"),
+    [(" EXTRA.TXT ", "extra.txt"), ("order.pdf", "order.pdf")],
+    ids=["case-and-spaces", "unmatched-kept"],
+)
+def test_line_source_is_matched_loosely_and_never_stops_the_email(seeded_db, run, source, stored):
+    _, state, _, _ = run(lines_answer=_line(source=source))
+    assert state["lines"][1]["source"] == stored
+    assert state["order_id"] == 1
+
+
+def test_huge_quantity_fails_the_email_without_a_partial_write(seeded_db, run):
+    with pytest.raises(OverflowError):
+        run(lines_answer=_line(quantity=10**30))
+    assert _rows(seeded_db[0]) == ([], [])
+
+
+def test_reply_does_not_repeat_re(tmp_path, run):
+    path = make_email(tmp_path / "EML-RE.eml", SENDER, "RE: weekly order", BODY, attachments=[EXTRA])
+    assert run(path=path)[1]["reply"].startswith(f"To: {SENDER}\nSubject: RE: weekly order\n\n")
 
 
 def test_store_is_one_transaction(seeded_db, run):
@@ -149,8 +170,13 @@ def test_store_is_one_transaction(seeded_db, run):
         ("stranger@example.org", None, "the sender 'stranger@example.org' is not a known customer"),
         (None, b"Subject: Order\r\n\r\n40 gloves", "the email cannot be parsed: no sender address"),
         (SENDER, "gloves " * (MAX_EMAIL_TEXT // 7 + 1), f"above the limit of {MAX_EMAIL_TEXT}"),
+        (
+            None,
+            f"From: {SENDER}\r\nSubject: Order\r\nContent-Type: multipart/mixed\r\n\r\n40 gloves".encode(),
+            "the email cannot be parsed: broken MIME structure (NoBoundaryInMultipartDefect",
+        ),
     ],
-    ids=["unknown-sender", "unparseable", "over-long"],
+    ids=["unknown-sender", "unparseable", "over-long", "no-boundary"],
 )
 def test_rejected_email_makes_no_model_call_and_writes_nothing(seeded_db, tmp_path, sender, content, reason):
     db_path, catalog = seeded_db
@@ -199,6 +225,20 @@ def test_email_demo_command_prints_intake_lines_order_and_reply(tmp_path, no_net
     assert 'Your email order "Larger glove sizes and thermometers" is registered as order 3:' in out
     assert '- "13 boxes of surgical gloves in size 9" (13)' in out
     assert no_network == []
+
+
+def test_email_demo_command_names_a_failed_email_and_goes_on(tmp_path, no_network, capsys, monkeypatch):
+    from purchase_cycle import cli
+
+    class Failing:
+        def invoke(self, state, config):
+            raise OverflowError("Python int too large to convert to SQLite INTEGER")
+
+    monkeypatch.setattr(cli, "build_email_order_graph", lambda *args, **kwargs: Failing())
+    code = cli.main(["--db", str(tmp_path / "b.db"), "email-demo", "--checkpoints", str(tmp_path / "c.db")])
+    err = capsys.readouterr().err
+    assert code == 1
+    assert err.count("failed: OverflowError: Python int too large") == 4
 
 
 def test_email_demo_command_reports_an_empty_folder(tmp_path, capsys):
