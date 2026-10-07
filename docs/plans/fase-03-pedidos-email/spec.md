@@ -1,7 +1,7 @@
 # Phase 03 - Email orders: specification
 
-Status: draft (spec in review)
-Approved by the owner: -
+Status: approved
+Approved by the owner: 2026-10-07
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
