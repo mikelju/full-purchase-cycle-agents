@@ -1,6 +1,6 @@
 # Phase 03 - Email orders: plan and results
 
-Status: in execution; batches A, B, C and D done (owner audit of increment 9 done in `5720389`), batch E in progress
+Status: in execution; batches A, B, C and D done (owner audit of increment 9 done in `5720389`), batch E done except increment 17 (blocked until about 2026-11-05)
 Spec: `spec.md` (frozen)
 Base: branch `fase-03-pedidos-email` from `main` at commit `d335905`; the spec was frozen in `d283f99`.
 
@@ -103,12 +103,11 @@ This file is the durable state: a new session resumes from here and from Git.
 
 ### Batch E - Demo, README, secrets and fresh clone
 - [x] 13. Sample folder `examples/email_orders/` with one body order, one PDF order, one Excel order and one non-order email, copied from dataset emails so the replay recordings already cover them, and the command `purchase-cycle email-demo` (C8) - check: a pytest runs the command in replay and asserts the printed intake decision, each line with its source, the order number and the reply; replay output in `.evidence/fase-03/demo-replay.txt`.
-  Needs the owner's key: one live run with tracing off, output with cached tokens in `.evidence/fase-03/demo-live.txt` (C5, C8).
+  Live run with the owner's key and tracing off (C5, C8): `.evidence/fase-03/demo-live.txt`, exit 0, four emails with correct intake decisions; prompt cache read 8397 tokens on intake calls 2 to 4 and 9004 on extraction calls 2 and 3.
   Evidence: `examples/email_orders/` holds four test-split emails whose recorded answers are fully correct in the baseline: `EML-0024.eml` (body, one out-of-catalog line), `EML-0001.eml` (PDF delivery note), `EML-0012.eml` (Excel) and `EML-0002.eml` (not an order).
   `purchase-cycle email-demo [folder] --mode --checkpoints` runs each email in its own checkpoint thread and prints the intake decision with its reason, each line with its source text, SKU and source, the stored order number and the reply.
   `test_email_demo_command_prints_intake_lines_order_and_reply` runs it in replay with the network blocked and asserts those outputs; replay output with no key in `.evidence/fase-03/demo-replay.txt` (orders 1 to 3, exit 0).
   `npm run check` exit 0 with 198 tests (`.evidence/fase-03/check-increment-13.txt`).
-  Live run pending: it needs the owner's key.
 - [x] 14. README sections for the email demo in replay and live mode, how the dataset was built, how to run the new evaluation, and the catalog-in-prompt limitation with no retrieval (C15) - check: follow the sections in the clean clone of increment 16.
   Evidence: `README.md` gains "Run the email demo" (replay and live commands, the four nodes, what is printed), "Email order extraction dataset" (seeded plan, agent-written texts, deterministic build, blind second pass with 2 of 312 fixed, owner audit 40/40), the email evaluation command with the Haiku 4.5 baseline table from `evals/baselines/email_order_extraction.json`, and two limits: `.eml` folder instead of a mailbox, and the whole catalog in the prompt with no retrieval.
   The commands named in the new sections exist (`--help` of `email-dataset`, `email-audit`, `eval`); `uv run purchase-cycle eval --suite email_order_extraction` exit 0 with the baseline figures (`.evidence/fase-03/readme-email-eval-replay.txt`); the walk-through in a clean clone stays with increment 16.
@@ -116,7 +115,11 @@ This file is the durable state: a new session resumes from here and from Git.
   Evidence: `test_phase_03_files_are_tracked_and_their_decoded_text_holds_no_keys` asserts that both email recordings files, the plan, dataset, second-pass and audit files, the baseline, every file in `texts/` and the 316 `.eml` files (dataset and `examples/email_orders/`) are tracked by git and hold no key or auth header.
   It also parses every `.eml` and scans the sender, subject, body and decoded attachment text, and requires at least 104 PDF and Excel attachments with non-empty text, so base64 content is not skipped.
   `uv run pytest -q tests/test_secrets.py` 5 passed; `npm run check` exit 0 with 199 tests (`.evidence/fase-03/check-increment-15.txt`).
-- [ ] 16. `npm run check` and fresh-clone run with the Anthropic and LangSmith variables unset (C1) - check: `uv sync` and `npm run check` in a clean clone, three evaluations in replay, output in `.evidence/fase-03/fresh-clone.txt`; record the replay time of the three suites.
+- [x] 16. `npm run check` and fresh-clone run with the Anthropic and LangSmith variables unset (C1) - check: `uv sync` and `npm run check` in a clean clone, three evaluations in replay, output in `.evidence/fase-03/fresh-clone.txt`; record the replay time of the three suites.
+  Evidence: the first clean-clone run failed one test: `test_upload_command_uploads_both_suites_and_keeps_the_worst_exit` stubbed only two suites, so `eval-upload` called LangSmith for the email suite (401 with no valid key); the test now stubs the email suite too and asserts the three uploads (`1fcf5a7`).
+  Fresh clone at `1fcf5a7` with the five Anthropic and LangSmith variables unset and no `.env`: `uv sync`, `npm ci` and `npm run check` exit 0 with 199 passed; `npm run eval` replays the three suites with every gate passing in 16 s.
+  README email sections followed in the clone (C15): `email-demo` in replay prints the four emails and exits 0, `eval --suite email_order_extraction` passes the gates in 7 s, and `email-dataset --help` and `email-audit --help` exit 0; the clone stays clean (`.evidence/fase-03/fresh-clone.txt`).
+  `npm run check` in the worktree exit 0 with 199 tests (`.evidence/fase-03/check-increment-16.txt`).
 - [ ] 17. LangSmith trace of a live demo run with one span per node and an experiment of the new evaluation against its uploaded splits (C13) - blocked: the trace quota is exhausted until about 2026-11-05 (owner decision 6); executors skip it and leave it pending.
   When unblocked: `eval-upload --suite email_order_extraction`, live demo and live evaluation with tracing on, links and the owner's screenshot as evidence.
 
