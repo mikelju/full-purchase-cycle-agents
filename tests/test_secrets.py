@@ -1,4 +1,4 @@
-"""C14: no secret is versioned and every variable is documented."""
+"""C14 (phases 01 to 03): no secret is versioned and every variable is documented."""
 
 import re
 import subprocess
@@ -56,3 +56,38 @@ def test_phase_02_data_files_are_tracked_and_scanned():
         "examples/web_form_submission.json",
     ):
         assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+
+
+def test_phase_03_files_are_tracked_and_their_decoded_text_holds_no_keys():
+    from purchase_cycle.email_order import model_text, parse_email
+
+    tracked = set(_tracked())
+    dataset = "evals/datasets/email_order_extraction"
+    fixed = [
+        "evals/recordings/email_intake.jsonl",
+        "evals/recordings/email_order_extraction.jsonl",
+        f"{dataset}/plan.jsonl",
+        f"{dataset}/dataset.jsonl",
+        f"{dataset}/second_pass_review.jsonl",
+        "evals/baselines/email_order_extraction.json",
+        "evals/audit/email_order_extraction-audit-v1.0.csv",
+    ]
+    texts = sorted(str(p.relative_to(ROOT).as_posix()) for p in (ROOT / dataset / "texts").iterdir())
+    emails = sorted(
+        str(p.relative_to(ROOT).as_posix())
+        for folder in (ROOT / dataset / "emails", ROOT / "examples" / "email_orders")
+        for p in folder.glob("*.eml")
+    )
+    assert len(emails) == 316 and texts
+    for name in fixed + texts + emails:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
+    attachments = 0
+    for name in emails:
+        email = parse_email((ROOT / name).read_bytes())
+        attachments += sum(
+            a["name"].endswith((".pdf", ".xlsx")) and bool(a["text"].strip()) for a in email["attachments"]
+        )
+        decoded = "\n".join([email["sender"], model_text(email)])
+        assert not SECRET_PATTERNS.search(decoded), f"possible secret in the decoded text of {name}"
+    assert attachments >= 104, "the PDF and Excel attachments were not decoded"
