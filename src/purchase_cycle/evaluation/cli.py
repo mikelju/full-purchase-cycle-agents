@@ -61,6 +61,10 @@ def add_eval_commands(sub) -> None:
         handler=lambda args: audit.report_audit()
     )
 
+    from purchase_cycle.evaluation import web_form_dataset
+
+    web_form_dataset.add_commands(sub)
+
     from purchase_cycle.evaluation.harness import add_run_commands
 
     add_run_commands(sub, MODES)

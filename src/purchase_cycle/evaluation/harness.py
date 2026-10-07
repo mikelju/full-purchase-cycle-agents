@@ -340,7 +340,8 @@ def upload_datasets(dataset_path: Path = ds.DATASET_PATH) -> int:
 
 
 def add_run_commands(sub, modes) -> None:
-    run = sub.add_parser("eval", help="evaluate the extraction graph on the golden dataset")
+    run = sub.add_parser("eval", help="run the evaluations on their golden datasets")
+    run.add_argument("--suite", choices=(*SUITES, "all"), default="all", help="evaluation to run (default: all)")
     run.add_argument("--mode", choices=modes, default="replay")
     run.add_argument("--split", choices=("dev", "test", "all"), default="test")
     run.add_argument("--workers", type=int, default=8)
@@ -349,11 +350,38 @@ def add_run_commands(sub, modes) -> None:
     )
     run.set_defaults(handler=cmd_eval)
     upload = sub.add_parser("eval-upload", help="upload the dataset splits to LangSmith")
-    upload.set_defaults(handler=lambda args: upload_datasets())
+    upload.add_argument("--suite", choices=(*SUITES, "all"), default="all", help="splits to upload (default: all)")
+    upload.set_defaults(handler=cmd_upload)
+
+
+SUITES = ("order_line_extraction", "web_form_matching")
+
+
+def _suite(name: str):
+    if name == "web_form_matching":
+        from purchase_cycle.evaluation import web_form_eval
+
+        return web_form_eval
+    return sys.modules[__name__]
+
+
+def cmd_upload(args) -> int:
+    names = SUITES if args.suite == "all" else (args.suite,)
+    return max(_suite(name).upload_datasets() for name in names)
 
 
 def cmd_eval(args) -> int:
-    if args.set_baseline and (args.mode != "record" or args.split != "test"):
-        print("Error: a baseline is measured on the test split with the real model (--mode record)", file=sys.stderr)
+    if args.set_baseline and (args.mode != "record" or args.split != "test" or args.suite == "all"):
+        print(
+            "Error: a baseline is measured for one --suite on the test split with the real model (--mode record)",
+            file=sys.stderr,
+        )
         return 2
-    return evaluate(args.mode, args.split, set_baseline=args.set_baseline, workers=args.workers)
+    names = SUITES if args.suite == "all" else (args.suite,)
+    codes = []
+    for n, name in enumerate(names):
+        if n:
+            print()
+        codes.append(_suite(name).evaluate(args.mode, args.split, set_baseline=args.set_baseline, workers=args.workers))
+    # The worst exit code wins: 1 for a failed gate, 2 for missing recordings, 3 for a stopped baseline.
+    return max(codes)

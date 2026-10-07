@@ -1,6 +1,8 @@
-"""Model client for order line extraction with live, record and replay modes.
+"""Model client for catalog tasks with live, record and replay modes.
 
-The model answers through one forced tool call. Its arguments are validated
+Each task (phase 01 order line extraction, phase 02 web form matching) has its
+own prompt, tool, answer schema and recordings file. The model answers through
+one forced tool call. Its arguments are validated
 by Pydantic in every mode, so a recorded answer goes through the same checks
 as a live one.
 """
@@ -8,11 +10,12 @@ as a live one.
 import hashlib
 import json
 import threading
+from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from purchase_cycle.config import MAX_TOKENS, MODEL_ID, MODES, RECORDINGS_PATH
+from purchase_cycle.config import MATCHING_RECORDINGS_PATH, MAX_TOKENS, MODEL_ID, MODES, RECORDINGS_PATH
 
 TOOL_NAME = "record_order_line"
 
@@ -40,6 +43,58 @@ class ExtractedLine(BaseModel):
     quantity: int = Field(gt=0, strict=True, description="Quantity in catalog sale units")
 
 
+MATCHING_INSTRUCTIONS = """You match one product description typed by a customer in the order form of a medical supplies distributor to the catalog.
+
+Return the catalog SKU of the product the customer means, or null when the catalog does not carry it.
+
+Rules:
+- The description may be a short or informal name, contain typos or omit words of the catalog name.
+- Pick the SKU whose name and variant (size, volume, pack size, latex or latex-free, sterile or non-sterile) match the description.
+- When the description names a variant the catalog does not carry, or a product the catalog does not carry, return null.
+- Never guess a different size, volume or variant.
+
+Catalog (SKU | name | sale unit):
+"""
+
+
+class MatchedProduct(BaseModel):
+    """Structured answer of the web form matching node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    sku: str | None = Field(description="Catalog SKU, or null when the product is not in the catalog")
+
+
+@dataclass(frozen=True)
+class Task:
+    """What the model is asked to do and where its recorded answers live."""
+
+    name: str
+    instructions: str
+    tool_name: str
+    tool_description: str
+    answer: type[BaseModel]
+    recordings_path: Path
+
+
+EXTRACTION = Task(
+    "order_line_extraction",
+    INSTRUCTIONS,
+    TOOL_NAME,
+    "Record the single order line found in the customer message.",
+    ExtractedLine,
+    RECORDINGS_PATH,
+)
+MATCHING = Task(
+    "web_form_matching",
+    MATCHING_INSTRUCTIONS,
+    "record_catalog_match",
+    "Record the catalog product that matches the description, or null.",
+    MatchedProduct,
+    MATCHING_RECORDINGS_PATH,
+)
+
+
 class InvalidModelOutput(ValueError):
     """The model answer does not fit the schema; nothing downstream runs."""
 
@@ -53,34 +108,35 @@ class MissingRecording(LookupError):
     """Replay mode found no stored answer for this exact prompt."""
 
 
-def tool_definition() -> dict:
+def tool_definition(task: Task = EXTRACTION) -> dict:
     return {
-        "name": TOOL_NAME,
-        "description": "Record the single order line found in the customer message.",
-        "input_schema": ExtractedLine.model_json_schema(),
+        "name": task.tool_name,
+        "description": task.tool_description,
+        "input_schema": task.answer.model_json_schema(),
     }
 
 
-def build_system_prompt(catalog: list) -> str:
+def build_system_prompt(catalog: list, task: Task = EXTRACTION) -> str:
     lines = [f"{r['sku']} | {r['name']} | {r['sale_unit']}" for r in catalog]
-    return INSTRUCTIONS + "\n".join(lines)
+    return task.instructions + "\n".join(lines)
 
 
-def recording_key(system_prompt: str, sentence: str) -> str:
+def recording_key(system_prompt: str, sentence: str, task: Task = EXTRACTION) -> str:
     payload = json.dumps(
-        {"model": MODEL_ID, "system": system_prompt, "tool": tool_definition(), "sentence": sentence},
+        {"model": MODEL_ID, "system": system_prompt, "tool": tool_definition(task), "sentence": sentence},
         sort_keys=True,
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 class ModelClient:
-    def __init__(self, mode: str, catalog: list, recordings_path: Path | None = None):
+    def __init__(self, mode: str, catalog: list, recordings_path: Path | None = None, task: Task = EXTRACTION):
         if mode not in MODES:
             raise ValueError(f"Unknown mode '{mode}'; use one of {', '.join(MODES)}")
         self.mode = mode
-        self.system_prompt = build_system_prompt(catalog)
-        self.recordings_path = Path(recordings_path or RECORDINGS_PATH)
+        self.task = task
+        self.system_prompt = build_system_prompt(catalog, task)
+        self.recordings_path = Path(recordings_path or task.recordings_path)
         self.calls = 0
         self.usage: list[dict] = []
         self._lock = threading.Lock()
@@ -99,7 +155,9 @@ class ModelClient:
             from langchain_anthropic import ChatAnthropic
 
             llm = ChatAnthropic(model=MODEL_ID, max_tokens=MAX_TOKENS, temperature=0, max_retries=6)
-            self._llm = llm.bind_tools([tool_definition()], tool_choice={"type": "tool", "name": TOOL_NAME})
+            self._llm = llm.bind_tools(
+                [tool_definition(self.task)], tool_choice={"type": "tool", "name": self.task.tool_name}
+            )
         return self._llm
 
     def _call_model(self, sentence: str) -> tuple[dict, dict]:
@@ -120,9 +178,10 @@ class ModelClient:
         }
         return args, usage
 
-    def extract(self, sentence: str, case_id: str | None = None) -> ExtractedLine:
+    def extract(self, sentence: str, case_id: str | None = None) -> BaseModel:
+        """Ask the model about one text and return its answer validated by the task schema."""
         label = f"case {case_id}" if case_id else f"sentence {sentence!r}"
-        key = recording_key(self.system_prompt, sentence)
+        key = recording_key(self.system_prompt, sentence, self.task)
         with self._lock:
             self.calls += 1
         if self.mode == "replay":
@@ -140,7 +199,7 @@ class ModelClient:
                 if self.mode == "record":
                     self._new[key] = {"key": key, "case_id": case_id, "sentence": sentence, "answer": answer}
         try:
-            return ExtractedLine.model_validate(answer)
+            return self.task.answer.model_validate(answer)
         except ValidationError as error:
             raise InvalidModelOutput(error, label) from error
 

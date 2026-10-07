@@ -1,0 +1,12 @@
+{
+  "submission_id": "WF-DEMO-1",
+  "customer_code": "CLI-002",
+  "lines": [
+    {"product": "GLV-NIT-M", "quantity": 40},
+    {"product": "Ethyl alcohol 70% 250 ml", "quantity": 12},
+    {"product": "cotton rounds", "quantity": 6},
+    {"product": "latex exam glovs powder-free size M", "quantity": 10},
+    {"product": "vinyl gloves XL", "quantity": 5},
+    {"product": "compressor nebuliser machine", "quantity": 1}
+  ]
+}
