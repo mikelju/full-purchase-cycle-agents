@@ -12,11 +12,11 @@ It is needed now because free text with several lines, unit expressions and atta
 
 ## Scope
 In:
-- Email input as local `.eml` files (RFC 822), parsed with the Python standard library (see open decision 1).
+- Email input as local `.eml` files (RFC 822), parsed with the Python standard library (owner decision 1).
 - A subgraph `email_order` with the nodes `intake`, `extract`, `store` and `reply`, checkpointed in SQLite like the phase 02 subgraph.
 - Intake agent, deterministic part: the sender address identifies the customer through the `email` column of `customers`, matched ignoring case; the body is taken as plain text (HTML bodies are reduced to text); supported attachments (`.txt`, `.pdf`, `.xlsx`) are turned into text and other attachments are listed as ignored.
-- Intake agent, model part: Claude Haiku 4.5 classifies the email as an order or not an order (for example a question, a complaint or a newsletter) and returns a short reason.
-- Attachment text extraction: `.txt` decoded as text, text-based `.pdf` read page by page, `.xlsx` read row by row from the first sheet into a tab-separated text (see open decision 2).
+- Intake agent, model part: Claude Haiku 4.5 classifies the email as an order or not an order (for example a question, a complaint or a newsletter) and returns a short reason (owner decision 5).
+- Attachment text extraction: `.txt` decoded as text, text-based `.pdf` read page by page, `.xlsx` read row by row from the first sheet into a tab-separated text with `pypdf` and `openpyxl` (owner decision 2).
 - Extractor agent: one Claude Haiku 4.5 call per order email receives the body and attachment texts together with the cached catalog and returns a list of lines, each with the source text, a SKU or null, and a quantity converted to catalog sale units.
 - Deterministic checks of the extractor output: every SKU must exist in the catalog and every quantity must be a positive whole number; output that does not fit the schema stops the run before anything is written.
 - Storing and reply through the phase 02 steps, with channel `email` and status `received`; lines with a null SKU are not stored and the reply lists them with the text the customer wrote.
@@ -24,11 +24,12 @@ In:
 - All model calls through the existing client with live, record and replay modes and Pydantic validation; the intake and extractor prompts have their own recordings files.
 - A demo command that runs the subgraph on a folder of sample `.eml` files (one body order, one PDF order, one Excel order, one non-order email) and prints, per email, the intake decision, the extracted lines with their source and the stored order and reply.
 - A third evaluation, `email_order_extraction`, with field-level metrics and its own synthetic golden dataset built with the phase 01 method, run in replay mode inside `npm run check` next to the two existing evaluations.
-- README sections for the email demo, the new dataset and the new evaluation.
+- README sections for the email demo, the new dataset, the new evaluation and the catalog-in-prompt limitation.
 
 Out:
-- Real mailbox access (IMAP, Gmail API or any mail server) and sending the reply by email (see open decision 1).
+- Real mailbox access (IMAP, Gmail API or any mail server) and sending the reply by email (owner decision 1).
 - Scanned or image-only PDFs, OCR, images, `.xls`, `.csv`, `.docx` and other attachment types; they are listed as ignored.
+  Candidate for a later phase (owner's suggestion, not yet scheduled).
 - Questions to the customer, pauses and resumption when a product is ambiguous, a quantity is doubtful or the sender is unknown: phase 04.
 - Email threads, forwarded chains and replies to a previous order; one email holds at most one order.
 - Duplicate email protection and retry policies: phase 05.
@@ -44,14 +45,14 @@ Graded fields per email: the intake decision; and per order line: the SKU and th
 Customer identification is a deterministic lookup and is covered by pytest, not by the evaluation.
 
 ### Golden dataset
-- Size: at least 300 emails in six categories of at least 50 emails each, with at least 800 expected order lines in total; every catalog family appears and no product dominates (see open decision 4).
+- Size: at least 300 emails in six categories of at least 50 emails each, with at least 800 expected order lines in total; every catalog family appears and no product dominates (owner decision 4).
 - Split: a fixed, stratified split by email of about 25% development and 75% test; published figures come from the test split.
 - Labels by construction: the seeded planning script fixes, before any text exists, the category, the sender (a seeded customer address), whether the email is an order, its lines with expected SKU (or an out-of-catalog item) and expected quantity in sale units, the unit expression and where each line lives (body or attachment).
 - Email bodies and the line texts are written by the coding agent in Claude Code sessions under the owner's subscription, as in phases 01 and 02.
 - A rendering script builds the `.eml` files and their attachments from the planned and written content with a few fixed layouts per format (order form PDF, delivery-note-like PDF, spreadsheet with header row, spreadsheet with extra columns), so attachment contents match the labels exactly.
 - Automatic validation rejects and regenerates an email when an expected SKU does not exist, a quantity is not a positive whole number, the text duplicates another email after normalisation, a planned line is missing from the rendered text, or a category rule fails.
 - An automated second-pass review of every written email in clean-context subagents runs before the owner audit.
-- Owner audit: 40 emails drawn at random, reviewed in a review file (see open decision 4).
+- Owner audit: 40 emails drawn at random, reviewed in a review file (owner decision 4).
 
 Categories, with examples:
 
@@ -99,13 +100,13 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 | C12 | The baseline of Claude Haiku 4.5 on the `email_order_extraction` test split is measured, stored with its per-email and per-line results, and the thresholds are set by the rule in "Gates" | Stored baseline file and the live run report, saved as evidence |
 | C13 | With the LangSmith variables set, a live demo run appears in LangSmith with one span per subgraph node, and a live run of the new evaluation is logged as an experiment against its uploaded dataset splits | Trace and experiment links, and the owner's screenshot of the trace, as evidence |
 | C14 | No secret is versioned: the new recordings, sample emails and dataset files contain no keys or auth headers | `tests/test_secrets.py` covers the new files |
-| C15 | The README explains in English how to run the email demo in replay and live mode, how the new dataset was built and how to run the new evaluation | Follow the new README sections in a clean clone |
+| C15 | The README explains in English how to run the email demo in replay and live mode, how the new dataset was built and how to run the new evaluation, and states explicitly the known limitation that the extractor sends the whole catalog in the prompt, so it only works while the catalog fits the model's context window, and that retrieval is not implemented | Follow the new README sections in a clean clone |
 
 ## Constraints and risks
-- New dependencies are needed to read PDF and Excel files and to render the dataset attachments; none is added before the owner decides (open decisions 2 and 3).
+- New dependencies: `pypdf` and `openpyxl` at runtime, `fpdf2` (LGPL-3.0) for development only (owner decisions 2 and 3).
 - Live runs need the owner's Anthropic and LangSmith keys in `.env`; the agent never reads that file.
 - Expected API cost of the phase: 2 to 5 USD (about 300 intake calls and 250 extractor calls per recorded split, prompt tuning on the development split and a few live runs) with prompt caching; an estimate, not a limit.
-- The LangSmith monthly trace allowance was exhausted in phase 02; C13 may stay blocked until it renews, as phase 02 C13 is.
+- The LangSmith free trace quota (5,000 traces) was exhausted right after it started on 2026-10-06; the owner expects it to reset around 2026-11-05, so C13 stays blocked until then (owner decision 6).
 - The `.eml` files and attachments are binary or semi-binary; recording keys must come from the extracted text, not from file bytes, so a re-render with the same content keeps the recordings valid.
 - Synthetic PDFs and spreadsheets are cleaner than real ones; the per-source report shows the gap only within synthetic data.
 - Like phases 01 and 02, the text writer and the evaluated model belong to the same family, so results may be optimistic.
@@ -125,22 +126,17 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 - Recordings for the new prompts go to their own files under `evals/recordings/`.
 - `npm run check` stays fast: replaying the three evaluations takes seconds.
 
-## Open decisions
-1. Email source.
-   Options: (a) local `.eml` files in a folder, standard library only; (b) IMAP against a test mailbox; (c) Gmail API.
-   Recommendation: (a); it is reproducible, free, testable offline and keeps credentials out of the project; real mailbox ingestion can be a later change.
-2. Reading PDF and Excel attachments.
-   Options: (a) local text extraction with `pypdf` and `openpyxl` as runtime dependencies, then the text goes to the model; (b) send PDFs to Claude as document input and read Excel with `openpyxl`; (c) `pdfplumber` instead of `pypdf` for better table layout.
-   Recommendation: (a); pure Python, permissive licenses, no extra model cost, and the extracted text is visible and testable; (b) raises cost per call and couples the evaluation to the model's PDF reading.
-3. Rendering the dataset attachments.
-   Options: (a) `fpdf2` as a development dependency to write PDFs and `openpyxl` to write spreadsheets, from a seeded script; (b) `reportlab` instead of `fpdf2`; (c) render once and version the binary files only.
-   Recommendation: (a) with the rendered files also versioned, so `check` never re-renders; note that `fpdf2` is LGPL-3.0, while `reportlab` is BSD if the owner prefers permissive licenses only.
-4. Dataset size and owner audit.
-   Options: (a) 300 emails, at least 800 lines, audit of 40 emails; (b) 200 emails, at least 500 lines, audit of 30 emails; (c) 500 emails, audit of 60 emails.
-   Recommendation: (a); 300 emails give about 225 test emails and 600 test lines, enough for Wilson intervals of about plus or minus 2 points near 95%, at an audit cost of about 20 minutes.
-5. Model for the intake classification.
-   Options: (a) Claude Haiku 4.5, as for extraction; (b) deterministic keyword rules.
-   Recommendation: (a); it is the agent decision the phase is meant to show, the cost per call is small, and rules would fail on conversational orders.
-6. LangSmith check (C13).
-   Options: (a) keep C13 and let the phase be ready locally but not closed until the trace quota renews, as in phase 02; (b) drop C13 from this phase and check tracing for phases 02 and 03 together later.
-   Recommendation: (a), for consistency with phase 02.
+## Known limitations
+- The extractor sends the whole catalog in the prompt together with the email text.
+  This only works while the catalog fits in the model's context window and stays affordable with prompt caching.
+  Retrieval (RAG, embeddings) is not implemented in this project; the owner has built it in another project (Voice to Order).
+
+## Owner decisions (2026-10-07)
+1. Email source: local `.eml` files in a folder, parsed with the standard library; real mailbox ingestion can be a later change.
+2. PDF and Excel attachments: local text extraction with `pypdf` and `openpyxl` as runtime dependencies; the extracted text goes to the model.
+3. Dataset attachments: `fpdf2` (LGPL-3.0) as a development dependency for PDFs and `openpyxl` for spreadsheets, from a seeded script; the rendered files are versioned, so `check` never re-renders.
+4. Dataset size and audit: 300 emails, at least 800 lines, owner audit of 40 emails.
+5. Intake classification: Claude Haiku 4.5.
+6. LangSmith check: C13 is kept.
+   The free trace quota (5,000 traces) was exhausted right after it started; the owner expects it to reset about 30 days after 2026-10-06, around 2026-11-05.
+   The phase can be ready locally but stays open until C13 is met.
