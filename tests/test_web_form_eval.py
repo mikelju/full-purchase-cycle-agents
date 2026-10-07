@@ -146,11 +146,12 @@ def test_schema_invalid_answer_does_not_trip_the_call_gate(baseline_copy, tmp_pa
     assert "GATE FAILED: the client made" not in out
 
 
-def test_upload_command_uploads_both_suites_and_keeps_the_worst_exit(monkeypatch):
+def test_upload_command_uploads_every_suite_and_keeps_the_worst_exit(monkeypatch):
     from purchase_cycle.cli import main
 
     uploaded = []
     monkeypatch.setattr(harness, "upload_datasets", lambda: uploaded.append("order_line_extraction") or 0)
     monkeypatch.setattr(web_form_eval, "upload_datasets", lambda: uploaded.append("web_form_matching") or 1)
+    monkeypatch.setattr(email_eval, "upload_datasets", lambda: uploaded.append("email_order_extraction") or 0)
     assert main(["eval-upload"]) == 1
-    assert uploaded == ["order_line_extraction", "web_form_matching"]
+    assert uploaded == ["order_line_extraction", "web_form_matching", "email_order_extraction"]
