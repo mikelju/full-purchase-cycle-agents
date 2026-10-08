@@ -103,3 +103,71 @@ def detect(lines: list[dict], catalog: list, channel: str) -> list[dict]:
                 }
             )
     return doubts
+
+
+DOUBT_LABELS = {AMBIGUOUS: "ambiguous product", UNKNOWN: "unknown product", QUANTITY: "doubtful quantity"}
+
+
+class InvalidQuestion(ValueError):
+    """The drafted question misses a doubtful line or a candidate; nothing is paused or written."""
+
+
+class InvalidAnswer(ValueError):
+    """The interpreted answer breaks a check; nothing is written."""
+
+
+def doubts_message(doubts: list[dict]) -> str:
+    """Fixed layout of the doubtful lines for the model, free of thread ids and timestamps."""
+    out = ["Doubtful lines:"]
+    for doubt in doubts:
+        kinds = ", ".join(DOUBT_LABELS[t] for t in doubt["types"])
+        current = f" | current SKU: {doubt['sku']}" if doubt["sku"] else ""
+        out.append(
+            f"Line {doubt['line_id']} | doubt: {kinds} | quantity read: {doubt['quantity']}{current}"
+            f' | text: "{doubt["text"]}"'
+        )
+        out += [f"  candidate: {c['sku']} | {c['name']}" for c in doubt["candidates"]]
+    return "\n".join(out)
+
+
+def answer_message(doubts: list[dict], question: str, answer: str) -> str:
+    """User message of the interpretation call: the doubts, the question sent and the customer answer."""
+    return f"{doubts_message(doubts)}\n\nQuestion sent to the customer:\n{question}\n\nCustomer answer:\n{answer}"
+
+
+def check_question(question: str, doubts: list[dict]) -> None:
+    """Every doubtful line's text and every candidate name must appear in the question."""
+    key = f" {match_key(question)} "
+    missing = []
+    for doubt in doubts:
+        if f" {match_key(doubt['text'])} " not in key:
+            missing.append(f'line {doubt["line_id"]} text "{doubt["text"]}"')
+        missing += [
+            f'line {doubt["line_id"]} candidate "{c["name"]}"'
+            for c in doubt["candidates"]
+            if f" {match_key(c['name'])} " not in key
+        ]
+    if missing:
+        raise InvalidQuestion("Clarification question rejected: it does not name " + "; ".join(missing))
+
+
+def check_resolutions(resolutions: list, doubts: list[dict], catalog: list) -> None:
+    """Every doubtful line answered exactly once, every set SKU in the catalog, every set quantity positive."""
+    expected = {doubt["line_id"] for doubt in doubts}
+    known_skus = {row["sku"] for row in catalog}
+    errors = []
+    seen = set()
+    for r in resolutions:
+        if r.line_id not in expected:
+            errors.append(f"line {r.line_id} is not a doubtful line")
+        elif r.line_id in seen:
+            errors.append(f"line {r.line_id} is answered more than once")
+        seen.add(r.line_id)
+        if r.action == "set":
+            if r.sku not in known_skus:
+                errors.append(f"line {r.line_id}: SKU '{r.sku}' is not in the catalog")
+            if r.quantity is None or r.quantity <= 0:
+                errors.append(f"line {r.line_id}: quantity {r.quantity} is not a positive whole number")
+    errors += [f"line {line_id} is not answered" for line_id in sorted(expected - seen)]
+    if errors:
+        raise InvalidAnswer("Clarification answer rejected: " + "; ".join(errors))

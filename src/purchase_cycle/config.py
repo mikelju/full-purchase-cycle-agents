@@ -14,6 +14,9 @@ MATCHING_RECORDINGS_PATH = EVALS_DIR / "recordings" / "web_form_matching.jsonl"
 EMAIL_INTAKE_RECORDINGS_PATH = EVALS_DIR / "recordings" / "email_intake.jsonl"
 EMAIL_EXTRACTION_RECORDINGS_PATH = EVALS_DIR / "recordings" / "email_order_extraction.jsonl"
 EMAIL_EXTRACTION_MAX_TOKENS = 4096  # one answer lists every line of an email
+CLARIFICATION_QUESTION_RECORDINGS_PATH = EVALS_DIR / "recordings" / "clarification_question.jsonl"
+CLARIFICATION_ANSWER_RECORDINGS_PATH = EVALS_DIR / "recordings" / "clarification_answers.jsonl"
+CLARIFICATION_MAX_TOKENS = 1024  # a question or a resolution list covers every doubtful line of an order
 
 MODES = ("live", "record", "replay")
 

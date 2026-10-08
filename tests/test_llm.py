@@ -6,6 +6,8 @@ from conftest import SENTENCE
 from purchase_cycle import db
 from purchase_cycle.graph import build_graph
 from purchase_cycle.llm import (
+    CLARIFICATION_ANSWER,
+    CLARIFICATION_QUESTION,
     EMAIL_EXTRACTION,
     EMAIL_INTAKE,
     EXTRACTION,
@@ -174,3 +176,72 @@ def test_email_tasks_have_own_recordings_and_cached_catalog_prompt(seeded_db):
     assert tool_definition(EMAIL_EXTRACTION)["name"] == "record_email_order_lines"
     assert tool_definition(EMAIL_INTAKE)["name"] == "record_email_intake"
     assert (EXTRACTION.max_tokens, MATCHING.max_tokens, EMAIL_INTAKE.max_tokens) == (256, 256, 256)
+
+
+DOUBTS_TEXT = 'Doubtful lines:\nLine 1 | doubt: ambiguous product | quantity read: 10 | text: "nitrile gloves"'
+
+
+def test_clarification_question_is_parsed_in_replay(seeded_db, write_recording, no_network):
+    _, catalog = seeded_db
+    path = write_recording(catalog, DOUBTS_TEXT, {"question": "Which size?"}, task=CLARIFICATION_QUESTION)
+    client = ModelClient("replay", catalog, path, task=CLARIFICATION_QUESTION)
+    assert client.extract(DOUBTS_TEXT, case_id="CLQ-1").question == "Which size?"
+    assert no_network == []
+
+
+def test_clarification_answer_is_parsed_in_replay(seeded_db, write_recording, no_network):
+    _, catalog = seeded_db
+    resolutions = [
+        {"line_id": 1, "action": "set", "sku": "GLV-NIT-M", "quantity": 10},
+        {"line_id": 2, "action": "remove", "sku": None, "quantity": None},
+        {"line_id": 3, "action": "unclear", "sku": None, "quantity": None},
+    ]
+    path = write_recording(catalog, DOUBTS_TEXT, {"resolutions": resolutions}, task=CLARIFICATION_ANSWER)
+    answer = ModelClient("replay", catalog, path, task=CLARIFICATION_ANSWER).extract(DOUBTS_TEXT, case_id="CLA-1")
+    assert [r.model_dump() for r in answer.resolutions] == resolutions
+    assert no_network == []
+
+
+@pytest.mark.parametrize(
+    ("task", "answer", "field"),
+    [
+        (CLARIFICATION_QUESTION, {"question": ""}, "question"),
+        (CLARIFICATION_QUESTION, {}, "question"),
+        (CLARIFICATION_QUESTION, {"question": "x", "note": "y"}, "note"),
+        (CLARIFICATION_ANSWER, {"resolutions": "none"}, "resolutions"),
+        (
+            CLARIFICATION_ANSWER,
+            {"resolutions": [{"line_id": 1, "action": "keep", "sku": None, "quantity": None}]},
+            "resolutions.0.action",
+        ),
+        (
+            CLARIFICATION_ANSWER,
+            {"resolutions": [{"line_id": 1, "action": "set", "sku": "GLV-NIT-M", "quantity": 2.5}]},
+            "resolutions.0.quantity",
+        ),
+        (
+            CLARIFICATION_ANSWER,
+            {"resolutions": [{"line_id": "1", "action": "remove", "sku": None, "quantity": None}]},
+            "resolutions.0.line_id",
+        ),
+        (CLARIFICATION_ANSWER, {"resolutions": [{"line_id": 1, "action": "remove"}]}, "resolutions.0.sku"),
+    ],
+)
+def test_invalid_clarification_answers_are_rejected_by_schema(seeded_db, write_recording, task, answer, field):
+    _, catalog = seeded_db
+    path = write_recording(catalog, DOUBTS_TEXT, answer, task=task)
+    with pytest.raises(InvalidModelOutput) as raised:
+        ModelClient("replay", catalog, path, task=task).extract(DOUBTS_TEXT, case_id="CL-1")
+    assert field in raised.value.fields
+
+
+def test_clarification_tasks_have_own_tools_recordings_and_keys(seeded_db):
+    _, catalog = seeded_db
+    tasks = (EXTRACTION, MATCHING, EMAIL_INTAKE, EMAIL_EXTRACTION, CLARIFICATION_QUESTION, CLARIFICATION_ANSWER)
+    assert len({recording_key(build_system_prompt(catalog, t), "x", t) for t in tasks}) == 6
+    assert (
+        ModelClient("live", catalog, task=CLARIFICATION_QUESTION).recordings_path.name == "clarification_question.jsonl"
+    )
+    assert ModelClient("live", catalog, task=CLARIFICATION_ANSWER).recordings_path.name == "clarification_answers.jsonl"
+    assert tool_definition(CLARIFICATION_QUESTION)["name"] == "record_clarification_question"
+    assert tool_definition(CLARIFICATION_ANSWER)["name"] == "record_clarification_resolutions"

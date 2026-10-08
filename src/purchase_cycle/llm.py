@@ -1,7 +1,7 @@
 """Model client for catalog tasks with live, record and replay modes.
 
 Each task (phase 01 order line extraction, phase 02 web form matching, phase 03
-email intake and email order extraction) has its own prompt, tool, answer schema and recordings file. The model answers through
+email intake and email order extraction, phase 04 clarification question and answer) has its own prompt, tool, answer schema and recordings file. The model answers through
 one forced tool call. Its arguments are validated
 by Pydantic in every mode, so a recorded answer goes through the same checks
 as a live one.
@@ -12,10 +12,14 @@ import json
 import threading
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from purchase_cycle.config import (
+    CLARIFICATION_ANSWER_RECORDINGS_PATH,
+    CLARIFICATION_MAX_TOKENS,
+    CLARIFICATION_QUESTION_RECORDINGS_PATH,
     EMAIL_EXTRACTION_MAX_TOKENS,
     EMAIL_EXTRACTION_RECORDINGS_PATH,
     EMAIL_INTAKE_RECORDINGS_PATH,
@@ -140,6 +144,60 @@ class EmailLines(BaseModel):
     lines: list[EmailLine] = Field(description="Every ordered product, in the order the customer wrote them")
 
 
+CLARIFICATION_QUESTION_INSTRUCTIONS = """You write one question to a customer of a medical supplies distributor whose order holds doubtful lines.
+
+The user message lists the doubtful lines of one order: line id, the doubt, the quantity read, the text exactly as the customer wrote it and, for an ambiguous product, the candidate catalog products.
+Write a single short, polite message in English that covers every doubtful line at once:
+- Name every doubtful line by quoting its text exactly as the customer wrote it, in double quotes.
+- For an ambiguous product, list every candidate by its catalog name exactly as given and ask which one the customer wants.
+- For an unknown product, say the catalog does not carry it and ask for another description or whether it can be removed.
+- For a doubtful quantity, give the quantity read in sale units and ask the customer to confirm or correct it.
+- Do not mention line ids, SKUs, doubt types or prices, and do not add products the customer did not write.
+The catalog below only helps you describe the products.
+
+Catalog (SKU | name | sale unit):
+"""
+
+
+class ClarificationQuestion(BaseModel):
+    """Structured answer of the clarification question node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    question: str = Field(min_length=1, max_length=4000, description="The message sent to the customer")
+
+
+CLARIFICATION_ANSWER_INSTRUCTIONS = """You read a customer answer to a question about the doubtful lines of an order sent to a medical supplies distributor.
+
+The user message lists the doubtful lines (line id, doubt, quantity read, text as the customer wrote it, candidate catalog products), the question sent and the customer answer.
+Return exactly one resolution per doubtful line id:
+- set: the answer tells which product and quantity the customer wants; give the catalog SKU and the quantity in catalog sale units. When the answer does not change the quantity, keep the quantity read.
+- remove: the customer says the line is not needed.
+- unclear: the answer does not resolve the line, is off topic or picks no catalog product; sku and quantity are null.
+For remove and unclear, sku and quantity are null.
+Use only SKUs from the catalog below. Ignore new products the customer adds in the answer.
+
+Catalog (SKU | name | sale unit):
+"""
+
+
+class LineResolution(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    line_id: int = Field(strict=True, description="Id of the doubtful line")
+    action: Literal["set", "remove", "unclear"] = Field(description="What the answer decides for the line")
+    sku: str | None = Field(description="Catalog SKU for set, otherwise null")
+    quantity: int | None = Field(strict=True, description="Quantity in catalog sale units for set, otherwise null")
+
+
+class ClarificationResolutions(BaseModel):
+    """Structured answer of the clarification interpretation node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    resolutions: list[LineResolution] = Field(description="One resolution per doubtful line")
+
+
 @dataclass(frozen=True)
 class Task:
     """What the model is asked to do and where its recorded answers live."""
@@ -185,6 +243,24 @@ EMAIL_EXTRACTION = Task(
     EmailLines,
     EMAIL_EXTRACTION_RECORDINGS_PATH,
     EMAIL_EXTRACTION_MAX_TOKENS,
+)
+CLARIFICATION_QUESTION = Task(
+    "clarification_question",
+    CLARIFICATION_QUESTION_INSTRUCTIONS,
+    "record_clarification_question",
+    "Record the question sent to the customer about the doubtful lines.",
+    ClarificationQuestion,
+    CLARIFICATION_QUESTION_RECORDINGS_PATH,
+    CLARIFICATION_MAX_TOKENS,
+)
+CLARIFICATION_ANSWER = Task(
+    "clarification_answer",
+    CLARIFICATION_ANSWER_INSTRUCTIONS,
+    "record_clarification_resolutions",
+    "Record one resolution per doubtful line from the customer answer.",
+    ClarificationResolutions,
+    CLARIFICATION_ANSWER_RECORDINGS_PATH,
+    CLARIFICATION_MAX_TOKENS,
 )
 
 
