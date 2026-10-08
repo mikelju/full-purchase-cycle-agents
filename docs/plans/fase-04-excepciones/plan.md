@@ -137,6 +137,11 @@ This file is the durable state: a new session resumes from here and from Git.
 - [ ] 14. Haiku 4.5 baselines on the test splits with per-item results and thresholds by the spec rule (C14) - needs the owner's key: `--mode record --split test --set-baseline` for both suites; baselines in `evals/baselines/clarification_detection.json` and `evals/baselines/clarification_answers.json`; output in `.evidence/fase-04/eval-test-baseline.txt`; then `npm run eval` is the plain command again and replays the five suites.
   If detection recall of any doubt type, the false question rate or resolution accuracy misses its gate, the executor stops, writes deviation `04.1` with the measured figures and leaves the threshold to the owner.
   Estimated cost about 1 to 2 USD; the total live spend of the phase is recorded here.
+  Status: stopped by deviation 04.1, owner decision pending; output in `.evidence/fase-04/eval-test-baseline.txt`.
+  Answers: baseline stored in `evals/baselines/clarification_answers.json`; resolution accuracy 99.5% [97.2, 99.9] n=195, threshold 95% PASS; case exact match 99.4%; one failure, CLA-0173 answered as unclear.
+  Detection: the run exited 3 and stored no baseline; recall ambiguous 58.2% [45.0, 70.3] n=55, unknown 94.3% [84.6, 98.1] n=53, quantity 91.3% [79.7, 96.6] n=46, false question rate 0.0% [0.0, 7.4] n=48; the test recordings are stored, so a replay baseline needs no new live call.
+  `npm run eval` keeps naming the three existing suites until the detection baseline exists.
+  Total live spend of the phase, measured from the token lines at Haiku 4.5 prices: increment 13 0.79 USD and increment 14 1.06 USD (detection 0.69, answers 0.37), about 1.85 USD.
 
 ### Batch G - Demo, README, secrets and fresh clone (one small live run)
 - [ ] 15. Sample inputs `examples/exceptions/` (one web form submission and one email with doubts, copied from detection test items whose recorded answers are correct) and `purchase-cycle exceptions-demo`; question and interpretation recordings for the samples and their sample answers (C10) - check: a pytest runs the demo and then `clarify answer` as a separate process in replay with the network blocked and asserts doubts, question, thread id, interpretation, order number and reply; replay output in `.evidence/fase-04/demo-replay.txt`; live run with the owner's key and tracing off in `.evidence/fase-04/demo-live.txt` (a few cents).
@@ -154,6 +159,7 @@ The phase can be ready locally with C12 or C15 pending, but it does not close un
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
+| 04.1 | The Haiku 4.5 detection baseline on the test split misses the 95% recall gate: ambiguous 58.2% [45.0, 70.3] n=55, unknown 94.3% [84.6, 98.1] n=53, quantity 91.3% [79.7, 96.6] n=46; false question rate 0.0% meets it. Ambiguous misses: the frozen phase 02 matcher and phase 03 extractor give a SKU to a generic text such as "Zinc oxide tape", and the spec rule raises an ambiguous doubt only for a line without a SKU. Unknown and quantity misses: email lines the extractor drops, and three email orders whose extractor answer has a non-integer quantity and is rejected by the schema. Prompt tuning on the two new instructions cannot change detection. The owner decides the thresholds or a change of rule; answers met their gate (99.5%) and its baseline is stored. | C13, C14 | Open, owner decision |
 
 Pending, out of scope for phase 04: the `check:puerta` stop hook times out at 120 s under concurrent subagent load and takes about 117 s alone (all checks green); the hook is unchanged.
 

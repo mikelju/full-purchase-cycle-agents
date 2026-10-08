@@ -1,24 +1,91 @@
 {"answer": {"sku": null}, "case_id": "CLD-0001-1", "key": "4463478977f0c49c4a8e0840d5ce420597cd2a17bdd4e2f89b771dd413207cf3", "sentence": "Transparent film dressings"}
 {"answer": {"sku": null}, "case_id": "CLD-0001-2", "key": "9004e9bea4cf4743fc538f8ced4fecfb7583f0bab0acb768576a60c8b0a60f2f", "sentence": "X-ray film sheets"}
+{"answer": {"sku": "GEL-1000"}, "case_id": "CLD-0002-1", "key": "3c16c1ad2759f0b47efb796a0f13f63863f25b338a32691460a3985becc10377", "sentence": "Hand sanitiser gel refill, 1 litre"}
+{"answer": {"sku": null}, "case_id": "CLD-0002-2", "key": "54c2742906ec938e6f501e3495b5a3839bff37e326b07bc566f026426f640dc5", "sentence": "SPF pls"}
+{"answer": {"sku": "CATH-SIL-18"}, "case_id": "CLD-0002-3", "key": "b9f2b74f30488737dc34ffb44aa940bfaf2740565aa334812c7ab956c21b57bf", "sentence": "100% silicone Foley catheter 18 Fr"}
+{"answer": {"sku": "GLV-VIN-M"}, "case_id": "CLD-0002-4", "key": "2aad7de86f21982320a7d9dfb6c51f23fbc34bac4b04b70ab02185af6e675929", "sentence": "vinyl gloves size M"}
+{"answer": {"sku": null}, "case_id": "CLD-0003-1", "key": "ab8a9856e358d14c29ed1f564f342cfc8ead18eeb04f9cb03ac3d3fe15c03203", "sentence": "Plasters"}
+{"answer": {"sku": "SAL-10"}, "case_id": "CLD-0003-2", "key": "07c7dfa5e9ae33a77cd24840a04f3df7a512f6334ff635598a6860fa1ef77553", "sentence": "saline 0.9% single dose 10 ml"}
+{"answer": {"sku": "STOOL-CUP"}, "case_id": "CLD-0003-3", "key": "74a75c8e1b5b02f70f6f932b2fa333a3d1a78b87ebb613edc3f588b11560dcd0", "sentence": "stool sample containers"}
+{"answer": {"sku": "STITCH-CUT"}, "case_id": "CLD-0006-1", "key": "887862296da1bb76243195958e86a060c301598c60e56a997e4b8d0744ddc38c", "sentence": "sterile stitch cutters"}
+{"answer": {"sku": "GEL-PACK-L"}, "case_id": "CLD-0006-2", "key": "6fc239104ce2c71fd4eed76e725eb51d4a33ebd2b4566316d0d5b93ba0e19125", "sentence": "reusable hot and cold gel pack 15 x 25"}
+{"answer": {"sku": "COT-APPL"}, "case_id": "CLD-0006-3", "key": "6aa42bba10cbfa2da82e722a53d54cb7830c9656c3c85397b18b597dc0df60ee", "sentence": "cotton-tipped applicators, sterile"}
 {"answer": {"sku": "INC-PANT-XL"}, "case_id": "CLD-0007-1", "key": "dca1c2340603c84f4a9b06478774e4ebac5bd91df0b3788aaa95bbaa9759605b", "sentence": "pull-up pants XL"}
 {"answer": {"sku": "SCALPEL-15"}, "case_id": "CLD-0007-2", "key": "b3a40f46fe82adec336704675c11786ff03ddf783a05ad4207c6a17cb4efa744", "sentence": "Disposable scalpel no. 15"}
 {"answer": {"sku": "TAPE-ZNC-25"}, "case_id": "CLD-0007-3", "key": "aa3a9ceb9ea9c90682a427510d0145a1323e912d0e90b30625ece8b612f75620", "sentence": "Zinc oxide tape"}
 {"answer": {"sku": "GEL-5000"}, "case_id": "CLD-0007-4", "key": "fd0ef6954e72adcce2d18f977013301cf9af8ed10e64a6519d9276d3ab9fb8c4", "sentence": "sanitiser gel 5 litre jerrycan"}
 {"answer": {"sku": null}, "case_id": "CLD-0007-5", "key": "be8ec9dd015fa98710ea587790b8cd7caf44689218f8816bd1470e0aecee3228", "sentence": "stair lift"}
+{"answer": {"sku": "PILL-BOX-7"}, "case_id": "CLD-0008-1", "key": "0e74ccef964322e159375d1f7b3fec6e5c5df851a47b399d66af52519910e5d6", "sentence": "weekly pill organiser"}
+{"answer": {"sku": "WIPE-SURF-100"}, "case_id": "CLD-0008-3", "key": "b1b997444ab548f755275adab1b1eeaf6875159ead266a379d4c9001e33ff15b", "sentence": "disinfectant wipes"}
+{"answer": {"sku": "STOCK-THIGH-M"}, "case_id": "CLD-0009-1", "key": "7b65739c1bde8fbab5be6276543acfe1003c25d5b4078c6db3317cbdff759245", "sentence": "Thigh-high compression stockings, M"}
+{"answer": {"sku": null}, "case_id": "CLD-0009-2", "key": "7a6d743dcf3f53e398927ba4f7e25c0381d55a9f0b697ad785529a2ce4d44bf0", "sentence": "pregnancy tests"}
+{"answer": {"sku": "SLING-ARM"}, "case_id": "CLD-0009-3", "key": "4bbba531a9c721b97cb516a191532eb467b7eccb7af4c86b97a366023e8ae806", "sentence": "arm sling"}
+{"answer": {"sku": "INC-PANT-M"}, "case_id": "CLD-0009-4", "key": "5e7970fd23251ef4c4076cc126626a428e218eefc8c88592d7d43e915a492c8a", "sentence": "adult pull-up pants"}
+{"answer": {"sku": null}, "case_id": "CLD-0011-3", "key": "1030016410592df5e632c73a4328ea49a110ad5e959fb2759546c1e4c89d3c8f", "sentence": "massage tables"}
+{"answer": {"sku": "GAUZE-ROLL-7"}, "case_id": "CLD-0013-2", "key": "882569d607c654b329a342f7eff11bcdc5b08103cf91a2b186acd002be81a06e", "sentence": "gauze bandage roll 7.5 cm"}
+{"answer": {"sku": "KIT-FA-REFILL"}, "case_id": "CLD-0013-4", "key": "ca19385c250174b095baf492586e108aa43f29475c389c3916c4ab39fa5b0e3b", "sentence": "first aid refill pack"}
+{"answer": {"sku": "GOWN-ISO-XL"}, "case_id": "CLD-0017-2", "key": "cb552686685f090277cac8df3a64f903f90f5df133e433b1d4ea28ed059d8863", "sentence": "isolation gowns XL"}
+{"answer": {"sku": "MASK-FFP2-BLK"}, "case_id": "CLD-0017-3", "key": "c01e8a9409c96c73d0e9c3bce2f7012001955271d8ef7723110525fbe37e1dd2", "sentence": "black FFP2 masks"}
 {"answer": {"sku": "FORCEPS-DISP"}, "case_id": "CLD-0018-1", "key": "409a7087bf457516b932df15c8c6004872c6a8b22f272c6dde1527bdf23cf4b6", "sentence": "disposable plastic forceps"}
 {"answer": {"sku": null}, "case_id": "CLD-0018-3", "key": "1e2a3815bdda3a03a9a6b437ca08ada3fb1efc270f02693123521876ad3e8e01", "sentence": "bariatric underpads 90 x 180 cm"}
 {"answer": {"sku": null}, "case_id": "CLD-0018-4", "key": "767e36793f1ced1b6a15cc01a4b43088fc3c0768e28a88919750076fa22b4a46", "sentence": "cohesive bandage"}
+{"answer": {"sku": "LAN-PEN"}, "case_id": "CLD-0019-1", "key": "a4ff856b1db59645370e9c556bf602bd96d641cd555ded3d03a4dde63d40cdc0", "sentence": "lancet pen"}
+{"answer": {"sku": "WIPE-WASH-CAP"}, "case_id": "CLD-0019-2", "key": "9f2ee89d013fab54b619613ed21db1a011ee702bc76ffd55eb6c162feb5feb9d", "sentence": "rinse-free shampoo caps"}
+{"answer": {"sku": null}, "case_id": "CLD-0019-3", "key": "f5b7134e5d8c5abe25cf4847212b684b8e3c867193f8e669d4a8189e2c9a1f65", "sentence": "crepe bandages 20 cm wide"}
+{"answer": {"sku": null}, "case_id": "CLD-0019-4", "key": "1681aae19790354d50de844a697b60682c08a4bf6ee28187c7a0f10a287511c9", "sentence": "hearing aid batteries"}
 {"answer": {"sku": null}, "case_id": "CLD-0021-1", "key": "f8d972fdc5092c018c4fe9343072e7985bba0b83ccfc70151474c583992cdbdf", "sentence": "20 ml luer slip syringes"}
 {"answer": {"sku": "MOUTHWASH-500"}, "case_id": "CLD-0021-2", "key": "c31882d5ec537113d795e1eef8234e6e0eca5351dffbc7f32e60d7541659ccf6", "sentence": "alcohol-free mouthwash"}
 {"answer": {"sku": "CREAM-HAND-100"}, "case_id": "CLD-0021-3", "key": "e5da4a8b9e6324b8be51d5eeb3d1261ff5e8db2693025ba45c28dc550fa74a35", "sentence": "hand cream 100 ml"}
+{"answer": {"sku": "BND-ELA-7"}, "case_id": "CLD-0024-1", "key": "ed1b730916c37390121b858b1d8f478b12e4bfe6f7e4f0f17920f34285a9c6c8", "sentence": "elastic crepe bandage 7.5 cm"}
+{"answer": {"sku": "SAL-250"}, "case_id": "CLD-0025-1", "key": "9d26aeff124c26e0d6d0ea3cf76c28993023b01f76716a869f311e4fe6687abf", "sentence": "saline for irrigation 250 ml"}
+{"answer": {"sku": "GLV-NIT200-L"}, "case_id": "CLD-0025-2", "key": "803d27e5d7e4b72bb15b7ff2d5304a9e2bf49ceb452c5fb044582d8e49811cd4", "sentence": "nitrile gloves value pack L"}
+{"answer": {"sku": "GEL-500"}, "case_id": "CLD-0028-1", "key": "c8e7537302bfede09e5060256365aceb1417c84d6b7a7ab700fbc12e2b0c5872", "sentence": "hand sanitiser gel with pump"}
+{"answer": {"sku": "GLV-NIT-M"}, "case_id": "CLD-0028-2", "key": "c8668edcc0bdaabb12a894228bce0c784a8531f78f24f82bd3f8fc671cb8d494", "sentence": "Nitrile examination gloves, powder-free"}
+{"answer": {"sku": null}, "case_id": "CLD-0029-1", "key": "47f98192f2dd41e2ca27e64ccaf175268b021543d4500bcfe05583122ee1013f", "sentence": "COVID antigen tests"}
+{"answer": {"sku": null}, "case_id": "CLD-0029-2", "key": "d950f2308972452eca2d66d654e5b3fc5d727483eeb5ccee3fd6cf39b17b2eb6", "sentence": "Compression stockings, class I"}
+{"answer": {"sku": "CATH-FOL-16"}, "case_id": "CLD-0029-3", "key": "f0a67a1ff0e5f8d04e1b20d3185b2912ddbcc123e07563995d4da7519fb915ca", "sentence": "silicone-coated latex Foley 16 Fr"}
+{"answer": {"sku": "SUN-KIDS-50-200"}, "case_id": "CLD-0029-4", "key": "59dbbb38b18f39f3e0b4791a0392533c6bc7549ab4f88f5a2f1da0c5f872f48b", "sentence": "children's sunscreen 200 ml"}
+{"answer": {"sku": "GLV-VIN-L"}, "case_id": "CLD-0029-5", "key": "6fd2297ee0aff5b530f5d67f60190bed43305a2489983eb48ef058a514df14ab", "sentence": "vinyl examination gloves L"}
 {"answer": {"sku": "GOWN-SURG-ST"}, "case_id": "CLD-0030-1", "key": "7df3165ed491dccc2d96a6a6a50b91590345f9f488988359d251ae7673b9c449", "sentence": "sterile surgical gown, reinforced"}
 {"answer": {"sku": "GLV-SURG-NEO-8"}, "case_id": "CLD-0030-2", "key": "bf03e59b298dacf12dcac60d3dc16ee8321ce525c6a31812d52248a44e33fc0b", "sentence": "latex-free neoprene surgical gloves, size 8"}
 {"answer": {"sku": "SAL-500"}, "case_id": "CLD-0030-3", "key": "c5ace1e4c7d314e30db2a13ed5304171dbeb8dc979ad16fa582f70c5b5e39f35", "sentence": "irrigation saline 500 ml"}
 {"answer": {"sku": "WIPE-SURF-100"}, "case_id": "CLD-0030-4", "key": "ab99bdac3e5fc78122bd0dc4c29b508cf7c89c006166d6c308f07e84ff5d3130", "sentence": "disinfectant wipes canister"}
+{"answer": {"sku": null}, "case_id": "CLD-0033-1", "key": "a9513ad5595dfc0ba4f83f7d15e9243a01a749d7555bf11b31af616bbfe0cc6e", "sentence": "FFP1 masks"}
+{"answer": {"sku": null}, "case_id": "CLD-0033-2", "key": "544ade6d114c175632d229a3787652e8a276fbf475c5eb09c877c77950629ac1", "sentence": "AED defibrillator"}
+{"answer": {"sku": "DRS-FOAM-15"}, "case_id": "CLD-0033-3", "key": "1b78bfa8a9a9279052b5e1a7ccd1bc8e7befb1da9b2a0f4cdeba9bbd5606967c", "sentence": "foam dressing with border 15 x 15"}
+{"answer": {"sku": "PLST-KIDS"}, "case_id": "CLD-0034-1", "key": "727ba48334669c151963b4752391e7d6d06050e77e372677dc27cae183b01493", "sentence": "children's plasters with drawings"}
+{"answer": {"sku": null}, "case_id": "CLD-0034-2", "key": "c194ccc28f6bbe7ef9948c487485de9f98a73589fffe1dca95308ad027021af9", "sentence": "nitrile gloves XXL"}
+{"answer": {"sku": "GLV-VIN-S"}, "case_id": "CLD-0034-3", "key": "1defff155e4b799a7b516b82736bd60f8faa3ccf331117ca040f14e3aa9b625e", "sentence": "powder-free vinyl gloves S"}
+{"answer": {"sku": "CPR-MASK"}, "case_id": "CLD-0034-4", "key": "0913c783aa4596b5f1b0f5409665aa57941d1cd30a5f476affbe3a740aa1e130", "sentence": "CPR face shield"}
+{"answer": {"sku": "NDL-19G"}, "case_id": "CLD-0034-5", "key": "665ae5a77825961af4bed39bee3e9a32771c9808ada6ca1380e64afe6ae407c8", "sentence": "19G hypodermic needles"}
+{"answer": {"sku": "NDL-21G"}, "case_id": "CLD-0036-1", "key": "34c6b277abd94e9a8a7787a0df829b203ebab50e86f980a2fe74ea42aac2b5d7", "sentence": "hypodermic needles 21G"}
+{"answer": {"sku": null}, "case_id": "CLD-0036-2", "key": "1c0330d4b1104a6168cef87259382a74403b78bc9fbf714b2303efa188a896cb", "sentence": "Latex surgical gloves"}
+{"answer": {"sku": "SHARPS-10"}, "case_id": "CLD-0036-3", "key": "1581f4b06cb76683bd0eb5fa53d73b4c109acd8188a28881f9caedab1e4d719d", "sentence": "10 litre sharps container"}
+{"answer": {"sku": "STOCK-KNEE-S"}, "case_id": "CLD-0036-4", "key": "c5edc1a9baf194632d7cc43a3388bb57b8a8cf116b5eb71a91a7bbde5f33b5a5", "sentence": "knee-high compression stockings S"}
+{"answer": {"sku": "SHOE-COVER"}, "case_id": "CLD-0036-5", "key": "ac569b9bc6e9644a7f0525678180a4b2085a158de5c449d87cf729d68222577a", "sentence": "shoe covers"}
+{"answer": {"sku": "CATH-SIL-14"}, "case_id": "CLD-0038-1", "key": "dcf302ca48a8a356544a2f00a8a16b0ea03e3599dab4d9f1a02802fc18d578d5", "sentence": "100% silicone Foley catheter 14 Fr"}
+{"answer": {"sku": "DRS-FOAM-10"}, "case_id": "CLD-0038-2", "key": "4a24aec6181edab753a933a13363e405d3d765362976198542e70934e659d53f", "sentence": "foam dressings 10 x 10 cm"}
+{"answer": {"sku": null}, "case_id": "CLD-0038-3", "key": "e03eb3470a27d4a9e7d89db83d56f9f486a35e83d86801e3f1182a0c63cdbd00", "sentence": "sharps container 15 litre, yellow"}
+{"answer": {"sku": "BND-COH-7"}, "case_id": "CLD-0038-4", "key": "837d0e8c60cf2921adb36a70af16641945803621926777a80559f3aeec35f3ca", "sentence": "cohesive bandage 7.5 cm"}
 {"answer": {"sku": "BND-ELA-10"}, "case_id": "CLD-0040-1", "key": "0a85b8f66473f9802466ba2c3ecea1e5edc485d5ff12376fd2b8b05a48a2adaf", "sentence": "crepe bandage 10 cm"}
 {"answer": {"sku": null}, "case_id": "CLD-0042-2", "key": "a1a360b459397135b229d4e4d686a3ff41d0b2a458f2831bdd008c818a94d1b7", "sentence": "sharps containers"}
 {"answer": {"sku": "DRS-NONADH-10"}, "case_id": "CLD-0042-3", "key": "0c912f1451a2b1e8be50ff43594d10dde73880286e8178e46b707e0a8b054062", "sentence": "non-adherent dressing pad"}
 {"answer": {"sku": "THERM-SHEATH"}, "case_id": "CLD-0042-4", "key": "93dd9ebb322711f872a2644a00d68472df1c7b7ee69f3d3be8809fa79e1cab92", "sentence": "sheaths for digital thermometer"}
+{"answer": {"sku": "SUN-FACE-50-50"}, "case_id": "CLD-0050-1", "key": "80727045eeaf7e96516a5b760b8d449db034cf9c2bb842921fcefae6ffcb7894", "sentence": "facial sunscreen"}
+{"answer": {"sku": "DRS-ISL-5x7"}, "case_id": "CLD-0050-2", "key": "6af1f35fe1c177ab366b9368a3562058d64b9e2fb294d69caac1bedce3765e8d", "sentence": "island dressing 5 x 7.2 cm"}
+{"answer": {"sku": "SYR-10"}, "case_id": "CLD-0050-3", "key": "3e37a3d3def17d3a2dd0bad3408344f15bf66b40b26217e906a153094cc1b1aa", "sentence": "10 ml luer slip syringe"}
+{"answer": {"sku": "SYR-INS-05"}, "case_id": "CLD-0051-1", "key": "615811f85752029e92fc14d34030bae51457fee18e123ec1b9a273c0f5b5b4af", "sentence": "insulin syringe 0.5 ml"}
+{"answer": {"sku": "SAL-1000"}, "case_id": "CLD-0051-2", "key": "15f00f3a3ecc51c7a111ce7482e738de9b81b323ccdcb23d4819fb1de72f8d22", "sentence": "saline for irrigation, 1 litre"}
+{"answer": {"sku": "DRS-FILM-6x7"}, "case_id": "CLD-0052-1", "key": "543235dea5c1856e56525947a7768cbdcf157927e9d17bc0d8687e53e711dedc", "sentence": "film dressing 6 x 7 cm"}
+{"answer": {"sku": null}, "case_id": "CLD-0052-2", "key": "449f0cd0579dcc9bfdbb3af8fa0c20d769ce564d7940bb28e8bede49d0c80a7e", "sentence": "contact lens solution"}
+{"answer": {"sku": "GLV-LTXP-M"}, "case_id": "CLD-0052-3", "key": "3fc18fc4bdf8776cc378861f1f8047f538e3eb6af5922d8b75d4511194212b6f", "sentence": "lightly powdered latex gloves"}
+{"answer": {"sku": "CATH-FOL-14"}, "case_id": "CLD-0053-1", "key": "c7285ab27e018e62da12342b37581a9086c058afb9c04c6269627645a39f9dc3", "sentence": "Foley 14 Fr silicone-coated latex"}
+{"answer": {"sku": null}, "case_id": "CLD-0053-2", "key": "da3fe2dfd634dda2730d5e7f2e4aee56c75ffdf664e2ada03e4e24773736019e", "sentence": "masks"}
+{"answer": {"sku": null}, "case_id": "CLD-0054-1", "key": "8d52b0c626e2a775832c1883a46833bc38c89eb388b37b24fcd1dd65b4f763f8", "sentence": "oxygen cylinders"}
+{"answer": {"sku": "SYR-3"}, "case_id": "CLD-0055-1", "key": "8a887d4f8905ad7b0e7ecf18ce350eb0a0830c903b446375c203a320151529b7", "sentence": "luer slip syringe 3 ml"}
+{"answer": {"sku": "SYR-2"}, "case_id": "CLD-0055-2", "key": "690f5e67d2b6081f06ede6311ed3046bce21ca497b4d1aad0cc3ac6a19fd2ac6", "sentence": "syringes 2 ml luer slip"}
+{"answer": {"sku": "SYR-1"}, "case_id": "CLD-0055-3", "key": "a883add779befa08254fdfb31ff4c12f4c338241fa0e8d32e01f809b5f9a3b7d", "sentence": "1 ml syringe, luer slip"}
+{"answer": {"sku": "SYR-LL-20"}, "case_id": "CLD-0055-5", "key": "6f1e16ed0dd4031c3b6bd0645ac05ef378e78a11baeadbb02a67cdf5b0aeed5d", "sentence": "luer lock syringe 20 ml"}
 {"answer": {"sku": "CAP-BOUF"}, "case_id": "CLD-0059-1", "key": "525ecade1f404efe1a70aa5ab2ea3378c334bf7b1e696e4ce32279dc55c79af2", "sentence": "bouffant caps"}
 {"answer": {"sku": null}, "case_id": "CLD-0059-2", "key": "e54da9e46c22e77a61efbe7dc5605f2291e12f4f123c53c727284383117cb601", "sentence": "sunscreen SPF 15 lotion"}
 {"answer": {"sku": "STOCK-THIGH-S"}, "case_id": "CLD-0059-3", "key": "4f5dd118c438d5e5080c512b6d2ce267803b37a38cfd36fee76758100d0d20c4", "sentence": "thigh-high stockings, size S"}
@@ -34,37 +101,174 @@
 {"answer": {"sku": "SAL-30"}, "case_id": "CLD-0069-2", "key": "f40ad5622d00308b83fec2103c900c3e9af5f2931760e84d9d087f2380969616", "sentence": "saline single-dose 30 ml"}
 {"answer": {"sku": "CATH-SIL-16"}, "case_id": "CLD-0069-3", "key": "c206173646715a6779fe90f124b517a4e60063f584473072e355332b47bf0766", "sentence": "Foley 100% silicone 16 Fr"}
 {"answer": {"sku": "MASK-FFP3-V"}, "case_id": "CLD-0069-4", "key": "6e8397cdbca52ace7f2d98443542dd3b4159592d2440083af92e91b0517adb81", "sentence": "FFP3 with exhalation valve"}
+{"answer": {"sku": "GEL-1000"}, "case_id": "CLD-0070-1", "key": "f6dad959f3fed2594725004734428bf7cdf85f8a3cdcbbb9d60800ceb3e2eb26", "sentence": "sanitiser gel litre"}
+{"answer": {"sku": "SUN-30-50"}, "case_id": "CLD-0070-2", "key": "b999a205d104f2dfb3dfa9233a91fbeed8ea468ee3621eeaa45df082a20bbe22", "sentence": "Sunscreen SPF 30"}
+{"answer": {"sku": "PILL-CUP"}, "case_id": "CLD-0070-4", "key": "b6f5c8e7efaf58a9ffa0ac813257487605149b2e654a1481d755597ff89cb9c5", "sentence": "plastic medicine cups"}
+{"answer": {"sku": "THERM-DIG-FLEX"}, "case_id": "CLD-0071-1", "key": "2a0fbd55c425f13159bc9631bbd692c98a8457020a4b75ead5647e4668e016cd", "sentence": "digital thermometer with flexible tip"}
+{"answer": {"sku": "ALC96-250"}, "case_id": "CLD-0071-2", "key": "2b40a858f3d7d48b0e247d50c44f102e3e41a8517497ed795c6ea96256735838", "sentence": "alcohol 96% 250 ml"}
+{"answer": {"sku": "GLV-SURG-LTX-6.5"}, "case_id": "CLD-0072-1", "key": "9be6cd28c07b0ded3554e444830b64db9f7191b6f7e0c3c349195af53341081d", "sentence": "sterile latex surgical gloves 6.5"}
+{"answer": {"sku": null}, "case_id": "CLD-0072-2", "key": "f630d138cfd9a1dea3c703e098b34452e29a8415f92770cc31ed50a94638cc16", "sentence": "pads in cm"}
+{"answer": {"sku": null}, "case_id": "CLD-0073-1", "key": "5eb35a7618b720b66301e60ab1d05cd10de8ccb6acd5f4c60b9ce4db21f27ebc", "sentence": "oxygen cylinder refills"}
+{"answer": {"sku": "BND-TUB-C"}, "case_id": "CLD-0073-2", "key": "1b221544bd84c655f4ca7f2765ed99a807f3ee8847a58375dd1c2d88025dbe28", "sentence": "tubular bandage size C"}
+{"answer": {"sku": "TAPE-SILK-12"}, "case_id": "CLD-0075-1", "key": "af56220db7b9e461cceebe5070e0b348e4e38254ff84da1e2a25102d561f50cb", "sentence": "silk tape 1.25 cm"}
+{"answer": {"sku": null}, "case_id": "CLD-0075-3", "key": "927e21b9b5edb052ea90db0c7e7d204a534de7f569614eaa3e3f391b67f43c17", "sentence": "urine"}
+{"answer": {"sku": null}, "case_id": "CLD-0075-4", "key": "d55206d6287d251f819dbc136aa1b72f897403ccff74ee8e4963247690e71e54", "sentence": "infusion pumps"}
+{"answer": {"sku": null}, "case_id": "CLD-0076-1", "key": "8a10b8ea56523f5aee51f55c671212b9a26c4d34cfc89c028fee04f123f0f867", "sentence": "ankle support"}
+{"answer": {"sku": "CREAM-HAND-100"}, "case_id": "CLD-0076-2", "key": "84ad50dfe2e662761e4b54cd0ce1801a800d30efc31adeb7b39ee63607a02b00", "sentence": "hand cream"}
+{"answer": {"sku": "SPONGE-SOAP"}, "case_id": "CLD-0077-1", "key": "e192db90bb5602162e10942b714725a53228a94f85ca8c5a067cce83f336960b", "sentence": "pre-soaped sponges"}
+{"answer": {"sku": null}, "case_id": "CLD-0077-2", "key": "886e1ba0667b95e3b322af4e72b6f001d8cc8de8e153afdecb80a4adb02dd1d8", "sentence": "massage tables, foldable"}
+{"answer": {"sku": "TAPE-PAP-25"}, "case_id": "CLD-0077-3", "key": "9011e02bfad316659335947b11325ae7a1ec605285d01bd90a2506a1098dc75f", "sentence": "microporous paper tape 2.5 cm"}
 {"answer": {"sku": "CATH-FOL-12"}, "case_id": "CLD-0078-1", "key": "0516bb9983e12a48f8b598a2e9fb2bcae62b422b55675712af7e46ce12eb3cda", "sentence": "Foley catheter 12 Fr, silicone-coated latex"}
 {"answer": {"sku": null}, "case_id": "CLD-0078-2", "key": "41dd6898cd6da8862394df5d0dad358e04a2b53dff5b9c0f3377d0ded89130f4", "sentence": "60 ml syringes with catheter tip"}
 {"answer": {"sku": "THERM-EAR"}, "case_id": "CLD-0078-3", "key": "efaf8186498e4dda9ccd5c64055da21d8f71caa1d563595d59e075599cf13ac1", "sentence": "ear thermometer"}
 {"answer": {"sku": "PEN-31-5"}, "case_id": "CLD-0078-4", "key": "c99b66b9b7e6a03e2ad832b1b0ab649fbf574f8ef2c18998858f722873c84d35", "sentence": "pen needles 31G x 5 mm"}
+{"answer": {"sku": "TAPE-ZNC-25"}, "case_id": "CLD-0088-1", "key": "d83ebd892e73965c298077337df519e088928137e16b21e62f9b0c6fe13e5e0f", "sentence": "zinc oxide tape 2.5 cm"}
+{"answer": {"sku": "TAPE-PAP-12"}, "case_id": "CLD-0088-2", "key": "83df94fdb7dbc19c4cf6f12abbb3811bf9099495bb45b441ab8f69f7bff42373", "sentence": "paper tape 1.25 cm"}
+{"answer": {"sku": "GLV-NIT-XL"}, "case_id": "CLD-0088-3", "key": "830c5b7aca632dd3c13b8560337fcccc1f4bdd5fbc0e505ae9acae0e3b7f82bd", "sentence": "nitrile examination gloves, powder-free, XL"}
+{"answer": {"sku": "CREAM-MOIST-500"}, "case_id": "CLD-0088-4", "key": "82952372f8d7ad400b0d0ce85f43bd0c8cf39cdcf379076e05a6822ce28bfde2", "sentence": "moisturising body cream with pump"}
+{"answer": {"sku": "NDL-25G"}, "case_id": "CLD-0092-1", "key": "1afc328c9c231a19a7a0c492f85f64d5fb1cb02e6c4c398fa2e213b61c274baa", "sentence": "25G needles"}
+{"answer": {"sku": "SYR-LL-50"}, "case_id": "CLD-0092-3", "key": "8c6d390eeb9c0102a643d4dbffef5e79ccfa792b57416f793fb9e64db7853666", "sentence": "50 ml luer lock syringe"}
+{"answer": {"sku": "GLV-LTX-M"}, "case_id": "CLD-0092-4", "key": "ee0912e38ca08282ded0ee7e06d6ed3dc520609a612ae5e2e2b26d19e7b0307e", "sentence": "latex gloves powder-free, size M"}
+{"answer": {"sku": "MASK-FFP3"}, "case_id": "CLD-0096-1", "key": "6e5adafe244ce58476a4db4763935063d9a2695697af74e295cdd2ba9d843d25", "sentence": "FFP3 mask, no valve"}
+{"answer": {"sku": "GOWN-ISO"}, "case_id": "CLD-0096-3", "key": "0df6139b272b1d15efb57f2a5baf26f4dac7fdb24058acbfc74d9fef273f9c63", "sentence": "isolation gown, blue"}
+{"answer": {"sku": "NDL-20G"}, "case_id": "CLD-0096-4", "key": "855fa7db09f66864b1e33de61bc0c7c712b549882c0030239b976e2b7ebcc987", "sentence": "hypodermic needle 20G"}
 {"answer": {"sku": "CATH-SIL-12"}, "case_id": "CLD-0097-1", "key": "3d92019a24e4fc94ae8fcd6f31513ce9ae3abf07c28fd3924c82b5417d14c448", "sentence": "silicone Foley catheter 12 Fr, 100%"}
 {"answer": {"sku": null}, "case_id": "CLD-0097-2", "key": "be54370d027ebc60f110851138b624f8e187929f0d776b0c7bef4f801ee184e3", "sentence": "the free one"}
 {"answer": {"sku": "GLV-SURG-NEO-7"}, "case_id": "CLD-0098-1", "key": "b5e0fe817787602edac4c01fa0e41ef1a50b7474e43d71d30c09ad784e94ca02", "sentence": "neoprene surgical gloves size 7"}
 {"answer": {"sku": "INC-BRF-NIGHT-L"}, "case_id": "CLD-0098-2", "key": "f050bc5b9653ec9053412d982cb328e6e650c4f01f6142eb97aac11605e0b099", "sentence": "night briefs, size L"}
 {"answer": {"sku": "BND-ELA-5"}, "case_id": "CLD-0098-3", "key": "f7e88e7c1359ee4791ae80c064f2640d6194012f7e727405e77978754e2d1b1c", "sentence": "elastic crepe bandage 5 cm"}
+{"answer": {"sku": "COT-BUDS"}, "case_id": "CLD-0100-2", "key": "f4648d9977a0145c0ddaa98d43f1542cefe5be564d87cba0e83e5b4257c39dfc", "sentence": "cotton buds"}
+{"answer": {"sku": "PLST-ASST"}, "case_id": "CLD-0100-3", "key": "c89ae6ff5e44466542fc173e85ccb3adb0bc0d33e13a78044dcd93408161220e", "sentence": "assorted adhesive plasters"}
+{"answer": {"sku": "WIPE-PAD-100"}, "case_id": "CLD-0103-1", "key": "558512dad92fde18af9eeda8d99a509eb998cbe67c7a4f582d592925b1694856", "sentence": "alcohol prep pads, box of 100"}
+{"answer": {"sku": "SAL-5"}, "case_id": "CLD-0103-2", "key": "413733e0cdfa543b32e44a6f68ce1e72481aa458d7ccb011884c4dea067424e5", "sentence": "single-dose saline 5 ml"}
+{"answer": {"sku": "AFTERSUN-200"}, "case_id": "CLD-0105-1", "key": "5ea8498ed2de75194adfcb9b9da6d2ad7f54ab14d16eb4336581adc8f277bba3", "sentence": "aloe vera after-sun gel"}
+{"answer": {"sku": "GLV-LTX-XL"}, "case_id": "CLD-0105-2", "key": "3ed12eabebd3e5c9ae96effde82687499134f06050c443079335439a34b2b5c0", "sentence": "latex examination gloves powder-free XL"}
+{"answer": {"sku": "GLV-SURG-LTX-8.5"}, "case_id": "CLD-0105-3", "key": "327dcd33036dbd9988e46a4845b29878b4346d92283a927df2094788515de3d0", "sentence": "latex surgical gloves 8.5"}
+{"answer": {"sku": "MASK-FFP2"}, "case_id": "CLD-0106-1", "key": "e060f947f09e13bb51bdcca38fa9c0860f58a87c04766163f9bc28ce6df83d35", "sentence": "FFP2 respirator, no valve"}
+{"answer": {"sku": "CATH-FOL-18"}, "case_id": "CLD-0106-2", "key": "3faf12583a81a2ba6644186c3d725af65868515bff3dc17a28353b14289e2884", "sentence": "Foley silicone-coated latex 18 Fr"}
+{"answer": {"sku": "GLV-NIT-M"}, "case_id": "CLD-0106-3", "key": "e5787260b9498cf4f86a879baab5ff290a39b8646d650a02e71b0be04a48f16d", "sentence": "nitrile gloves M, powder-free"}
+{"answer": {"sku": "SUP-KNEE-M"}, "case_id": "CLD-0108-1", "key": "10dfa13c2d04b94a587dde888609d85831946b8f9a5db7889c43f6c146bc1756", "sentence": "knee support size M"}
+{"answer": {"sku": "NDL-22G"}, "case_id": "CLD-0108-2", "key": "43850c4ecbb7396b3179fc9caa1d951ffb2d19b811bb1a31688f654a41862160", "sentence": "needle 22G x 30 mm"}
+{"answer": {"sku": null}, "case_id": "CLD-0109-1", "key": "f4479bb6a50bf185535ae06baa11013ce06f5e6253322b5acbc57b08c351298b", "sentence": "sterile disposable"}
+{"answer": {"sku": "BLANKET-FOIL"}, "case_id": "CLD-0109-2", "key": "a4f2867bef6885a067222489789e65dd711ea86c37ea7a033a7c09c204e671a6", "sentence": "foil blanket"}
+{"answer": {"sku": "SUP-KNEE-XL"}, "case_id": "CLD-0111-1", "key": "6508111629c7956b87ff4f5419fd931236f6753d0572ebbbc775a4c02b012fb0", "sentence": "elastic knee support XL"}
+{"answer": {"sku": "RAZOR-DISP"}, "case_id": "CLD-0111-2", "key": "5c01df05c8204ed9388f4a7ddb9695e7324f0d0efe63dbfc5851b2c3b1c62489", "sentence": "disposable razors"}
+{"answer": {"sku": "GLV-NIT-L"}, "case_id": "CLD-0118-1", "key": "4d4c25ed7fb7903dbbb7cc684a0628e2d745059a79f0e02c7c0d8cfca11ddab5", "sentence": "nitrile gloves size L powder-free"}
+{"answer": {"sku": null}, "case_id": "CLD-0118-2", "key": "593b8ba4ef9f27e9b19459805789dbc1cb124770ae65dbae0e0f81482682924f", "sentence": "hospital beds"}
+{"answer": {"sku": null}, "case_id": "CLD-0118-3", "key": "fb6a578bf69de28381dbc726d3dc40f67fe8802eb1a2051df1a29241038dc4b3", "sentence": "sterile"}
+{"answer": {"sku": "TAPE-TR-25"}, "case_id": "CLD-0118-4", "key": "f8f9a2eaf376891a6e7e390bb0ebc64e9698beb1534e626257ee012ed36c179e", "sentence": "transparent tape 2.5 cm"}
+{"answer": {"sku": "BURN-GEL"}, "case_id": "CLD-0120-1", "key": "84b6ef05b3fad5bcbc0a753593695208af1cb0493cd3b770b49408c11055c998", "sentence": "burn relief gel dressing"}
+{"answer": {"sku": null}, "case_id": "CLD-0120-2", "key": "e6edb4adf38a10d09b39dc9b2b33fbbb62021a3b385fa3d2c34c2bb5b324691c", "sentence": "dressing"}
+{"answer": {"sku": "GOGGLES"}, "case_id": "CLD-0121-1", "key": "71bf205be532286736e19283ea171ea023abda2e119ab5fad86f311fb92d03c8", "sentence": "anti-fog goggles"}
+{"answer": {"sku": "CANE-ADJ"}, "case_id": "CLD-0121-2", "key": "3311dad8cb3de28b52977548aefcb0d6ae694c1f30830186d7d77437f560a646", "sentence": "adjustable walking stick"}
+{"answer": {"sku": null}, "case_id": "CLD-0121-3", "key": "0d90dee347f04c6940f2f0b66cee12f07818526cce2f3152dcaf16fc122152fd", "sentence": "night"}
+{"answer": {"sku": null}, "case_id": "CLD-0121-4", "key": "d2373e11411f468f30c8cfa775ac985eac66fd7d678a5e7bdbd941a69a8028da", "sentence": "dental implants"}
+{"answer": {"sku": null}, "case_id": "CLD-0122-1", "key": "c9fdff0ec758de827cc72baf3899953121eef9019ebf766ee81ce60e0077615b", "sentence": "insulin syringes 2 ml capacity"}
+{"answer": {"sku": "PEN-31-8"}, "case_id": "CLD-0124-1", "key": "933185544893c9d0ad9bef3803fd6e8a6f97cacaa40b2069684c0c124a60e4f6", "sentence": "pen needles 31G 8 mm"}
+{"answer": {"sku": "MASK-II"}, "case_id": "CLD-0124-2", "key": "68c07559b8d6a2bba17684ff31cf7ad83ca9d1d94cd3c450afca0338e9436996", "sentence": "type II mask ear loops"}
+{"answer": {"sku": "GAUZE-ROLL-10"}, "case_id": "CLD-0124-3", "key": "d66ec7b4beb68cdb82402d0545c63c27c27d7b5090562780b1594fc83259ebbe", "sentence": "gauze bandage roll 10 cm"}
+{"answer": {"sku": "GLV-SURG-NEO-6.5"}, "case_id": "CLD-0124-4", "key": "5cd7aa3dfe2e4ec3cfc8942f5e3fcf6e09ac6b5d22f6577f02ba31f3e5ae9c70", "sentence": "sterile neoprene gloves 6.5"}
 {"answer": {"sku": "COT-ROLL-100"}, "case_id": "CLD-0126-1", "key": "ab1dfaafb4e913198f5835c921a89c07e0fca38a7bf2b927de2c19ecf90ef293", "sentence": "cotton wool 100 g"}
 {"answer": {"sku": "MASK-KIDS"}, "case_id": "CLD-0126-2", "key": "eb0b0c57dfd21c352dd3fbaa5e9a9751b04d4c2a679a496ddbc3db798a167cd6", "sentence": "children's surgical masks"}
 {"answer": {"sku": "GLU-METER"}, "case_id": "CLD-0126-3", "key": "2bfbf4fa8e26567dfe9673e53eef095d76deafb8ab1d6029ecc6990ab1205d15", "sentence": "glucose meter kit"}
 {"answer": {"sku": "SUN-50-200"}, "case_id": "CLD-0128-2", "key": "1e801c0d8ce7f95773817179a180bc85ed6e1bfea359683abc2198bb1aff3c13", "sentence": "SPF 50+ sunscreen, 200 ml"}
 {"answer": {"sku": null}, "case_id": "CLD-0128-3", "key": "ac384dd5689b3f893930d7f545725b17b0ed69bc92526e0c19cbef461020cf7e", "sentence": "ultrasound gel 5 litre"}
+{"answer": {"sku": null}, "case_id": "CLD-0129-1", "key": "87906c46fb7f7cb72b7a19e63d59b51441c320f26ac03dcda32da0ecef95e223", "sentence": "scrubs uniforms"}
+{"answer": {"sku": "CREAM-BARRIER"}, "case_id": "CLD-0129-2", "key": "e0a69eefb60757a5d39f9863c26d2ffcd1f24a95cefc3804afa20aa8ef87d00d", "sentence": "barrier cream"}
+{"answer": {"sku": "COVERALL-L"}, "case_id": "CLD-0129-3", "key": "46863c246d9d88818e57c8e60f06ae1712c806772afb377a4d1c58394ec5650f", "sentence": "protective coverall size L"}
+{"answer": {"sku": "KIDNEY-DISH"}, "case_id": "CLD-0130-1", "key": "160faf729434404abf1d83f459744e21b3f18e4871f16c2171aa126717e944b4", "sentence": "kidney dish, disposable"}
+{"answer": {"sku": "INC-BRF-XL"}, "case_id": "CLD-0132-1", "key": "e1f7c5b18e27d28e00b198d3b9d8ff1980ed11e0e9a29ecb67372d7707fcc851", "sentence": "incontinence briefs XL"}
+{"answer": {"sku": null}, "case_id": "CLD-0132-2", "key": "17164b6c3e2f3037840ba92975105076cb4211d197d8682d4395cd82a4752978", "sentence": "insulin syringes, 2 ml, with needle attached"}
+{"answer": {"sku": "GLV-NIT-XS"}, "case_id": "CLD-0134-1", "key": "648513e657824971a30b1b2124c740fceef78e61f4ed56c9c75cb5262edafd80", "sentence": "nitrile gloves XS"}
+{"answer": {"sku": null}, "case_id": "CLD-0134-2", "key": "11aec1d061fdab684a0394a0d351a91ce48c53920130b063341adbcdd3e1890e", "sentence": "underpads 90 x 180 cm extra large"}
+{"answer": {"sku": "BPM-CUFF-L"}, "case_id": "CLD-0134-3", "key": "b3f350233ca3270e6a6cca774af7d7ca0f3dfa0b8a4448b2ca1e791a28bbebcf", "sentence": "blood pressure cuff large adult"}
+{"answer": {"sku": "SUP-WRIST-S"}, "case_id": "CLD-0138-1", "key": "a7bdd687d77453c0290ef305f003c34091eb74dcd0472762a139bc90a94da006", "sentence": "wrist support S"}
+{"answer": {"sku": "SYR-5"}, "case_id": "CLD-0138-2", "key": "98f44f293398cee100c7af356d7606d4300d3c70ce0accbf148c578362b95883", "sentence": "5 ml syringe slip"}
+{"answer": {"sku": null}, "case_id": "CLD-0138-3", "key": "51a5c403f61e76b68ec825d86071fab2131d56c77e289b567013093f8162637c", "sentence": "wrist"}
+{"answer": {"sku": null}, "case_id": "CLD-0140-1", "key": "de1d1d71af95d7b6646de99f709c6fd5cca166bb987c20641bf044305357c4bd", "sentence": "surgical gloves size 9, powdered"}
+{"answer": {"sku": "GEL-PACK-S"}, "case_id": "CLD-0140-2", "key": "fe106bf3b800eefa7a5f0e3d85937b9413403140f430703830d87af5888f04e3", "sentence": "gel pack 10 x 15"}
+{"answer": {"sku": "ALC70-5000"}, "case_id": "CLD-0140-3", "key": "022782bcdf94c82f5b08f15b6d68e7810be6baff38c79a8287ff081f53f50e67", "sentence": "alcohol 70% jerrycan"}
 {"answer": {"sku": "GLV-SURG-NEO-7.5"}, "case_id": "CLD-0141-1", "key": "b043988f7c08d8605cfa869260f1506c44043ba5901652414541f5286fe14279", "sentence": "neoprene surgical gloves 7.5"}
 {"answer": {"sku": "SYR-INS-10"}, "case_id": "CLD-0141-2", "key": "d122120ef329e009a681a1e7c515272b88822817245e9779dc73d01952840846", "sentence": "insulin syringe 1 ml fixed needle"}
 {"answer": {"sku": "BND-COH-10"}, "case_id": "CLD-0141-3", "key": "fafffaf3d6ae5835be4a5e0a1a846c5eca1619b5a42f915ca96de72f22f8eeaa", "sentence": "cohesive bandage 10 cm"}
 {"answer": {"sku": "WIPE-WET-80"}, "case_id": "CLD-0143-1", "key": "f31fb199297a3737f1ecdf500f345a71945daec9c19a3390768ebb97ab3e729f", "sentence": "wet body wipes"}
 {"answer": {"sku": "GLV-NITX-M"}, "case_id": "CLD-0144-1", "key": "1f5a4435c657e680fb526d2c9057efd1dde6c3e338e9307b47e530172a2b1324", "sentence": "extended cuff gloves"}
 {"answer": {"sku": "GAUZE-ST-10"}, "case_id": "CLD-0144-3", "key": "7fd1496fd2500c28586e10000782d996facf6d8ddfb36bc1903e5d89e0283618", "sentence": "sterile gauze swabs 10 x 10"}
+{"answer": {"sku": "STRIP-3x75"}, "case_id": "CLD-0145-1", "key": "eca35a41dc053dc6ccefae66a6d40959f2a2c024bdb35713cb496e7fa16bc3b8", "sentence": "skin closure strips 3 x 75"}
+{"answer": {"sku": "GAUZE-NS-7-12"}, "case_id": "CLD-0145-2", "key": "af3c608fe246509be219c104fc4f0cca28fbf23944920241f7fca4a75778f6f0", "sentence": "non-sterile gauze 7.5 x 7.5, 12 ply"}
+{"answer": {"sku": null}, "case_id": "CLD-0145-3", "key": "4708552243eabec1977980803f0197ae821269438eaae863cc59ecb907e1ce15", "sentence": "island dressings"}
+{"answer": {"sku": "GLV-SURG-NEO-8.5"}, "case_id": "CLD-0145-4", "key": "25a8e7458942349853effbea89132be15d478b8fee26c9fe0adb2ffdb589c1b9", "sentence": "latex-free surgical gloves 8.5"}
+{"answer": {"sku": "BPM-CUFF-S"}, "case_id": "CLD-0150-1", "key": "bb6bc9c474a6f5a3ca7f77d7ecd39b366f0dce51d7ebaa9643ebae30c4a96e53", "sentence": "small adult cuff 17-22 cm"}
+{"answer": {"sku": "NDL-18G"}, "case_id": "CLD-0150-2", "key": "dd6293c4c2e9144bb173eeb0feab193a7b75f296ae5b0c527dfb8470a2a81094", "sentence": "18G needles"}
+{"answer": {"sku": null}, "case_id": "CLD-0150-3", "key": "409ef87338778af3df54d27f3cc3970f6b1c9ebced3589d39821dcc10f3d2330", "sentence": "electric wheelchairs"}
+{"answer": {"sku": "SUP-KNEE-S"}, "case_id": "CLD-0153-1", "key": "13c614b0a97f2b8698fd46bcb94f6e2584d255d2deaf771fa9fe31e2b0337c2a", "sentence": "knee support, size S"}
+{"answer": {"sku": "STRIP-6x75"}, "case_id": "CLD-0153-2", "key": "f07f83d04b00c077319eaa181276d0c212da424afb09abe37bd6fcf007564b29", "sentence": "closure strips 6 x 75 mm"}
+{"answer": {"sku": "SHARPS-2"}, "case_id": "CLD-0153-3", "key": "786ff7b57c8e7736e622ec60557a74f2d047629d9b6565726cd68ee01107b431", "sentence": "2 litre sharps container"}
+{"answer": {"sku": null}, "case_id": "CLD-0155-1", "key": "8865da131cc8c865db4c0ec4d8c7e16d8ff983b1fd14cd3e0e460790b6ca2f85", "sentence": "baby formula"}
+{"answer": {"sku": "BND-TRI"}, "case_id": "CLD-0155-2", "key": "c879ef45a5a5719be5c51994790cb6525ae8f774f48aa5384a7379c954572eb7", "sentence": "triangular bandage"}
+{"answer": {"sku": "SOAP-LIQ-5000"}, "case_id": "CLD-0155-3", "key": "9272389ad8a87980c1b3e98932ff543ddd065d544df93389b2d95b7b76622742", "sentence": "liquid soap 5 litre refill"}
+{"answer": {"sku": "GLV-VIN-XL"}, "case_id": "CLD-0156-1", "key": "6e1170a583fd64355168100a102fe85a5034e52cfce4bbd720a01618eeb353a1", "sentence": "vinyl gloves XL"}
+{"answer": {"sku": "BPM-ANER"}, "case_id": "CLD-0159-1", "key": "09b4de9c0b54bd283e69edce9c17556e0d7beb3e4b3352244150aadc525e6435", "sentence": "aneroid sphygmomanometer"}
+{"answer": {"sku": null}, "case_id": "CLD-0159-2", "key": "a4fba678aea2960148bf76a795398a104124e049259eb5bc9657527cea76e4be", "sentence": "Foley catheters 22 Fr, large balloon"}
+{"answer": {"sku": "OXI-PAED"}, "case_id": "CLD-0163-1", "key": "6ab3c3e8406e2b775e234b7599bc3fa872a9335553d2b20c07482afdec3663e5", "sentence": "paediatric pulse oximeter"}
+{"answer": {"sku": "SAL-10"}, "case_id": "CLD-0163-2", "key": "78b8aed27db653ada32c6850ea57c7db85fb31b07d5513287bb914bc29afd139", "sentence": "single-dose saline"}
+{"answer": {"sku": "PAD-40x60"}, "case_id": "CLD-0164-1", "key": "bb77f1a6ec243aef3e8d836621092360ae72aaaebbe436f60913186eaf8b8cef", "sentence": "disposable underpads"}
+{"answer": {"sku": "SAL-250"}, "case_id": "CLD-0164-2", "key": "e3f81206640c309591fb25ba597ca865860d9e23146d0998c4d5cdc432379476", "sentence": "irrigation saline, the ml bottle"}
+{"answer": {"sku": "PAD-40x60"}, "case_id": "CLD-0164-3", "key": "6c1b4267984d32466cbe9c1a44f1ced6555a4d61806dcb86501f3a8374550527", "sentence": "underpad 40 x 60 cm"}
 {"answer": {"sku": "GAUZE-ST-7"}, "case_id": "CLD-0166-1", "key": "a2f46d5026ba9a4280c9861349a554064f1cc2cef6afda43801d42e9bbaa425a", "sentence": "sterile gauze swabs 7.5 x 7.5"}
 {"answer": {"sku": "GLV-LTX-S"}, "case_id": "CLD-0166-3", "key": "c6cb6034948e66cb7ec99e4e0516bd5cf01eb6629a45939a1dc0f2e6c482caeb", "sentence": "latex gloves powder-free S"}
 {"answer": {"sku": "INC-PAD-LIGHT"}, "case_id": "CLD-0166-4", "key": "bd35cb0fd00dd8cab4abb79b19627ce807506dd0fd0da360e2c620f69dcf2fd0", "sentence": "incontinence pads light"}
 {"answer": {"sku": "URN-CUP-60"}, "case_id": "CLD-0166-5", "key": "6e7b6bc5590e600e1ea38ca8f70aaed8c3e4679bb0d94c19201e340c6b7acd4a", "sentence": "urine container 60 ml"}
+{"answer": {"sku": "GEL-WALL"}, "case_id": "CLD-0169-1", "key": "644dde1091551815fb7f8d7ac128b9b065116e3308d2615bb2a9eae19bae5ed2", "sentence": "wall dispenser for sanitiser"}
+{"answer": {"sku": "EYE-WASH-500"}, "case_id": "CLD-0169-2", "key": "3ab57d3b1d92e5461590e096f6089b713f6d35c27f13c7016f4dbf1545de7e3e", "sentence": "eye wash bottle"}
+{"answer": {"sku": "SWAB-TRANS"}, "case_id": "CLD-0169-3", "key": "1c562ed697d036113cbf1c6997b280f0d9680b85c1b2a2d8802507383f28dbb8", "sentence": "transport swab with medium"}
+{"answer": {"sku": "URN-BAG-2L"}, "case_id": "CLD-0169-4", "key": "fb208e4e8d54722f49ae0b7b9856c903f1f7865c7e742fb70a35c602bf70f56a", "sentence": "urine drainage bag with tap"}
+{"answer": {"sku": "GLV-NITX-L"}, "case_id": "CLD-0172-1", "key": "cc313e637aa5458c3980db803cb527ccc93501f6825f5b594bf8156e41bf2bae", "sentence": "extended cuff nitrile gloves L"}
+{"answer": {"sku": "SYR-LL-5"}, "case_id": "CLD-0172-2", "key": "97db259c88c282686017fd5f2b1558c8c3d76fee77922d504cd0b63b541070c4", "sentence": "5 ml luer lock syringes"}
+{"answer": {"sku": null}, "case_id": "CLD-0172-3", "key": "2679fc6d9eb57ed058f30106c21c6477c6cc133b2f27036c51bee179b68adb8b", "sentence": "cotton"}
+{"answer": {"sku": "COUCH-60"}, "case_id": "CLD-0172-4", "key": "346ff211ef11d6492b21eb6c7c4b001a8f1f3c066daf46049d1256123d1b1b29", "sentence": "couch paper roll 60 cm"}
+{"answer": {"sku": "INC-BRF-L"}, "case_id": "CLD-0173-1", "key": "8e82bca500e1f3aac5e637f8e315dd370a08a8e516b89983ba5d37c7b750c220", "sentence": "incontinence briefs size L"}
+{"answer": {"sku": "GAUZE-ROLL-5"}, "case_id": "CLD-0173-2", "key": "6ba7771034b39237ca9f1ab7ac6bf1d2afa0edd44a45205d9a5d66d5d7cb7b81", "sentence": "gauze roll 5 cm"}
+{"answer": {"sku": null}, "case_id": "CLD-0175-1", "key": "640d2605397c6e16df7982416a6e14cc8a364391834e1792bc70d99c932888f5", "sentence": "SPF 15 sun cream"}
+{"answer": {"sku": "SUP-LUMBAR"}, "case_id": "CLD-0177-1", "key": "ff68c1693000c88875e553c28550a061f855c29e004bfe59ba7d9662bf047b5a", "sentence": "lumbar support belt"}
+{"answer": {"sku": "SHARPS-5"}, "case_id": "CLD-0177-2", "key": "fd22515c19e7156f8e25cd9b420cfa64b4efc918591272b18790e365398bc0e0", "sentence": "5 litre sharps containers"}
+{"answer": {"sku": "ALC96-500"}, "case_id": "CLD-0177-3", "key": "658b095bf70cfc0415ec90962ab150790fbd45e477226fa461969b1a0b1d8805", "sentence": "96% alcohol, 500 ml"}
+{"answer": {"sku": "PLST-WP"}, "case_id": "CLD-0177-4", "key": "d3b4392be071475372f7b0c7910087ec8ca2640d6549bbaff0206786817c51a7", "sentence": "waterproof plasters"}
 {"answer": {"sku": null}, "case_id": "CLD-0178-1", "key": "1f87db64456f757815df60876a5397dddc7d4ead312141b47fa5ef5fa39ea8c1", "sentence": "patient lifts"}
 {"answer": {"sku": "GLV-VIN-M"}, "case_id": "CLD-0178-2", "key": "6e1edc3dc944a64c4646936a091f1a19ed763a1911366fc22a41e94982bac79c", "sentence": "vinyl gloves"}
+{"answer": {"sku": "MASK-FFP2-V"}, "case_id": "CLD-0179-1", "key": "370214cc1db7e8f1c1f8a2e12fd8c371eb16865dc9ac3a8b02374b2c282744eb", "sentence": "FFP2 exhalation valve"}
+{"answer": {"sku": "DRS-FILM-10x12"}, "case_id": "CLD-0179-2", "key": "f7275c5bbe100ed3d860f992d28cac0f78e9dbf4e4fa1e538a4ecb93beccfdf1", "sentence": "transparent film dressing 10 x 12"}
+{"answer": {"sku": "LAN-200"}, "case_id": "CLD-0179-3", "key": "25fda58d855d3f0246ae1eacdb2af5e488c094a22686280e625b36956c67da92", "sentence": "safety lancets box of 200"}
+{"answer": {"sku": "MASK-IIR"}, "case_id": "CLD-0179-4", "key": "84c42bbdc66f7677d042fbb7814a95ff0cf38262648a4c1340f63d0c40fd911b", "sentence": "type IIR surgical mask, ear loops"}
 {"answer": {"sku": "INC-PAD-MAXI"}, "case_id": "CLD-0184-2", "key": "19eeb84243cd08127a41bc21f57ddf29345c31ab224b676ed90fd67d4ae953c1", "sentence": "maxi incontinence pads"}
 {"answer": {"sku": "PEN-32-6"}, "case_id": "CLD-0184-3", "key": "4a45ebf69fb65e07d995285441dd06a5cb62dc168b4cecc36d3a04fe9fd5a6b6", "sentence": "pen needle 32G 6 mm"}
+{"answer": {"sku": "SCALPEL-10"}, "case_id": "CLD-0185-1", "key": "d27aedc0c9d0f3126035ee36b0b7ca4b2164a61647fc2ba7027e31d6bd58c56d", "sentence": "scalpel no. 10"}
+{"answer": {"sku": "NDL-23G"}, "case_id": "CLD-0185-2", "key": "da6441b86dd41371ca742588d1b050130e925e084c52759ed64f5fd5b8a67156", "sentence": "23G hypodermic needle"}
 {"answer": {"sku": "CREAM-FOOT"}, "case_id": "CLD-0186-1", "key": "cc8a28f095aa463981e370ec0df705d8750c27fc245c331e2de89a5cff83be5d", "sentence": "foot cream for dry heels"}
 {"answer": {"sku": "VISOR"}, "case_id": "CLD-0186-2", "key": "54410c13b4bb449236ab8df826bb942e1f47eeb1467a2f3c19b14296fe691705", "sentence": "face shield visor"}
 {"answer": {"sku": "SHOWER-GEL-750"}, "case_id": "CLD-0186-3", "key": "5bac1fc0a6bec4317e9a94cad7f3bf2568c67cf62bf82124107171803c3f9bcb", "sentence": "dermatological shower gel"}
+{"answer": {"sku": "SYR-INS-03"}, "case_id": "CLD-0187-1", "key": "7a548ef49a288c09cac0122d46f13af784156daf98e5c7eb01d6933c459e0ed4", "sentence": "syringes with fixed needle"}
+{"answer": {"sku": "INC-BRF-NIGHT-M"}, "case_id": "CLD-0187-2", "key": "c10fa5635277e6cb0da2032af198eec4d5e21107b1fb8f252f834e99370ebe36", "sentence": "night incontinence briefs M"}
+{"answer": {"sku": "GAUZE-NS-10-12"}, "case_id": "CLD-0187-3", "key": "9d82b12b864b270495b376b73da533fac5160703f4b959e23c2e6a491daef9df", "sentence": "non-sterile gauze swabs 10 x 10, 12 ply"}
+{"answer": {"sku": null}, "case_id": "CLD-0188-1", "key": "081eb97d0a2233c9122c6153e19e5308c19cfa73790cf0af98da82b2d52f3d43", "sentence": "large sterile gauze swabs 15 x 15 cm"}
+{"answer": {"sku": "BPM-WRIST"}, "case_id": "CLD-0188-2", "key": "a81d4b5ac225c8393a52660f40613cc124d1ed9379b011351d9e5395400b6f53", "sentence": "wrist blood pressure monitor"}
+{"answer": {"sku": "BND-TUB-E"}, "case_id": "CLD-0190-2", "key": "91efa341f5942fc9202da50f7a608058f59866ddb7929d825e7db5baf0a5fdbb", "sentence": "tubular bandage size E"}
+{"answer": {"sku": "GLV-NIT200-S"}, "case_id": "CLD-0190-3", "key": "58512619321ec74f94aa63fac92120c16a737c21328d5436bea0c81332118439", "sentence": "nitrile gloves value pack S"}
+{"answer": {"sku": "GLV-NIT-S"}, "case_id": "CLD-0190-4", "key": "b36f4f5c6fd1a82733182049af99e5ea948bc35c2b9341168acd442b13209784", "sentence": "nitrile powder-free gloves size S"}
+{"answer": {"sku": "PLST-FAB"}, "case_id": "CLD-0191-3", "key": "640ab8004b744f64845cbd4325fba4ff8be6e7171fea09ee9d914db04b0a6b68", "sentence": "fabric plasters"}
+{"answer": {"sku": "BND-ELA-15"}, "case_id": "CLD-0191-4", "key": "6c4b686a6642379530d34192afd7bcbd6211e8e4aa06d929f613269065aa39ba", "sentence": "elastic bandage 15 cm"}
+{"answer": {"sku": "URN-BAG-LEG"}, "case_id": "CLD-0191-5", "key": "d083b352ddf856e2832396e0d0f6d72761c24afc255b753155dd4c3331eb6109", "sentence": "leg bag"}
+{"answer": {"sku": "STOCK-KNEE-M"}, "case_id": "CLD-0192-1", "key": "14417dcf3fc651f8ea166345eb8ee718fa13ee919258078cdc46f54ae1bccb40", "sentence": "knee-high compression stockings M"}
+{"answer": {"sku": "GLV-NITX-S"}, "case_id": "CLD-0192-2", "key": "a08accc000644d5502a6b6ee5e0031a548152568622af3586f35c3cd07e80281", "sentence": "nitrile extended cuff S"}
+{"answer": {"sku": null}, "case_id": "CLD-0194-1", "key": "9da7beb9c6afa6e0acff0ae3d14ab66a7bee2e1b1f6a105c57f0b7e6e6234284", "sentence": "nebuliser machines"}
+{"answer": {"sku": "GLU-STRIP-50"}, "case_id": "CLD-0194-2", "key": "b679030d4305142b619548153f587f6747273b229686f06d343f14c689fd7d16", "sentence": "glucose test strips 50"}
+{"answer": {"sku": "LAN-100"}, "case_id": "CLD-0197-1", "key": "6140638c21918d72840ca114fa7a7d110e6dc6f0cc177c2f10c2b3d2c05ab9e7", "sentence": "safety lancets"}
+{"answer": {"sku": "BPM-ARM"}, "case_id": "CLD-0197-2", "key": "bed4319647c42d764e89bc87ffa36369434b0faf3c8e6c0d5ad7fda2044e608a", "sentence": "upper arm blood pressure monitor"}
+{"answer": {"sku": "ICE-INSTANT"}, "case_id": "CLD-0197-3", "key": "7c90d4ebbd2b90158273dd91e3fb735cbdc223bbb540d4236814c5cf8b1be277", "sentence": "instant cold pack"}
+{"answer": {"sku": null}, "case_id": "CLD-0197-4", "key": "89a425fa0ff78509b48469fa92b79768ed69eb0ccfce4a370dac7b6a4e4d811b", "sentence": "skin closure strips"}
 {"answer": {"sku": "GLV-LTX-L"}, "case_id": "CLD-0198-1", "key": "e36df9ccab92df49a336d0079e4d28f3ded5519f09648a55dfd7a40cd4aab8b8", "sentence": "latex gloves L powder-free"}
 {"answer": {"sku": "KIT-FA-WALL"}, "case_id": "CLD-0198-2", "key": "aa8fbcdf1d06e0bb19d67273c1e662b5cecd19940eb35ef3202578a211a693ab", "sentence": "wall-mounted first aid cabinet"}
 {"answer": {"sku": "SUP-ELBOW-M"}, "case_id": "CLD-0198-3", "key": "1076d4aabf61b99971e4c9eaf963aaeacec77a54e75bb438e3ba2d44cc991fb3", "sentence": "elbow support M"}
+{"answer": {"sku": "INC-BRF-S"}, "case_id": "CLD-0199-1", "key": "441c3d31e138eca0cedb7cc43ef0b772634bd81c2b66695c71ba5cdd0c7571c3", "sentence": "incontinence briefs S"}
+{"answer": {"sku": "APRON-PE"}, "case_id": "CLD-0199-2", "key": "14529cd6f69fbc7ac12fa24ea765aa203c62f17236613f320edb53580ad711de", "sentence": "plastic aprons"}
+{"answer": {"sku": "DRS-EYE"}, "case_id": "CLD-0199-3", "key": "c032d3cdef1e60d7b29c7175cc0b8ad1acb6ff3a3a01b3ccef3abedd64db50cd", "sentence": "eye pad"}
