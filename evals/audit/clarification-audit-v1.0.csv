@@ -1,0 +1,418 @@
+﻿id;dataset;channel;category;item_text;expected_labels;verdict;comment
+CLD-0008;clarification_detection;web_form;has doubt;"weekly pill organiser | quantity 11
+elastic wrist support size M | quantity 15
+disinfectant wipes | quantity 16";"CLD-0008-L1: clear -> PILL-BOX-7 Weekly pill organiser, 7 days (sold per unit) x 11
+CLD-0008-L2: clear -> SUP-WRIST-M Elastic wrist support, size M (sold per unit) x 15
+CLD-0008-L3: ambiguous, ask which of: WIPE-SURF-100 Surface disinfectant wipes, alcohol-free, canister (sold per canister of 100); WIPE-SURF-200 Surface disinfectant wipes, alcohol-free, refill (sold per refill of 200)";ok;
+CLD-0009;clarification_detection;web_form;has doubt;"Thigh-high compression stockings, M | quantity 11
+pregnancy tests | quantity 44
+arm sling | quantity 37
+adult pull-up pants | quantity 50";"CLD-0009-L1: clear -> STOCK-THIGH-M Compression thigh-high stockings class I, size M (sold per pair) x 11
+CLD-0009-L2: unknown, not in the catalog (asked for: pregnancy tests)
+CLD-0009-L3: clear -> SLING-ARM Arm sling, adjustable (sold per unit) x 37
+CLD-0009-L4: ambiguous, ask which of: INC-PANT-L Adult pull-up pants, size L (sold per pack of 14); INC-PANT-M Adult pull-up pants, size M (sold per pack of 14); INC-PANT-XL Adult pull-up pants, size XL (sold per pack of 14)";ok;
+CLD-0016;clarification_detection;email;has doubt;"Subject: Dressings and thermometers
+
+Hi,
+
+seven boxes of the 6 cm transparent film dressing
+43 digital thermometers
+
+Cheers,
+Xabier Lasa
+Residencia Aiete";"CLD-0016-L1: clear -> DRS-FILM-6x7 Transparent film dressing 6 x 7 cm (sold per box of 50) x 7
+CLD-0016-L2: ambiguous, ask which of: THERM-DIG Digital thermometer, rigid tip (sold per unit); THERM-DIG-FLEX Digital thermometer, flexible tip (sold per unit)";ok;
+CLD-0033;clarification_detection;web_form;has doubt;"FFP1 masks | quantity 28
+AED defibrillator | quantity 10
+foam dressing with border 15 x 15 | quantity 24";"CLD-0033-L1: unknown, not in the catalog (asked for: FFP1 masks)
+CLD-0033-L2: unknown, not in the catalog (asked for: automated external defibrillators)
+CLD-0033-L3: clear -> DRS-FOAM-15 Foam dressing 15 x 15 cm, with border (sold per box of 10) x 24";ok;
+CLD-0034;clarification_detection;web_form;has doubt;"children's plasters with drawings | quantity 21
+nitrile gloves XXL | quantity 11
+powder-free vinyl gloves S | quantity 1000
+CPR face shield | quantity 49
+19G hypodermic needles | quantity 29";"CLD-0034-L1: clear -> PLST-KIDS Children's adhesive plasters with drawings (sold per box of 50) x 21
+CLD-0034-L2: unknown, not in the catalog (asked for: nitrile examination gloves, size XXL)
+CLD-0034-L3: quantity doubt, 1000 is over 500 -> GLV-VIN-S Vinyl examination gloves, powder-free, size S (sold per box of 100)
+CLD-0034-L4: clear -> CPR-MASK CPR face shield with one-way valve (sold per pack of 10) x 49
+CLD-0034-L5: clear -> NDL-19G Hypodermic needle 19G x 40 mm (sold per box of 100) x 29";wrong;"The box holds 100, so 1000 units would be 10 boxes; I think the customer means 1000 units, not 1000 boxes."
+CLD-0053;clarification_detection;web_form;has doubt;"Foley 14 Fr silicone-coated latex | quantity 28
+masks | quantity 50";"CLD-0053-L1: clear -> CATH-FOL-14 Foley catheter 2-way, silicone-coated latex, 14 Fr (sold per box of 10) x 28
+CLD-0053-L2: ambiguous, ask which of: MASK-FFP2 FFP2 respirator mask, no valve (sold per box of 20); MASK-FFP3 FFP3 respirator mask, no valve (sold per box of 10); MASK-KIDS Children's surgical face mask (sold per box of 50)";ok;
+CLD-0063;clarification_detection;web_form;has doubt;"disposable underpad 60 x 90 | quantity 36
+70% alcohol 1 litre | quantity 48
+disposable coveralls | quantity 46
+26G needle | quantity 50";"CLD-0063-L1: clear -> PAD-60x90 Disposable underpad 60 x 90 cm (sold per pack of 25) x 36
+CLD-0063-L2: clear -> ALC70-1000 Ethyl alcohol 70% 1 litre (sold per bottle) x 48
+CLD-0063-L3: ambiguous, ask which of: COVERALL-L Disposable protective coverall, size L (sold per unit); COVERALL-XL Disposable protective coverall, size XL (sold per unit)
+CLD-0063-L4: clear -> NDL-26G Hypodermic needle 26G x 13 mm (sold per box of 100) x 50";ok;
+CLD-0071;clarification_detection;web_form;no doubt;"digital thermometer with flexible tip | quantity 2
+alcohol 96% 250 ml | quantity 45";"CLD-0071-L1: clear -> THERM-DIG-FLEX Digital thermometer, flexible tip (sold per unit) x 2
+CLD-0071-L2: clear -> ALC96-250 Ethyl alcohol 96% 250 ml (sold per bottle) x 45";ok;
+CLD-0073;clarification_detection;web_form;has doubt;"oxygen cylinder refills | quantity 31
+tubular bandage size C | quantity 11";"CLD-0073-L1: unknown, not in the catalog (asked for: oxygen cylinders)
+CLD-0073-L2: clear -> BND-TUB-C Tubular bandage size C, 10 m (sold per roll) x 11";ok;
+CLD-0090;clarification_detection;email;has doubt;"Subject: Order - Farmacia La Paz
+
+Bon dia,
+
+Our order for this week:
+
+FFP1 masks x 19
+1 bag of cotton wool balls
+9 boxes of sterile latex surgical gloves in size 8.5
+
+Margalida Riera
+Farmacia La Paz";"CLD-0090-L1: unknown, not in the catalog (asked for: FFP1 masks)
+CLD-0090-L2: clear -> COT-BALL Cotton wool balls (sold per bag of 100) x 1
+CLD-0090-L3: clear -> GLV-SURG-LTX-8.5 Sterile latex surgical gloves, size 8.5 (sold per box of 50 pairs) x 9";ok;
+CLD-0113;clarification_detection;web_form;no doubt;Adult pull-up pants, size M | quantity 40;CLD-0113-L1: clear -> INC-PANT-M Adult pull-up pants, size M (sold per pack of 14) x 40;ok;
+CLD-0118;clarification_detection;web_form;has doubt;"nitrile gloves size L powder-free | quantity 44
+hospital beds | quantity 33
+sterile | quantity 4
+transparent tape 2.5 cm | quantity 32";"CLD-0118-L1: clear -> GLV-NIT-L Nitrile examination gloves, powder-free, size L (sold per box of 100) x 44
+CLD-0118-L2: unknown, not in the catalog (asked for: hospital beds)
+CLD-0118-L3: ambiguous, ask which of: DRS-EYE Sterile eye pad (sold per box of 50); STITCH-CUT Sterile stitch cutter (sold per box of 100)
+CLD-0118-L4: clear -> TAPE-TR-25 Transparent tape 2.5 cm x 9.1 m (sold per box of 12 rolls) x 32";ok;
+CLD-0135;clarification_detection;email;has doubt;"Subject: Supports and facial sunscreen
+
+Hi again,
+
+The orthopaedic corner is selling well, so please send 24 elastic elbow supports, size L and 44 elastic wrist supports. With the autumn sun still strong we are also adding 120 tubes of facial sunscreen SPF 50+, 50 ml to the summer display we never took down.
+
+Rocio Dominguez
+Farmacia Nervion";"CLD-0135-L1: clear -> SUP-ELBOW-L Elastic elbow support, size L (sold per unit) x 24
+CLD-0135-L2: clear -> SUN-FACE-50-50 Facial sunscreen SPF 50+, 50 ml (sold per tube) x 120
+CLD-0135-L3: ambiguous, ask which of: SUP-WRIST-L Elastic wrist support, size L (sold per unit); SUP-WRIST-M Elastic wrist support, size M (sold per unit); SUP-WRIST-S Elastic wrist support, size S (sold per unit)";ok;Is there no default size?
+CLD-0136;clarification_detection;email;no doubt;"Subject: Tourniquets and coveralls
+
+Hello,
+
+The blood donation unit is coming to our neighbourhood next week and they asked us to keep stock for them. Could you send 75 rolls of disposable tourniquet strips? Also, for the volunteers who help with the cleaning, 17 disposable protective coveralls, size XL.
+
+Thanks,
+Ximo Peris
+Farmacia Benimaclet";"CLD-0136-L1: clear -> TOURNIQ Disposable tourniquet strips (sold per roll of 25) x 75
+CLD-0136-L2: clear -> COVERALL-XL Disposable protective coverall, size XL (sold per unit) x 17";ok;
+CLD-0149;clarification_detection;email;has doubt;"Subject: Lens solution and long-cuff gloves
+
+Hello,
+
+19 bottles of contact lens solution
+twenty-five boxes of nitrile examination gloves, extended cuff 30 cm, size L
+
+Rosa Jimenez
+Residencia El Pinar";"CLD-0149-L1: unknown, not in the catalog (asked for: contact lens solution)
+CLD-0149-L2: clear -> GLV-NITX-L Nitrile examination gloves, extended cuff 30 cm, size L (sold per box of 50) x 25";ok;
+CLD-0164;clarification_detection;web_form;has doubt;"disposable underpads | quantity 20
+irrigation saline, the ml bottle | quantity 30
+underpad 40 x 60 cm | quantity 7";"CLD-0164-L1: ambiguous, ask which of: PAD-40x60 Disposable underpad 40 x 60 cm (sold per pack of 25); PAD-60x60 Disposable underpad 60 x 60 cm (sold per pack of 25); PAD-60x90 Disposable underpad 60 x 90 cm (sold per pack of 25)
+CLD-0164-L2: ambiguous, ask which of: SAL-250 Saline solution 0.9% for irrigation 250 ml (sold per bottle); SAL-500 Saline solution 0.9% for irrigation 500 ml (sold per bottle)
+CLD-0164-L3: clear -> PAD-40x60 Disposable underpad 40 x 60 cm (sold per pack of 25) x 7";ok;
+CLD-0171;clarification_detection;email;has doubt;"Subject: Mar Blava - wipes, prep pads, eye pads
+
+Hello,
+
+Please send:
+
+* 19 canisters of surface disinfectant wipes, alcohol-free
+* 7 packs of hearing aid batteries
+* 1000 boxes of alcohol prep pads, single-use, box of 100
+* 4 dozen boxes of sterile eye pads
+
+Montse Vidal
+Residencia Mar Blava";"CLD-0171-L1: clear -> WIPE-SURF-100 Surface disinfectant wipes, alcohol-free, canister (sold per canister of 100) x 19
+CLD-0171-L2: unknown, not in the catalog (asked for: hearing aid batteries)
+CLD-0171-L3: quantity doubt, 1000 is over 500 -> WIPE-PAD-100 Alcohol prep pads, single-use, box of 100 (sold per box of 100)
+CLD-0171-L4: clear -> DRS-EYE Sterile eye pad (sold per box of 50) x 48";ok;
+CLD-0189;clarification_detection;email;has doubt;"Subject: Alcohol for the season and gauze
+
+Hi,
+
+The local council has asked us to supply all the public sports centres in town for the season, so I need 1200 bottles of ethyl alcohol 70% 1 litre. Also 49 packs of gauze, my assistant did not write down which ones, I will check with her later.
+
+Alvaro Benitez
+Farmacia del Puerto";"CLD-0189-L1: quantity doubt, 1200 is over 500 -> ALC70-1000 Ethyl alcohol 70% 1 litre (sold per bottle)
+CLD-0189-L2: ambiguous, ask which of: GAUZE-ROLL-10 Gauze bandage roll 10 cm x 4 m (sold per bag of 12); GAUZE-ROLL-5 Gauze bandage roll 5 cm x 4 m (sold per bag of 12); GAUZE-ROLL-7 Gauze bandage roll 7.5 cm x 4 m (sold per bag of 12); GAUZE-ST-10 Sterile gauze swabs 10 x 10 cm, 8 ply (sold per pack of 25 envelopes); GAUZE-ST-5 Sterile gauze swabs 5 x 5 cm, 8 ply (sold per pack of 25 envelopes); GAUZE-ST-7 Sterile gauze swabs 7.5 x 7.5 cm, 8 ply (sold per pack of 25 envelopes)";ok;
+CLD-0191;clarification_detection;web_form;no doubt;"dual-head stethoscope | quantity 31
+sterile urine container 100 ml | quantity 7
+fabric plasters | quantity 6
+elastic bandage 15 cm | quantity 13
+leg bag | quantity 4";"CLD-0191-L1: clear -> STETH-DUAL Dual-head stethoscope (sold per unit) x 31
+CLD-0191-L2: clear -> URN-CUP-100 Sterile urine container 100 ml (sold per box of 100) x 7
+CLD-0191-L3: clear -> PLST-FAB Fabric adhesive plasters, assorted sizes (sold per box of 100) x 6
+CLD-0191-L4: clear -> BND-ELA-15 Elastic crepe bandage 15 cm x 4.5 m (sold per pack of 10) x 13
+CLD-0191-L5: clear -> URN-BAG-LEG Leg urine bag 750 ml (sold per box of 10) x 4";ok;
+CLD-0196;clarification_detection;email;has doubt;"Subject: Las Acacias - syringes, plastic, pull-ups
+
+Hello,
+
+Our list:
+
+- 6 boxes of disposable syringes 10 ml, luer slip
+- 39 packs of the plastic
+- adult pull-up pants, size M
+- 15 rolls of cut-to-size plaster strip 6 cm x 1 m
+- 3 boxes of adhesive island dressings 9 x 10 cm
+
+Pull-ups: same as last month.
+
+Encarna Sanchez
+Residencia Las Acacias";"CLD-0196-L1: clear -> SYR-10 Disposable syringe 10 ml, luer slip (sold per box of 100) x 6
+CLD-0196-L2: ambiguous, ask which of: APRON-PE Disposable plastic apron, white (sold per roll of 200); FORCEPS-DISP Sterile disposable plastic forceps (sold per box of 100); PILL-CUP Plastic medicine cups 30 ml (sold per pack of 100)
+CLD-0196-L3: quantity doubt, no quantity in sale units -> INC-PANT-M Adult pull-up pants, size M (sold per pack of 14)
+CLD-0196-L4: clear -> PLST-ROLL-6 Cut-to-size plaster strip 6 cm x 1 m (sold per roll) x 15
+CLD-0196-L5: clear -> DRS-ISL-9x10 Adhesive island dressing 9 x 10 cm (sold per box of 50) x 3";ok;
+CLA-0014;clarification_answers;email;remove_line;"Lines in doubt:
+line 2: 13 boxes of 15 x 15 cm gauze squares | quantity 13 | doubt unknown
+
+Question:
+Hello again, a short question before we ship.
+
+Line 2, ""13 boxes of 15 x 15 cm gauze squares"", does not match anything in our catalogue. Should we remove it, or did you mean another product?
+
+Thank you, the rest of the order is on hold until we hear from you.
+
+Answer:
+If you don't carry the 15 x 15 squares, just remove them. No substitute needed.";line 2: remove the line;ok;
+CLA-0025;clarification_answers;web_form;several_lines;"Lines in doubt:
+line 1: plaster | quantity 14 | doubt ambiguous; options: PLST-ASST, PLST-SPOT
+line 4: patient lifts | quantity 5 | doubt unknown
+line 5: disinfectant | quantity 48 | doubt ambiguous; options: WIPE-SURF-100, WIPE-SURF-200
+
+Question:
+Hello, thank you for your order. Before we confirm it we need to check a few details.
+
+For line 1 (""plaster"") we found several matching items:
+- Adhesive plasters, assorted sizes
+- Round spot plasters 22 mm
+Could you tell us which one you mean?
+
+Line 4, ""patient lifts"", does not match anything in our catalogue. Should we remove it, or did you mean another product?
+
+For line 5 (""disinfectant"") we found several matching items:
+- Surface disinfectant wipes, alcohol-free, canister
+- Surface disinfectant wipes, alcohol-free, refill
+Could you tell us which one you mean?
+
+Just reply here and we will take care of the rest.
+
+Answer:
+Remove the plaster line and the patient lifts. For the disinfectant wipes we want the refill packs.";"line 1: remove the line
+line 4: remove the line
+line 5: set WIPE-SURF-200 Surface disinfectant wipes, alcohol-free, refill (sold per refill of 200) x 48";ok;
+CLA-0030;clarification_answers;web_form;pick_description;"Lines in doubt:
+line 5: wall | quantity 36 | doubt ambiguous; options: GEL-WALL, KIT-FA-WALL
+
+Question:
+Hello, thank you for your order. Before we confirm it we need to check a few details.
+
+Line 5 says ""wall"", which fits more than one of our products:
+- Wall dispenser for hand sanitiser, 1 litre
+- First aid cabinet, wall-mounted, stocked
+Which one do you want?
+
+Thank you, the rest of the order is on hold until we hear from you.
+
+Answer:
+The dispenser that screws onto the wall next to the sink, for the sanitiser.";line 5: set GEL-WALL Wall dispenser for hand sanitiser, 1 litre (sold per unit) x 36;ok;
+CLA-0038;clarification_answers;email;pick_variant;"Lines in doubt:
+line 2: 18 cm | quantity 18 | doubt ambiguous; options: GRAB-REACH, PAD-40x60, PAD-60x60, PAD-60x90
+
+Question:
+Dear customer, your order is almost ready, but we need a quick clarification.
+
+Line 2 says ""18 cm"", which fits more than one of our products:
+- Reaching aid grabber 80 cm
+- Disposable underpad 40 x 60 cm
+- Disposable underpad 60 x 60 cm
+- Disposable underpad 60 x 90 cm
+Which one do you want?
+
+Thank you, the rest of the order is on hold until we hear from you.
+
+Answer:
+The 40 x 60 underpads.";line 2: set PAD-40x60 Disposable underpad 40 x 60 cm (sold per pack of 25) x 18;ok;
+CLA-0046;clarification_answers;web_form;remove_line;"Lines in doubt:
+line 3: saline | quantity 38 | doubt ambiguous; options: SAL-10, SAL-1000, SAL-250, SAL-30, SAL-5, SAL-500
+
+Question:
+Hi, we are processing your order and one point needs your input.
+
+Line 3 says ""saline"", which fits more than one of our products:
+- Saline solution 0.9%, single-dose 10 ml
+- Saline solution 0.9% for irrigation 1 litre
+- Saline solution 0.9% for irrigation 250 ml
+- Saline solution 0.9%, single-dose 30 ml
+- Saline solution 0.9%, single-dose 5 ml
+- Saline solution 0.9% for irrigation 500 ml
+Which one do you want?
+
+Thank you, the rest of the order is on hold until we hear from you.
+
+Answer:
+Please take the saline out entirely, we still have stock.";line 3: remove the line;ok;
+CLA-0052;clarification_answers;email;pick_variant;"Lines in doubt:
+line 5: 44 x alcohol litre | quantity 44 | doubt ambiguous; options: ALC70-1000, ALC96-1000
+
+Question:
+Good morning, thanks for ordering with us. We could not settle part of your request.
+
+Line 5 says ""44 x alcohol litre"", which fits more than one of our products:
+- Ethyl alcohol 70% 1 litre
+- Ethyl alcohol 96% 1 litre
+Which one do you want?
+
+Please reply to this message and we will update the order.
+
+Answer:
+The 70% one, in litre bottles. The 96% is too strong for what we do.";line 5: set ALC70-1000 Ethyl alcohol 70% 1 litre (sold per bottle) x 44;ok;
+CLA-0065;clarification_answers;email;pick_description;"Lines in doubt:
+line 4: 50 x irrigation ml | quantity 50 | doubt ambiguous; options: SAL-250, SAL-500
+
+Question:
+Hello, thank you for your order. Before we confirm it we need to check a few details.
+
+For line 4 (""50 x irrigation ml"") we found several matching items:
+- Saline solution 0.9% for irrigation 250 ml
+- Saline solution 0.9% for irrigation 500 ml
+Could you tell us which one you mean?
+
+Just reply here and we will take care of the rest.
+
+Answer:
+The bigger irrigation bottle, not the small one.";line 4: set SAL-500 Saline solution 0.9% for irrigation 500 ml (sold per bottle) x 50;ok;
+CLA-0081;clarification_answers;web_form;pick_description;"Lines in doubt:
+line 2: ml sterile | quantity 17 | doubt ambiguous; options: URN-CUP-100, URN-CUP-60
+
+Question:
+Hi, we are processing your order and one point needs your input.
+
+For line 2 (""ml sterile"") we found several matching items:
+- Sterile urine container 100 ml
+- Sterile urine container 60 ml
+Could you tell us which one you mean?
+
+Just reply here and we will take care of the rest.
+
+Answer:
+The larger sample pots.";line 2: set URN-CUP-100 Sterile urine container 100 ml (sold per box of 100) x 17;ok;
+CLA-0084;clarification_answers;email;several_lines;"Lines in doubt:
+line 1: 5 ultrasound gel 5 litre | quantity 5 | doubt unknown
+line 2: some Aneroid sphygmomanometer with stethoscope | quantity 1 | doubt unsupported
+line 5: silk tape, twenty five boxes | quantity 25 | doubt ambiguous; options: TAPE-SILK-12, TAPE-SILK-25
+
+Question:
+Hello again, a short question before we ship.
+
+Line 1, ""5 ultrasound gel 5 litre"", does not match anything in our catalogue. Should we remove it, or did you mean another product?
+
+Line 2 (""some Aneroid sphygmomanometer with stethoscope"") has no quantity. How many would you like?
+
+Line 5 says ""silk tape, twenty five boxes"", which fits more than one of our products:
+- Silk tape 1.25 cm x 9.1 m
+- Silk tape 2.5 cm x 9.1 m
+Which one do you want?
+
+Please reply to this message and we will update the order.
+
+Answer:
+Hello, drop the ultrasound gel. We need 80 of the aneroid sphygmomanometers with stethoscope. Silk tape: the narrow 1.25 cm.";"line 1: remove the line
+line 2: set BPM-ANER Aneroid sphygmomanometer with stethoscope (sold per unit) x 80
+line 5: set TAPE-SILK-12 Silk tape 1.25 cm x 9.1 m (sold per box of 12 rolls) x 25";ok;
+CLA-0105;clarification_answers;web_form;still_unclear;"Lines in doubt:
+line 3: Wooden tongue depressors, children | quantity 501 | doubt over_ceiling
+
+Question:
+Hello, thank you for your order. Before we confirm it we need to check a few details.
+
+The quantity on line 3 (""Wooden tongue depressors, children"") is 501, more than the 500 we accept per line. Can you confirm the right figure?
+
+Just reply here and we will take care of the rest.
+
+Answer:
+Give me a day, I'm checking numbers with the paediatric wards.";line 3: still unclear, ask again;ok;
+CLA-0118;clarification_answers;web_form;pick_variant;"Lines in doubt:
+line 3: Latex | quantity 10 | doubt ambiguous; options: GLV-SURG-LTX-6.5, GLV-SURG-LTX-7, GLV-SURG-LTX-7.5, GLV-SURG-LTX-8, GLV-SURG-LTX-8.5
+
+Question:
+Which size do you need for line 3, ""Latex""? We have Sterile latex surgical gloves, size 6.5, Sterile latex surgical gloves, size 7, Sterile latex surgical gloves, size 7.5, Sterile latex surgical gloves, size 8 and Sterile latex surgical gloves, size 8.5.
+
+Answer:
+Size 8.5. They're for our two surgeons with the big hands.";line 3: set GLV-SURG-LTX-8.5 Sterile latex surgical gloves, size 8.5 (sold per box of 50 pairs) x 10;ok;
+CLA-0132;clarification_answers;web_form;pick_variant;"Lines in doubt:
+line 1: Underpad | quantity 1 | doubt ambiguous; options: PAD-40x60, PAD-60x60, PAD-60x90
+
+Question:
+For line 1, ""Underpad"", we have three sizes: Disposable underpad 40 x 60 cm, Disposable underpad 60 x 60 cm and Disposable underpad 60 x 90 cm. Which one do you need?
+
+Answer:
+The square ones, 60 by 60.";line 1: set PAD-60x60 Disposable underpad 60 x 60 cm (sold per pack of 25) x 1;ok;
+CLA-0134;clarification_answers;email;give_quantity;"Lines in doubt:
+line 3: 1200 gauze bandage rolls 7.5 cm x 4 m | quantity 1200 | doubt over_ceiling
+
+Question:
+Line 3, ""1200 gauze bandage rolls 7.5 cm x 4 m"", is over the maximum we accept per line. Could you confirm how many bags you need?
+
+Answer:
+I counted rolls instead of bags, sorry. Make it 15 bags.";line 3: set GAUZE-ROLL-7 Gauze bandage roll 7.5 cm x 4 m (sold per bag of 12) x 15;ok;
+CLA-0155;clarification_answers;email;several_lines;"Lines in doubt:
+line 1: thirty-six plastic | quantity 36 | doubt ambiguous; options: APRON-PE, FORCEPS-DISP, PILL-CUP
+line 5: 1000 boxes sterile latex-free surgical gloves neoprene size 8.5 | quantity 1000 | doubt over_ceiling
+
+Question:
+Hello, two lines need checking. Line 1, ""thirty-six plastic"", could be Disposable plastic apron, white, Sterile disposable plastic forceps or Plastic medicine cups 30 ml. Line 5, ""1000 boxes sterile latex-free surgical gloves neoprene size 8.5"", is over our per-line limit. Please advise.
+
+Answer:
+Remove the plastic line please, I'll send a proper list for that later. The neoprene gloves should be 86 boxes.";"line 1: remove the line
+line 5: set GLV-SURG-NEO-8.5 Sterile latex-free surgical gloves (neoprene), size 8.5 (sold per box of 50 pairs) x 86";ok;
+CLA-0159;clarification_answers;email;give_quantity;"Lines in doubt:
+line 3: adult wooden tongue depressors | quantity 1 | doubt unsupported
+
+Question:
+How many boxes of line 3, ""adult wooden tongue depressors"", would you like?
+
+Answer:
+69 boxes, thanks. Same as last quarter.";line 3: set TONGUE-AD Wooden tongue depressors, adult (sold per box of 100) x 69;ok;
+CLA-0165;clarification_answers;email;remove_line;"Lines in doubt:
+line 3: thirteen boxes nitrile | quantity 13 | doubt ambiguous; options: GLV-NIT-L, GLV-NIT-M, GLV-NIT-S, GLV-NIT-XL, GLV-NIT-XS
+
+Question:
+Line 3, ""thirteen boxes nitrile"", needs a size: Nitrile examination gloves, powder-free, size XS, Nitrile examination gloves, powder-free, size S, Nitrile examination gloves, powder-free, size M, Nitrile examination gloves, powder-free, size L or Nitrile examination gloves, powder-free, size XL?
+
+Answer:
+Please cancel the nitrile gloves. Another supplier has them cheaper this month, no offence!";line 3: remove the line;ok;
+CLA-0175;clarification_answers;web_form;pick_variant;"Lines in doubt:
+line 5: Pad cm | quantity 3 | doubt ambiguous; options: DRS-NONADH-10, PAD-REUSE-75
+
+Question:
+Could you clarify line 5, ""Pad cm""? It could be Non-adherent dressing pad 10 x 10 cm or Reusable washable bed pad 75 x 90 cm.
+
+Answer:
+Reusable washable bed pad, the 75 x 90 ones.";line 5: set PAD-REUSE-75 Reusable washable bed pad 75 x 90 cm (sold per unit) x 3;ok;
+CLA-0182;clarification_answers;email;still_unclear;"Lines in doubt:
+line 3: 16 patient lifts | quantity 16 | doubt unknown
+line 5: nine face | quantity 9 | doubt ambiguous; options: MASK-KIDS, VISOR
+
+Question:
+Two questions about your email. Line 3, ""16 patient lifts"", is not in our catalog. Line 5, ""nine face"", could be Children's surgical face mask or Face shield visor, reusable frame. What would you like to do?
+
+Answer:
+Hmm, both of those came from the night shift's wishlist and I'm not sure what they had in mind. Let me find out and get back to you.";"line 3: still unclear, ask again
+line 5: still unclear, ask again";ok;
+CLA-0201;clarification_answers;web_form;give_quantity;"Lines in doubt:
+line 3: Sterile transport swab with medium | quantity 1500 | doubt over_ceiling
+
+Question:
+Line 3, ""Sterile transport swab with medium"", asks for 1500 boxes, which is over our per-line limit. What quantity should it be?
+
+Answer:
+We need 59 boxes for the quarter.";line 3: set SWAB-TRANS Sterile transport swab with medium (sold per box of 50) x 59;ok;
+CLA-0203;clarification_answers;email;still_unclear;"Lines in doubt:
+line 4: 150 pregnancy tests | quantity 150 | doubt unknown
+
+Question:
+Line 4, ""150 pregnancy tests"", is not in our catalog. Do you want us to remove it?
+
+Answer:
+Hmm, not sure yet. Our clinic lead hasn't decided whether we're still running that service.";line 4: still unclear, ask again;ok;

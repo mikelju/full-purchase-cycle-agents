@@ -1,0 +1,2720 @@
+{
+ "cases": {
+  "CLA-0001": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 67,
+     "sku": "RAZOR-DISP"
+    }
+   ]
+  },
+  "CLA-0003": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "unclear",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0004": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 37,
+     "sku": "INC-BRF-NIGHT-L"
+    }
+   ]
+  },
+  "CLA-0007": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0009": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0010": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 89,
+     "sku": "GLV-NIT200-M"
+    }
+   ]
+  },
+  "CLA-0011": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 36,
+     "sku": "GLV-LTX-M"
+    }
+   ]
+  },
+  "CLA-0013": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0014": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0015": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 37,
+     "sku": "URN-CUP-60"
+    }
+   ]
+  },
+  "CLA-0016": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 53,
+     "sku": "PLST-KIDS"
+    }
+   ]
+  },
+  "CLA-0017": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 20,
+     "sku": "SAL-5"
+    }
+   ]
+  },
+  "CLA-0018": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 27,
+     "sku": "CREAM-HAND-50"
+    }
+   ]
+  },
+  "CLA-0019": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 46,
+     "sku": "TONGUE-AD"
+    }
+   ]
+  },
+  "CLA-0020": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 4,
+     "sku": "GLV-NITX-L"
+    }
+   ]
+  },
+  "CLA-0021": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 44,
+     "sku": "GEL-PACK-L"
+    }
+   ]
+  },
+  "CLA-0023": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 69,
+     "sku": "PAD-40x60"
+    }
+   ]
+  },
+  "CLA-0024": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 49,
+     "sku": "STITCH-CUT"
+    }
+   ]
+  },
+  "CLA-0025": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "remove",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 48,
+     "sku": "WIPE-SURF-200"
+    }
+   ]
+  },
+  "CLA-0027": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 32,
+     "sku": "SOAP-LIQ-5000"
+    }
+   ]
+  },
+  "CLA-0028": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 44,
+     "sku": "GLV-NIT200-L"
+    }
+   ]
+  },
+  "CLA-0029": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0030": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 36,
+     "sku": "GEL-WALL"
+    }
+   ]
+  },
+  "CLA-0031": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 36,
+     "sku": "SYR-2"
+    }
+   ]
+  },
+  "CLA-0033": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 46,
+     "sku": "PLST-SPOT"
+    },
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 83,
+     "sku": "PLST-ASST"
+    }
+   ]
+  },
+  "CLA-0034": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0035": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 117,
+     "sku": "COUCH-60"
+    }
+   ]
+  },
+  "CLA-0036": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 64,
+     "sku": "GLV-SURG-LTX-7"
+    }
+   ]
+  },
+  "CLA-0037": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 44,
+     "sku": "HOT-WATER-BOTTLE"
+    }
+   ]
+  },
+  "CLA-0038": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 18,
+     "sku": "PAD-40x60"
+    }
+   ]
+  },
+  "CLA-0040": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0041": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 38,
+     "sku": "TAPE-SILK-25"
+    }
+   ]
+  },
+  "CLA-0044": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "unclear",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0046": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0049": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 26,
+     "sku": "GEL-5000"
+    }
+   ]
+  },
+  "CLA-0050": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 74,
+     "sku": "GLV-NITX-L"
+    }
+   ]
+  },
+  "CLA-0051": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 13,
+     "sku": "PEN-31-8"
+    }
+   ]
+  },
+  "CLA-0052": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 44,
+     "sku": "ALC70-1000"
+    }
+   ]
+  },
+  "CLA-0053": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0055": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0058": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 27,
+     "sku": "SYR-LL-20"
+    },
+    {
+     "action": "remove",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0059": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 7,
+     "sku": "BND-TUB-C"
+    }
+   ]
+  },
+  "CLA-0060": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 40,
+     "sku": "SYR-INS-05"
+    }
+   ]
+  },
+  "CLA-0061": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 23,
+     "sku": "TONGUE-KID"
+    }
+   ]
+  },
+  "CLA-0062": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 5,
+     "sku": "LIP-BALM"
+    }
+   ]
+  },
+  "CLA-0063": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0064": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 34,
+     "sku": "MASK-IIR"
+    }
+   ]
+  },
+  "CLA-0065": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 50,
+     "sku": "SAL-500"
+    }
+   ]
+  },
+  "CLA-0066": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0067": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0069": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 19,
+     "sku": "OXI-FING"
+    }
+   ]
+  },
+  "CLA-0072": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "unclear",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0073": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 26,
+     "sku": "STOCK-THIGH-S"
+    }
+   ]
+  },
+  "CLA-0074": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 7,
+     "sku": "PLST-ROLL-6"
+    }
+   ]
+  },
+  "CLA-0075": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 20,
+     "sku": "GAUZE-NS-7-12"
+    }
+   ]
+  },
+  "CLA-0076": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 35,
+     "sku": "THERM-SHEATH"
+    }
+   ]
+  },
+  "CLA-0080": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 5,
+     "sku": "PLST-ROLL-6"
+    }
+   ]
+  },
+  "CLA-0081": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 17,
+     "sku": "URN-CUP-100"
+    }
+   ]
+  },
+  "CLA-0082": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0083": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 14,
+     "sku": "SUP-ANKLE-S"
+    },
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 34,
+     "sku": "SOAP-LIQ-500"
+    }
+   ]
+  },
+  "CLA-0085": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0086": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0087": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0088": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 110,
+     "sku": "SUP-LUMBAR"
+    }
+   ]
+  },
+  "CLA-0089": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0090": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 50,
+     "sku": "GLV-SURG-NEO-6.5"
+    },
+    {
+     "action": "remove",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0091": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 37,
+     "sku": "COUCH-60"
+    }
+   ]
+  },
+  "CLA-0092": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0093": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 73,
+     "sku": "SYR-LL-5"
+    }
+   ]
+  },
+  "CLA-0094": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 13,
+     "sku": "GLV-SURG-NEO-7"
+    },
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 43,
+     "sku": "TAPE-TR-12"
+    }
+   ]
+  },
+  "CLA-0095": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0096": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 27,
+     "sku": "GAUZE-ST-10"
+    }
+   ]
+  },
+  "CLA-0097": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0098": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "unclear",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0099": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 8,
+     "sku": "STRIP-3x75"
+    }
+   ]
+  },
+  "CLA-0101": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0102": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 27,
+     "sku": "CATH-FOL-14"
+    }
+   ]
+  },
+  "CLA-0103": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 25,
+     "sku": "SUP-WRIST-S"
+    }
+   ]
+  },
+  "CLA-0104": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 21,
+     "sku": "GOWN-ISO"
+    }
+   ]
+  },
+  "CLA-0105": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0106": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "remove",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0107": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0108": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 22,
+     "sku": "DRS-FILM-6x7"
+    }
+   ]
+  },
+  "CLA-0109": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0110": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0111": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 98,
+     "sku": "OIL-MASSAGE"
+    }
+   ]
+  },
+  "CLA-0114": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 69,
+     "sku": "KIT-FA-WALL"
+    }
+   ]
+  },
+  "CLA-0115": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0117": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "remove",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0118": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 10,
+     "sku": "GLV-SURG-LTX-8.5"
+    }
+   ]
+  },
+  "CLA-0120": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0121": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0122": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 6,
+     "sku": "SCALPEL-10"
+    }
+   ]
+  },
+  "CLA-0124": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 19,
+     "sku": "GLV-VIN-M"
+    }
+   ]
+  },
+  "CLA-0125": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "unclear",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0126": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "unclear",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0127": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 115,
+     "sku": "OXI-PAED"
+    }
+   ]
+  },
+  "CLA-0128": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 10,
+     "sku": "DRS-EYE"
+    }
+   ]
+  },
+  "CLA-0129": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 40,
+     "sku": "TAPE-PAP-12"
+    },
+    {
+     "action": "remove",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0130": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 39,
+     "sku": "SAL-500"
+    }
+   ]
+  },
+  "CLA-0132": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 1,
+     "sku": "PAD-60x60"
+    }
+   ]
+  },
+  "CLA-0133": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 5,
+     "sku": "GLV-LTXP-S"
+    }
+   ]
+  },
+  "CLA-0134": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 15,
+     "sku": "GAUZE-ROLL-7"
+    }
+   ]
+  },
+  "CLA-0135": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 40,
+     "sku": "GAUZE-NS-10-12"
+    }
+   ]
+  },
+  "CLA-0136": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 19,
+     "sku": "TAPE-TR-12"
+    }
+   ]
+  },
+  "CLA-0138": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "remove",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0140": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 71,
+     "sku": "EYE-WASH-500"
+    }
+   ]
+  },
+  "CLA-0143": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0144": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 54,
+     "sku": "DRS-NONADH-10"
+    }
+   ]
+  },
+  "CLA-0145": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 27,
+     "sku": "SAL-30"
+    }
+   ]
+  },
+  "CLA-0146": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 62,
+     "sku": "TAPE-ZNC-50"
+    }
+   ]
+  },
+  "CLA-0148": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 26,
+     "sku": "COT-PADS"
+    }
+   ]
+  },
+  "CLA-0149": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0151": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0152": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 2,
+     "sku": "SUP-KNEE-XL"
+    },
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 117,
+     "sku": "INC-PANT-XL"
+    }
+   ]
+  },
+  "CLA-0154": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0155": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 86,
+     "sku": "GLV-SURG-NEO-8.5"
+    }
+   ]
+  },
+  "CLA-0156": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 93,
+     "sku": "THERM-SHEATH"
+    },
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 21,
+     "sku": "ALC70-250"
+    }
+   ]
+  },
+  "CLA-0160": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0161": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 43,
+     "sku": "NDL-27G"
+    }
+   ]
+  },
+  "CLA-0162": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 29,
+     "sku": "CREAM-HAND-100"
+    }
+   ]
+  },
+  "CLA-0164": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 4,
+     "sku": "CAP-BOUF"
+    },
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 14,
+     "sku": "KIT-FA-WALL"
+    }
+   ]
+  },
+  "CLA-0165": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0166": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 108,
+     "sku": "GEL-5000"
+    }
+   ]
+  },
+  "CLA-0167": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 24,
+     "sku": "SHARPS-10"
+    }
+   ]
+  },
+  "CLA-0168": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0170": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0173": {
+   "case_exact_match": false,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0174": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 31,
+     "sku": "MASK-FFP2-V"
+    }
+   ]
+  },
+  "CLA-0175": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 3,
+     "sku": "PAD-REUSE-75"
+    }
+   ]
+  },
+  "CLA-0176": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 115,
+     "sku": "CREAM-HAND-50"
+    },
+    {
+     "action": "remove",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0178": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0180": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0182": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "unclear",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0183": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 91,
+     "sku": "MASK-IIR-TIE"
+    },
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 47,
+     "sku": "SCALPEL-11"
+    },
+    {
+     "action": "remove",
+     "line_id": 5,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0184": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 42,
+     "sku": "INC-PAD-NORMAL"
+    }
+   ]
+  },
+  "CLA-0185": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0187": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 2,
+     "quantity": 12,
+     "sku": "SUN-50-200"
+    }
+   ]
+  },
+  "CLA-0189": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 8,
+     "sku": "TAPE-SILK-12"
+    }
+   ]
+  },
+  "CLA-0193": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 105,
+     "sku": "BURN-GEL"
+    }
+   ]
+  },
+  "CLA-0195": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 44,
+     "sku": "WALKER-FOLD"
+    }
+   ]
+  },
+  "CLA-0196": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0197": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0198": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 5,
+     "quantity": 24,
+     "sku": "WIPE-PAD-100"
+    }
+   ]
+  },
+  "CLA-0199": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 42,
+     "sku": "INC-BRF-NIGHT-L"
+    },
+    {
+     "action": "remove",
+     "line_id": 3,
+     "quantity": null,
+     "sku": null
+    },
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 1,
+     "sku": "TAPE-TR-12"
+    }
+   ]
+  },
+  "CLA-0200": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0201": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 59,
+     "sku": "SWAB-TRANS"
+    }
+   ]
+  },
+  "CLA-0202": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "remove",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0203": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 4,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0204": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 46,
+     "sku": "GAUZE-NS-5-12"
+    },
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 7,
+     "sku": "SOAP-LIQ-5000"
+    }
+   ]
+  },
+  "CLA-0205": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 4,
+     "quantity": 2,
+     "sku": "GLV-NIT-XL"
+    }
+   ]
+  },
+  "CLA-0206": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 1,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0207": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "unclear",
+     "line_id": 2,
+     "quantity": null,
+     "sku": null
+    }
+   ]
+  },
+  "CLA-0208": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 1,
+     "quantity": 44,
+     "sku": "TAPE-ZNC-50"
+    }
+   ]
+  },
+  "CLA-0209": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 97,
+     "sku": "SYR-5"
+    }
+   ]
+  },
+  "CLA-0210": {
+   "case_exact_match": true,
+   "error": null,
+   "resolutions": [
+    {
+     "action": "set",
+     "line_id": 3,
+     "quantity": 29,
+     "sku": "BND-TRI"
+    }
+   ]
+  }
+ },
+ "dataset_version": "1.0",
+ "lines": {
+  "CLA-0001-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0003-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0003-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0004-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0007-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0009-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0010-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0011-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0013-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0014-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0015-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0016-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0017-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0018-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0019-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0019-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0020-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0021-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0023-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0023-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0024-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0025-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0025-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0025-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0027-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0028-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0029-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0030-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0031-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0033-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0033-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0033-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0034-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0035-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0036-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0037-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0038-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0040-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0040-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0041-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0044-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0044-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0046-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0049-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0050-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0051-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0052-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0053-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0055-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0058-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0058-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0059-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0060-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0061-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0062-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0063-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0064-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0065-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0066-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0067-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0069-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0072-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0072-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0073-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0074-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0075-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0076-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0080-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0081-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0082-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0083-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0083-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0085-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0086-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0087-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0087-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0088-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0089-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0090-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0090-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0090-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0091-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0092-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0093-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0094-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0094-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0095-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0096-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0097-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0098-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0098-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0099-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0101-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0102-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0103-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0104-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0105-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0106-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0106-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0107-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0108-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0109-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0110-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0111-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0114-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0115-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0117-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0117-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0118-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0120-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0121-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0122-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0124-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0125-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0125-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0126-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0126-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0127-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0128-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0129-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0129-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0130-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0132-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0133-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0134-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0135-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0135-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0136-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0138-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0138-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0140-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0143-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0144-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0145-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0146-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0148-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0149-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0151-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0152-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0152-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0152-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0154-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0155-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0155-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0156-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0156-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0160-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0161-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0162-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0164-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0164-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0165-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0166-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0167-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0168-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0170-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0173-L2": {
+   "resolution_accuracy": false
+  },
+  "CLA-0174-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0175-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0176-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0176-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0178-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0180-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0182-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0182-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0183-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0183-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0183-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0184-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0184-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0185-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0187-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0189-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0189-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0193-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0193-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0195-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0196-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0197-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0198-L5": {
+   "resolution_accuracy": true
+  },
+  "CLA-0199-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0199-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0199-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0200-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0201-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0202-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0203-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0204-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0204-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0205-L4": {
+   "resolution_accuracy": true
+  },
+  "CLA-0206-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0207-L2": {
+   "resolution_accuracy": true
+  },
+  "CLA-0208-L1": {
+   "resolution_accuracy": true
+  },
+  "CLA-0209-L3": {
+   "resolution_accuracy": true
+  },
+  "CLA-0210-L3": {
+   "resolution_accuracy": true
+  }
+ },
+ "measured_at": "2026-10-08",
+ "metrics": {
+  "case_exact_match": {
+   "high": 0.998867534682875,
+   "hits": 155,
+   "low": 0.9645871355648048,
+   "n": 156,
+   "value": 0.9935897435897436
+  },
+  "resolution_accuracy": {
+   "high": 0.9990941715567736,
+   "hits": 194,
+   "low": 0.9715283593010307,
+   "n": 195,
+   "value": 0.9948717948717949
+  }
+ },
+ "mode": "record",
+ "model": "claude-haiku-4-5",
+ "split": "test",
+ "threshold": 0.95,
+ "threshold_rule": "95% if resolution accuracy reaches 95% on the test split; otherwise the owner decides (deviation 04.1)"
+}

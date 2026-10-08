@@ -1,0 +1,313 @@
+{"line_id": "CLD-0004-L1", "product": "clear", "sku": "GLV-LTXP-S", "candidates": [], "quantity": 2, "quantity_doubt": "none", "note": "200 gloves = 2 boxes of 100"}
+{"line_id": "CLD-0004-L2", "product": "clear", "sku": "BURN-GEL", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0004-L3", "product": "clear", "sku": "GEL-1000", "candidates": [], "quantity": 70, "quantity_doubt": "none"}
+{"line_id": "CLD-0004-L4", "product": "clear", "sku": "INC-PAD-MAXI", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0004-L5", "product": "clear", "sku": "PLST-ASST", "candidates": [], "quantity": 20, "quantity_doubt": "none", "note": "exact name; waterproof/fabric variants also contain the phrase"}
+{"line_id": "CLD-0005-L1", "product": "clear", "sku": "STOCK-THIGH-L", "candidates": [], "quantity": 36, "quantity_doubt": "none"}
+{"line_id": "CLD-0005-L2", "product": "clear", "sku": "STOCK-KNEE-L", "candidates": [], "quantity": 30, "quantity_doubt": "none"}
+{"line_id": "CLD-0005-L3", "product": "clear", "sku": "NDL-27G", "candidates": [], "quantity": 7, "quantity_doubt": "none"}
+{"line_id": "CLD-0005-L4", "product": "clear", "sku": "GLU-STRIP-100", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0005-L5", "product": "clear", "sku": "SYR-INS-03", "candidates": [], "quantity": 4, "quantity_doubt": "none"}
+{"line_id": "CLD-0010-L1", "product": "clear", "sku": "THERM-EAR", "candidates": [], "quantity": 100, "quantity_doubt": "none"}
+{"line_id": "CLD-0010-L2", "product": "clear", "sku": "CRUTCH-ADULT", "candidates": [], "quantity": 13, "quantity_doubt": "none"}
+{"line_id": "CLD-0012-L1", "product": "clear", "sku": "CANE-FOLD", "candidates": [], "quantity": 2, "quantity_doubt": "none"}
+{"line_id": "CLD-0012-L2", "product": "clear", "sku": "INC-BRF-M", "candidates": [], "quantity": 7, "quantity_doubt": "none"}
+{"line_id": "CLD-0012-L3", "product": "clear", "sku": "INC-PAD-NORMAL", "candidates": [], "quantity": 4, "quantity_doubt": "none"}
+{"line_id": "CLD-0012-L4", "product": "clear", "sku": "GAUZE-NS-10", "candidates": [], "quantity": 1, "quantity_doubt": "none", "note": "100 swabs = 1 pack of 100"}
+{"line_id": "CLD-0014-L1", "product": "clear", "sku": "GLV-SURG-LTX-7.5", "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0014-L2", "product": "clear", "sku": "TAPE-TR-12", "candidates": [], "quantity": 7, "quantity_doubt": "none", "note": "84 rolls = 7 boxes of 12 rolls"}
+{"line_id": "CLD-0015-L1", "product": "clear", "sku": "BND-COH-5", "candidates": [], "quantity": 50, "quantity_doubt": "none"}
+{"line_id": "CLD-0015-L2", "product": "clear", "sku": "MASK-FFP3-V", "candidates": [], "quantity": 24, "quantity_doubt": "none"}
+{"line_id": "CLD-0015-L3", "product": "clear", "sku": "BND-ELA-10", "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0015-L4", "product": "clear", "sku": "INC-BRF-NIGHT-M", "candidates": [], "quantity": 2000, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0016-L1", "product": "clear", "sku": "DRS-FILM-6x7", "candidates": [], "quantity": 7, "quantity_doubt": "none"}
+{"line_id": "CLD-0016-L2", "product": "ambiguous", "sku": null, "candidates": ["THERM-DIG", "THERM-DIG-FLEX"], "quantity": 43, "quantity_doubt": "none"}
+{"line_id": "CLD-0020-L1", "product": "clear", "sku": "SUN-50-200", "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0020-L2", "product": "clear", "sku": "GLV-NIT200-S", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0020-L3", "product": "ambiguous", "sku": null, "candidates": ["GLV-NIT-XL", "GLV-NITX-XL", "GLV-LTX-XL", "GLV-VIN-XL"], "quantity": 24, "quantity_doubt": "none"}
+{"line_id": "CLD-0022-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 20, "quantity_doubt": "none"}
+{"line_id": "CLD-0022-L2", "product": "clear", "sku": "LAN-100", "candidates": [], "quantity": 750, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0022-L3", "product": "clear", "sku": "SCALPEL-10", "candidates": [], "quantity": 50, "quantity_doubt": "none"}
+{"line_id": "CLD-0023-L1", "product": "ambiguous", "sku": null, "candidates": ["MASK-FFP2-V", "MASK-FFP3-V"], "quantity": 40, "quantity_doubt": "none"}
+{"line_id": "CLD-0023-L2", "product": "clear", "sku": "THERM-COVER", "candidates": [], "quantity": 15, "quantity_doubt": "none"}
+{"line_id": "CLD-0023-L3", "product": "ambiguous", "sku": null, "candidates": ["GAUZE-ST-5", "GAUZE-ST-7", "GAUZE-ST-10"], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0023-L4", "product": "clear", "sku": "BND-COH-7", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0026-L1", "product": "clear", "sku": "CREAM-BARRIER", "candidates": [], "quantity": 600, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0026-L2", "product": "clear", "sku": "KIT-FA-REFILL", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0026-L3", "product": "clear", "sku": "GAUZE-NS-7", "candidates": [], "quantity": 8, "quantity_doubt": "none"}
+{"line_id": "CLD-0027-L1", "product": "clear", "sku": "LAN-100", "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0027-L2", "product": "clear", "sku": "SUP-ANKLE-S", "candidates": [], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0027-L3", "product": "clear", "sku": "SYR-LL-10", "candidates": [], "quantity": 40, "quantity_doubt": "none"}
+{"line_id": "CLD-0027-L4", "product": "clear", "sku": "ALC96-100", "candidates": [], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0031-L1", "product": "ambiguous", "sku": null, "candidates": ["SAL-5", "SAL-10", "SAL-30", "SAL-250", "SAL-500", "SAL-1000"], "quantity": 36, "quantity_doubt": "none"}
+{"line_id": "CLD-0031-L2", "product": "clear", "sku": "DRS-NONADH-10", "candidates": [], "quantity": 1, "quantity_doubt": "none", "note": "100 pads = 1 box of 100"}
+{"line_id": "CLD-0031-L3", "product": "clear", "sku": "BND-ELA-5", "candidates": [], "quantity": 501, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0032-L1", "product": "clear", "sku": "INC-PANT-XL", "candidates": [], "quantity": 2, "quantity_doubt": "none"}
+{"line_id": "CLD-0032-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 40, "quantity_doubt": "none"}
+{"line_id": "CLD-0035-L1", "product": "clear", "sku": "CREAM-MOIST-100", "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0035-L2", "product": "clear", "sku": "SHAMPOO-500", "candidates": [], "quantity": 20, "quantity_doubt": "none"}
+{"line_id": "CLD-0035-L3", "product": "clear", "sku": "COUCH-60-SMOOTH", "candidates": [], "quantity": 48, "quantity_doubt": "none"}
+{"line_id": "CLD-0037-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 14, "quantity_doubt": "none"}
+{"line_id": "CLD-0037-L2", "product": "clear", "sku": "NDL-22G", "candidates": [], "quantity": 8, "quantity_doubt": "none", "note": "800 needles = 8 boxes of 100"}
+{"line_id": "CLD-0039-L1", "product": "clear", "sku": "SHARPS-1", "candidates": [], "quantity": 4, "quantity_doubt": "none"}
+{"line_id": "CLD-0039-L2", "product": "clear", "sku": "COT-BUDS", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0039-L3", "product": "clear", "sku": "SHOE-COVER", "candidates": [], "quantity": 13, "quantity_doubt": "none"}
+{"line_id": "CLD-0039-L4", "product": "clear", "sku": "TAPE-ZNC-25", "candidates": [], "quantity": 36, "quantity_doubt": "none", "note": "36 rolls, sale unit box of 10 rolls, not a whole number of boxes"}
+{"line_id": "CLD-0039-L5", "product": "unknown", "sku": null, "candidates": [], "quantity": 8, "quantity_doubt": "none", "note": "FFP1 not in catalog"}
+{"line_id": "CLD-0041-L1", "product": "clear", "sku": "SYR-5", "candidates": [], "quantity": 4, "quantity_doubt": "none"}
+{"line_id": "CLD-0041-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0041-L3", "product": "clear", "sku": "ALC70-500", "candidates": [], "quantity": 8, "quantity_doubt": "none"}
+{"line_id": "CLD-0043-L1", "product": "clear", "sku": "GAUZE-NS-7-12", "candidates": [], "quantity": 20, "quantity_doubt": "none"}
+{"line_id": "CLD-0043-L2", "product": "clear", "sku": "BPM-ARM", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0043-L3", "product": "clear", "sku": "PEN-31-8", "candidates": [], "quantity": 8, "quantity_doubt": "none", "note": "800 needles = 8 boxes of 100"}
+{"line_id": "CLD-0043-L4", "product": "clear", "sku": "COUCH-50", "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0043-L5", "product": "unknown", "sku": null, "candidates": [], "quantity": 2, "quantity_doubt": "none"}
+{"line_id": "CLD-0044-L1", "product": "clear", "sku": "CATH-SIL-14", "candidates": [], "quantity": 6, "quantity_doubt": "none", "note": "60 catheters = 6 boxes of 10"}
+{"line_id": "CLD-0044-L2", "product": "clear", "sku": "BND-ELA-7", "candidates": [], "quantity": 9, "quantity_doubt": "none", "note": "90 bandages = 9 packs of 10"}
+{"line_id": "CLD-0044-L3", "product": "clear", "sku": "COT-ROLL-500", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0044-L4", "product": "clear", "sku": "CANE-FOLD", "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0044-L5", "product": "clear", "sku": "TAPE-KIN", "candidates": [], "quantity": 30, "quantity_doubt": "none"}
+{"line_id": "CLD-0045-L1", "product": "clear", "sku": "PEN-32-6", "candidates": [], "quantity": 2500, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0045-L2", "product": "ambiguous", "sku": null, "candidates": ["TAPE-PAP-12", "TAPE-PAP-25", "TAPE-PAP-50", "TAPE-SILK-12", "TAPE-SILK-25", "TAPE-TR-12", "TAPE-TR-25", "TAPE-ZNC-25", "TAPE-ZNC-50", "TAPE-KIN"], "quantity": 45, "quantity_doubt": "none"}
+{"line_id": "CLD-0046-L1", "product": "clear", "sku": "STOCK-KNEE-M", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0046-L2", "product": "clear", "sku": "BPM-ANER", "candidates": [], "quantity": 120, "quantity_doubt": "none"}
+{"line_id": "CLD-0046-L3", "product": "clear", "sku": "URN-CUP-60", "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0047-L1", "product": "clear", "sku": "BPM-ARM", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0047-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0048-L1", "product": "clear", "sku": "BLANKET-FOIL", "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0049-L1", "product": "clear", "sku": "STOCK-KNEE-L", "candidates": [], "quantity": 80, "quantity_doubt": "none"}
+{"line_id": "CLD-0049-L2", "product": "clear", "sku": "BPM-CUFF-M", "candidates": [], "quantity": 24, "quantity_doubt": "none"}
+{"line_id": "CLD-0049-L3", "product": "clear", "sku": "STRIP-6x100", "candidates": [], "quantity": 2, "quantity_doubt": "none"}
+{"line_id": "CLD-0049-L4", "product": "clear", "sku": "SUP-ELBOW-M", "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0049-L5", "product": "clear", "sku": "CANE-ADJ", "candidates": [], "quantity": 7, "quantity_doubt": "none"}
+{"line_id": "CLD-0056-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 11, "quantity_doubt": "none"}
+{"line_id": "CLD-0056-L2", "product": "clear", "sku": "SOAP-LIQ-500", "candidates": [], "quantity": 9, "quantity_doubt": "none"}
+{"line_id": "CLD-0056-L3", "product": "clear", "sku": "SWAB-TRANS", "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0056-L4", "product": "unknown", "sku": null, "candidates": [], "quantity": 80, "quantity_doubt": "none"}
+{"line_id": "CLD-0057-L1", "product": "clear", "sku": "MASK-IIR-TIE", "candidates": [], "quantity": 10, "quantity_doubt": "none", "note": "500 masks = 10 boxes of 50"}
+{"line_id": "CLD-0057-L2", "product": "clear", "sku": "THERM-COVER", "candidates": [], "quantity": 2, "quantity_doubt": "none"}
+{"line_id": "CLD-0058-L1", "product": "clear", "sku": "SUP-ELBOW-S", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0061-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0061-L2", "product": "clear", "sku": "TAPE-ZNC-50", "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0061-L3", "product": "clear", "sku": "SUN-50-50", "candidates": [], "quantity": 48, "quantity_doubt": "none"}
+{"line_id": "CLD-0062-L1", "product": "clear", "sku": "HOT-WATER-BOTTLE", "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0062-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0064-L1", "product": "clear", "sku": "GEL-5000", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0064-L2", "product": "clear", "sku": "GEL-WALL", "candidates": [], "quantity": 200, "quantity_doubt": "none"}
+{"line_id": "CLD-0064-L3", "product": "clear", "sku": "BND-TRI", "candidates": [], "quantity": 24, "quantity_doubt": "none"}
+{"line_id": "CLD-0064-L4", "product": "clear", "sku": "SUP-WRIST-L", "candidates": [], "quantity": 20, "quantity_doubt": "none"}
+{"line_id": "CLD-0064-L5", "product": "clear", "sku": "SHARPS-30", "candidates": [], "quantity": 6, "quantity_doubt": "none"}
+{"line_id": "CLD-0065-L1", "product": "clear", "sku": "OIL-MASSAGE", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0066-L1", "product": "ambiguous", "sku": null, "candidates": ["MASK-IIR", "MASK-II"], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0066-L2", "product": "clear", "sku": "TAPE-PAP-25", "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0066-L3", "product": "clear", "sku": "INC-PAD-NORMAL", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0066-L4", "product": "clear", "sku": "SUP-WRIST-L", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0067-L1", "product": "clear", "sku": "COT-ROLL-1000", "candidates": [], "quantity": 200, "quantity_doubt": "none"}
+{"line_id": "CLD-0067-L2", "product": "clear", "sku": "PLST-ROLL-6", "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0067-L3", "product": "clear", "sku": "GLV-NITX-M", "candidates": [], "quantity": 20, "quantity_doubt": "none"}
+{"line_id": "CLD-0068-L1", "product": "clear", "sku": "MASK-II", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0068-L2", "product": "clear", "sku": "CAP-BOUF", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0068-L3", "product": "clear", "sku": "NDL-25G", "candidates": [], "quantity": 11, "quantity_doubt": "none"}
+{"line_id": "CLD-0068-L4", "product": "clear", "sku": "SYR-1", "candidates": [], "quantity": 2, "quantity_doubt": "none", "note": "200 syringes = 2 boxes of 100"}
+{"line_id": "CLD-0068-L5", "product": "ambiguous", "sku": null, "candidates": ["STOCK-THIGH-S", "STOCK-THIGH-M", "STOCK-THIGH-L"], "quantity": 26, "quantity_doubt": "none"}
+{"line_id": "CLD-0074-L1", "product": "clear", "sku": "SAL-5", "candidates": [], "quantity": 10, "quantity_doubt": "none", "note": "300 units = 10 boxes of 30"}
+{"line_id": "CLD-0079-L1", "product": "clear", "sku": "SUP-ELBOW-L", "candidates": [], "quantity": 15, "quantity_doubt": "none"}
+{"line_id": "CLD-0079-L2", "product": "clear", "sku": "GEL-100", "candidates": [], "quantity": 10, "quantity_doubt": "none"}
+{"line_id": "CLD-0079-L3", "product": "clear", "sku": "GAUZE-NS-7", "candidates": [], "quantity": 5, "quantity_doubt": "none", "note": "500 swabs = 5 packs of 100"}
+{"line_id": "CLD-0080-L1", "product": "clear", "sku": "INC-PANT-L", "candidates": [], "quantity": 15, "quantity_doubt": "none"}
+{"line_id": "CLD-0080-L2", "product": "clear", "sku": "TAPE-PAP-50", "candidates": [], "quantity": 30, "quantity_doubt": "none"}
+{"line_id": "CLD-0081-L1", "product": "clear", "sku": "COT-ROLL-1000", "candidates": [], "quantity": 501, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0081-L2", "product": "clear", "sku": "STRIP-3x75", "candidates": [], "quantity": 25, "quantity_doubt": "none"}
+{"line_id": "CLD-0081-L3", "product": "clear", "sku": "INC-BRF-L", "candidates": [], "quantity": 15, "quantity_doubt": "none"}
+{"line_id": "CLD-0082-L1", "product": "clear", "sku": "THERM-SHEATH", "candidates": [], "quantity": 900, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0082-L2", "product": "clear", "sku": "MASK-KIDS", "candidates": [], "quantity": 6, "quantity_doubt": "none"}
+{"line_id": "CLD-0083-L1", "product": "ambiguous", "sku": null, "candidates": ["PAD-40x60", "PAD-60x60", "PAD-60x90", "INC-PAD-LIGHT", "INC-PAD-NORMAL", "INC-PAD-MAXI", "COT-PADS"], "quantity": 3, "quantity_doubt": "none", "note": "pads matches underpads, incontinence pads, cotton pads; context (facial peel) hints cotton pads"}
+{"line_id": "CLD-0083-L2", "product": "clear", "sku": "PLST-SPOT", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0084-L1", "product": "clear", "sku": "GOWN-ISO-XL", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0084-L2", "product": "clear", "sku": "GLV-LTX-S", "candidates": [], "quantity": 48, "quantity_doubt": "none"}
+{"line_id": "CLD-0084-L3", "product": "clear", "sku": "GAUZE-NS-5-12", "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0084-L4", "product": "unknown", "sku": null, "candidates": [], "quantity": 2, "quantity_doubt": "none", "note": "ultrasound gel not in catalog"}
+{"line_id": "CLD-0085-L1", "product": "clear", "sku": "GLV-NIT-XS", "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0085-L2", "product": "clear", "sku": "SCALPEL-15", "candidates": [], "quantity": 4, "quantity_doubt": "none"}
+{"line_id": "CLD-0085-L3", "product": "clear", "sku": "SUP-ANKLE-L", "candidates": [], "quantity": 24, "quantity_doubt": "none"}
+{"line_id": "CLD-0086-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0086-L2", "product": "clear", "sku": "VISOR", "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0086-L3", "product": "clear", "sku": "KIDNEY-DISH", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0087-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 13, "quantity_doubt": "none", "note": "singles is meaningless against the catalog"}
+{"line_id": "CLD-0089-L1", "product": "clear", "sku": "GLV-NIT-XL", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0090-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 19, "quantity_doubt": "none", "note": "FFP1 not in catalog"}
+{"line_id": "CLD-0090-L2", "product": "clear", "sku": "COT-BALL", "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0090-L3", "product": "clear", "sku": "GLV-SURG-LTX-8.5", "candidates": [], "quantity": 9, "quantity_doubt": "none"}
+{"line_id": "CLD-0091-L1", "product": "clear", "sku": "GAUZE-ROLL-5", "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0091-L2", "product": "ambiguous", "sku": null, "candidates": ["TAPE-PAP-12", "TAPE-PAP-25", "TAPE-PAP-50"], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0093-L1", "product": "clear", "sku": "TAPE-SILK-25", "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0093-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0093-L3", "product": "clear", "sku": "GLU-METER", "candidates": [], "quantity": 36, "quantity_doubt": "none"}
+{"line_id": "CLD-0093-L4", "product": "unknown", "sku": null, "candidates": [], "quantity": 35, "quantity_doubt": "none", "note": "illegible description, no product named"}
+{"line_id": "CLD-0094-L1", "product": "clear", "sku": "OXI-PAED", "candidates": [], "quantity": 45, "quantity_doubt": "none"}
+{"line_id": "CLD-0094-L2", "product": "clear", "sku": "SUP-ELBOW-S", "candidates": [], "quantity": 24, "quantity_doubt": "none"}
+{"line_id": "CLD-0094-L3", "product": "ambiguous", "sku": null, "candidates": ["SCALPEL-10", "SCALPEL-11", "SCALPEL-15"], "quantity": 47, "quantity_doubt": "none"}
+{"line_id": "CLD-0094-L4", "product": "ambiguous", "sku": null, "candidates": ["PEN-31-5", "PEN-31-8", "PEN-32-4", "PEN-32-6"], "quantity": 44, "quantity_doubt": "none"}
+{"line_id": "CLD-0095-L1", "product": "clear", "sku": "OXI-FING", "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0095-L2", "product": "clear", "sku": "SOAP-LIQ-500", "candidates": [], "quantity": 200, "quantity_doubt": "none"}
+{"line_id": "CLD-0095-L3", "product": "clear", "sku": "GAUZE-ST-5", "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0095-L4", "product": "clear", "sku": "TAPE-ZNC-50", "candidates": [], "quantity": 11, "quantity_doubt": "none"}
+{"line_id": "CLD-0099-L1", "product": "clear", "sku": "STOOL-CUP", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0099-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0099-L3", "product": "unknown", "sku": null, "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0101-L1", "product": "clear", "sku": "TONGUE-ST", "candidates": [], "quantity": 6, "quantity_doubt": "none"}
+{"line_id": "CLD-0101-L2", "product": "clear", "sku": "DRS-ISL-9x10", "candidates": [], "quantity": 4, "quantity_doubt": "none"}
+{"line_id": "CLD-0102-L1", "product": "clear", "sku": "CREAM-HAND-50", "candidates": [], "quantity": 20, "quantity_doubt": "none"}
+{"line_id": "CLD-0102-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0104-L1", "product": "clear", "sku": "GLV-SURG-LTX-8", "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0104-L2", "product": "clear", "sku": "THERM-IR", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0104-L3", "product": "clear", "sku": "PEN-32-4", "candidates": [], "quantity": 11, "quantity_doubt": "none"}
+{"line_id": "CLD-0104-L4", "product": "clear", "sku": "SUP-ANKLE-M", "candidates": [], "quantity": 48, "quantity_doubt": "none"}
+{"line_id": "CLD-0107-L1", "product": "ambiguous", "sku": null, "candidates": ["URN-CUP-60", "URN-CUP-100"], "quantity": 41, "quantity_doubt": "none"}
+{"line_id": "CLD-0107-L2", "product": "clear", "sku": "SYR-20", "candidates": [], "quantity": 48, "quantity_doubt": "none"}
+{"line_id": "CLD-0110-L1", "product": "ambiguous", "sku": null, "candidates": ["CATH-FOL-12", "CATH-FOL-14", "CATH-FOL-16", "CATH-FOL-18"], "quantity": 35, "quantity_doubt": "none"}
+{"line_id": "CLD-0110-L2", "product": "clear", "sku": "KIT-FA-REFILL", "candidates": [], "quantity": 13, "quantity_doubt": "none"}
+{"line_id": "CLD-0112-L1", "product": "clear", "sku": "EYE-WASH-500", "candidates": [], "quantity": 14, "quantity_doubt": "none"}
+{"line_id": "CLD-0112-L2", "product": "ambiguous", "sku": null, "candidates": ["GLU-STRIP-50", "GLU-STRIP-100"], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0112-L3", "product": "clear", "sku": "INC-BRF-M", "candidates": [], "quantity": 1, "quantity_doubt": "none", "note": "20 briefs = 1 pack of 20"}
+{"line_id": "CLD-0114-L1", "product": "clear", "sku": "PILL-CRUSH", "candidates": [], "quantity": 9, "quantity_doubt": "none"}
+{"line_id": "CLD-0114-L2", "product": "ambiguous", "sku": null, "candidates": ["CANE-FOLD", "WALKER-FOLD"], "quantity": 20, "quantity_doubt": "none"}
+{"line_id": "CLD-0114-L3", "product": "clear", "sku": "GLV-NITX-M", "candidates": [], "quantity": 8, "quantity_doubt": "none", "note": "400 gloves = 8 boxes of 50"}
+{"line_id": "CLD-0114-L4", "product": "clear", "sku": "CREAM-FOOT", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0115-L1", "product": "clear", "sku": "WIPE-ALC-100", "candidates": [], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0115-L2", "product": "clear", "sku": "SCALPEL-11", "candidates": [], "quantity": 11, "quantity_doubt": "none"}
+{"line_id": "CLD-0115-L3", "product": "clear", "sku": "GLV-LTXP-M", "candidates": [], "quantity": 70, "quantity_doubt": "none"}
+{"line_id": "CLD-0115-L4", "product": "clear", "sku": "PAD-REUSE-75", "candidates": [], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0116-L1", "product": "clear", "sku": "TAPE-KIN", "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0116-L2", "product": "clear", "sku": "GLV-NITX-XL", "candidates": [], "quantity": 6, "quantity_doubt": "none"}
+{"line_id": "CLD-0116-L3", "product": "clear", "sku": "GEL-100", "candidates": [], "quantity": 36, "quantity_doubt": "none"}
+{"line_id": "CLD-0117-L1", "product": "ambiguous", "sku": null, "candidates": ["WIPE-PAD-100", "WIPE-PAD-200"], "quantity": 46, "quantity_doubt": "none"}
+{"line_id": "CLD-0117-L2", "product": "clear", "sku": "SOAP-LIQ-5000", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0119-L1", "product": "clear", "sku": "ALC70-100", "candidates": [], "quantity": 24, "quantity_doubt": "none"}
+{"line_id": "CLD-0119-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0119-L3", "product": "unknown", "sku": null, "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0123-L1", "product": "clear", "sku": "GAUZE-NS-5", "candidates": [], "quantity": 48, "quantity_doubt": "none"}
+{"line_id": "CLD-0123-L2", "product": "clear", "sku": "SHAMPOO-500", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0123-L3", "product": "clear", "sku": "GLU-STRIP-50", "candidates": [], "quantity": 15, "quantity_doubt": "none"}
+{"line_id": "CLD-0123-L4", "product": "clear", "sku": "LIP-BALM", "candidates": [], "quantity": 10, "quantity_doubt": "none"}
+{"line_id": "CLD-0125-L1", "product": "clear", "sku": "CATH-SIL-18", "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0125-L2", "product": "clear", "sku": "MOUTHWASH-500", "candidates": [], "quantity": 6, "quantity_doubt": "none"}
+{"line_id": "CLD-0125-L3", "product": "ambiguous", "sku": null, "candidates": ["PLST-ROLL-6", "PLST-ROLL-8"], "quantity": 50, "quantity_doubt": "none"}
+{"line_id": "CLD-0127-L1", "product": "clear", "sku": "SYR-LL-5", "candidates": [], "quantity": 4, "quantity_doubt": "none"}
+{"line_id": "CLD-0127-L2", "product": "clear", "sku": "SUN-KIDS-50-200", "candidates": [], "quantity": 120, "quantity_doubt": "none"}
+{"line_id": "CLD-0127-L3", "product": "clear", "sku": "BPM-WRIST", "candidates": [], "quantity": 20, "quantity_doubt": "none"}
+{"line_id": "CLD-0131-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 7, "quantity_doubt": "none"}
+{"line_id": "CLD-0131-L2", "product": "clear", "sku": "RAZOR-DISP", "candidates": [], "quantity": 2, "quantity_doubt": "none"}
+{"line_id": "CLD-0131-L3", "product": "clear", "sku": "TAPE-SILK-12", "candidates": [], "quantity": 13, "quantity_doubt": "none"}
+{"line_id": "CLD-0131-L4", "product": "clear", "sku": "GAUZE-NS-10", "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0131-L5", "product": "ambiguous", "sku": null, "candidates": ["BND-TRI", "GOWN-ISO", "GOWN-ISO-XL", "CAP-BOUF"], "quantity": 44, "quantity_doubt": "none", "note": "only non-woven named; could be read as unknown"}
+{"line_id": "CLD-0135-L1", "product": "clear", "sku": "SUP-ELBOW-L", "candidates": [], "quantity": 24, "quantity_doubt": "none"}
+{"line_id": "CLD-0135-L2", "product": "clear", "sku": "SUN-FACE-50-50", "candidates": [], "quantity": 120, "quantity_doubt": "none"}
+{"line_id": "CLD-0135-L3", "product": "ambiguous", "sku": null, "candidates": ["SUP-WRIST-S", "SUP-WRIST-M", "SUP-WRIST-L"], "quantity": 44, "quantity_doubt": "none"}
+{"line_id": "CLD-0136-L1", "product": "clear", "sku": "TOURNIQ", "candidates": [], "quantity": 75, "quantity_doubt": "none"}
+{"line_id": "CLD-0136-L2", "product": "clear", "sku": "COVERALL-XL", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0137-L1", "product": "clear", "sku": "SUP-ANKLE-S", "candidates": [], "quantity": 13, "quantity_doubt": "none"}
+{"line_id": "CLD-0137-L2", "product": "clear", "sku": "GLV-NITX-XL", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0137-L3", "product": "ambiguous", "sku": null, "candidates": ["MASK-IIR", "MASK-IIR-TIE"], "quantity": 26, "quantity_doubt": "none"}
+{"line_id": "CLD-0139-L1", "product": "clear", "sku": "DRS-ISL-9x25", "candidates": [], "quantity": 5, "quantity_doubt": "none", "note": "250 dressings = 5 boxes of 50"}
+{"line_id": "CLD-0139-L2", "product": "clear", "sku": "GLV-NIT200-L", "candidates": [], "quantity": 600, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0139-L3", "product": "unknown", "sku": null, "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0139-L4", "product": "clear", "sku": "ALC96-100", "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0139-L5", "product": "clear", "sku": "SUP-KNEE-M", "candidates": [], "quantity": 7, "quantity_doubt": "none"}
+{"line_id": "CLD-0142-L1", "product": "clear", "sku": "SUP-KNEE-L", "candidates": [], "quantity": 8, "quantity_doubt": "none"}
+{"line_id": "CLD-0142-L2", "product": "clear", "sku": "STRIP-6x100", "candidates": [], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0142-L3", "product": "clear", "sku": "TONGUE-KID", "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0146-L1", "product": "ambiguous", "sku": null, "candidates": ["INC-BRF-S", "INC-BRF-M", "INC-BRF-L", "INC-BRF-XL", "INC-BRF-NIGHT-M", "INC-BRF-NIGHT-L"], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0146-L2", "product": "clear", "sku": "NDL-18G", "candidates": [], "quantity": 100, "quantity_doubt": "none"}
+{"line_id": "CLD-0146-L3", "product": "clear", "sku": "PAD-60x60", "candidates": [], "quantity": 24, "quantity_doubt": "none"}
+{"line_id": "CLD-0146-L4", "product": "clear", "sku": "STOCK-THIGH-M", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0147-L1", "product": "clear", "sku": "INC-PAD-LIGHT", "candidates": [], "quantity": 60, "quantity_doubt": "none"}
+{"line_id": "CLD-0147-L2", "product": "clear", "sku": "CATH-FOL-12", "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0147-L3", "product": "unknown", "sku": null, "candidates": [], "quantity": 2, "quantity_doubt": "none"}
+{"line_id": "CLD-0147-L4", "product": "clear", "sku": "WALKER-FOLD", "candidates": [], "quantity": 900, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0148-L1", "product": "clear", "sku": "PAD-60x60", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0148-L2", "product": "clear", "sku": "PLST-BLUE", "candidates": [], "quantity": 15, "quantity_doubt": "none"}
+{"line_id": "CLD-0148-L3", "product": "clear", "sku": "GLV-NIT200-M", "candidates": [], "quantity": 11, "quantity_doubt": "none"}
+{"line_id": "CLD-0148-L4", "product": "clear", "sku": "SUP-ANKLE-L", "candidates": [], "quantity": 4, "quantity_doubt": "none"}
+{"line_id": "CLD-0148-L5", "product": "clear", "sku": "SHARPS-06", "candidates": [], "quantity": 31, "quantity_doubt": "none"}
+{"line_id": "CLD-0149-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0149-L2", "product": "clear", "sku": "GLV-NITX-L", "candidates": [], "quantity": 25, "quantity_doubt": "none"}
+{"line_id": "CLD-0151-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 9, "quantity_doubt": "none"}
+{"line_id": "CLD-0151-L2", "product": "clear", "sku": "ALC70-250", "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0152-L1", "product": "clear", "sku": "COT-BALL", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0154-L1", "product": "clear", "sku": "TOOTHBRUSH-SOFT", "candidates": [], "quantity": 48, "quantity_doubt": "none"}
+{"line_id": "CLD-0154-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0154-L3", "product": "ambiguous", "sku": null, "candidates": ["INC-PAD-LIGHT", "INC-PAD-NORMAL", "INC-PAD-MAXI"], "quantity": 8, "quantity_doubt": "none"}
+{"line_id": "CLD-0157-L1", "product": "ambiguous", "sku": null, "candidates": ["CAP-BOUF", "WIPE-WASH-CAP"], "quantity": 38, "quantity_doubt": "none", "note": "caps: bouffant cap or rinse-free shampoo cap"}
+{"line_id": "CLD-0157-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 30, "quantity_doubt": "none"}
+{"line_id": "CLD-0157-L3", "product": "clear", "sku": "MASK-FFP3", "candidates": [], "quantity": 4, "quantity_doubt": "none"}
+{"line_id": "CLD-0158-L1", "product": "clear", "sku": "INC-PAD-MAXI", "candidates": [], "quantity": 25, "quantity_doubt": "none"}
+{"line_id": "CLD-0158-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 7, "quantity_doubt": "none"}
+{"line_id": "CLD-0158-L3", "product": "clear", "sku": "GLV-SURG-LTX-7", "candidates": [], "quantity": 25, "quantity_doubt": "none"}
+{"line_id": "CLD-0158-L4", "product": "clear", "sku": "SYR-INS-10", "candidates": [], "quantity": 2000, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0160-L1", "product": "clear", "sku": "GEL-500", "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0160-L2", "product": "ambiguous", "sku": null, "candidates": ["GAUZE-ROLL-5", "GAUZE-ROLL-7", "GAUZE-ROLL-10"], "quantity": 40, "quantity_doubt": "none"}
+{"line_id": "CLD-0161-L1", "product": "clear", "sku": "MASK-FFP2-V", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0161-L2", "product": "clear", "sku": "OIL-MASSAGE", "candidates": [], "quantity": 15, "quantity_doubt": "none"}
+{"line_id": "CLD-0161-L3", "product": "clear", "sku": "GLV-LTX-XL", "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0161-L4", "product": "unknown", "sku": null, "candidates": [], "quantity": 75, "quantity_doubt": "none", "note": "ultrasound gel not in catalog"}
+{"line_id": "CLD-0162-L1", "product": "clear", "sku": "TAPE-TR-25", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0162-L2", "product": "clear", "sku": "STITCH-CUT", "candidates": [], "quantity": 30, "quantity_doubt": "none"}
+{"line_id": "CLD-0162-L3", "product": "clear", "sku": "SYR-3", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0162-L4", "product": "clear", "sku": "NDL-30G", "candidates": [], "quantity": 600, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0165-L1", "product": "ambiguous", "sku": null, "candidates": ["ALC70-1000", "ALC96-1000"], "quantity": 9, "quantity_doubt": "none"}
+{"line_id": "CLD-0165-L2", "product": "clear", "sku": "THERM-DIG", "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0165-L3", "product": "clear", "sku": "SUP-LUMBAR", "candidates": [], "quantity": 6, "quantity_doubt": "none"}
+{"line_id": "CLD-0167-L1", "product": "clear", "sku": "DRS-FOAM-10", "candidates": [], "quantity": 13, "quantity_doubt": "none"}
+{"line_id": "CLD-0167-L2", "product": "clear", "sku": "PLST-FAB", "candidates": [], "quantity": 750, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0167-L3", "product": "ambiguous", "sku": null, "candidates": ["SYR-LL-5", "SYR-LL-10", "SYR-LL-20", "SYR-LL-50"], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0167-L4", "product": "clear", "sku": "GRAB-REACH", "candidates": [], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0167-L5", "product": "clear", "sku": "MASK-FFP2", "candidates": [], "quantity": 90, "quantity_doubt": "none", "note": "exact name; black variant MASK-FFP2-BLK not stated"}
+{"line_id": "CLD-0168-L1", "product": "clear", "sku": "NDL-27G", "candidates": [], "quantity": 6, "quantity_doubt": "none", "note": "600 needles = 6 boxes of 100"}
+{"line_id": "CLD-0168-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 11, "quantity_doubt": "none"}
+{"line_id": "CLD-0168-L3", "product": "unknown", "sku": null, "candidates": [], "quantity": 10, "quantity_doubt": "none"}
+{"line_id": "CLD-0170-L1", "product": "clear", "sku": "WIPE-SURF-200", "candidates": [], "quantity": 150, "quantity_doubt": "none"}
+{"line_id": "CLD-0170-L2", "product": "ambiguous", "sku": null, "candidates": ["GLV-LTX-S", "GLV-LTX-M", "GLV-LTX-L", "GLV-LTX-XL"], "quantity": 30, "quantity_doubt": "none"}
+{"line_id": "CLD-0170-L3", "product": "clear", "sku": "PEN-32-4", "candidates": [], "quantity": 750, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0170-L4", "product": "clear", "sku": "GLV-SURG-NEO-7", "candidates": [], "quantity": 10, "quantity_doubt": "none"}
+{"line_id": "CLD-0170-L5", "product": "clear", "sku": "ALC70-5000", "candidates": [], "quantity": 6, "quantity_doubt": "none"}
+{"line_id": "CLD-0171-L1", "product": "clear", "sku": "WIPE-SURF-100", "candidates": [], "quantity": 19, "quantity_doubt": "none"}
+{"line_id": "CLD-0171-L2", "product": "unknown", "sku": null, "candidates": [], "quantity": 7, "quantity_doubt": "none"}
+{"line_id": "CLD-0171-L3", "product": "clear", "sku": "WIPE-PAD-100", "candidates": [], "quantity": 1000, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0171-L4", "product": "clear", "sku": "DRS-EYE", "candidates": [], "quantity": 48, "quantity_doubt": "none"}
+{"line_id": "CLD-0174-L1", "product": "clear", "sku": "GRAB-REACH", "candidates": [], "quantity": 12, "quantity_doubt": "none"}
+{"line_id": "CLD-0174-L2", "product": "clear", "sku": "WIPE-SURF-200", "candidates": [], "quantity": 6, "quantity_doubt": "none", "note": "1200 wipes = 6 refills of 200"}
+{"line_id": "CLD-0174-L3", "product": "clear", "sku": "WIPE-PAD-200", "candidates": [], "quantity": 17, "quantity_doubt": "none"}
+{"line_id": "CLD-0174-L4", "product": "clear", "sku": "GLV-LTXP-S", "candidates": [], "quantity": 6, "quantity_doubt": "none"}
+{"line_id": "CLD-0174-L5", "product": "clear", "sku": "KIT-FA-SMALL", "candidates": [], "quantity": 15, "quantity_doubt": "none"}
+{"line_id": "CLD-0176-L1", "product": "clear", "sku": "GLV-LTXP-L", "candidates": [], "quantity": 10, "quantity_doubt": "none"}
+{"line_id": "CLD-0176-L2", "product": "clear", "sku": "BPM-CUFF-M", "candidates": [], "quantity": 11, "quantity_doubt": "none"}
+{"line_id": "CLD-0180-L1", "product": "clear", "sku": "CREAM-HAND-100", "candidates": [], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0180-L2", "product": "ambiguous", "sku": null, "candidates": ["GOGGLES", "WHEELCHAIR-CUSH"], "quantity": 15, "quantity_doubt": "none", "note": "smudged word; anti matches anti-fog and anti-pressure; could be read as unknown"}
+{"line_id": "CLD-0180-L3", "product": "clear", "sku": "INC-PANT-L", "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0181-L1", "product": "clear", "sku": "KIT-FA-WALL", "candidates": [], "quantity": null, "quantity_doubt": "missing", "note": "one per floor, floor count not given"}
+{"line_id": "CLD-0181-L2", "product": "clear", "sku": "SYR-INS-03", "candidates": [], "quantity": 10, "quantity_doubt": "none"}
+{"line_id": "CLD-0181-L3", "product": "clear", "sku": "OXI-HAND", "candidates": [], "quantity": 2, "quantity_doubt": "none"}
+{"line_id": "CLD-0181-L4", "product": "ambiguous", "sku": null, "candidates": ["ALC70-100", "ALC70-250", "ALC70-500", "ALC70-1000", "ALC96-100", "ALC96-250", "ALC96-500", "ALC96-1000"], "quantity": 30, "quantity_doubt": "none"}
+{"line_id": "CLD-0182-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 12, "quantity_doubt": "none", "note": "size XXL not in catalog; could be read as ambiguous over nitrile sizes"}
+{"line_id": "CLD-0182-L2", "product": "clear", "sku": "SCALPEL-11", "candidates": [], "quantity": 5, "quantity_doubt": "none"}
+{"line_id": "CLD-0182-L3", "product": "clear", "sku": "ALC96-1000", "candidates": [], "quantity": 13, "quantity_doubt": "none"}
+{"line_id": "CLD-0182-L4", "product": "clear", "sku": "GAUZE-NS-10-12", "candidates": [], "quantity": 8, "quantity_doubt": "none", "note": "800 swabs = 8 packs of 100"}
+{"line_id": "CLD-0182-L5", "product": "unknown", "sku": null, "candidates": [], "quantity": 60, "quantity_doubt": "none"}
+{"line_id": "CLD-0183-L1", "product": "unknown", "sku": null, "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0189-L1", "product": "clear", "sku": "ALC70-1000", "candidates": [], "quantity": 1200, "quantity_doubt": "over_ceiling"}
+{"line_id": "CLD-0189-L2", "product": "ambiguous", "sku": null, "candidates": ["GAUZE-NS-5", "GAUZE-NS-5-12", "GAUZE-NS-7", "GAUZE-NS-7-12", "GAUZE-NS-10", "GAUZE-NS-10-12", "GAUZE-ST-5", "GAUZE-ST-7", "GAUZE-ST-10", "GAUZE-ROLL-5", "GAUZE-ROLL-7", "GAUZE-ROLL-10"], "quantity": 49, "quantity_doubt": "none"}
+{"line_id": "CLD-0193-L1", "product": "clear", "sku": "LAN-PEN", "candidates": [], "quantity": 1, "quantity_doubt": "none"}
+{"line_id": "CLD-0193-L2", "product": "clear", "sku": "GLV-NIT-XS", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0193-L3", "product": "clear", "sku": "WIPE-WET-80", "candidates": [], "quantity": 7, "quantity_doubt": "none"}
+{"line_id": "CLD-0193-L4", "product": "ambiguous", "sku": null, "candidates": ["SUP-KNEE-S", "SUP-KNEE-M", "SUP-KNEE-L", "SUP-KNEE-XL"], "quantity": 8, "quantity_doubt": "none"}
+{"line_id": "CLD-0195-L1", "product": "clear", "sku": "PLST-KIDS", "candidates": [], "quantity": 18, "quantity_doubt": "none"}
+{"line_id": "CLD-0195-L2", "product": "clear", "sku": "STRIP-6x75", "candidates": [], "quantity": 10, "quantity_doubt": "none"}
+{"line_id": "CLD-0196-L1", "product": "clear", "sku": "SYR-10", "candidates": [], "quantity": 6, "quantity_doubt": "none"}
+{"line_id": "CLD-0196-L2", "product": "ambiguous", "sku": null, "candidates": ["APRON-PE", "FORCEPS-DISP", "PILL-CUP"], "quantity": 39, "quantity_doubt": "none", "note": "only plastic named; could be read as unknown"}
+{"line_id": "CLD-0196-L3", "product": "clear", "sku": "INC-PANT-M", "candidates": [], "quantity": null, "quantity_doubt": "missing"}
+{"line_id": "CLD-0196-L4", "product": "clear", "sku": "PLST-ROLL-6", "candidates": [], "quantity": 15, "quantity_doubt": "none"}
+{"line_id": "CLD-0196-L5", "product": "clear", "sku": "DRS-ISL-9x10", "candidates": [], "quantity": 3, "quantity_doubt": "none"}
+{"line_id": "CLD-0200-L1", "product": "clear", "sku": "NDL-30G", "candidates": [], "quantity": 9, "quantity_doubt": "none"}
+{"line_id": "CLD-0200-L2", "product": "clear", "sku": "PLST-ROLL-8", "candidates": [], "quantity": 16, "quantity_doubt": "none"}
+{"line_id": "CLD-0200-L3", "product": "clear", "sku": "BND-COH-5", "candidates": [], "quantity": 17, "quantity_doubt": "none"}

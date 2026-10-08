@@ -28,12 +28,11 @@ from purchase_cycle.evaluation.planning import (
     GENERIC_QUANTITIES,
     OUT_OF_CATALOG_ITEMS,
     WORD_QUANTITIES,
-    has_number,
-    pack_size,
     read_jsonl,
     write_jsonl,
 )
 from purchase_cycle.evaluation.stats import wilson_interval
+from purchase_cycle.quantities import has_number, pack_size
 from purchase_cycle.web_form import match_key
 
 DATASET_VERSION = "1.0"

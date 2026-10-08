@@ -1,0 +1,3309 @@
+{
+ "dataset_version": "1.0",
+ "doubts": {
+  "CLD-0002-L2:ambiguous": true,
+  "CLD-0002-L3:quantity": true,
+  "CLD-0003-L1:ambiguous": true,
+  "CLD-0003-L2:quantity": true,
+  "CLD-0008-L3:ambiguous": true,
+  "CLD-0009-L2:unknown": true,
+  "CLD-0009-L4:ambiguous": true,
+  "CLD-0011-L3:unknown": true,
+  "CLD-0015-L4:quantity": true,
+  "CLD-0016-L2:ambiguous": true,
+  "CLD-0017-L1:quantity": true,
+  "CLD-0017-L2:quantity": true,
+  "CLD-0019-L3:unknown": true,
+  "CLD-0019-L4:unknown": true,
+  "CLD-0023-L1:ambiguous": true,
+  "CLD-0023-L3:ambiguous": true,
+  "CLD-0024-L1:quantity": true,
+  "CLD-0026-L1:quantity": true,
+  "CLD-0026-L2:quantity": true,
+  "CLD-0028-L2:ambiguous": true,
+  "CLD-0029-L1:unknown": true,
+  "CLD-0029-L2:ambiguous": true,
+  "CLD-0031-L1:ambiguous": true,
+  "CLD-0031-L3:quantity": true,
+  "CLD-0032-L2:unknown": true,
+  "CLD-0033-L1:unknown": true,
+  "CLD-0033-L2:unknown": true,
+  "CLD-0034-L2:unknown": true,
+  "CLD-0034-L3:quantity": true,
+  "CLD-0036-L2:ambiguous": true,
+  "CLD-0036-L3:quantity": true,
+  "CLD-0037-L1:unknown": true,
+  "CLD-0038-L3:unknown": true,
+  "CLD-0041-L2:unknown": false,
+  "CLD-0043-L2:quantity": true,
+  "CLD-0043-L5:unknown": true,
+  "CLD-0047-L1:quantity": true,
+  "CLD-0047-L2:unknown": false,
+  "CLD-0050-L1:quantity": true,
+  "CLD-0050-L2:quantity": true,
+  "CLD-0052-L2:unknown": true,
+  "CLD-0052-L3:ambiguous": true,
+  "CLD-0053-L2:ambiguous": true,
+  "CLD-0054-L1:unknown": true,
+  "CLD-0056-L1:unknown": true,
+  "CLD-0056-L4:unknown": true,
+  "CLD-0061-L1:unknown": true,
+  "CLD-0062-L2:unknown": true,
+  "CLD-0066-L1:ambiguous": false,
+  "CLD-0066-L4:quantity": false,
+  "CLD-0068-L2:quantity": true,
+  "CLD-0068-L5:ambiguous": true,
+  "CLD-0070-L1:ambiguous": true,
+  "CLD-0070-L3:quantity": true,
+  "CLD-0072-L2:ambiguous": true,
+  "CLD-0073-L1:unknown": true,
+  "CLD-0075-L3:ambiguous": true,
+  "CLD-0075-L4:unknown": true,
+  "CLD-0076-L1:ambiguous": true,
+  "CLD-0076-L2:ambiguous": true,
+  "CLD-0077-L2:unknown": true,
+  "CLD-0081-L1:quantity": true,
+  "CLD-0082-L1:quantity": true,
+  "CLD-0083-L1:ambiguous": false,
+  "CLD-0083-L2:quantity": false,
+  "CLD-0084-L4:unknown": true,
+  "CLD-0087-L1:ambiguous": true,
+  "CLD-0091-L2:ambiguous": true,
+  "CLD-0093-L2:unknown": true,
+  "CLD-0093-L4:ambiguous": true,
+  "CLD-0094-L3:ambiguous": true,
+  "CLD-0094-L4:ambiguous": true,
+  "CLD-0099-L2:unknown": true,
+  "CLD-0099-L3:unknown": true,
+  "CLD-0102-L2:unknown": true,
+  "CLD-0103-L2:quantity": true,
+  "CLD-0105-L2:quantity": true,
+  "CLD-0106-L3:quantity": true,
+  "CLD-0107-L1:ambiguous": true,
+  "CLD-0109-L1:ambiguous": true,
+  "CLD-0109-L2:quantity": true,
+  "CLD-0110-L1:ambiguous": true,
+  "CLD-0112-L2:ambiguous": false,
+  "CLD-0117-L1:ambiguous": true,
+  "CLD-0117-L2:quantity": true,
+  "CLD-0118-L2:unknown": true,
+  "CLD-0118-L3:ambiguous": true,
+  "CLD-0119-L2:unknown": true,
+  "CLD-0119-L3:unknown": true,
+  "CLD-0120-L1:quantity": true,
+  "CLD-0120-L2:ambiguous": true,
+  "CLD-0121-L3:ambiguous": true,
+  "CLD-0121-L4:unknown": true,
+  "CLD-0122-L1:unknown": true,
+  "CLD-0123-L2:quantity": false,
+  "CLD-0129-L1:unknown": true,
+  "CLD-0131-L1:unknown": true,
+  "CLD-0131-L5:ambiguous": true,
+  "CLD-0132-L2:unknown": true,
+  "CLD-0134-L2:unknown": true,
+  "CLD-0135-L3:ambiguous": true,
+  "CLD-0137-L2:quantity": false,
+  "CLD-0137-L3:ambiguous": false,
+  "CLD-0138-L3:ambiguous": true,
+  "CLD-0139-L2:quantity": true,
+  "CLD-0139-L3:unknown": true,
+  "CLD-0140-L1:unknown": true,
+  "CLD-0140-L3:quantity": true,
+  "CLD-0145-L3:ambiguous": true,
+  "CLD-0145-L4:quantity": true,
+  "CLD-0146-L1:ambiguous": true,
+  "CLD-0146-L4:quantity": true,
+  "CLD-0147-L3:unknown": true,
+  "CLD-0147-L4:quantity": true,
+  "CLD-0149-L1:unknown": false,
+  "CLD-0150-L3:unknown": true,
+  "CLD-0151-L1:unknown": true,
+  "CLD-0155-L1:unknown": true,
+  "CLD-0157-L1:ambiguous": true,
+  "CLD-0157-L2:unknown": true,
+  "CLD-0158-L2:unknown": true,
+  "CLD-0158-L4:quantity": true,
+  "CLD-0159-L2:unknown": true,
+  "CLD-0160-L2:ambiguous": false,
+  "CLD-0162-L4:quantity": true,
+  "CLD-0163-L2:ambiguous": true,
+  "CLD-0164-L1:ambiguous": true,
+  "CLD-0164-L2:ambiguous": true,
+  "CLD-0165-L1:ambiguous": false,
+  "CLD-0167-L2:quantity": true,
+  "CLD-0167-L3:ambiguous": true,
+  "CLD-0168-L2:unknown": true,
+  "CLD-0168-L3:unknown": true,
+  "CLD-0170-L2:ambiguous": true,
+  "CLD-0170-L3:quantity": true,
+  "CLD-0172-L3:ambiguous": true,
+  "CLD-0175-L1:unknown": true,
+  "CLD-0177-L2:quantity": true,
+  "CLD-0177-L3:quantity": true,
+  "CLD-0180-L2:ambiguous": true,
+  "CLD-0183-L1:unknown": true,
+  "CLD-0187-L1:ambiguous": true,
+  "CLD-0187-L2:quantity": true,
+  "CLD-0188-L1:unknown": true,
+  "CLD-0189-L1:quantity": true,
+  "CLD-0189-L2:ambiguous": true,
+  "CLD-0190-L3:quantity": true,
+  "CLD-0190-L4:quantity": true,
+  "CLD-0193-L2:quantity": true,
+  "CLD-0193-L4:ambiguous": true,
+  "CLD-0194-L1:unknown": true,
+  "CLD-0194-L2:quantity": true,
+  "CLD-0197-L1:ambiguous": true,
+  "CLD-0197-L4:ambiguous": true
+ },
+ "measured_at": "2026-10-08",
+ "metrics": {
+  "false_question_rate": {
+   "high": 0.07410012966611748,
+   "hits": 0,
+   "low": 6.938893903907228e-18,
+   "n": 48,
+   "value": 0.0
+  },
+  "precision_ambiguous": {
+   "high": 0.9999999999999999,
+   "hits": 49,
+   "low": 0.9273021807795035,
+   "n": 49,
+   "value": 1.0
+  },
+  "precision_quantity": {
+   "high": 0.9958829127256662,
+   "hits": 42,
+   "low": 0.8794100655939282,
+   "n": 43,
+   "value": 0.9767441860465116
+  },
+  "precision_unknown": {
+   "high": 0.9965303073589391,
+   "hits": 50,
+   "low": 0.8969543127385502,
+   "n": 51,
+   "value": 0.9803921568627451
+  },
+  "recall_ambiguous": {
+   "high": 0.9490327499921767,
+   "hits": 49,
+   "low": 0.7817445091344648,
+   "n": 55,
+   "value": 0.8909090909090909
+  },
+  "recall_quantity": {
+   "high": 0.9656641321052741,
+   "hits": 42,
+   "low": 0.7967533592588116,
+   "n": 46,
+   "value": 0.9130434782608695
+  },
+  "recall_unknown": {
+   "high": 0.9805633385150642,
+   "hits": 50,
+   "low": 0.8462979168981911,
+   "n": 53,
+   "value": 0.9433962264150944
+  }
+ },
+ "mode": "replay",
+ "model": "claude-haiku-4-5",
+ "orders": {
+  "CLD-0002": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 22,
+     "sku": "GEL-1000",
+     "text": "Hand sanitiser gel refill, 1 litre"
+    },
+    {
+     "quantity": 45,
+     "sku": null,
+     "text": "SPF pls"
+    },
+    {
+     "quantity": 800,
+     "sku": "CATH-SIL-18",
+     "text": "100% silicone Foley catheter 18 Fr"
+    },
+    {
+     "quantity": 20,
+     "sku": "GLV-VIN-M",
+     "text": "vinyl gloves size M"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0003": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 47,
+     "sku": null,
+     "text": "Plasters"
+    },
+    {
+     "quantity": 1500,
+     "sku": "SAL-10",
+     "text": "saline 0.9% single dose 10 ml"
+    },
+    {
+     "quantity": 21,
+     "sku": "STOOL-CUP",
+     "text": "stool sample containers"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0006": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 31,
+     "sku": "STITCH-CUT",
+     "text": "sterile stitch cutters"
+    },
+    {
+     "quantity": 43,
+     "sku": "GEL-PACK-L",
+     "text": "reusable hot and cold gel pack 15 x 25"
+    },
+    {
+     "quantity": 5,
+     "sku": "COT-APPL",
+     "text": "cotton-tipped applicators, sterile"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0008": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "PILL-BOX-7",
+     "text": "weekly pill organiser"
+    },
+    {
+     "quantity": 15,
+     "sku": "SUP-WRIST-M",
+     "text": "elastic wrist support size M"
+    },
+    {
+     "quantity": 16,
+     "sku": "WIPE-SURF-100",
+     "text": "disinfectant wipes"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0009": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "STOCK-THIGH-M",
+     "text": "Thigh-high compression stockings, M"
+    },
+    {
+     "quantity": 44,
+     "sku": null,
+     "text": "pregnancy tests"
+    },
+    {
+     "quantity": 37,
+     "sku": "SLING-ARM",
+     "text": "arm sling"
+    },
+    {
+     "quantity": 50,
+     "sku": "INC-PANT-M",
+     "text": "adult pull-up pants"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0010": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 100,
+     "sku": "THERM-EAR",
+     "text": "100 infrared ear thermometers"
+    },
+    {
+     "quantity": 13,
+     "sku": "CRUTCH-ADULT",
+     "text": "13 x elbow crutch, adult"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0011": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 48,
+     "sku": "SHARPS-1",
+     "text": "sharps container 1 litre"
+    },
+    {
+     "quantity": 9,
+     "sku": "CREAM-HAND-50",
+     "text": "repairing hand cream 50 ml"
+    },
+    {
+     "quantity": 41,
+     "sku": null,
+     "text": "massage tables"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0013": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 36,
+     "sku": "COUCH-50",
+     "text": "examination couch paper roll 50 cm x 50 m"
+    },
+    {
+     "quantity": 27,
+     "sku": "GAUZE-ROLL-7",
+     "text": "gauze bandage roll 7.5 cm"
+    },
+    {
+     "quantity": 6,
+     "sku": "GAUZE-NS-5-12",
+     "text": "non-sterile gauze swabs 5 x 5 cm, 12 ply"
+    },
+    {
+     "quantity": 15,
+     "sku": "KIT-FA-REFILL",
+     "text": "first aid refill pack"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0014": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": "GLV-SURG-LTX-7.5",
+     "text": "1 box of sterile latex surgical gloves, size 7.5"
+    },
+    {
+     "quantity": 7,
+     "sku": "TAPE-TR-12",
+     "text": "84 rolls of transparent tape 1.25 cm x 9.1 m"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0015": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 50,
+     "sku": "BND-COH-5",
+     "text": "50 packs of cohesive bandage 5 cm x 4.5 m"
+    },
+    {
+     "quantity": 24,
+     "sku": "MASK-FFP3-V",
+     "text": "2 dozen boxes of FFP3 respirator masks with exhalation valve"
+    },
+    {
+     "quantity": 12,
+     "sku": "BND-ELA-10",
+     "text": "a dozen packs of elastic crepe bandage 10 cm x 4.5 m"
+    },
+    {
+     "quantity": 2000,
+     "sku": "INC-BRF-NIGHT-M",
+     "text": "2000 packs of adult incontinence briefs, night, size M"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0016": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "DRS-FILM-6x7",
+     "text": "seven boxes of the 6 cm transparent film dressing"
+    },
+    {
+     "quantity": 43,
+     "sku": null,
+     "text": "43 digital thermometers"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0017": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1500,
+     "sku": "TOOTHBRUSH-SOFT",
+     "text": "soft toothbrush"
+    },
+    {
+     "quantity": 600,
+     "sku": "GOWN-ISO-XL",
+     "text": "isolation gowns XL"
+    },
+    {
+     "quantity": 47,
+     "sku": "MASK-FFP2-BLK",
+     "text": "black FFP2 masks"
+    },
+    {
+     "quantity": 25,
+     "sku": "TONGUE-AD",
+     "text": "wooden tongue depressors, adult"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0019": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "LAN-PEN",
+     "text": "lancet pen"
+    },
+    {
+     "quantity": 15,
+     "sku": "WIPE-WASH-CAP",
+     "text": "rinse-free shampoo caps"
+    },
+    {
+     "quantity": 27,
+     "sku": null,
+     "text": "crepe bandages 20 cm wide"
+    },
+    {
+     "quantity": 20,
+     "sku": null,
+     "text": "hearing aid batteries"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0023": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 40,
+     "sku": "MASK-FFP3-V",
+     "text": "40 masks with exhalation valve"
+    },
+    {
+     "quantity": 15,
+     "sku": "THERM-COVER",
+     "text": "15 boxes of disposable probe covers for ear thermometer"
+    },
+    {
+     "quantity": 12,
+     "sku": "GAUZE-ST-10",
+     "text": "12 packs of sterile gauze swabs, 8 ply"
+    },
+    {
+     "quantity": 17,
+     "sku": "BND-COH-7",
+     "text": "seventeen packs of cohesive bandage 7.5 cm x 4.5 m"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0024": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 2000,
+     "sku": "BND-ELA-7",
+     "text": "elastic crepe bandage 7.5 cm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0025": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 30,
+     "sku": "SAL-250",
+     "text": "saline for irrigation 250 ml"
+    },
+    {
+     "quantity": 32,
+     "sku": "GLV-NIT200-L",
+     "text": "nitrile gloves value pack L"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0026": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 600,
+     "sku": "CREAM-BARRIER",
+     "text": "600 tubes of barrier cream for skin protection 100 g"
+    },
+    {
+     "quantity": 1,
+     "sku": "KIT-FA-REFILL",
+     "text": "first aid kit refill packs, enough for all the rooms"
+    },
+    {
+     "quantity": 8,
+     "sku": "GAUZE-NS-7",
+     "text": "8 packs of non-sterile gauze swabs 7.5 x 7.5 cm, 8 ply"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0027": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 19,
+     "sku": "LAN-100",
+     "text": "19 x safety lancets 28G, box of 100"
+    },
+    {
+     "quantity": 5,
+     "sku": "SUP-ANKLE-S",
+     "text": "5 elastic ankle supports, size S"
+    },
+    {
+     "quantity": 40,
+     "sku": "SYR-LL-10",
+     "text": "40 boxes of disposable syringes 10 ml, luer lock"
+    },
+    {
+     "quantity": 5,
+     "sku": "ALC96-100",
+     "text": "5 bottles of ethyl alcohol 96% 100 ml"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0028": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 47,
+     "sku": "GEL-500",
+     "text": "hand sanitiser gel with pump"
+    },
+    {
+     "quantity": 2,
+     "sku": "GLV-NIT-M",
+     "text": "Nitrile examination gloves, powder-free"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0029": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 21,
+     "sku": null,
+     "text": "COVID antigen tests"
+    },
+    {
+     "quantity": 28,
+     "sku": null,
+     "text": "Compression stockings, class I"
+    },
+    {
+     "quantity": 45,
+     "sku": "CATH-FOL-16",
+     "text": "silicone-coated latex Foley 16 Fr"
+    },
+    {
+     "quantity": 43,
+     "sku": "SUN-KIDS-50-200",
+     "text": "children's sunscreen 200 ml"
+    },
+    {
+     "quantity": 22,
+     "sku": "GLV-VIN-L",
+     "text": "vinyl examination gloves L"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0031": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 36,
+     "sku": null,
+     "text": "36 x saline"
+    },
+    {
+     "quantity": 1,
+     "sku": "DRS-NONADH-10",
+     "text": "100 non-adherent dressing pads 10 x 10 cm"
+    },
+    {
+     "quantity": 501,
+     "sku": "BND-ELA-5",
+     "text": "501 packs of elastic crepe bandage 5 cm x 4.5 m"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0032": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 2,
+     "sku": "INC-PANT-XL",
+     "text": "2 packs of adult pull-up pants, size XL"
+    },
+    {
+     "quantity": 40,
+     "sku": null,
+     "text": "forty scrubs uniforms"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0033": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 28,
+     "sku": null,
+     "text": "FFP1 masks"
+    },
+    {
+     "quantity": 10,
+     "sku": null,
+     "text": "AED defibrillator"
+    },
+    {
+     "quantity": 24,
+     "sku": "DRS-FOAM-15",
+     "text": "foam dressing with border 15 x 15"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0034": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 21,
+     "sku": "PLST-KIDS",
+     "text": "children's plasters with drawings"
+    },
+    {
+     "quantity": 11,
+     "sku": null,
+     "text": "nitrile gloves XXL"
+    },
+    {
+     "quantity": 1000,
+     "sku": "GLV-VIN-S",
+     "text": "powder-free vinyl gloves S"
+    },
+    {
+     "quantity": 49,
+     "sku": "CPR-MASK",
+     "text": "CPR face shield"
+    },
+    {
+     "quantity": 29,
+     "sku": "NDL-19G",
+     "text": "19G hypodermic needles"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0035": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 19,
+     "sku": "CREAM-MOIST-100",
+     "text": "nineteen tubes of moisturising body cream 100 ml"
+    },
+    {
+     "quantity": 20,
+     "sku": "SHAMPOO-500",
+     "text": "20 bottles of mild shampoo 500 ml"
+    },
+    {
+     "quantity": 48,
+     "sku": "COUCH-60-SMOOTH",
+     "text": "4 dozen packs of smooth examination couch roll 60 cm x 100 m"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0036": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 34,
+     "sku": "NDL-21G",
+     "text": "hypodermic needles 21G"
+    },
+    {
+     "quantity": 17,
+     "sku": null,
+     "text": "Latex surgical gloves"
+    },
+    {
+     "quantity": 750,
+     "sku": "SHARPS-10",
+     "text": "10 litre sharps container"
+    },
+    {
+     "quantity": 34,
+     "sku": "STOCK-KNEE-S",
+     "text": "knee-high compression stockings S"
+    },
+    {
+     "quantity": 50,
+     "sku": "SHOE-COVER",
+     "text": "shoe covers"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0037": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 8,
+     "sku": "NDL-22G",
+     "text": "800 hypodermic needles 22G x 30 mm"
+    },
+    {
+     "quantity": 14,
+     "sku": null,
+     "text": "14 oxygen cylinders"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0038": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 22,
+     "sku": "CATH-SIL-14",
+     "text": "100% silicone Foley catheter 14 Fr"
+    },
+    {
+     "quantity": 27,
+     "sku": "DRS-FOAM-10",
+     "text": "foam dressings 10 x 10 cm"
+    },
+    {
+     "quantity": 9,
+     "sku": null,
+     "text": "sharps container 15 litre, yellow"
+    },
+    {
+     "quantity": 25,
+     "sku": "BND-COH-7",
+     "text": "cohesive bandage 7.5 cm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0041": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 4,
+     "sku": "SYR-5",
+     "text": "4 boxes of the 5 ml disposable syringes, luer slip"
+    },
+    {
+     "quantity": 8,
+     "sku": "ALC70-500",
+     "text": "8 bottles of ethyl alcohol 70% 500 ml"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0043": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "GAUZE-NS-7-12",
+     "text": "20 packs of non-sterile gauze swabs 7.5 x 7.5 cm, 12 ply"
+    },
+    {
+     "quantity": 1,
+     "sku": "BPM-ARM",
+     "text": "automatic upper arm blood pressure monitor"
+    },
+    {
+     "quantity": 8,
+     "sku": "PEN-31-8",
+     "text": "800 pen needles 31G x 8 mm"
+    },
+    {
+     "quantity": 3,
+     "sku": "COUCH-50",
+     "text": "three packs of examination couch paper roll 50 cm x 50 m"
+    },
+    {
+     "quantity": 2,
+     "sku": null,
+     "text": "2 automated external defibrillators"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0044": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "CATH-SIL-14",
+     "text": "60 Foley catheters 2-way, 100% silicone, 14 Fr"
+    },
+    {
+     "quantity": 9,
+     "sku": "BND-ELA-7",
+     "text": "90 elastic crepe bandages 7.5 cm x 4.5 m"
+    },
+    {
+     "quantity": 18,
+     "sku": "COT-ROLL-500",
+     "text": "18 rolls of cotton wool 500 g"
+    },
+    {
+     "quantity": 3,
+     "sku": "CANE-FOLD",
+     "text": "3 folding walking sticks"
+    },
+    {
+     "quantity": 30,
+     "sku": "TAPE-KIN",
+     "text": "thirty rolls of kinesiology tape 5 cm x 5 m, black"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0046": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": "STOCK-KNEE-M",
+     "text": "18 pairs of compression knee-high stockings class I, size M"
+    },
+    {
+     "quantity": 120,
+     "sku": "BPM-ANER",
+     "text": "120 aneroid sphygmomanometers with stethoscope"
+    },
+    {
+     "quantity": 3,
+     "sku": "URN-CUP-60",
+     "text": "3 boxes of sterile urine containers 60 ml"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0047": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": "BPM-ARM",
+     "text": "blood pressure monitors, automatic upper arm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0049": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 80,
+     "sku": "STOCK-KNEE-L",
+     "text": "80 pairs of compression knee-high stockings class I, size L"
+    },
+    {
+     "quantity": 24,
+     "sku": "BPM-CUFF-M",
+     "text": "2 dozen replacement blood pressure cuffs, adult 22-32 cm"
+    },
+    {
+     "quantity": 2,
+     "sku": "STRIP-6x100",
+     "text": "2 boxes of skin closure strips 6 x 100 mm"
+    },
+    {
+     "quantity": 19,
+     "sku": "SUP-ELBOW-M",
+     "text": "19 elastic elbow supports, size M"
+    },
+    {
+     "quantity": 7,
+     "sku": "CANE-ADJ",
+     "text": "7 adjustable aluminium walking sticks"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0050": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1200,
+     "sku": "SUN-FACE-50-50",
+     "text": "facial sunscreen"
+    },
+    {
+     "quantity": 750,
+     "sku": "DRS-ISL-5x7",
+     "text": "island dressing 5 x 7.2 cm"
+    },
+    {
+     "quantity": 15,
+     "sku": "SYR-10",
+     "text": "10 ml luer slip syringe"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0051": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 29,
+     "sku": "SYR-INS-05",
+     "text": "insulin syringe 0.5 ml"
+    },
+    {
+     "quantity": 48,
+     "sku": "SAL-1000",
+     "text": "saline for irrigation, 1 litre"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0052": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "DRS-FILM-6x7",
+     "text": "film dressing 6 x 7 cm"
+    },
+    {
+     "quantity": 1,
+     "sku": null,
+     "text": "contact lens solution"
+    },
+    {
+     "quantity": 3,
+     "sku": "GLV-LTXP-M",
+     "text": "lightly powdered latex gloves"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0053": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 28,
+     "sku": "CATH-FOL-14",
+     "text": "Foley 14 Fr silicone-coated latex"
+    },
+    {
+     "quantity": 50,
+     "sku": null,
+     "text": "masks"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0054": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 40,
+     "sku": null,
+     "text": "oxygen cylinders"
+    },
+    {
+     "quantity": 5,
+     "sku": "ALC96-1000",
+     "text": "ethyl alcohol 96% 1 litre"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0055": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "SYR-3",
+     "text": "luer slip syringe 3 ml"
+    },
+    {
+     "quantity": 49,
+     "sku": "SYR-2",
+     "text": "syringes 2 ml luer slip"
+    },
+    {
+     "quantity": 37,
+     "sku": "SYR-1",
+     "text": "1 ml syringe, luer slip"
+    },
+    {
+     "quantity": 19,
+     "sku": "LIP-BALM",
+     "text": "lip balm"
+    },
+    {
+     "quantity": 20,
+     "sku": "SYR-LL-20",
+     "text": "luer lock syringe 20 ml"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0056": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": null,
+     "text": "11 COVID antigen tests"
+    },
+    {
+     "quantity": 9,
+     "sku": "SOAP-LIQ-500",
+     "text": "9 bottles of gentle liquid soap 500 ml"
+    },
+    {
+     "quantity": 12,
+     "sku": "SWAB-TRANS",
+     "text": "twelve boxes of sterile transport swabs with medium"
+    },
+    {
+     "quantity": 80,
+     "sku": null,
+     "text": "80 tins of baby formula"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0057": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "MASK-IIR-TIE",
+     "text": "500 surgical face masks type IIR, tie-on"
+    },
+    {
+     "quantity": 2,
+     "sku": "THERM-COVER",
+     "text": "2 boxes of disposable probe covers for ear thermometer"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0058": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": "SUP-ELBOW-S",
+     "text": "18 elastic elbow supports, size S"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0061": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": null,
+     "text": "1 pack of hearing aid batteries"
+    },
+    {
+     "quantity": 12,
+     "sku": "TAPE-ZNC-50",
+     "text": "one dozen boxes of zinc oxide tape 5 cm x 5 m"
+    },
+    {
+     "quantity": 48,
+     "sku": "SUN-50-50",
+     "text": "4 dozen tubes of sunscreen SPF 50+, 50 ml"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0062": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "HOT-WATER-BOTTLE",
+     "text": "16 hot water bottles 2 litres"
+    },
+    {
+     "quantity": 12,
+     "sku": null,
+     "text": "12 pregnancy tests"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0064": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": "GEL-5000",
+     "text": "18 hydroalcoholic hand sanitiser gel 5 litre jerrycans"
+    },
+    {
+     "quantity": 200,
+     "sku": "GEL-WALL",
+     "text": "200 wall dispensers for hand sanitiser, 1 litre"
+    },
+    {
+     "quantity": 24,
+     "sku": "BND-TRI",
+     "text": "two dozen packs of triangular bandages, non-woven"
+    },
+    {
+     "quantity": 20,
+     "sku": "SUP-WRIST-L",
+     "text": "20 elastic wrist supports, size L"
+    },
+    {
+     "quantity": 6,
+     "sku": "SHARPS-30",
+     "text": "6 sharps containers of 30 litres"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0065": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 17,
+     "sku": "OIL-MASSAGE",
+     "text": "seventeen bottles of massage oil 500 ml"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0066": {
+   "error": "Model output for case CLD-0066 rejected by schema: field 'lines.3.quantity': Input should be a valid integer",
+   "lines": [],
+   "question": false
+  },
+  "CLD-0068": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": "MASK-II",
+     "text": "18 boxes of surgical face masks type II, ear loops"
+    },
+    {
+     "quantity": 1,
+     "sku": "CAP-BOUF",
+     "text": "non-woven bouffant caps"
+    },
+    {
+     "quantity": 11,
+     "sku": "NDL-25G",
+     "text": "11 boxes of hypodermic needles 25G x 16 mm"
+    },
+    {
+     "quantity": 2,
+     "sku": "SYR-1",
+     "text": "200 disposable syringes 1 ml, luer slip"
+    },
+    {
+     "quantity": 26,
+     "sku": null,
+     "text": "26 pairs of thigh-high stockings"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0070": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": "GEL-1000",
+     "text": "sanitiser gel litre"
+    },
+    {
+     "quantity": 29,
+     "sku": "SUN-30-50",
+     "text": "Sunscreen SPF 30"
+    },
+    {
+     "quantity": 1200,
+     "sku": "ALC70-100",
+     "text": "ethyl alcohol 70% 100 ml"
+    },
+    {
+     "quantity": 33,
+     "sku": "PILL-CUP",
+     "text": "plastic medicine cups"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0071": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 2,
+     "sku": "THERM-DIG-FLEX",
+     "text": "digital thermometer with flexible tip"
+    },
+    {
+     "quantity": 45,
+     "sku": "ALC96-250",
+     "text": "alcohol 96% 250 ml"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0072": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 4,
+     "sku": "GLV-SURG-LTX-6.5",
+     "text": "sterile latex surgical gloves 6.5"
+    },
+    {
+     "quantity": 17,
+     "sku": null,
+     "text": "pads in cm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0073": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 31,
+     "sku": null,
+     "text": "oxygen cylinder refills"
+    },
+    {
+     "quantity": 11,
+     "sku": "BND-TUB-C",
+     "text": "tubular bandage size C"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0074": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "SAL-5",
+     "text": "300 units of saline solution 0.9%, single-dose 5 ml"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0075": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "TAPE-SILK-12",
+     "text": "silk tape 1.25 cm"
+    },
+    {
+     "quantity": 43,
+     "sku": "DRS-ISL-9x15",
+     "text": "adhesive island dressing 9 x 15 cm"
+    },
+    {
+     "quantity": 3,
+     "sku": null,
+     "text": "urine"
+    },
+    {
+     "quantity": 42,
+     "sku": null,
+     "text": "infusion pumps"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0076": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 39,
+     "sku": null,
+     "text": "ankle support"
+    },
+    {
+     "quantity": 19,
+     "sku": "CREAM-HAND-100",
+     "text": "hand cream"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0077": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 25,
+     "sku": "SPONGE-SOAP",
+     "text": "pre-soaped sponges"
+    },
+    {
+     "quantity": 12,
+     "sku": null,
+     "text": "massage tables, foldable"
+    },
+    {
+     "quantity": 5,
+     "sku": "TAPE-PAP-25",
+     "text": "microporous paper tape 2.5 cm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0079": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "SUP-ELBOW-L",
+     "text": "15 elastic elbow supports, size L"
+    },
+    {
+     "quantity": 10,
+     "sku": "GEL-100",
+     "text": "10 bottles of hydroalcoholic hand sanitiser gel 100 ml"
+    },
+    {
+     "quantity": 5,
+     "sku": "GAUZE-NS-7",
+     "text": "500 non-sterile gauze swabs 7.5 x 7.5 cm, 8 ply"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0080": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 15,
+     "sku": "INC-PANT-L",
+     "text": "15 packs of adult pull-up pants, size L"
+    },
+    {
+     "quantity": 30,
+     "sku": "TAPE-PAP-50",
+     "text": "30 boxes of microporous paper tape 5 cm x 9.1 m"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0081": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 501,
+     "sku": "COT-ROLL-1000",
+     "text": "501 cotton wool rolls 1 kg"
+    },
+    {
+     "quantity": 25,
+     "sku": "STRIP-3x75",
+     "text": "25 boxes of skin closure strips 3 x 75 mm"
+    },
+    {
+     "quantity": 15,
+     "sku": "INC-BRF-L",
+     "text": "15 packs of adult incontinence briefs, size L"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0082": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 900,
+     "sku": "THERM-SHEATH",
+     "text": "900 boxes of disposable sheaths for digital thermometer"
+    },
+    {
+     "quantity": 6,
+     "sku": "MASK-KIDS",
+     "text": "6 boxes of children's surgical face masks"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0083": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "COT-PADS",
+     "text": "3 packs of pads for the treatment room"
+    },
+    {
+     "quantity": 1,
+     "sku": "PLST-SPOT",
+     "text": "round spot plasters for after the injections, enough for a normal month"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0084": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": "GOWN-ISO-XL",
+     "text": "18 packs of disposable isolation gowns, non-woven, blue, XL"
+    },
+    {
+     "quantity": 48,
+     "sku": "GLV-LTX-S",
+     "text": "4 dozen boxes of latex examination gloves, powder-free, size S"
+    },
+    {
+     "quantity": 3,
+     "sku": "GAUZE-NS-5-12",
+     "text": "3 packs of non-sterile gauze swabs 5 x 5 cm, 12 ply"
+    },
+    {
+     "quantity": 2,
+     "sku": null,
+     "text": "2 jerrycans of ultrasound gel 5 litre"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0085": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 19,
+     "sku": "GLV-NIT-XS",
+     "text": "nineteen boxes of nitrile examination gloves, powder-free, size XS"
+    },
+    {
+     "quantity": 4,
+     "sku": "SCALPEL-15",
+     "text": "4 boxes of sterile disposable scalpel no. 15"
+    },
+    {
+     "quantity": 24,
+     "sku": "SUP-ANKLE-L",
+     "text": "2 dozen elastic ankle supports, size L"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0087": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": null,
+     "text": "13 x singles"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0088": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 22,
+     "sku": "TAPE-ZNC-25",
+     "text": "zinc oxide tape 2.5 cm"
+    },
+    {
+     "quantity": 28,
+     "sku": "TAPE-PAP-12",
+     "text": "paper tape 1.25 cm"
+    },
+    {
+     "quantity": 33,
+     "sku": "GLV-NIT-XL",
+     "text": "nitrile examination gloves, powder-free, XL"
+    },
+    {
+     "quantity": 19,
+     "sku": "CREAM-MOIST-500",
+     "text": "moisturising body cream with pump"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0091": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "GAUZE-ROLL-5",
+     "text": "12 bags of gauze bandage roll 5 cm x 4 m"
+    },
+    {
+     "quantity": 19,
+     "sku": null,
+     "text": "19 boxes of paper tape"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0092": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 44,
+     "sku": "NDL-25G",
+     "text": "25G needles"
+    },
+    {
+     "quantity": 47,
+     "sku": "COT-ROLL-250",
+     "text": "cotton wool roll 250 g"
+    },
+    {
+     "quantity": 8,
+     "sku": "SYR-LL-50",
+     "text": "50 ml luer lock syringe"
+    },
+    {
+     "quantity": 18,
+     "sku": "GLV-LTX-M",
+     "text": "latex gloves powder-free, size M"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0093": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "TAPE-SILK-25",
+     "text": "16 boxes of silk tape 2.5 cm x 9.1 m"
+    },
+    {
+     "quantity": 3,
+     "sku": null,
+     "text": "3 boxes of X-ray film"
+    },
+    {
+     "quantity": 36,
+     "sku": "GLU-METER",
+     "text": "3 dozen blood glucose meter kits"
+    },
+    {
+     "quantity": 35,
+     "sku": null,
+     "text": "35 boxes in the size in cm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0094": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 45,
+     "sku": "OXI-PAED",
+     "text": "forty-five paediatric fingertip pulse oximeters"
+    },
+    {
+     "quantity": 24,
+     "sku": "SUP-ELBOW-S",
+     "text": "24 elastic elbow supports, size S"
+    },
+    {
+     "quantity": 47,
+     "sku": null,
+     "text": "47 boxes of sterile disposable scalpels"
+    },
+    {
+     "quantity": 44,
+     "sku": null,
+     "text": "44 boxes of pen needles"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0096": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 50,
+     "sku": "MASK-FFP3",
+     "text": "FFP3 mask, no valve"
+    },
+    {
+     "quantity": 12,
+     "sku": "SUN-50-50",
+     "text": "Sunscreen SPF 50+ 50 ml"
+    },
+    {
+     "quantity": 31,
+     "sku": "GOWN-ISO",
+     "text": "isolation gown, blue"
+    },
+    {
+     "quantity": 33,
+     "sku": "NDL-20G",
+     "text": "hypodermic needle 20G"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0099": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 17,
+     "sku": "STOOL-CUP",
+     "text": "17 boxes of stool sample containers 30 ml"
+    },
+    {
+     "quantity": 12,
+     "sku": null,
+     "text": "twelve packs of hearing aid batteries"
+    },
+    {
+     "quantity": 16,
+     "sku": null,
+     "text": "16 patient lifts"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0100": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 31,
+     "sku": "WHEELCHAIR-CUSH",
+     "text": "anti-pressure wheelchair cushion"
+    },
+    {
+     "quantity": 5,
+     "sku": "COT-BUDS",
+     "text": "cotton buds"
+    },
+    {
+     "quantity": 31,
+     "sku": "PLST-ASST",
+     "text": "assorted adhesive plasters"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0101": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "TONGUE-ST",
+     "text": "six boxes of sterile wooden tongue depressors, individually wrapped"
+    },
+    {
+     "quantity": 4,
+     "sku": "DRS-ISL-9x10",
+     "text": "4 boxes of adhesive island dressings 9 x 10 cm"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0102": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "CREAM-HAND-50",
+     "text": "20 tubes of repairing hand cream 50 ml"
+    },
+    {
+     "quantity": 5,
+     "sku": null,
+     "text": "5 pregnancy tests"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0103": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 47,
+     "sku": "WIPE-PAD-100",
+     "text": "alcohol prep pads, box of 100"
+    },
+    {
+     "quantity": 1200,
+     "sku": "SAL-5",
+     "text": "single-dose saline 5 ml"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0104": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "GLV-SURG-LTX-8",
+     "text": "12 boxes of sterile latex surgical gloves, size 8"
+    },
+    {
+     "quantity": 18,
+     "sku": "THERM-IR",
+     "text": "18 infrared forehead thermometers, non-contact"
+    },
+    {
+     "quantity": 11,
+     "sku": "PEN-32-4",
+     "text": "11 boxes of pen needles 32G x 4 mm"
+    },
+    {
+     "quantity": 48,
+     "sku": "SUP-ANKLE-M",
+     "text": "four dozen elastic ankle supports, size M"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0105": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 49,
+     "sku": "AFTERSUN-200",
+     "text": "aloe vera after-sun gel"
+    },
+    {
+     "quantity": 800,
+     "sku": "GLV-LTX-XL",
+     "text": "latex examination gloves powder-free XL"
+    },
+    {
+     "quantity": 35,
+     "sku": "GLV-SURG-LTX-8.5",
+     "text": "latex surgical gloves 8.5"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0106": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "MASK-FFP2",
+     "text": "FFP2 respirator, no valve"
+    },
+    {
+     "quantity": 20,
+     "sku": "CATH-FOL-18",
+     "text": "Foley silicone-coated latex 18 Fr"
+    },
+    {
+     "quantity": 900,
+     "sku": "GLV-NIT-M",
+     "text": "nitrile gloves M, powder-free"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0107": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": "URN-CUP-100",
+     "text": "41 sterile urine containers"
+    },
+    {
+     "quantity": 48,
+     "sku": "SYR-20",
+     "text": "4 dozen boxes of disposable syringes 20 ml, luer slip"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0108": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 43,
+     "sku": "SUP-KNEE-M",
+     "text": "knee support size M"
+    },
+    {
+     "quantity": 7,
+     "sku": "NDL-22G",
+     "text": "needle 22G x 30 mm"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0109": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": null,
+     "text": "sterile disposable"
+    },
+    {
+     "quantity": 1000,
+     "sku": "BLANKET-FOIL",
+     "text": "foil blanket"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0110": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 35,
+     "sku": null,
+     "text": "35 boxes of silicone-coated latex Foley catheters"
+    },
+    {
+     "quantity": 13,
+     "sku": "KIT-FA-REFILL",
+     "text": "13 first aid kit refill packs"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0111": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "SUP-KNEE-XL",
+     "text": "elastic knee support XL"
+    },
+    {
+     "quantity": 47,
+     "sku": "RAZOR-DISP",
+     "text": "disposable razors"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0112": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 14,
+     "sku": "EYE-WASH-500",
+     "text": "14 eye wash station bottles 500 ml"
+    },
+    {
+     "quantity": 3,
+     "sku": "GLU-STRIP-100",
+     "text": "3 boxes of test strips for our diabetic patients"
+    },
+    {
+     "quantity": 1,
+     "sku": "INC-BRF-M",
+     "text": "20 adult incontinence briefs, size M"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0115": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "WIPE-ALC-100",
+     "text": "5 canisters of alcohol surface wipes"
+    },
+    {
+     "quantity": 11,
+     "sku": "SCALPEL-11",
+     "text": "11 boxes of sterile disposable scalpel no. 11"
+    },
+    {
+     "quantity": 70,
+     "sku": "GLV-LTXP-M",
+     "text": "seventy boxes of latex examination gloves, lightly powdered, size M"
+    },
+    {
+     "quantity": 5,
+     "sku": "PAD-REUSE-75",
+     "text": "5 reusable washable bed pads 75 x 90 cm"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0116": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": "TAPE-KIN",
+     "text": "1 roll of kinesiology tape 5 cm x 5 m, black"
+    },
+    {
+     "quantity": 6,
+     "sku": "GLV-NITX-XL",
+     "text": "6 boxes of nitrile examination gloves, extended cuff 30 cm, size XL"
+    },
+    {
+     "quantity": 36,
+     "sku": "GEL-100",
+     "text": "3 dozen bottles of hydroalcoholic hand sanitiser gel 100 ml"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0117": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 46,
+     "sku": "WIPE-PAD-100",
+     "text": "46 boxes of alcohol prep pads"
+    },
+    {
+     "quantity": 1,
+     "sku": "SOAP-LIQ-5000",
+     "text": "gentle liquid soap refill"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0118": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 44,
+     "sku": "GLV-NIT-L",
+     "text": "nitrile gloves size L powder-free"
+    },
+    {
+     "quantity": 33,
+     "sku": null,
+     "text": "hospital beds"
+    },
+    {
+     "quantity": 4,
+     "sku": null,
+     "text": "sterile"
+    },
+    {
+     "quantity": 32,
+     "sku": "TAPE-TR-25",
+     "text": "transparent tape 2.5 cm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0119": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 24,
+     "sku": "ALC70-100",
+     "text": "24 bottles of ethyl alcohol 70% 100 ml"
+    },
+    {
+     "quantity": 16,
+     "sku": null,
+     "text": "16 stair lifts"
+    },
+    {
+     "quantity": 19,
+     "sku": null,
+     "text": "19 infusion pumps"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0120": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 750,
+     "sku": "BURN-GEL",
+     "text": "burn relief gel dressing"
+    },
+    {
+     "quantity": 44,
+     "sku": null,
+     "text": "dressing"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0121": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "GOGGLES",
+     "text": "anti-fog goggles"
+    },
+    {
+     "quantity": 19,
+     "sku": "CANE-ADJ",
+     "text": "adjustable walking stick"
+    },
+    {
+     "quantity": 29,
+     "sku": null,
+     "text": "night"
+    },
+    {
+     "quantity": 28,
+     "sku": null,
+     "text": "dental implants"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0122": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": null,
+     "text": "insulin syringes 2 ml capacity"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0123": {
+   "error": "Model output for case CLD-0123 rejected by schema: field 'lines.1.quantity': Input should be a valid integer",
+   "lines": [],
+   "question": false
+  },
+  "CLD-0124": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 34,
+     "sku": "PEN-31-8",
+     "text": "pen needles 31G 8 mm"
+    },
+    {
+     "quantity": 9,
+     "sku": "MASK-II",
+     "text": "type II mask ear loops"
+    },
+    {
+     "quantity": 39,
+     "sku": "GAUZE-ROLL-10",
+     "text": "gauze bandage roll 10 cm"
+    },
+    {
+     "quantity": 3,
+     "sku": "GLV-SURG-NEO-6.5",
+     "text": "sterile neoprene gloves 6.5"
+    },
+    {
+     "quantity": 20,
+     "sku": "COT-BALL",
+     "text": "cotton wool balls"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0129": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 30,
+     "sku": null,
+     "text": "scrubs uniforms"
+    },
+    {
+     "quantity": 35,
+     "sku": "CREAM-BARRIER",
+     "text": "barrier cream"
+    },
+    {
+     "quantity": 7,
+     "sku": "COVERALL-L",
+     "text": "protective coverall size L"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0130": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 27,
+     "sku": "KIDNEY-DISH",
+     "text": "kidney dish, disposable"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0131": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 7,
+     "sku": null,
+     "text": "7 automated external defibrillators"
+    },
+    {
+     "quantity": 2,
+     "sku": "RAZOR-DISP",
+     "text": "2 packs of disposable razors, twin blade"
+    },
+    {
+     "quantity": 13,
+     "sku": "TAPE-SILK-12",
+     "text": "13 boxes of silk tape 1.25 cm x 9.1 m"
+    },
+    {
+     "quantity": 16,
+     "sku": "GAUZE-NS-10",
+     "text": "16 packs of non-sterile gauze swabs 10 x 10 cm, 8 ply"
+    },
+    {
+     "quantity": 44,
+     "sku": null,
+     "text": "44 packs, non-woven"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0132": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 47,
+     "sku": "INC-BRF-XL",
+     "text": "incontinence briefs XL"
+    },
+    {
+     "quantity": 9,
+     "sku": null,
+     "text": "insulin syringes, 2 ml, with needle attached"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0133": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 39,
+     "sku": "OXI-HAND",
+     "text": "handheld pulse oximeter with probe"
+    },
+    {
+     "quantity": 19,
+     "sku": "CRUTCH-ADULT",
+     "text": "elbow crutch, adult"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0134": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 11,
+     "sku": "GLV-NIT-XS",
+     "text": "nitrile gloves XS"
+    },
+    {
+     "quantity": 10,
+     "sku": null,
+     "text": "underpads 90 x 180 cm extra large"
+    },
+    {
+     "quantity": 2,
+     "sku": "BPM-CUFF-L",
+     "text": "blood pressure cuff large adult"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0135": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 24,
+     "sku": "SUP-ELBOW-L",
+     "text": "24 elastic elbow supports, size L"
+    },
+    {
+     "quantity": 44,
+     "sku": "SUP-WRIST-M",
+     "text": "44 elastic wrist supports"
+    },
+    {
+     "quantity": 120,
+     "sku": "SUN-FACE-50-50",
+     "text": "120 tubes of facial sunscreen SPF 50+, 50 ml"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0136": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 75,
+     "sku": "TOURNIQ",
+     "text": "75 rolls of disposable tourniquet strips"
+    },
+    {
+     "quantity": 17,
+     "sku": "COVERALL-XL",
+     "text": "17 disposable protective coveralls, size XL"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0137": {
+   "error": "Model output for case CLD-0137 rejected by schema: field 'lines.1.quantity': Input should be a valid integer",
+   "lines": [],
+   "question": false
+  },
+  "CLD-0138": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 46,
+     "sku": "SUP-WRIST-S",
+     "text": "wrist support S"
+    },
+    {
+     "quantity": 20,
+     "sku": "SYR-5",
+     "text": "5 ml syringe slip"
+    },
+    {
+     "quantity": 12,
+     "sku": null,
+     "text": "wrist"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0139": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 250,
+     "sku": "DRS-ISL-9x25",
+     "text": "250 adhesive island dressings 9 x 25 cm"
+    },
+    {
+     "quantity": 600,
+     "sku": "GLV-NIT200-L",
+     "text": "600 boxes of nitrile examination gloves, powder-free, value pack, size L"
+    },
+    {
+     "quantity": 16,
+     "sku": null,
+     "text": "16 dental implants"
+    },
+    {
+     "quantity": 3,
+     "sku": "ALC96-100",
+     "text": "3 bottles of ethyl alcohol 96% 100 ml"
+    },
+    {
+     "quantity": 7,
+     "sku": "SUP-KNEE-M",
+     "text": "seven elastic knee supports, size M"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0140": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 42,
+     "sku": null,
+     "text": "surgical gloves size 9, powdered"
+    },
+    {
+     "quantity": 48,
+     "sku": "GEL-PACK-S",
+     "text": "gel pack 10 x 15"
+    },
+    {
+     "quantity": 900,
+     "sku": "ALC70-5000",
+     "text": "alcohol 70% jerrycan"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0145": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 26,
+     "sku": "STRIP-3x75",
+     "text": "skin closure strips 3 x 75"
+    },
+    {
+     "quantity": 27,
+     "sku": "GAUZE-NS-7-12",
+     "text": "non-sterile gauze 7.5 x 7.5, 12 ply"
+    },
+    {
+     "quantity": 13,
+     "sku": null,
+     "text": "island dressings"
+    },
+    {
+     "quantity": 1500,
+     "sku": "GLV-SURG-NEO-8.5",
+     "text": "latex-free surgical gloves 8.5"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0146": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": null,
+     "text": "5 packs of adult incontinence briefs"
+    },
+    {
+     "quantity": 24,
+     "sku": "PAD-60x60",
+     "text": "2 dozen packs of disposable underpads 60 x 60 cm"
+    },
+    {
+     "quantity": 1,
+     "sku": "STOCK-THIGH-M",
+     "text": "the usual amount of compression thigh-high stockings class I, size M"
+    },
+    {
+     "quantity": 100,
+     "sku": "NDL-18G",
+     "text": "100 boxes of hypodermic needles 18G x 40 mm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0147": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 900,
+     "sku": "WALKER-FOLD",
+     "text": "900 folding walking frames"
+    },
+    {
+     "quantity": 60,
+     "sku": "INC-PAD-LIGHT",
+     "text": "60 packs of incontinence pads, light absorbency"
+    },
+    {
+     "quantity": 1,
+     "sku": "CATH-FOL-12",
+     "text": "one box of Foley catheters 2-way, silicone-coated latex, 12 Fr"
+    },
+    {
+     "quantity": 2,
+     "sku": null,
+     "text": "2 tins of baby formula"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0148": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": "PAD-60x60",
+     "text": "18 packs of disposable underpads 60 x 60 cm"
+    },
+    {
+     "quantity": 15,
+     "sku": "PLST-BLUE",
+     "text": "15 boxes of blue detectable plasters for food handlers"
+    },
+    {
+     "quantity": 11,
+     "sku": "GLV-NIT200-M",
+     "text": "11 boxes of nitrile examination gloves, powder-free, value pack, size M"
+    },
+    {
+     "quantity": 4,
+     "sku": "SUP-ANKLE-L",
+     "text": "4 elastic ankle supports, size L"
+    },
+    {
+     "quantity": 31,
+     "sku": "SHARPS-06",
+     "text": "31 sharps containers of 0.6 litres"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0149": {
+   "error": null,
+   "lines": [],
+   "question": false
+  },
+  "CLD-0150": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 4,
+     "sku": "BPM-CUFF-S",
+     "text": "small adult cuff 17-22 cm"
+    },
+    {
+     "quantity": 28,
+     "sku": "NDL-18G",
+     "text": "18G needles"
+    },
+    {
+     "quantity": 34,
+     "sku": null,
+     "text": "electric wheelchairs"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0151": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": "ALC70-250",
+     "text": "one bottle of ethyl alcohol 70% 250 ml"
+    },
+    {
+     "quantity": 9,
+     "sku": null,
+     "text": "9 dental implants"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0153": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "SUP-KNEE-S",
+     "text": "knee support, size S"
+    },
+    {
+     "quantity": 6,
+     "sku": "STRIP-6x75",
+     "text": "closure strips 6 x 75 mm"
+    },
+    {
+     "quantity": 11,
+     "sku": "SHARPS-2",
+     "text": "2 litre sharps container"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0155": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": null,
+     "text": "baby formula"
+    },
+    {
+     "quantity": 15,
+     "sku": "BND-TRI",
+     "text": "triangular bandage"
+    },
+    {
+     "quantity": 11,
+     "sku": "SOAP-LIQ-5000",
+     "text": "liquid soap 5 litre refill"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0156": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 32,
+     "sku": "GLV-VIN-XL",
+     "text": "vinyl gloves XL"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0157": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 38,
+     "sku": "CAP-BOUF",
+     "text": "38 packs of caps"
+    },
+    {
+     "quantity": 30,
+     "sku": null,
+     "text": "30 hospital beds"
+    },
+    {
+     "quantity": 4,
+     "sku": "MASK-FFP3",
+     "text": "4 boxes of FFP3 respirator masks, no valve"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0158": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 25,
+     "sku": "INC-PAD-MAXI",
+     "text": "25 packs of incontinence pads, maxi absorbency"
+    },
+    {
+     "quantity": 7,
+     "sku": null,
+     "text": "7 electric wheelchairs"
+    },
+    {
+     "quantity": 25,
+     "sku": "GLV-SURG-LTX-7",
+     "text": "25 boxes of sterile latex surgical gloves, size 7"
+    },
+    {
+     "quantity": 2000,
+     "sku": "SYR-INS-10",
+     "text": "2000 boxes of insulin syringes 1 ml with fixed needle"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0159": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 31,
+     "sku": "BPM-ANER",
+     "text": "aneroid sphygmomanometer"
+    },
+    {
+     "quantity": 4,
+     "sku": null,
+     "text": "Foley catheters 22 Fr, large balloon"
+    },
+    {
+     "quantity": 23,
+     "sku": "GAUZE-NS-5",
+     "text": "non-sterile gauze swabs 5 x 5 cm, 8 ply"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0160": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": "GEL-500",
+     "text": "1 bottle of hydroalcoholic hand sanitiser gel 500 ml with pump"
+    },
+    {
+     "quantity": 40,
+     "sku": null,
+     "text": "40 gauze bandage rolls for the treatment boxes"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0162": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 17,
+     "sku": "TAPE-TR-25",
+     "text": "seventeen boxes of transparent tape 2.5 cm x 9.1 m"
+    },
+    {
+     "quantity": 30,
+     "sku": "STITCH-CUT",
+     "text": "thirty boxes of sterile stitch cutters"
+    },
+    {
+     "quantity": 17,
+     "sku": "SYR-3",
+     "text": "17 boxes of disposable syringes 3 ml, luer slip"
+    },
+    {
+     "quantity": 600,
+     "sku": "NDL-30G",
+     "text": "600 boxes of hypodermic needles 30G x 13 mm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0163": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 43,
+     "sku": "OXI-PAED",
+     "text": "paediatric pulse oximeter"
+    },
+    {
+     "quantity": 9,
+     "sku": "SAL-10",
+     "text": "single-dose saline"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0164": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 20,
+     "sku": "PAD-40x60",
+     "text": "disposable underpads"
+    },
+    {
+     "quantity": 30,
+     "sku": "SAL-250",
+     "text": "irrigation saline, the ml bottle"
+    },
+    {
+     "quantity": 7,
+     "sku": "PAD-40x60",
+     "text": "underpad 40 x 60 cm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0165": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "ALC70-1000",
+     "text": "9 litre bottles of ethyl alcohol for cleaning the equipment"
+    },
+    {
+     "quantity": 16,
+     "sku": "THERM-DIG",
+     "text": "16 digital thermometers, rigid tip for the consultation rooms"
+    },
+    {
+     "quantity": 6,
+     "sku": "SUP-LUMBAR",
+     "text": "6 lumbar support belts, adjustable"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0167": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "DRS-FOAM-10",
+     "text": "13 boxes of foam dressing 10 x 10 cm, with border"
+    },
+    {
+     "quantity": 750,
+     "sku": "PLST-FAB",
+     "text": "750 boxes of fabric adhesive plasters, assorted sizes"
+    },
+    {
+     "quantity": 3,
+     "sku": null,
+     "text": "3 boxes of luer lock syringes"
+    },
+    {
+     "quantity": 5,
+     "sku": "GRAB-REACH",
+     "text": "5 reaching aid grabbers 80 cm"
+    },
+    {
+     "quantity": 90,
+     "sku": "MASK-FFP2",
+     "text": "ninety boxes of FFP2 respirator masks, no valve"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0168": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 6,
+     "sku": "NDL-27G",
+     "text": "600 hypodermic needles 27G x 13 mm"
+    },
+    {
+     "quantity": 11,
+     "sku": null,
+     "text": "11 electric wheelchairs"
+    },
+    {
+     "quantity": 10,
+     "sku": null,
+     "text": "ten bottles of contact lens solution"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0169": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 14,
+     "sku": "GEL-WALL",
+     "text": "wall dispenser for sanitiser"
+    },
+    {
+     "quantity": 3,
+     "sku": "EYE-WASH-500",
+     "text": "eye wash bottle"
+    },
+    {
+     "quantity": 33,
+     "sku": "SWAB-TRANS",
+     "text": "transport swab with medium"
+    },
+    {
+     "quantity": 32,
+     "sku": "URN-BAG-2L",
+     "text": "urine drainage bag with tap"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0170": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 150,
+     "sku": "WIPE-SURF-200",
+     "text": "150 refills of surface disinfectant wipes, alcohol-free"
+    },
+    {
+     "quantity": 30,
+     "sku": null,
+     "text": "30 boxes of latex powder-free gloves"
+    },
+    {
+     "quantity": 750,
+     "sku": "PEN-32-4",
+     "text": "750 boxes of pen needles 32G x 4 mm"
+    },
+    {
+     "quantity": 10,
+     "sku": "GLV-SURG-NEO-7",
+     "text": "ten boxes of sterile latex-free surgical gloves (neoprene), size 7"
+    },
+    {
+     "quantity": 6,
+     "sku": "ALC70-5000",
+     "text": "6 jerrycans of ethyl alcohol 70% 5 litre"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0172": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 27,
+     "sku": "GLV-NITX-L",
+     "text": "extended cuff nitrile gloves L"
+    },
+    {
+     "quantity": 42,
+     "sku": "SYR-LL-5",
+     "text": "5 ml luer lock syringes"
+    },
+    {
+     "quantity": 43,
+     "sku": null,
+     "text": "cotton"
+    },
+    {
+     "quantity": 14,
+     "sku": "COUCH-60",
+     "text": "couch paper roll 60 cm"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0173": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "INC-BRF-L",
+     "text": "incontinence briefs size L"
+    },
+    {
+     "quantity": 43,
+     "sku": "GAUZE-ROLL-5",
+     "text": "gauze roll 5 cm"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0175": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 17,
+     "sku": null,
+     "text": "SPF 15 sun cream"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0176": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 10,
+     "sku": "GLV-LTXP-L",
+     "text": "10 boxes of latex examination gloves, lightly powdered, size L"
+    },
+    {
+     "quantity": 11,
+     "sku": "BPM-CUFF-M",
+     "text": "eleven replacement blood pressure cuffs, adult 22-32 cm"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0177": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 31,
+     "sku": "SUP-LUMBAR",
+     "text": "lumbar support belt"
+    },
+    {
+     "quantity": 2500,
+     "sku": "SHARPS-5",
+     "text": "5 litre sharps containers"
+    },
+    {
+     "quantity": 1500,
+     "sku": "ALC96-500",
+     "text": "96% alcohol, 500 ml"
+    },
+    {
+     "quantity": 20,
+     "sku": "PLST-WP",
+     "text": "waterproof plasters"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0179": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "MASK-FFP2-V",
+     "text": "FFP2 exhalation valve"
+    },
+    {
+     "quantity": 19,
+     "sku": "DRS-FILM-10x12",
+     "text": "transparent film dressing 10 x 12"
+    },
+    {
+     "quantity": 35,
+     "sku": "LAN-200",
+     "text": "safety lancets box of 200"
+    },
+    {
+     "quantity": 35,
+     "sku": "MASK-IIR",
+     "text": "type IIR surgical mask, ear loops"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0180": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 5,
+     "sku": "CREAM-HAND-100",
+     "text": "5 tubes of repairing hand cream 100 ml"
+    },
+    {
+     "quantity": 15,
+     "sku": null,
+     "text": "15 of the anti"
+    },
+    {
+     "quantity": 1,
+     "sku": "INC-PANT-L",
+     "text": "1 pack of adult pull-up pants, size L"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0183": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": null,
+     "text": "3 boxes of FFP1 masks"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0185": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 17,
+     "sku": "SCALPEL-10",
+     "text": "scalpel no. 10"
+    },
+    {
+     "quantity": 18,
+     "sku": "NDL-23G",
+     "text": "23G hypodermic needle"
+    },
+    {
+     "quantity": 34,
+     "sku": "GLV-SURG-LTX-7",
+     "text": "sterile latex surgical gloves size 7"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0187": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 46,
+     "sku": "SYR-INS-03",
+     "text": "syringes with fixed needle"
+    },
+    {
+     "quantity": 2500,
+     "sku": "INC-BRF-NIGHT-M",
+     "text": "night incontinence briefs M"
+    },
+    {
+     "quantity": 39,
+     "sku": "GAUZE-NS-10-12",
+     "text": "non-sterile gauze swabs 10 x 10, 12 ply"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0188": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 38,
+     "sku": null,
+     "text": "large sterile gauze swabs 15 x 15 cm"
+    },
+    {
+     "quantity": 13,
+     "sku": "BPM-WRIST",
+     "text": "wrist blood pressure monitor"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0189": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1200,
+     "sku": "ALC70-1000",
+     "text": "1200 bottles of ethyl alcohol 70% 1 litre"
+    },
+    {
+     "quantity": 49,
+     "sku": null,
+     "text": "49 packs of gauze"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0190": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 16,
+     "sku": "STETH-PAED",
+     "text": "paediatric stethoscope"
+    },
+    {
+     "quantity": 45,
+     "sku": "BND-TUB-E",
+     "text": "tubular bandage size E"
+    },
+    {
+     "quantity": 2000,
+     "sku": "GLV-NIT200-S",
+     "text": "nitrile gloves value pack S"
+    },
+    {
+     "quantity": 501,
+     "sku": "GLV-NIT-S",
+     "text": "nitrile powder-free gloves size S"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0191": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 31,
+     "sku": "STETH-DUAL",
+     "text": "dual-head stethoscope"
+    },
+    {
+     "quantity": 7,
+     "sku": "URN-CUP-100",
+     "text": "sterile urine container 100 ml"
+    },
+    {
+     "quantity": 6,
+     "sku": "PLST-FAB",
+     "text": "fabric plasters"
+    },
+    {
+     "quantity": 13,
+     "sku": "BND-ELA-15",
+     "text": "elastic bandage 15 cm"
+    },
+    {
+     "quantity": 4,
+     "sku": "URN-BAG-LEG",
+     "text": "leg bag"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0192": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 19,
+     "sku": "STOCK-KNEE-M",
+     "text": "knee-high compression stockings M"
+    },
+    {
+     "quantity": 50,
+     "sku": "GLV-NITX-S",
+     "text": "nitrile extended cuff S"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0193": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 1,
+     "sku": "LAN-PEN",
+     "text": "1 lancet pen device"
+    },
+    {
+     "quantity": 1,
+     "sku": "GLV-NIT-XS",
+     "text": "nitrile examination gloves, powder-free, size XS"
+    },
+    {
+     "quantity": 7,
+     "sku": "WIPE-WET-80",
+     "text": "seven packs of wet body wipes for patient hygiene"
+    },
+    {
+     "quantity": 8,
+     "sku": null,
+     "text": "8 elastic knee supports"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0194": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 2,
+     "sku": null,
+     "text": "nebuliser machines"
+    },
+    {
+     "quantity": 600,
+     "sku": "GLU-STRIP-50",
+     "text": "glucose test strips 50"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0195": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": "PLST-KIDS",
+     "text": "18 boxes of children's adhesive plasters with drawings"
+    },
+    {
+     "quantity": 10,
+     "sku": "STRIP-6x75",
+     "text": "10 boxes of skin closure strips 6 x 75 mm"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0197": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 3,
+     "sku": "LAN-100",
+     "text": "safety lancets"
+    },
+    {
+     "quantity": 27,
+     "sku": "BPM-ARM",
+     "text": "upper arm blood pressure monitor"
+    },
+    {
+     "quantity": 29,
+     "sku": "ICE-INSTANT",
+     "text": "instant cold pack"
+    },
+    {
+     "quantity": 16,
+     "sku": null,
+     "text": "skin closure strips"
+    }
+   ],
+   "question": true
+  },
+  "CLD-0199": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 32,
+     "sku": "INC-BRF-S",
+     "text": "incontinence briefs S"
+    },
+    {
+     "quantity": 24,
+     "sku": "APRON-PE",
+     "text": "plastic aprons"
+    },
+    {
+     "quantity": 47,
+     "sku": "DRS-EYE",
+     "text": "eye pad"
+    }
+   ],
+   "question": false
+  },
+  "CLD-0200": {
+   "error": null,
+   "lines": [
+    {
+     "quantity": 9,
+     "sku": "NDL-30G",
+     "text": "9 boxes of hypodermic needles 30G x 13 mm"
+    },
+    {
+     "quantity": 16,
+     "sku": "PLST-ROLL-8",
+     "text": "16 rolls of cut-to-size plaster strip 8 cm x 1 m"
+    },
+    {
+     "quantity": 17,
+     "sku": "BND-COH-5",
+     "text": "17 packs of cohesive bandage 5 cm x 4.5 m"
+    }
+   ],
+   "question": false
+  }
+ },
+ "split": "test",
+ "threshold": {
+  "false_question_rate": 0.050000000000000044,
+  "recall_ambiguous": 0.8909090909090909,
+  "recall_quantity": 0.9130434782608695,
+  "recall_unknown": 0.9433962264150944
+ },
+ "threshold_rule": "recall of each doubt type at the level measured after the rule change of deviation 04.1, accepted by the owner on 2026-10-08 as a phase 03 extractor limitation (change 001); false question rate at most 5% on the test split"
+}

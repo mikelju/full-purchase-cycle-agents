@@ -1,0 +1,10 @@
+{
+  "submission_id": "CLD-0070",
+  "customer_code": "CLI-003",
+  "lines": [
+    {"product": "sanitiser gel litre", "quantity": 7},
+    {"product": "Sunscreen SPF 30", "quantity": 29},
+    {"product": "ethyl alcohol 70% 100 ml", "quantity": 1200},
+    {"product": "plastic medicine cups", "quantity": 33}
+  ]
+}

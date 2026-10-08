@@ -3,7 +3,8 @@
 Portfolio project that demonstrates multi-agent orchestration with [LangGraph](https://github.com/langchain-ai/langgraph) (Python) over the full purchase cycle of a fictional company.
 Status: phase 01 (foundations) built: shared database, model client, persistent graph state, tracing and the evaluation harness.
 Phase 02 (web form orders) built: the first order channel, from a form submission to a stored order and a reply.
-Phase 03 (email orders) in progress: the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
+Phase 03 (email orders) built: the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
+Phase 04 (exceptions) built and delivered for review: both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
 
 ## What it does
 
@@ -103,13 +104,45 @@ The demo prints, per email, the intake decision and its reason, each line with i
 `--mode replay` (the default) needs no key, because the sample emails are copied from the test split of the evaluation dataset and their recorded answers are reused; `--mode live` calls the model and prints the cached tokens of both calls.
 Each email runs in its own checkpoint thread in `data/checkpoints.db`.
 
+## Run the exceptions demo
+
+```
+uv run purchase-cycle exceptions-demo
+uv run purchase-cycle clarify list
+uv run purchase-cycle clarify answer <thread_id> --file examples/exceptions/web_form_answer.txt
+uv run purchase-cycle clarify answer <thread_id> --text "The caps are the bouffant caps. Please drop the hospital beds." --mode live
+uv run purchase-cycle clarify close <thread_id>
+```
+
+Both order channels now have a `clarify` step, the shared `clarification` subgraph, between understanding the order (`match` or `extract`) and `store`:
+
+- `detect` applies deterministic rules to every line: an ambiguous product when the line text fits two or more catalog products by a search over catalog names (up to 6 candidates), also when the matcher or extractor already gave it a SKU, an unknown product when the line has no SKU and the search finds nothing, and a doubtful quantity above 500 sale units or, for email, not supported by any number in the source text.
+- `ask` has Claude Haiku 4.5 draft one question for all the doubtful lines; a deterministic check rejects a question that does not name every doubtful line with the text the customer wrote and every candidate name.
+- `wait` pauses the run with LangGraph `interrupt`; the state stays in the SQLite checkpointer `data/checkpoints.db` and a `pending` row in the `clarifications` table, and nothing is written to `orders` or `order_lines`.
+- `interpret` has the model read the customer answer into, per doubtful line, a SKU and quantity, a removal or "still unclear"; a missing or repeated line, a SKU outside the catalog or a non-positive quantity is rejected and the same question keeps waiting.
+- Lines still unclear get a second question; after the second round the clear and resolved lines are stored in one transaction and the reply lists removed and unresolved lines with the text the customer wrote.
+
+An order with no doubt goes straight through `clarify` with no model call and no pause, as in phases 02 and 03.
+
+`exceptions-demo` runs the two samples of `examples/exceptions/`: a web form submission (`web_form_submission.json`, an ambiguous gel and a quantity of 1,200) and an email (`email_order.eml`, ambiguous caps and hospital beds not in the catalog).
+For each one it prints the lines, the doubts found, the question and the thread id, and stops; the thread id starts with a new run id on every run, so copy it from the output, which also prints the full `clarify answer` command.
+The other commands run as separate processes, so the pause survives the end of the demo process:
+
+- `clarify list` shows every paused thread with its channel, customer, round and age.
+- `clarify answer <thread_id> --text "..."` or `--file <path>` resumes the thread with the customer answer and prints the interpretation, the stored order number and the reply, or the second question; `examples/exceptions/web_form_answer.txt` and `email_answer.txt` are sample answers for the two samples.
+- `clarify close <thread_id>` closes a thread with no answer: it stores the clear lines, lists the rest in the reply as unanswered and marks the row `closed`.
+
+Answering or closing a thread that is not pending fails with a message and changes nothing.
+`--mode replay` (the default) needs no key: the channel steps replay the detection evaluation recordings and the question and interpretation of the samples and their sample answers are recorded in `evals/recordings/`; any other answer text needs `--mode live`.
+`--mode live` on `exceptions-demo` and on `clarify answer` calls Claude Haiku 4.5 and prints the cached tokens; with the LangSmith variables set the run is traced, and the pause and the resumption share the thread id (the phase 04 trace evidence is still pending, see Limits).
+
 ## Run the tests
 
 ```
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and the three evaluations in replay mode.
+Runs the method's hook tests, ruff, pytest and the five evaluations in replay mode.
 
 ## The golden dataset
 
@@ -158,6 +191,24 @@ It was built with the same method:
 5. The owner audited 40 random emails: `uv run purchase-cycle email-audit create`, fill the `verdict` column of `evals/audit/email_order_extraction-audit-v1.0.csv`, then `uv run purchase-cycle email-audit report`.
    The audit passes with at most 1 wrong label; version 1.0 had none, 40 of 40 correct (error rate 0.0%, 95% Wilson interval 0.0% to 8.8%).
 
+### Clarification datasets
+
+Two datasets evaluate the exceptions step:
+
+- `evals/datasets/clarification_detection/` holds 200 orders, 100 web form submissions and 100 emails (`emails/`), with 620 lines: 70 lines per doubt type (ambiguous product, unknown product, doubtful quantity) and 64 orders with no doubt; each line carries its expected doubts.
+  Email quantity doubts are 15 lines over the 500 ceiling and 20 lines with no stated number.
+- `evals/datasets/clarification_answers/` holds 210 answer cases in six categories of 35: pick by size or variant, pick by description, give a quantity, remove a line, several lines at once, and still unclear or off topic; each case has its doubtful lines, the question sent and the customer answer, with the expected resolution per line (a SKU and quantity, a removal or still unclear).
+
+Both are split by order or case, stratified by channel and doubt type or by category: 50 development and 150 test orders, 54 development and 156 test cases.
+They were built with the same method as the earlier datasets:
+
+1. `uv run purchase-cycle clarification-dataset plan --dataset detection` (or `--dataset answers`) writes `plan.jsonl` from a fixed seed: every line with its product or out-of-catalog item, quantity, doubt type and, for an ambiguous line, its candidate set, before any text exists.
+2. The texts in `texts/` were written by the coding agent following the plan and checked with `uv run purchase-cycle clarification-dataset check --dataset <name> <file>`.
+3. `uv run purchase-cycle clarification-dataset build --dataset <name>` judges every line with the runtime detection rules, as an ideal matcher or extractor would return it, and rejects a text that does not raise exactly its planned doubt and candidates, a planned line missing from the text, a broken quantity rule, a duplicate text or an answer naming a SKU it may not name; emails are rendered with the phase 03 renderer and `dataset.jsonl` is written only when nothing is rejected.
+4. A blind second pass by clean-context agents read only the catalog and the texts (`second_pass_judgments/`) and was compared with the plan in `second_pass_review.jsonl`: 27 of 620 detection lines and 23 of 264 doubtful answer lines disagreed, every one justified (mostly candidate sets and the boundary between picking by variant and by description, with the same resolution).
+5. The owner audit of 40 random items, 20 from each dataset: `uv run purchase-cycle clarification-audit create`, fill the `verdict` column of `evals/audit/clarification-audit-v1.0.csv`, then `uv run purchase-cycle clarification-audit report`.
+   The audit passes with at most 1 wrong label; the owner review (2026-10-08) found 1 wrong label in 40, an error rate of 2.5% with a 95% Wilson interval of [0.4%, 12.9%], so it passes.
+
 ## Run the evaluation
 
 ```
@@ -165,7 +216,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the test split of the three evaluations and exits non-zero when a gate of any of them fails.
+`npm run eval` replays the test split of the five evaluations and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:
@@ -192,7 +243,36 @@ The Claude Haiku 4.5 baseline on the 234 test emails (`evals/baselines/email_ord
 
 The three gated metrics reach 95%, so the threshold is 95%.
 
-`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the three evaluations once; `--suite <name>` uploads one).
+`uv run purchase-cycle eval --suite clarification_detection` runs the detection orders through both parent graphs up to `detect`, replaying the phase 02 matcher and phase 03 intake and extraction answers recorded for these orders, and compares the doubts raised per line with the expected ones.
+It prints recall and precision per doubt type and the false question rate (the share of orders with no doubt that still get a question), with 95% Wilson intervals globally, per channel and per line kind, and the failing orders.
+The Claude Haiku 4.5 baseline on the 150 test orders and 453 lines (`evals/baselines/clarification_detection.json`):
+
+| Metric | Value | 95% interval | Threshold |
+|---|---|---|---|
+| Recall, ambiguous product (55 lines) | 89.1% | 78.2% to 94.9% | at least 89.1% |
+| Recall, unknown product (53 lines) | 94.3% | 84.6% to 98.1% | at least 94.3% |
+| Recall, doubtful quantity (46 lines) | 91.3% | 79.7% to 96.6% | at least 91.3% |
+| False question rate (48 orders with no doubt) | 0.0% | 0.0% to 7.4% | at most 5% |
+| Precision, ambiguous product (49 doubts raised) | 100.0% | 92.7% to 100.0% | reported |
+| Precision, unknown product (51 doubts raised) | 98.0% | 89.7% to 99.7% | reported |
+| Precision, doubtful quantity (43 doubts raised) | 97.7% | 87.9% to 99.6% | reported |
+
+The spec gate was 95% recall per doubt type; the baseline missed it, and the owner set the three recall thresholds at the measured level (deviation 04.1 in [docs/plans/fase-04-excepciones/plan.md](docs/plans/fase-04-excepciones/plan.md)).
+Every miss is an email line: the phase 03 extractor drops some lines, returns a non-integer quantity that the schema rejects, or copies a purpose clause such as "for the treatment room" into the line text so the candidate search finds one product or none; web form recall is 100% for the three types.
+The extractor fix is a separate change, [docs/changes/001-email-extractor-dropped-lines.md](docs/changes/001-email-extractor-dropped-lines.md), not yet authorized.
+
+`uv run purchase-cycle eval --suite clarification_answers` sends each case's doubts, question and answer to the interpreter and compares its reading with the expected resolution per line.
+It prints resolution accuracy per doubtful line (gated) and case exact match (reported), with 95% Wilson intervals globally, per channel and per category, and the failures.
+The Claude Haiku 4.5 baseline on the 156 test cases (`evals/baselines/clarification_answers.json`):
+
+| Metric | Value | 95% interval | Threshold |
+|---|---|---|---|
+| Resolution accuracy (195 doubtful lines) | 99.5% | 97.2% to 99.9% | at least 95% |
+| Case exact match (156 cases) | 99.4% | 96.5% to 99.9% | reported |
+
+Both new evaluations also have the McNemar regression gate against their stored per-item baseline.
+
+`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the five evaluations once; `--suite <name>` uploads one).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
 Recordings in `evals/recordings/` are tied to the exact prompt and model: changing either needs a new recording and a new comparison against the baseline.
 
@@ -204,6 +284,13 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - The web form is a JSON file, not a web page; the reply is printed, not sent; ambiguous products, stock checks and duplicate submissions come in later phases.
 - The email channel reads `.eml` files from a folder, not a mailbox; scanned PDFs, images and other attachment types are not read.
 - The email extractor sends the whole catalog in the prompt, so it only works while the catalog fits the model's context window; retrieval over the catalog is not implemented.
+- Phase 04 questions and answers do not travel through a real channel: the question is printed and the answer is delivered by the `clarify answer` command.
+- There is no automatic timeout or reminder; an unanswered thread stays paused until an operator runs `clarify close`.
+- A wrong variant picked with confidence by the matcher or the extractor raises no product doubt when the line text fits a single catalog product or none.
+- The candidate search and the extractor send or use the whole catalog, with the same context-window limitation as phase 03.
+- Detection inherits the phase 03 extractor limitations: dropped email lines, non-integer quantities rejected by the schema and purpose clauses copied into the line text lose doubts on email orders, so the detection recall thresholds sit at the measured level until change 001 is done.
+- Four detection lines with generic hints ("single", "free", "cm size", "litre") are labelled ambiguous by the runtime rule while a person may read them as unknown or as the default size; the owner accepted them as a recorded limitation of the second pass.
+- The LangSmith trace of the phase 04 demo and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
 
 ## License
 

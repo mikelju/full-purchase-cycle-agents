@@ -6,7 +6,8 @@ from pathlib import Path
 
 from purchase_cycle.catalog import PRODUCTS
 from purchase_cycle.config import EVALS_DIR
-from purchase_cycle.evaluation.planning import has_number, read_jsonl, write_jsonl
+from purchase_cycle.evaluation.planning import read_jsonl, write_jsonl
+from purchase_cycle.quantities import has_number
 
 DATASET_DIR = EVALS_DIR / "datasets" / "order_line_extraction"
 PLAN_PATH = DATASET_DIR / "plan.jsonl"
