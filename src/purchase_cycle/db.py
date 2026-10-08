@@ -100,9 +100,21 @@ def get_product(conn: sqlite3.Connection, sku: str) -> dict | None:
     return dict(row) if row else None
 
 
-def insert_order(conn: sqlite3.Connection, customer_code: str, channel: str, status: str, lines: list[tuple]) -> int:
-    """Insert one order and its (sku, quantity) lines in one transaction: all of it, or nothing."""
+def insert_order(
+    conn: sqlite3.Connection,
+    customer_code: str,
+    channel: str,
+    status: str,
+    lines: list[tuple],
+    clarification: tuple[str, str] | None = None,
+) -> int:
+    """Insert one order and its (sku, quantity) lines in one transaction: all of it, or nothing.
+
+    `clarification` is a (thread id, final status) pair whose row changes status in the same transaction.
+    """
     with conn:
+        if clarification:
+            finish_clarification(conn, *clarification)
         cursor = conn.execute(
             "INSERT INTO orders (customer_code, channel, status) VALUES (?, ?, ?)", (customer_code, channel, status)
         )
@@ -122,5 +134,42 @@ def order_line_details(conn: sqlite3.Connection, order_id: int) -> list[dict]:
             "SELECT p.name, p.sale_unit, p.price_eur, l.quantity FROM order_lines l "
             "JOIN products p USING (sku) WHERE l.order_id = ? ORDER BY l.id",
             (order_id,),
+        )
+    ]
+
+
+def save_clarification(
+    conn: sqlite3.Connection, thread_id: str, channel: str, customer_code: str, question: str, round_: int
+) -> None:
+    """Record the pending question of a thread; a later round replaces the question and the round."""
+    with conn:
+        conn.execute(
+            "INSERT INTO clarifications (thread_id, channel, customer_code, question, round, status) "
+            "VALUES (?, ?, ?, ?, ?, 'pending') ON CONFLICT (thread_id) DO UPDATE SET question = excluded.question, "
+            "round = excluded.round, status = 'pending', updated_at = datetime('now')",
+            (thread_id, channel, customer_code, question, round_),
+        )
+
+
+def finish_clarification(conn: sqlite3.Connection, thread_id: str, status: str) -> None:
+    """Change the status of a clarification row; the caller owns the transaction."""
+    conn.execute(
+        "UPDATE clarifications SET status = ?, updated_at = datetime('now') WHERE thread_id = ?", (status, thread_id)
+    )
+
+
+def get_clarification(conn: sqlite3.Connection, thread_id: str) -> dict | None:
+    row = conn.execute("SELECT * FROM clarifications WHERE thread_id = ?", (thread_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def pending_clarifications(conn: sqlite3.Connection) -> list[dict]:
+    """Pending threads, oldest first, with their age in whole minutes."""
+    return [
+        dict(r)
+        for r in conn.execute(
+            "SELECT thread_id, channel, customer_code, round, question, created_at, "
+            "CAST((julianday('now') - julianday(created_at)) * 1440 AS INTEGER) AS age_minutes "
+            "FROM clarifications WHERE status = 'pending' ORDER BY created_at, thread_id"
         )
     ]

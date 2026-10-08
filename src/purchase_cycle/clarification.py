@@ -5,6 +5,15 @@ or when its quantity is doubtful. The rules are deterministic and read only
 the lines the channel already produced and the catalog.
 """
 
+from pathlib import Path
+from typing import NamedTuple, TypedDict
+
+from langchain_core.runnables import RunnableConfig
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import interrupt
+
+from purchase_cycle import db
+from purchase_cycle.llm import ModelClient
 from purchase_cycle.quantities import NUMBER_WORDS, supports_quantity
 from purchase_cycle.web_form import match_key
 
@@ -171,3 +180,115 @@ def check_resolutions(resolutions: list, doubts: list[dict], catalog: list) -> N
     errors += [f"line {line_id} is not answered" for line_id in sorted(expected - seen)]
     if errors:
         raise InvalidAnswer("Clarification answer rejected: " + "; ".join(errors))
+
+
+class ClarificationClients(NamedTuple):
+    """Model clients of the clarify step: one drafts the question, one reads the answer."""
+
+    question: ModelClient
+    answer: ModelClient
+
+
+class ClarificationState(TypedDict, total=False):
+    lines: list[dict]
+    customer: dict
+    doubts: list[dict]
+    question: str
+    round: int
+    answer: str
+    closed: bool
+    resolutions: list[dict]
+    removed: list[dict]
+    unresolved: list[dict]
+    clarification: str | None
+
+
+def settle(lines: list[dict], resolutions: list[dict], open_doubts: list[dict]) -> tuple[list, list, list]:
+    """Lines to store with the resolutions applied, removed lines and unresolved lines, in line order."""
+    latest = {r["line_id"]: r for r in resolutions}
+    open_ids = {d["line_id"] for d in open_doubts}
+    kept, removed, unresolved = [], [], []
+    for line_id, line in enumerate(lines, start=1):
+        resolution = latest.get(line_id)
+        listed = {"text": line_text(line), "quantity": line["quantity"]}
+        if line_id in open_ids:
+            unresolved.append(listed)
+        elif resolution and resolution["action"] == "remove":
+            removed.append(listed)
+        elif resolution and resolution["action"] == "set":
+            kept.append({**line, "sku": resolution["sku"], "quantity": resolution["quantity"]})
+        else:
+            kept.append(line)
+    return kept, removed, unresolved
+
+
+def build_clarification_graph(clients: ClarificationClients, db_path: Path | str, channel: str):
+    """Shared subgraph: detect -> ask -> wait (pause) -> interpret -> detect, at most MAX_ROUNDS questions.
+
+    It leaves through `detect` when no doubt is open, the rounds are spent or the
+    thread was closed; then `lines` holds only the lines to store, and `removed`
+    and `unresolved` list the others with the text the customer wrote.
+    """
+    conn = db.connect(db_path)
+    try:
+        catalog = db.catalog_rows(conn)
+    finally:
+        conn.close()
+
+    def detect_step(state: ClarificationState) -> ClarificationState:
+        resolutions = state.get("resolutions", [])
+        settled = {r["line_id"] for r in resolutions if r["action"] != "unclear"}
+        doubts = [d for d in detect(state["lines"], catalog, channel) if d["line_id"] not in settled]
+        rounds = state.get("round", 0)
+        if doubts and rounds < MAX_ROUNDS and not state.get("closed"):
+            return {"doubts": doubts}
+        kept, removed, unresolved = settle(state["lines"], resolutions, doubts)
+        status = None if not rounds else "closed" if state.get("closed") else "answered"
+        return {
+            "doubts": doubts,
+            "lines": kept,
+            "removed": removed,
+            "unresolved": unresolved,
+            "resolutions": resolutions,
+            "clarification": status,
+        }
+
+    def ask(state: ClarificationState, config: RunnableConfig) -> ClarificationState:
+        thread_id = config["configurable"]["thread_id"]
+        rounds = state.get("round", 0) + 1
+        drafted = clients.question.extract(doubts_message(state["doubts"]), case_id=f"{thread_id}-question-{rounds}")
+        check_question(drafted.question, state["doubts"])
+        conn = db.connect(db_path)
+        try:
+            db.save_clarification(conn, thread_id, channel, state["customer"]["code"], drafted.question, rounds)
+        finally:
+            conn.close()
+        return {"question": drafted.question, "round": rounds}
+
+    def wait(state: ClarificationState) -> ClarificationState:
+        # Resumed with {"answer": text} or {"close": True}; the question was drafted before the pause.
+        received = interrupt({"question": state["question"], "round": state["round"], "doubts": state["doubts"]})
+        if received.get("close"):
+            return {"closed": True}
+        return {"answer": received["answer"]}
+
+    def interpret(state: ClarificationState, config: RunnableConfig) -> ClarificationState:
+        if state.get("closed"):
+            return {}
+        thread_id = config["configurable"]["thread_id"]
+        message = answer_message(state["doubts"], state["question"], state["answer"])
+        read = clients.answer.extract(message, case_id=f"{thread_id}-answer-{state['round']}")
+        check_resolutions(read.resolutions, state["doubts"], catalog)
+        return {"resolutions": state.get("resolutions", []) + [r.model_dump() for r in read.resolutions]}
+
+    builder = StateGraph(ClarificationState)
+    builder.add_node("detect", detect_step)
+    builder.add_node("ask", ask)
+    builder.add_node("wait", wait)
+    builder.add_node("interpret", interpret)
+    builder.add_edge(START, "detect")
+    builder.add_conditional_edges("detect", lambda s: "ask" if "unresolved" not in s else END, ["ask", END])
+    builder.add_edge("ask", "wait")
+    builder.add_edge("wait", "interpret")
+    builder.add_edge("interpret", "detect")
+    return builder.compile(name="clarification")

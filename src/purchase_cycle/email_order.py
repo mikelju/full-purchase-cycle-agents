@@ -15,11 +15,12 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import TypedDict
 
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 
 from purchase_cycle import db
 from purchase_cycle.llm import ModelClient
-from purchase_cycle.web_form import build_reply
+from purchase_cycle.web_form import build_reply, clarification_outcome
 
 CHANNEL = "email"
 STATUS = "received"
@@ -50,6 +51,10 @@ class EmailOrderState(TypedDict, total=False):
     lines: list[dict]
     order_id: int | None
     reply: str
+    resolutions: list[dict]
+    removed: list[dict]
+    unresolved: list[dict]
+    clarification: str | None
 
 
 class _HTMLText(HTMLParser):
@@ -330,11 +335,13 @@ def read_email(path: Path | str, conn: sqlite3.Connection) -> dict:
     return {**email, "customer": customer, "text": text}
 
 
-def build_email_reply(email: dict, customer: dict, order_id: int | None, stored: list[dict], lines: list[dict]) -> str:
-    """The phase 02 reply, addressed to the sender and quoting the subject."""
+def build_email_reply(
+    email: dict, customer: dict, order_id: int | None, stored: list[dict], lines: list[dict], **left_out
+) -> str:
+    """The phase 02 reply, addressed to the sender and quoting the subject; `left_out` as in `build_reply`."""
     unmatched = [(line["source_text"], line["quantity"]) for line in lines if line["sku"] is None]
     reference = f'email order "{email["subject"]}"' if email["subject"] else "email order"
-    body = build_reply(customer, reference, order_id, stored, unmatched)
+    body = build_reply(customer, reference, order_id, stored, unmatched, **left_out)
     subject = email["subject"] if email["subject"].lower().startswith("re:") else f"Re: {email['subject']}"
     return f"To: {email['sender']}\nSubject: {subject}\n\n{body}"
 
@@ -345,7 +352,9 @@ def build_email_order_graph(
     db_path: Path | str,
     checkpointer=None,
     interrupt_after=None,
+    clarification=None,
 ):
+    """Phase 03 graph; with `clarification` (ClarificationClients) a `clarify` step runs before `store`."""
     conn = db.connect(db_path)
     try:
         known_skus = {row["sku"] for row in db.catalog_rows(conn)}
@@ -383,13 +392,18 @@ def build_email_order_graph(
             lines.append({**line.model_dump(), "source": source})
         return {"lines": lines}
 
-    def store(state: EmailOrderState) -> EmailOrderState:
+    def store(state: EmailOrderState, config: RunnableConfig) -> EmailOrderState:
         matched = [(line["sku"], line["quantity"]) for line in state["lines"] if line["sku"] is not None]
-        if not matched:
-            return {"order_id": None}
+        outcome = clarification_outcome(state, config)
         conn = db.connect(db_path)
         try:
-            return {"order_id": db.insert_order(conn, state["customer"]["code"], CHANNEL, STATUS, matched)}
+            if not matched:
+                if outcome:
+                    with conn:
+                        db.finish_clarification(conn, *outcome)
+                return {"order_id": None}
+            order_id = db.insert_order(conn, state["customer"]["code"], CHANNEL, STATUS, matched, outcome)
+            return {"order_id": order_id}
         finally:
             conn.close()
 
@@ -401,8 +415,15 @@ def build_email_order_graph(
                 stored = db.order_line_details(conn, state["order_id"])
             finally:
                 conn.close()
+        left_out = {
+            "removed": state.get("removed", []),
+            "unresolved": state.get("unresolved", []),
+            "closed": state.get("clarification") == "closed",
+        }
         return {
-            "reply": build_email_reply(state["email"], state["customer"], state["order_id"], stored, state["lines"])
+            "reply": build_email_reply(
+                state["email"], state["customer"], state["order_id"], stored, state["lines"], **left_out
+            )
         }
 
     builder = StateGraph(EmailOrderState)
@@ -414,7 +435,14 @@ def build_email_order_graph(
     builder.add_conditional_edges(
         "intake", lambda s: END if s["errors"] or not s["is_order"] else "extract", ["extract", END]
     )
-    builder.add_edge("extract", "store")
+    if clarification is None:
+        builder.add_edge("extract", "store")
+    else:
+        from purchase_cycle.clarification import build_clarification_graph  # it imports the web form module
+
+        builder.add_node("clarify", build_clarification_graph(clarification, db_path, CHANNEL))
+        builder.add_edge("extract", "clarify")
+        builder.add_edge("clarify", "store")
     builder.add_edge("store", "reply")
     builder.add_edge("reply", END)
     return builder.compile(checkpointer=checkpointer, interrupt_after=interrupt_after, name="email_order")

@@ -10,6 +10,7 @@ import unicodedata
 from pathlib import Path
 from typing import TypedDict
 
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -47,6 +48,10 @@ class WebFormState(TypedDict, total=False):
     lines: list[dict]
     order_id: int | None
     reply: str
+    resolutions: list[dict]
+    removed: list[dict]
+    unresolved: list[dict]
+    clarification: str | None
 
 
 def match_key(text: str) -> str:
@@ -69,12 +74,21 @@ def validation_errors(error: ValidationError) -> list[str]:
 
 
 def build_reply(
-    customer: dict, reference: str, order_id: int | None, stored: list[dict], unmatched: list[tuple[str, int]]
+    customer: dict,
+    reference: str,
+    order_id: int | None,
+    stored: list[dict],
+    unmatched: list[tuple[str, int]],
+    removed: list[dict] = (),
+    unresolved: list[dict] = (),
+    closed: bool = False,
 ) -> str:
     """Fixed reply template; every figure comes from the stored rows.
 
     `reference` names what the customer sent, for example "web form order WF-1";
     `unmatched` holds the (text as the customer wrote it, quantity) of each line not in the catalog.
+    `removed` and `unresolved` hold the {text, quantity} of the lines a clarification left out;
+    `closed` says the thread was closed without an answer.
     """
     out = [f"Dear {customer['contact_name']},", ""]
     if order_id is not None:
@@ -92,11 +106,27 @@ def build_reply(
     if unmatched:
         out += ["", "We could not find these products in our catalog, so they are not part of the order:"]
         out += [f'- "{text}" ({quantity})' for text, quantity in unmatched]
+    if removed:
+        out += ["", "As you asked, these lines are removed from the order:"]
+        out += [f'- "{line["text"]}" ({line["quantity"]})' for line in removed]
+    if unresolved:
+        reason = "we received no answer about them" if closed else "we could not clarify them"
+        out += ["", f"These lines are not part of the order because {reason}:"]
+        out += [f'- "{line["text"]}" ({line["quantity"]})' for line in unresolved]
     out += ["", "Kind regards,", "Customer service"]
     return "\n".join(out)
 
 
-def build_web_form_graph(client: ModelClient, db_path: Path | str, checkpointer=None, interrupt_after=None):
+def clarification_outcome(state: dict, config: RunnableConfig) -> tuple[str, str] | None:
+    """(thread id, final status) of the clarification row the store step closes, if a question was asked."""
+    status = state.get("clarification")
+    return (config["configurable"]["thread_id"], status) if status else None
+
+
+def build_web_form_graph(
+    client: ModelClient, db_path: Path | str, checkpointer=None, interrupt_after=None, clarification=None
+):
+    """Phase 02 graph; with `clarification` (ClarificationClients) a `clarify` step runs before `store`."""
     conn = db.connect(db_path)
     try:
         catalog = db.catalog_rows(conn)
@@ -133,14 +163,23 @@ def build_web_form_graph(client: ModelClient, db_path: Path | str, checkpointer=
             lines.append({"product": line["product"], "quantity": line["quantity"], "sku": sku, "source": source})
         return {"lines": lines}
 
-    def store(state: WebFormState) -> WebFormState:
+    def store(state: WebFormState, config: RunnableConfig) -> WebFormState:
         matched = [line for line in state["lines"] if line["sku"] is not None]
-        if not matched:
-            return {"order_id": None}
+        outcome = clarification_outcome(state, config)
         conn = db.connect(db_path)
         try:
+            if not matched:
+                if outcome:
+                    with conn:
+                        db.finish_clarification(conn, *outcome)
+                return {"order_id": None}
             order_id = db.insert_order(
-                conn, state["customer"]["code"], CHANNEL, STATUS, [(line["sku"], line["quantity"]) for line in matched]
+                conn,
+                state["customer"]["code"],
+                CHANNEL,
+                STATUS,
+                [(line["sku"], line["quantity"]) for line in matched],
+                clarification=outcome,
             )
         finally:
             conn.close()
@@ -156,7 +195,12 @@ def build_web_form_graph(client: ModelClient, db_path: Path | str, checkpointer=
                 conn.close()
         unmatched = [(line["product"], line["quantity"]) for line in state["lines"] if line["sku"] is None]
         reference = f"web form order {state['submission']['submission_id']}"
-        return {"reply": build_reply(state["customer"], reference, state["order_id"], stored, unmatched)}
+        left_out = {
+            "removed": state.get("removed", []),
+            "unresolved": state.get("unresolved", []),
+            "closed": state.get("clarification") == "closed",
+        }
+        return {"reply": build_reply(state["customer"], reference, state["order_id"], stored, unmatched, **left_out)}
 
     builder = StateGraph(WebFormState)
     builder.add_node("validate", validate)
@@ -165,7 +209,14 @@ def build_web_form_graph(client: ModelClient, db_path: Path | str, checkpointer=
     builder.add_node("reply", reply)
     builder.add_edge(START, "validate")
     builder.add_conditional_edges("validate", lambda s: END if s["errors"] else "match", ["match", END])
-    builder.add_edge("match", "store")
+    if clarification is None:
+        builder.add_edge("match", "store")
+    else:
+        from purchase_cycle.clarification import build_clarification_graph  # it imports this module
+
+        builder.add_node("clarify", build_clarification_graph(clarification, db_path, CHANNEL))
+        builder.add_edge("match", "clarify")
+        builder.add_edge("clarify", "store")
     builder.add_edge("store", "reply")
     builder.add_edge("reply", END)
     return builder.compile(checkpointer=checkpointer, interrupt_after=interrupt_after, name="web_form_order")
