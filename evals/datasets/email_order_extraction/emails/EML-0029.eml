@@ -1,0 +1,56 @@
+From: Maite Ugarte <maite.cli-005@example.com>
+To: orders@purchase-cycle.example
+Subject: Order form attached
+Date: Wed, 09 Sep 2026 19:17:00 +0000
+Message-ID: <eml-0029@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0029-boundary=="
+
+--==EML-0029-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+Order form attached. Two of the items are new for us, so tell me if you canno=
+t supply them.
+
+Regards,
+Maite Ugarte
+Centro Medico Lakua
+
+--==EML-0029-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0029.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDM5NQo+PgpzdHJlYW0KeJx9
+k11PwjAUQN/9FfdRE7n2c+t4Uz6iRgPC9H2OYiaymdJF/fcOCnQO09dl5/Se3ZXB/RlBGcPX2U0K
+V2MKVCAhkC5hlG4fcYpUgRQKZQTpAs6nz7PB7fV8BJPZcDS7gPR9/+bVmAEl/8EsRqJ28KDe2Gqt
+TR8GurSmgke9KPIKHrJVnbVce3Crc+DELLQBo5fa6DLXfZhOeoSw5IQRCUcSu8MK+9OHl8JWpsj+
+DEoh8XMyhVyCiCNkDISiqBLo0QSVaM6DOXh1xDEi7iOYalHn9iDdDsrEwaEkEtFVSLqbq+V4qrPS
+NiMeJYlEpg4SKijG/MSSKKS0bXkuC9tZwmmbjJCrcJvgGLsFz2vzVuTZByyzXMM626zA/nxquLub
+XYItdK8qu93OH+z2fkW6xQ4PF3v+tfqGagnyqNlH8gilCEcyjgnbScbjKfWBm26QcwWDvCvu9jg6
+3OPxurXBfQqNMCbhFCIOV2PY3KRmW8X686P5oU5SnCuY4l1UdVscHm7xfLvlF54YAr8KZW5kc3Ry
+ZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5n
+IC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2
+IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5n
+Ci9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8
+PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFn
+ZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0F1dGhvciAoQ2VudHJvIE1lZGljbyBM
+YWt1YSkKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDkwMTA4MDAwMFopCi9UaXRsZSAocHVyY2hhc2Ut
+b3JkZXItMDAyOS5wZGYpCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAw
+MDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBuIAowMDAwMDAwMjA1IDAwMDAwIG4g
+CjAwMDAwMDAyODUgMDAwMDAgbiAKMDAwMDAwMDc1MiAwMDAwMCBuIAowMDAwMDAwODU0IDAwMDAw
+IG4gCjAwMDAwMDA5NTEgMDAwMDAgbiAKMDAwMDAwMTA0OCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9T
+aXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8NUEzNUQ5QjkzQjE1OTVGN0Y3NUNG
+NjhGODU0QTNCREU+PDVBMzVEOUI5M0IxNTk1RjdGNzVDRjY4Rjg1NEEzQkRFPl0KPj4Kc3RhcnR4
+cmVmCjExNjYKJSVFT0YK
+
+--==EML-0029-boundary==--

@@ -1,0 +1,30 @@
+From: Manuel Romero <manuel.cli-012@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Centro Medico Triana
+Date: Fri, 20 Nov 2026 06:22:00 +0000
+Message-ID: <eml-0274@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0274-boundary=="
+
+--==EML-0274-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+Two items, see the attached list.
+
+Thanks,
+Manuel
+Centro Medico Triana
+
+--==EML-0274-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0274.txt"
+MIME-Version: 1.0
+
+five packs disposable razors, twin blade
+6 packs disposable shoe covers, blue
+
+--==EML-0274-boundary==--

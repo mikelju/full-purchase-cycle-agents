@@ -1,0 +1,34 @@
+From: Ruben Alvarez <ruben.cli-017@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Clinica Dental Gijon Centro
+Date: Mon, 30 Nov 2026 18:10:00 +0000
+Message-ID: <eml-0310@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0310-boundary=="
+
+--==EML-0310-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Our order is in the attached text file. Please confirm availability.
+
+Thanks,
+Ruben
+Clinica Dental Gijon Centro
+
+--==EML-0310-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0310.txt"
+MIME-Version: 1.0
+
+16 packs cohesive bandage 10 cm x 4.5 m
+6 bottles contact lens solution
+25 boxes hypodermic needle 26G x 13 mm
+two hundred boxes skin closure strips 6 x 75 mm
+twenty first aid kits, small, for vehicles
+19 packs incontinence pads, normal absorbency
+
+--==EML-0310-boundary==--

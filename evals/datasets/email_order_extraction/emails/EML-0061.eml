@@ -1,0 +1,30 @@
+From: Alvaro Benitez <alvaro.far-011@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Farmacia del Puerto
+Date: Sat, 19 Sep 2026 03:13:00 +0000
+Message-ID: <eml-0061@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0061-boundary=="
+
+--==EML-0061-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Buenos dias,
+
+I attach our order as a text file. Thanks in advance.
+
+Alvaro
+Farmacia del Puerto
+
+--==EML-0061-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0061.txt"
+MIME-Version: 1.0
+
+200 boxes saline solution 0.9%, single-dose 30 ml
+12 boxes pen needle 32G x 6 mm
+eleven sharps containers 2 litres
+
+--==EML-0061-boundary==--

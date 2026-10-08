@@ -1,0 +1,57 @@
+From: Alvaro Benitez <alvaro.far-011@example.com>
+To: orders@purchase-cycle.example
+Subject: Pedido / order from Farmacia del Puerto
+Date: Thu, 10 Sep 2026 23:09:00 +0000
+Message-ID: <eml-0033@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0033-boundary=="
+
+--==EML-0033-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+Please see the attached order form. We would appreciate delivery before Frida=
+y.
+
+Best regards,
+Alvaro Benitez
+Farmacia del Puerto
+
+--==EML-0033-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0033.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Ngo+PgpzdHJlYW0KeJx9
+k89ymzAQh+95ij22M85Gf0H4lrr2dHqxa5MHUEBuaG3DSNCkefpiCwrGrW6Mht+3+2lXDL7eEZQx
+vN59SuFhRYEKJATSPSzT8xGnSBVIoVBGkObwYfO0XXx53C1hvf283H6E9Ef358OKASX/CrMYibqE
+F42ry6Oxc1hpe9RZoSE3B9g0xtbliNUFzzgfXNvcWLBmb6w5ZWYOm/U9IZzfZETCkcS+WFH/nsNC
+58X7VZsUkqFLppBLEHGEjIFQFFUC9zRBJdpqsIMBHHGMiL8CW+ZNVvfQc5tM9AwlkYgpQtJLVyPG
+t0af6rbBv5BEIlM9hAqKMb+hJAopHVOeTkU9GcGtm4yQq7Cb4Bj78T7mL8YVvwxUB+1qY90MtHOl
+rU0Orng3bmrt6UHrgU7l1NfHw75D/rl8g3LfrhnpOZ0jj1CKsCPjmLALZddefPYCWVO3gjM4axYH
+MxXzyKDYgGRTL58Oew3x/3rRCGMS9iKifyTL88iKDDJrKgPP+pR/1wZilJAd4Q1E+3GcWvoCQcuh
+wM30fDpsOcQrnf30mteWPIlQyaAlVwIZv7J8LayrwTVV1W7n7LKcsJvodeSQ3ogcTfS6dFBvFG9G
+j/EPNHlAngplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2Et
+Qm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0Zv
+bnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9X
+aW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAg
+b2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0
+IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQXV0aG9yIChG
+YXJtYWNpYSBkZWwgUHVlcnRvKQovQ3JlYXRpb25EYXRlIChEOjIwMjYwOTAxMDgwMDAwWikKL1Rp
+dGxlIChwdXJjaGFzZS1vcmRlci0wMDMzLnBkZikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAw
+MDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwMTAyIDAwMDAwIG4gCjAwMDAw
+MDAyMDUgMDAwMDAgbiAKMDAwMDAwMDI4NSAwMDAwMCBuIAowMDAwMDAwODIzIDAwMDAwIG4gCjAw
+MDAwMDA5MjUgMDAwMDAgbiAKMDAwMDAwMTAyMiAwMDAwMCBuIAowMDAwMDAxMTE5IDAwMDAwIG4g
+CnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzxEQ0Q5OUQz
+RTkyMzg4MTE2MDcwNjE5REIxRDMxQThDND48RENEOTlEM0U5MjM4ODExNjA3MDYxOURCMUQzMUE4
+QzQ+XQo+PgpzdGFydHhyZWYKMTIzNwolJUVPRgo=
+
+--==EML-0033-boundary==--

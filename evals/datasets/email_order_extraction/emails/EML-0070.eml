@@ -1,0 +1,31 @@
+From: Yeray Santana <yeray.far-015@example.com>
+To: orders@purchase-cycle.example
+Subject: Order from Las Canteras
+Date: Mon, 21 Sep 2026 18:10:00 +0000
+Message-ID: <eml-0070@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0070-boundary=="
+
+--==EML-0070-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Order attached. Delivery to the pharmacy in the morning, please.
+
+Yeray
+Farmacia Las Canteras
+
+--==EML-0070-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0070.txt"
+MIME-Version: 1.0
+
+120 rolls cotton wool 500 g
+11 boxes nitrile examination gloves, powder-free, size L
+19 boxes vinyl examination gloves, powder-free, size M
+14 packs crepe bandages 20 cm
+
+--==EML-0070-boundary==--

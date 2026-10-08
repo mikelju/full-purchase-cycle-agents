@@ -1,0 +1,738 @@
+﻿id;category;file;email_text;is_order;expected_lines;verdict;comment
+EML-0015;not_an_order;emails/EML-0015.eml;"Subject: Damaged boxes in yesterday's delivery
+
+Body:
+Hello,
+
+Yesterday's delivery arrived with two cartons crushed on one side and the contents partly wet. It looks like they were stored somewhere damp before reaching us.
+
+I have taken photos and kept the cartons aside. Could you tell me how you want to handle this - should we wait for a collection, or will you issue a credit note?
+
+This is the second time this year, so I would also appreciate it if you could check with the carrier.
+
+Regards,
+Unai Elorza
+Farmacia Casco Viejo";no;;ok;
+EML-0017;body_list;emails/EML-0017.eml;"Subject: Purchase order, Centre Medic Eixample
+
+Body:
+Hi team,
+
+We would like to order:
+
+- 24 boxes of sterile urine containers 60 ml
+- 11 electric wheelchairs
+- 1 box nitrile examination gloves, powder-free, value pack, size M
+
+If anything is not in stock, let us know before shipping.
+
+Jordi
+Centre Medic Eixample";yes;"EML-0017-L1: 24 boxes of sterile urine containers 60 ml -> URN-CUP-60 Sterile urine container 60 ml x 24 (box of 100)
+EML-0017-L2: 11 electric wheelchairs -> NOT IN CATALOG x 11
+EML-0017-L3: 1 box nitrile examination gloves, powder-free, value pack, size M -> GLV-NIT200-M Nitrile examination gloves, powder-free, value pack, size M x 1 (box of 200)";ok;
+EML-0026;not_an_order;emails/EML-0026.eml;"Subject: Do you stock latex-free tourniquets?
+
+Body:
+Hello,
+
+We are moving the whole clinic to latex-free materials. Before we change anything, I would like to know which of your products are certified latex-free, in particular tourniquets, plasters and bandages.
+
+Is there a list on your website, or could you send one?
+
+Many thanks,
+Alberto Sanz
+Clinica Medica Valladolid";no;;ok;
+EML-0028;pdf_attachment;emails/EML-0028.eml;"Subject: New order (PDF)
+
+Body:
+Kaixo,
+
+Here is our new order in the attached PDF form. Please confirm the delivery day.
+
+Eskerrik asko,
+Amaia Urrutia
+
+Attachment: purchase-order-0028.pdf
+PURCHASE ORDER
+Customer: Farmacia Abando
+Order reference: PO-0028
+City: Bilbao
+Product Quantity Unit
+Foot care cream for dry heels 100 ml 200 tube
+Pen needel 31G x 5 mm 8 box of 100
+Anti-pressure wheelchair cushion 19 unit
+Alcohol-free mouthwash 500 ml 2 bottle";yes;"EML-0028-L1: Foot care cream for dry heels 100 ml -> CREAM-FOOT Foot care cream for dry heels 100 ml x 200 (tube)
+EML-0028-L2: Pen needel 31G x 5 mm -> PEN-31-5 Pen needle 31G x 5 mm x 8 (box of 100)
+EML-0028-L3: Anti-pressure wheelchair cushion -> WHEELCHAIR-CUSH Anti-pressure wheelchair cushion x 19 (unit)
+EML-0028-L4: Alcohol-free mouthwash 500 ml -> MOUTHWASH-500 Alcohol-free mouthwash 500 ml x 2 (bottle)";ok;
+EML-0031;body_conversational;emails/EML-0031.eml;"Subject: Small consumables for Tuesday
+
+Body:
+Dear team,
+
+The care home doctor visits every Tuesday and we keep running low on small consumables. This time we would like a dozen boxes of cotton buds with paper stems, two dozen boxes of individually wrapped sterile tongue depressors (wooden) and four dozen boxes of 100 single-use alcohol prep pads.
+
+Please deliver to the back entrance as usual.
+
+Thank you,
+Rosa Jimenez";yes;"EML-0031-L1: a dozen boxes of cotton buds with paper stems -> COT-BUDS Cotton buds, paper stem x 12 (box of 200)
+EML-0031-L2: two dozen boxes of individually wrapped sterile tongue depressors (wooden) -> TONGUE-ST Sterile wooden tongue depressors, individually wrapped x 24 (box of 100)
+EML-0031-L3: four dozen boxes of 100 single-use alcohol prep pads -> WIPE-PAD-100 Alcohol prep pads, single-use, box of 100 x 48 (box of 100)";ok;
+EML-0050;body_list;emails/EML-0050.eml;"Subject: Order Farmacia Gros
+
+Body:
+Kaixo,
+
+Please send:
+
+17 x hypodermic needle 19G x 40 mm (box of 100)
+24 x sterile latex surgical gloves, size 7.5 (box of 50 pairs)
+9 x saline solution 0.9%, single-dose 30 ml (box of 20)
+
+Eskerrik asko, thanks.
+
+Garazi
+Farmacia Gros";yes;"EML-0050-L1: 17 x hypodermic needle 19G x 40 mm (box of 100) -> NDL-19G Hypodermic needle 19G x 40 mm x 17 (box of 100)
+EML-0050-L2: 24 x sterile latex surgical gloves, size 7.5 (box of 50 pairs) -> GLV-SURG-LTX-7.5 Sterile latex surgical gloves, size 7.5 x 24 (box of 50 pairs)
+EML-0050-L3: 9 x saline solution 0.9%, single-dose 30 ml (box of 20) -> SAL-30 Saline solution 0.9%, single-dose 30 ml x 9 (box of 20)";ok;
+EML-0059;not_an_order;emails/EML-0059.eml;"Subject: Invoice 2026-0815 - price difference
+
+Body:
+Hello,
+
+Our accounts team has spotted a difference on invoice 2026-0815. The unit price charged for the incontinence briefs is higher than the price in our annual agreement.
+
+Could you check it and, if it is an error, send us a corrected invoice or a credit note for the difference? We will hold the payment of that invoice until we hear from you.
+
+Thank you,
+Encarna Sanchez
+Residencia Las Acacias";no;;ok;
+EML-0066;txt_attachment;emails/EML-0066.eml;"Subject: Weekly order (see attachment)
+
+Body:
+Hello,
+
+The attached file has our full weekly order. Let us know about any items you cannot supply.
+
+Regards,
+Nuria
+Farmacia Sants
+
+Attachment: order-0066.txt
+13 automated external defibrillators
+18 boxes foley cathether 2-way, 100% silicone, 14 Fr
+one box microporous paper tape 1.25 cm x 9.1 m
+6 boxes sterile latex surgical gloves, size 7.5
+eighty boxes FFP1 masks
+2 packs adult incontinence brief, size XL
+2 boxes nitrile examination gloves, powder-free, value pack, size S
+14 boxes sterile urine container 100 ml";yes;"EML-0066-L1: 13 automated external defibrillators -> NOT IN CATALOG x 13
+EML-0066-L2: 18 boxes foley cathether 2-way, 100% silicone, 14 Fr -> CATH-SIL-14 Foley catheter 2-way, 100% silicone, 14 Fr x 18 (box of 10)
+EML-0066-L3: one box microporous paper tape 1.25 cm x 9.1 m -> TAPE-PAP-12 Microporous paper tape 1.25 cm x 9.1 m x 1 (box of 12 rolls)
+EML-0066-L4: 6 boxes sterile latex surgical gloves, size 7.5 -> GLV-SURG-LTX-7.5 Sterile latex surgical gloves, size 7.5 x 6 (box of 50 pairs)
+EML-0066-L5: eighty boxes FFP1 masks -> NOT IN CATALOG x 80
+EML-0066-L6: 2 packs adult incontinence brief, size XL -> INC-BRF-XL Adult incontinence briefs, size XL x 2 (pack of 20)
+EML-0066-L7: 2 boxes nitrile examination gloves, powder-free, value pack, size S -> GLV-NIT200-S Nitrile examination gloves, powder-free, value pack, size S x 2 (box of 200)
+EML-0066-L8: 14 boxes sterile urine container 100 ml -> URN-CUP-100 Sterile urine container 100 ml x 14 (box of 100)";ok;
+EML-0067;body_list;emails/EML-0067.eml;"Subject: Order request Farmacia Arguelles
+
+Body:
+Good afternoon,
+
+We would like to order:
+
+- 12 packs X-ray film 24 x 30 cm
+- 50 oxygen cylinders, 2 litre
+
+Please confirm price and availability.
+
+Diego
+Farmacia Arguelles";yes;"EML-0067-L1: 12 packs X-ray film 24 x 30 cm -> NOT IN CATALOG x 12
+EML-0067-L2: 50 oxygen cylinders, 2 litre -> NOT IN CATALOG x 50";ok;
+EML-0075;not_an_order;emails/EML-0075.eml;"Subject: Complaint about late deliveries
+
+Body:
+Dear sirs,
+
+Over the last month three of our deliveries have arrived between one and three days late, without any warning from your side. As a care home we cannot run short of basic supplies, and our staff had to borrow material from another residence.
+
+I would like a call with your account manager this week to discuss what is going wrong.
+
+Regards,
+Vicente Marti
+Residencia La Alameda";no;;ok;
+EML-0079;body_conversational;emails/EML-0079.eml;"Subject: Order for the home care service
+
+Body:
+Hola,
+
+We have put together the order for the home care service we supply. Please include a dozen replacement BP cuffs for small adults (17-22 cm), three dozen boxes of size L latex exam gloves, powder-free and half a dozen boxes of Foley catheter 2-way, 100% silicon, 12 Fr. One of the clinics also asked for 80 syringes of 60 ml; if you don't carry them, just leave them out and tell me.
+
+Gracies,
+Nuria Roca
+Farmacia Sants";yes;"EML-0079-L1: a dozen replacement BP cuffs for small adults (17-22 cm) -> BPM-CUFF-S Replacement blood pressure cuff, small adult 17-22 cm x 12 (unit)
+EML-0079-L2: three dozen boxes of size L latex exam gloves, powder-free -> GLV-LTX-L Latex examination gloves, powder-free, size L x 36 (box of 100)
+EML-0079-L3: 80 syringes of 60 ml -> NOT IN CATALOG x 80
+EML-0079-L4: half a dozen boxes of Foley catheter 2-way, 100% silicon, 12 Fr -> CATH-SIL-12 Foley catheter 2-way, 100% silicone, 12 Fr x 6 (box of 10)";ok;
+EML-0081;xlsx_attachment;emails/EML-0081.eml;"Subject: Order from Farmacia del Puerto
+
+Body:
+Good morning,
+
+Attached is this week's order. Please confirm receipt by reply.
+
+Kind regards,
+Alvaro Benitez
+Farmacia del Puerto
+
+Attachment: order-0081.xlsx
+Product	Quantity	Unit
+Burn relief gel dressing 10x10 cm	5	box of 10
+Silicone Foley catheter 2-way 12 Fr	30	box of 10
+Ethyl alcohol 96%, 250 ml	19	bottle";yes;"EML-0081-L1: Burn relief gel dressing 10x10 cm -> BURN-GEL Burn relief gel dressing 10 x 10 cm x 5 (box of 10)
+EML-0081-L2: Silicone Foley catheter 2-way 12 Fr -> CATH-SIL-12 Foley catheter 2-way, 100% silicone, 12 Fr x 30 (box of 10)
+EML-0081-L3: Ethyl alcohol 96%, 250 ml -> ALC96-250 Ethyl alcohol 96% 250 ml x 19 (bottle)";ok;
+EML-0084;body_conversational;emails/EML-0084.eml;"Subject: Items for us and for a home care service
+
+Body:
+Hi,
+
+One of our patients' relatives runs a small home care service and we have agreed to order a few items for them along with ours. Could you send a couple of folding walking sticks, half a dozen boxes of all-silicone 2-way Foley catheters in 18 Fr and 10 urine drainage bags of 2 litres with tap? For the clinic itself we need 100 non-sterile 8-ply gauze swabs, 7.5 x 7.5 cm.
+
+Thanks so much,
+Laura Etxeberria
+Clinica Dental Arenal";yes;"EML-0084-L1: a couple of folding walking sticks -> CANE-FOLD Folding walking stick x 2 (unit)
+EML-0084-L2: half a dozen boxes of all-silicone 2-way Foley catheters in 18 Fr -> CATH-SIL-18 Foley catheter 2-way, 100% silicone, 18 Fr x 6 (box of 10)
+EML-0084-L3: 10 urine drainage bags of 2 litres with tap -> URN-BAG-2L Urine drainage bag 2 litres with tap x 1 (box of 10)
+EML-0084-L4: 100 non-sterile 8-ply gauze swabs, 7.5 x 7.5 cm -> GAUZE-NS-7 Non-sterile gauze swabs 7.5 x 7.5 cm, 8 ply x 1 (pack of 100)";ok;
+EML-0091;not_an_order;emails/EML-0091.eml;"Subject: Great service this year
+
+Body:
+Hi all,
+
+Now that we have finished our first year working with you, I wanted to let you know how happy we are with the service. Deliveries have been on time and every question has been answered quickly.
+
+We look forward to continuing next year.
+
+Best,
+Sara Lopez
+Clinica de Fisioterapia Centro";no;;ok;
+EML-0104;xlsx_attachment;emails/EML-0104.eml;"Subject: Retiro clinic - order spreadsheet
+
+Body:
+Hi,
+
+I have attached a short order spreadsheet. The first item is a request from our director; if you do not stock it, please skip that line and ship the rest.
+
+Thanks,
+Elena Navarro
+
+Attachment: order-0104.xlsx
+Product	Quantity	Unit
+Oxygen cylinders	9	unit
+Anti-fog protective goggles	1	unit
+Sharps container 2 L	1	unit
+Blood pressure cuff, large adult 32-42 cm	7	unit";yes;"EML-0104-L1: Oxygen cylinders -> NOT IN CATALOG x 9
+EML-0104-L2: Anti-fog protective goggles -> GOGGLES Protective goggles, anti-fog x 1 (unit)
+EML-0104-L3: Sharps container 2 L -> SHARPS-2 Sharps container 2 litres x 1 (unit)
+EML-0104-L4: Blood pressure cuff, large adult 32-42 cm -> BPM-CUFF-L Replacement blood pressure cuff, large adult 32-42 cm x 7 (unit)";ok;
+EML-0106;not_an_order;emails/EML-0106.eml;"Subject: Farmacia Lakua - October newsletter
+
+Body:
+Kaixo guztioi,
+
+Our October newsletter is here.
+
+This month we are running a free skin check campaign with a visiting dermatologist, and we have started home delivery for elderly customers in the Lakua neighbourhood.
+
+We will be closed on 12 October for the bank holiday.
+
+Thank you for your support,
+Oier Bengoa
+Farmacia Lakua";no;;ok;
+EML-0117;txt_attachment;emails/EML-0117.eml;"Subject: Order Clinica Fisioterapia Deusto
+
+Body:
+Egun on,
+
+We attach our order for the physiotherapy units. Please call if anything is out of stock.
+
+Thank you,
+Ane
+Clinica Fisioterapia Deusto
+
+Attachment: order-0117.txt
+thirty-five aneroid sphygmomanometers with stethoscope
+6 boxes insulin syringes 2 ml
+19 bottles ethyl alcohol 70% 100 ml
+17 packs examination couch paper roll 60 cm x 50 m
+18 tubes moisturising body cream 100 ml
+9 first aid kits, small, for vehicles
+5 first aid kit refil packs
+19 packs non-sterile gauze swabs 10 x 10 cm, 12 ply";yes;"EML-0117-L1: thirty-five aneroid sphygmomanometers with stethoscope -> BPM-ANER Aneroid sphygmomanometer with stethoscope x 35 (unit)
+EML-0117-L2: 6 boxes insulin syringes 2 ml -> NOT IN CATALOG x 6
+EML-0117-L3: 19 bottles ethyl alcohol 70% 100 ml -> ALC70-100 Ethyl alcohol 70% 100 ml x 19 (bottle)
+EML-0117-L4: 17 packs examination couch paper roll 60 cm x 50 m -> COUCH-60 Examination couch paper roll 60 cm x 50 m x 17 (pack of 6)
+EML-0117-L5: 18 tubes moisturising body cream 100 ml -> CREAM-MOIST-100 Moisturising body cream 100 ml x 18 (tube)
+EML-0117-L6: 9 first aid kits, small, for vehicles -> KIT-FA-SMALL First aid kit, small, for vehicles x 9 (unit)
+EML-0117-L7: 5 first aid kit refil packs -> KIT-FA-REFILL First aid kit refill pack x 5 (unit)
+EML-0117-L8: 19 packs non-sterile gauze swabs 10 x 10 cm, 12 ply -> GAUZE-NS-10-12 Non-sterile gauze swabs 10 x 10 cm, 12 ply x 19 (pack of 100)";ok;
+EML-0126;xlsx_attachment;emails/EML-0126.eml;"Subject: Order - Centro de Salud Privado Chamberi
+
+Body:
+Good morning,
+
+Please find our order attached. Two of the lines are new for us, so tell me if they are not in your range.
+
+Best regards,
+Pablo Ortega
+Centro de Salud Privado Chamberi
+
+Attachment: order-0126.xlsx
+Product	Quantity	Unit
+FFP2 masks, no valve, black	18	box of 20
+Kinesiology tape black 5cm x 5m	16	roll
+Shoe covers, disposable, blue	8	pack of 100
+Underpads 90 x 180 cm	200	unit
+Stitch cutter, sterile	9	box of 100
+Contact lens solution	19	unit";yes;"EML-0126-L1: FFP2 masks, no valve, black -> MASK-FFP2-BLK FFP2 respirator mask, no valve, black x 18 (box of 20)
+EML-0126-L2: Kinesiology tape black 5cm x 5m -> TAPE-KIN Kinesiology tape 5 cm x 5 m, black x 16 (roll)
+EML-0126-L3: Shoe covers, disposable, blue -> SHOE-COVER Disposable shoe covers, blue x 8 (pack of 100)
+EML-0126-L4: Underpads 90 x 180 cm -> NOT IN CATALOG x 200
+EML-0126-L5: Stitch cutter, sterile -> STITCH-CUT Sterile stitch cutter x 9 (box of 100)
+EML-0126-L6: Contact lens solution -> NOT IN CATALOG x 19";ok;
+EML-0129;xlsx_attachment;emails/EML-0129.eml;"Subject: Monte Alto order with cost centres
+
+Body:
+Dear team,
+
+Our order is attached. Each row carries the cost centre our finance office asked for.
+
+Kind regards,
+Fernando Gil
+Residencia Monte Alto
+
+Attachment: order-0129.xlsx
+Line	Product	Quantity	Unit	Cost centre	Requested by
+1	Protective coverall, disposable, XL	19	unit	CC-757	Fernando Gil
+2	Nebuliser machines	12	unit	CC-757	Fernando Gil
+3	Latex examination gloves, lightly powdered, M	15	box of 100	CC-757	Fernando Gil
+4	Nitrile gloves extended cuff 30cm size M	80	box of 50	CC-757	Fernando Gil";yes;"EML-0129-L1: Protective coverall, disposable, XL -> COVERALL-XL Disposable protective coverall, size XL x 19 (unit)
+EML-0129-L2: Nebuliser machines -> NOT IN CATALOG x 12
+EML-0129-L3: Latex examination gloves, lightly powdered, M -> GLV-LTXP-M Latex examination gloves, lightly powdered, size M x 15 (box of 100)
+EML-0129-L4: Nitrile gloves extended cuff 30cm size M -> GLV-NITX-M Nitrile examination gloves, extended cuff 30 cm, size M x 80 (box of 50)";ok;
+EML-0142;not_an_order;emails/EML-0142.eml;"Subject: Rude delivery driver
+
+Body:
+Hello,
+
+I am sorry to have to write this, but the driver who delivered to us on Monday was rude to our receptionist and left the boxes blocking the entrance for patients.
+
+We have always had good service from you, so I am sure this is an exception, but I would like you to look into it.
+
+Marta Puig
+Clinica Podologica Gracia";no;;ok;
+EML-0145;pdf_attachment;emails/EML-0145.eml;"Subject: Lakua pharmacy - big order
+
+Body:
+Kaixo,
+
+A bigger order than usual this time, attached as PDF. We are restocking after the inventory.
+
+Mila esker,
+Oier Bengoa
+Farmacia Lakua
+
+Attachment: purchase-order-0145.pdf
+PURCHASE ORDER
+Customer: Farmacia Lakua
+Order reference: PO-0145
+City: Vitoria
+Product Quantity Unit
+Insulin syringes 0.5 ml, needle fixed 4 box of 100
+Nitrile examination gloves, powder-free, sise XL 7 box of 100
+Incontinence briefs for adults, size S 120 units
+Face shield with reusable frame and visor 5 unit
+Emergency foil blanket 60 units
+Adhesive island dressing 5 x 7.2 cm 2 box of 50
+Disposable underpad 40 x 60 cm 13 pack of 25
+Oxygen cylinder, small 16 unit";yes;"EML-0145-L1: Insulin syringes 0.5 ml, needle fixed -> SYR-INS-05 Insulin syringe 0.5 ml with fixed needle x 4 (box of 100)
+EML-0145-L2: Nitrile examination gloves, powder-free, sise XL -> GLV-NIT-XL Nitrile examination gloves, powder-free, size XL x 7 (box of 100)
+EML-0145-L3: Incontinence briefs for adults, size S -> INC-BRF-S Adult incontinence briefs, size S x 6 (pack of 20)
+EML-0145-L4: Face shield with reusable frame and visor -> VISOR Face shield visor, reusable frame x 5 (unit)
+EML-0145-L5: Emergency foil blanket -> BLANKET-FOIL Emergency foil blanket x 6 (pack of 10)
+EML-0145-L6: Adhesive island dressing 5 x 7.2 cm -> DRS-ISL-5x7 Adhesive island dressing 5 x 7.2 cm x 2 (box of 50)
+EML-0145-L7: Disposable underpad 40 x 60 cm -> PAD-40x60 Disposable underpad 40 x 60 cm x 13 (pack of 25)
+EML-0145-L8: Oxygen cylinder, small -> NOT IN CATALOG x 16";ok;
+EML-0150;body_list;emails/EML-0150.eml;"Subject: Alcohol order
+
+Body:
+Hi,
+
+Please send us:
+
+15 jerrycans of 70% ethyl alcohol, 5 L
+
+Regards.
+
+Iker
+Centro Medico Indautxu";yes;EML-0150-L1: 15 jerrycans of 70% ethyl alcohol, 5 L -> ALC70-5000 Ethyl alcohol 70% 5 litre jerrycan x 15 (jerrycan);ok;
+EML-0159;xlsx_attachment;emails/EML-0159.eml;"Subject: Order for physio and geriatrics
+
+Body:
+Hi,
+
+Order attached for our physio and geriatrics rooms. No rush on this one.
+
+Jordi Ferrer
+
+Attachment: order-0159.xlsx
+Product	Quantity	Unit
+Sharps containers 0.6 litre	60	unit
+Grabber reaching aid, 80cm	7	unit";yes;"EML-0159-L1: Sharps containers 0.6 litre -> SHARPS-06 Sharps container 0.6 litre x 60 (unit)
+EML-0159-L2: Grabber reaching aid, 80cm -> GRAB-REACH Reaching aid grabber 80 cm x 7 (unit)";ok;
+EML-0161;txt_attachment;emails/EML-0161.eml;"Subject: Order Residencia Santa Clara - October
+
+Body:
+Good morning,
+
+Attached is the order from the nursing team.
+
+Thank you,
+Antonio
+Residencia Santa Clara
+
+Attachment: order-0161.txt
+12 boxes hypodermic neddle 25G x 16 mm
+50 bottles ethyl alchohol 96% 1 litre
+5 boxes zinc oxide tape 5 cm x 5 m
+4 dozen boxes saline solution 0.9%, single-dose 5 ml";yes;"EML-0161-L1: 12 boxes hypodermic neddle 25G x 16 mm -> NDL-25G Hypodermic needle 25G x 16 mm x 12 (box of 100)
+EML-0161-L2: 50 bottles ethyl alchohol 96% 1 litre -> ALC96-1000 Ethyl alcohol 96% 1 litre x 50 (bottle)
+EML-0161-L3: 5 boxes zinc oxide tape 5 cm x 5 m -> TAPE-ZNC-50 Zinc oxide tape 5 cm x 5 m x 5 (box of 10 rolls)
+EML-0161-L4: 4 dozen boxes saline solution 0.9%, single-dose 5 ml -> SAL-5 Saline solution 0.9%, single-dose 5 ml x 48 (box of 30)";ok;
+EML-0162;body_list;emails/EML-0162.eml;"Subject: Sharps and gauze order
+
+Body:
+Good morning,
+
+We would like to order:
+
+- 15 x sharps container 1 litre
+- 2 dozen x sharps container 10 litres
+- 12 bags gauze bandage roll 5 cm x 4 m
+
+Please send the delivery note with the goods.
+
+Elena
+Clinica Dermatologica Retiro";yes;"EML-0162-L1: 15 x sharps container 1 litre -> SHARPS-1 Sharps container 1 litre x 15 (unit)
+EML-0162-L2: 2 dozen x sharps container 10 litres -> SHARPS-10 Sharps container 10 litres x 24 (unit)
+EML-0162-L3: 12 bags gauze bandage roll 5 cm x 4 m -> GAUZE-ROLL-5 Gauze bandage roll 5 cm x 4 m x 12 (bag of 12)";ok;
+EML-0167;pdf_attachment;emails/EML-0167.eml;"Subject: Itsasbegi residence order
+
+Body:
+Good morning,
+
+Please find the residence order attached. The first aid item is a question from our safety officer.
+
+Regards,
+Josu Aguirre
+
+Attachment: delivery-note-0167.pdf
+DELIVERY NOTE - REQUESTED ITEMS
+Deliver to: Residencia Itsasbegi, Getxo
+Note number: DN-0167
+Ref Description Qty Unit
+1 Surgical mask type II with ear loops 14 box of 50
+2 Defibrillator (AED), automatic 2 unit
+3 Blood glucose test strips, box of 100 14 box of 100
+4 Microporous paper tape 2.5 cm x 9.1 m 9 box of 12 rolls
+5 Weekly pill organiser, 7 days 5 unit
+6 Sterile neoprene surgical gloves (latex-free), 7.5 6 box of 50 pairs
+7 Elastic elbow support, size S 7 unit";yes;"EML-0167-L1: Surgical mask type II with ear loops -> MASK-II Surgical face mask type II, ear loops x 14 (box of 50)
+EML-0167-L2: Defibrillator (AED), automatic -> NOT IN CATALOG x 2
+EML-0167-L3: Blood glucose test strips, box of 100 -> GLU-STRIP-100 Blood glucose test strips, box of 100 x 14 (box of 100)
+EML-0167-L4: Microporous paper tape 2.5 cm x 9.1 m -> TAPE-PAP-25 Microporous paper tape 2.5 cm x 9.1 m x 9 (box of 12 rolls)
+EML-0167-L5: Weekly pill organiser, 7 days -> PILL-BOX-7 Weekly pill organiser, 7 days x 5 (unit)
+EML-0167-L6: Sterile neoprene surgical gloves (latex-free), 7.5 -> GLV-SURG-NEO-7.5 Sterile latex-free surgical gloves (neoprene), size 7.5 x 6 (box of 50 pairs)
+EML-0167-L7: Elastic elbow support, size S -> SUP-ELBOW-S Elastic elbow support, size S x 7 (unit)";ok;
+EML-0172;body_list;emails/EML-0172.eml;"Subject: Order Policlinica Gipuzkoa Norte
+
+Body:
+Egun on,
+
+Our order for the coming week:
+
+- Silk tape 2.5 cm x 9.1 m, 15 boxes
+- Sterile transport swab with medium, 450 swabs
+- Elbow support, elastic, medium size, 14 units
+- Disposible syringe 1 ml, luer slip, 18 boxes
+- Contact lens solution, four bottles
+- Adhesive plasters, assorted sizes, 5 boxes
+- Cut-to-size plaster strip 6 cm x 1 m, 16 rolls
+- Foley catheter 2-way, silicone-coated latex, 12 Fr, 50 boxes
+
+Thanks, and please split the delivery if some items are back-ordered.
+
+Jon
+Policlinica Gipuzkoa Norte";yes;"EML-0172-L1: Silk tape 2.5 cm x 9.1 m, 15 boxes -> TAPE-SILK-25 Silk tape 2.5 cm x 9.1 m x 15 (box of 12 rolls)
+EML-0172-L2: Sterile transport swab with medium, 450 swabs -> SWAB-TRANS Sterile transport swab with medium x 9 (box of 50)
+EML-0172-L3: Elbow support, elastic, medium size, 14 units -> SUP-ELBOW-M Elastic elbow support, size M x 14 (unit)
+EML-0172-L4: Disposible syringe 1 ml, luer slip, 18 boxes -> SYR-1 Disposable syringe 1 ml, luer slip x 18 (box of 100)
+EML-0172-L5: Contact lens solution, four bottles -> NOT IN CATALOG x 4
+EML-0172-L6: Adhesive plasters, assorted sizes, 5 boxes -> PLST-ASST Adhesive plasters, assorted sizes x 5 (box of 100)
+EML-0172-L7: Cut-to-size plaster strip 6 cm x 1 m, 16 rolls -> PLST-ROLL-6 Cut-to-size plaster strip 6 cm x 1 m x 16 (roll)
+EML-0172-L8: Foley catheter 2-way, silicone-coated latex, 12 Fr, 50 boxes -> CATH-FOL-12 Foley catheter 2-way, silicone-coated latex, 12 Fr x 50 (box of 10)";ok;
+EML-0179;txt_attachment;emails/EML-0179.eml;"Subject: Order Farmacia Gros
+
+Body:
+Hello again,
+
+Here is another order, attached as a text file.
+
+Best,
+Garazi
+Farmacia Gros
+
+Attachment: order-0179.txt
+25 boxes children's adhesive plasters with drawings
+14 packs rinse-free shampoo cap
+six boxes sterile latex surgical gloves, size 8
+4 sharps containers 0.6 litre
+1 bottle saline solution 0.9% for irrigation 1 litre";yes;"EML-0179-L1: 25 boxes children's adhesive plasters with drawings -> PLST-KIDS Children's adhesive plasters with drawings x 25 (box of 50)
+EML-0179-L2: 14 packs rinse-free shampoo cap -> WIPE-WASH-CAP Rinse-free shampoo cap x 14 (pack of 10)
+EML-0179-L3: six boxes sterile latex surgical gloves, size 8 -> GLV-SURG-LTX-8 Sterile latex surgical gloves, size 8 x 6 (box of 50 pairs)
+EML-0179-L4: 4 sharps containers 0.6 litre -> SHARPS-06 Sharps container 0.6 litre x 4 (unit)
+EML-0179-L5: 1 bottle saline solution 0.9% for irrigation 1 litre -> SAL-1000 Saline solution 0.9% for irrigation 1 litre x 1 (bottle)";ok;
+EML-0209;body_conversational;emails/EML-0209.eml;"Subject: Mixed order, partly for the shop next door
+
+Body:
+Hi,
+
+A new food shop opened next door and they asked us to source hygiene items for them, so this is a mixed order. For them: 8 wall dispensers for 1 litre hand sanitiser and eight packs of boufant caps, non-woven. For the pharmacy: 11 infrared ear thermometers and a couple of pairs of size L knee-high compression stockings (class I).
+
+Thanks,
+Oier Bengoa";yes;"EML-0209-L1: a couple of pairs of size L knee-high compression stockings (class I) -> STOCK-KNEE-L Compression knee-high stockings class I, size L x 2 (pair)
+EML-0209-L2: 8 wall dispensers for 1 litre hand sanitiser -> GEL-WALL Wall dispenser for hand sanitiser, 1 litre x 8 (unit)
+EML-0209-L3: 11 infrared ear thermometers -> THERM-EAR Infrared ear thermometer x 11 (unit)
+EML-0209-L4: eight packs of boufant caps, non-woven -> CAP-BOUF Bouffant cap, non-woven x 8 (pack of 100)";ok;
+EML-0226;xlsx_attachment;emails/EML-0226.eml;"Subject: Las Canteras - restock
+
+Body:
+Hi,
+
+Restock order attached. We also need the invoice with our tax number, as last time it was missing.
+
+Yeray Santana
+
+Attachment: order-0226.xlsx
+Product	Quantity	Unit
+CPR face shields with one-way valve	10	units
+Foley catheter 2-way silicone-coated latex 18Fr	7	box of 10
+Small adult BP cuff 17-22 cm, replacement	17	unit
+Sharps container 10 L	4	unit
+Paper stem cotton buds	13	box of 200
+Scalpels no. 10, sterile, disposable	9	box of 10
+Stethoscope, dual head	8	unit";yes;"EML-0226-L1: CPR face shields with one-way valve -> CPR-MASK CPR face shield with one-way valve x 1 (pack of 10)
+EML-0226-L2: Foley catheter 2-way silicone-coated latex 18Fr -> CATH-FOL-18 Foley catheter 2-way, silicone-coated latex, 18 Fr x 7 (box of 10)
+EML-0226-L3: Small adult BP cuff 17-22 cm, replacement -> BPM-CUFF-S Replacement blood pressure cuff, small adult 17-22 cm x 17 (unit)
+EML-0226-L4: Sharps container 10 L -> SHARPS-10 Sharps container 10 litres x 4 (unit)
+EML-0226-L5: Paper stem cotton buds -> COT-BUDS Cotton buds, paper stem x 13 (box of 200)
+EML-0226-L6: Scalpels no. 10, sterile, disposable -> SCALPEL-10 Sterile disposable scalpel no. 10 x 9 (box of 10)
+EML-0226-L7: Stethoscope, dual head -> STETH-DUAL Dual-head stethoscope x 8 (unit)";ok;
+EML-0235;pdf_attachment;emails/EML-0235.eml;"Subject: Los Robles residence order
+
+Body:
+Hello,
+
+Attached is the residence order signed by our head nurse.
+
+Thank you,
+Begona Larrea
+Residencia Los Robles
+
+Attachment: purchase-order-0235.pdf
+PURCHASE ORDER
+Customer: Residencia Los Robles
+Order reference: PO-0235
+City: Bilbao
+Product Quantity Unit
+Tubular bandage size E, 10 m 120 roll
+Skin closure strips 6 x 100 mm 50 units";yes;"EML-0235-L1: Tubular bandage size E, 10 m -> BND-TUB-E Tubular bandage size E, 10 m x 120 (roll)
+EML-0235-L2: Skin closure strips 6 x 100 mm -> STRIP-6x100 Skin closure strips 6 x 100 mm x 1 (box of 50 envelopes)";ok;
+EML-0236;txt_attachment;emails/EML-0236.eml;"Subject: Briefs order
+
+Body:
+Buenos dias,
+
+Small order attached. Thanks.
+
+Alvaro
+Farmacia del Puerto
+
+Attachment: order-0236.txt
+80 adult incontinence briefs, size M";yes;EML-0236-L1: 80 adult incontinence briefs, size M -> INC-BRF-M Adult incontinence briefs, size M x 4 (pack of 20);ok;
+EML-0237;pdf_attachment;emails/EML-0237.eml;"Subject: Dermatology clinic restock
+
+Body:
+Good afternoon,
+
+We are restocking our consultation rooms; the full list is in the attached PDF. One item is for the waste area and may not be in your range.
+
+Regards,
+Elena Navarro
+
+Attachment: delivery-note-0237.pdf
+DELIVERY NOTE - REQUESTED ITEMS
+Deliver to: Clinica Dermatologica Retiro, Madrid
+Note number: DN-0237
+Ref Description Qty Unit
+1 Automatic upper arm blood pressure monitor 1 unit
+2 Hypodermic neelde 30G x 13 mm 7 box of 100
+3 Infrared forehead thermometer, non-contact 3 unit
+4 Paediatric stethoscope 100 unit
+5 Sharps bins 15 L 3 unit
+6 Compression knee-high stockings class I, size M 50 pair";yes;"EML-0237-L1: Automatic upper arm blood pressure monitor -> BPM-ARM Automatic upper arm blood pressure monitor x 1 (unit)
+EML-0237-L2: Hypodermic neelde 30G x 13 mm -> NDL-30G Hypodermic needle 30G x 13 mm x 7 (box of 100)
+EML-0237-L3: Infrared forehead thermometer, non-contact -> THERM-IR Infrared forehead thermometer, non-contact x 3 (unit)
+EML-0237-L4: Paediatric stethoscope -> STETH-PAED Paediatric stethoscope x 100 (unit)
+EML-0237-L5: Sharps bins 15 L -> NOT IN CATALOG x 3
+EML-0237-L6: Compression knee-high stockings class I, size M -> STOCK-KNEE-M Compression knee-high stockings class I, size M x 50 (pair)";ok;
+EML-0263;pdf_attachment;emails/EML-0263.eml;"Subject: Aiete residence order
+
+Body:
+Kaixo,
+
+Our order is attached. The new nurses asked for their own equipment, hence the stethoscopes.
+
+Mila esker,
+Xabier Lasa
+
+Attachment: delivery-note-0263.pdf
+DELIVERY NOTE - REQUESTED ITEMS
+Deliver to: Residencia Aiete, San Sebastian
+Note number: DN-0263
+Ref Description Qty Unit
+1 Stethoscope, dual head 3 unit
+2 Elastic wrist support, size L 2 unit
+3 Disposable probe covers for ear thermometer 30 box of 40";yes;"EML-0263-L1: Stethoscope, dual head -> STETH-DUAL Dual-head stethoscope x 3 (unit)
+EML-0263-L2: Elastic wrist support, size L -> SUP-WRIST-L Elastic wrist support, size L x 2 (unit)
+EML-0263-L3: Disposable probe covers for ear thermometer -> THERM-COVER Disposable probe covers for ear thermometer x 30 (box of 40)";ok;
+EML-0267;not_an_order;emails/EML-0267.eml;"Subject: Thank you for your flexibility
+
+Body:
+Hi,
+
+Thank you for changing our delivery slot at such short notice last week. It meant a lot to us during the flooding in the area.
+
+Kind regards,
+Rocio Dominguez
+Farmacia Nervion";no;;ok;
+EML-0268;body_list;emails/EML-0268.eml;"Subject: Order Farmacia Nervion
+
+Body:
+Buenas tardes,
+
+Please send:
+
+- Latex examination gloves, lightly powdered, size L (3 boxes)
+- Adult incontinence briefs, size M (14 packs)
+
+Thank you.
+
+Rocio
+Farmacia Nervion";yes;"EML-0268-L1: Latex examination gloves, lightly powdered, size L (3 boxes) -> GLV-LTXP-L Latex examination gloves, lightly powdered, size L x 3 (box of 100)
+EML-0268-L2: Adult incontinence briefs, size M (14 packs) -> INC-BRF-M Adult incontinence briefs, size M x 14 (pack of 20)";ok;
+EML-0269;pdf_attachment;emails/EML-0269.eml;"Subject: Pamplona medical centre - delivery note
+
+Body:
+Good morning,
+
+Attached is our order in delivery note format, as agreed with your sales rep.
+
+Regards,
+Mikel Iriarte
+
+Attachment: delivery-note-0269.pdf
+DELIVERY NOTE - REQUESTED ITEMS
+Deliver to: Centro Medico Pamplona, Pamplona
+Note number: DN-0269
+Ref Description Qty Unit
+1 Reusable washable bed pad 75 x 90 cm 16 unit
+2 Automatic wrist blood pressure monitor 2 unit";yes;"EML-0269-L1: Reusable washable bed pad 75 x 90 cm -> PAD-REUSE-75 Reusable washable bed pad 75 x 90 cm x 16 (unit)
+EML-0269-L2: Automatic wrist blood pressure monitor -> BPM-WRIST Automatic wrist blood pressure monitor x 2 (unit)";ok;
+EML-0271;pdf_attachment;emails/EML-0271.eml;"Subject: Order and one size question
+
+Body:
+Hello,
+
+Our order is attached. We also listed a glove size that our new doctor needs; tell us if it does not exist.
+
+Best regards,
+Elena Navarro
+Clinica Dermatologica Retiro
+
+Attachment: delivery-note-0271.pdf
+DELIVERY NOTE - REQUESTED ITEMS
+Deliver to: Clinica Dermatologica Retiro, Madrid
+Note number: DN-0271
+Ref Description Qty Unit
+1 Latex examination gloves, lightly powdered, size S 13 box of 100
+2 Nitrile exam gloves, size XXL 14 unit
+3 Skin closure strips 6 x 75 mm 15 box of 50 envelopes
+4 Nitrile examination gloves, powder-free, size XS 13 box of 100
+5 Container for stool samples, 30 ml 20 box of 100";yes;"EML-0271-L1: Latex examination gloves, lightly powdered, size S -> GLV-LTXP-S Latex examination gloves, lightly powdered, size S x 13 (box of 100)
+EML-0271-L2: Nitrile exam gloves, size XXL -> NOT IN CATALOG x 14
+EML-0271-L3: Skin closure strips 6 x 75 mm -> STRIP-6x75 Skin closure strips 6 x 75 mm x 15 (box of 50 envelopes)
+EML-0271-L4: Nitrile examination gloves, powder-free, size XS -> GLV-NIT-XS Nitrile examination gloves, powder-free, size XS x 13 (box of 100)
+EML-0271-L5: Container for stool samples, 30 ml -> STOOL-CUP Stool sample container 30 ml x 20 (box of 100)";ok;
+EML-0297;xlsx_attachment;emails/EML-0297.eml;"Subject: Itsasbegi order - see Excel
+
+Body:
+Arratsalde on,
+
+The residence order is attached in Excel. Please include the cost centre on the delivery note too.
+
+Mila esker,
+Josu Aguirre
+Residencia Itsasbegi
+
+Attachment: order-0297.xlsx
+Line	Product	Quantity	Unit	Cost centre	Requested by
+1	Foot cream for dry heels, 100 ml	120	tube	CC-393	Josu Aguirre
+2	Sunscreen SPF50+ 50 ml tube	15	tube	CC-393	Josu Aguirre
+3	Wrist blood pressure monitor, automatic	8	unit	CC-393	Josu Aguirre
+4	Surgical masks for children	10	box of 50	CC-393	Josu Aguirre
+5	Couch paper roll 60cm x 50m	7	pack of 6	CC-393	Josu Aguirre
+6	Surgical gloves size 9	30	unit	CC-393	Josu Aguirre
+7	Hypodermic needle 26G x 13mm	14	box of 100	CC-393	Josu Aguirre
+8	Sterile latex surgical gloves size 7.5	13	box of 50 pairs	CC-393	Josu Aguirre";yes;"EML-0297-L1: Foot cream for dry heels, 100 ml -> CREAM-FOOT Foot care cream for dry heels 100 ml x 120 (tube)
+EML-0297-L2: Sunscreen SPF50+ 50 ml tube -> SUN-50-50 Sunscreen SPF 50+, 50 ml x 15 (tube)
+EML-0297-L3: Wrist blood pressure monitor, automatic -> BPM-WRIST Automatic wrist blood pressure monitor x 8 (unit)
+EML-0297-L4: Surgical masks for children -> MASK-KIDS Children's surgical face mask x 10 (box of 50)
+EML-0297-L5: Couch paper roll 60cm x 50m -> COUCH-60 Examination couch paper roll 60 cm x 50 m x 7 (pack of 6)
+EML-0297-L6: Surgical gloves size 9 -> NOT IN CATALOG x 30
+EML-0297-L7: Hypodermic needle 26G x 13mm -> NDL-26G Hypodermic needle 26G x 13 mm x 14 (box of 100)
+EML-0297-L8: Sterile latex surgical gloves size 7.5 -> GLV-SURG-LTX-7.5 Sterile latex surgical gloves, size 7.5 x 13 (box of 50 pairs)";ok;
+EML-0310;txt_attachment;emails/EML-0310.eml;"Subject: Order Clinica Dental Gijon Centro
+
+Body:
+Hello,
+
+Our order is in the attached text file. Please confirm availability.
+
+Thanks,
+Ruben
+Clinica Dental Gijon Centro
+
+Attachment: order-0310.txt
+16 packs cohesive bandage 10 cm x 4.5 m
+6 bottles contact lens solution
+25 boxes hypodermic needle 26G x 13 mm
+two hundred boxes skin closure strips 6 x 75 mm
+twenty first aid kits, small, for vehicles
+19 packs incontinence pads, normal absorbency";yes;"EML-0310-L1: 16 packs cohesive bandage 10 cm x 4.5 m -> BND-COH-10 Cohesive bandage 10 cm x 4.5 m x 16 (pack of 10)
+EML-0310-L2: 6 bottles contact lens solution -> NOT IN CATALOG x 6
+EML-0310-L3: 25 boxes hypodermic needle 26G x 13 mm -> NDL-26G Hypodermic needle 26G x 13 mm x 25 (box of 100)
+EML-0310-L4: two hundred boxes skin closure strips 6 x 75 mm -> STRIP-6x75 Skin closure strips 6 x 75 mm x 200 (box of 50 envelopes)
+EML-0310-L5: twenty first aid kits, small, for vehicles -> KIT-FA-SMALL First aid kit, small, for vehicles x 20 (unit)
+EML-0310-L6: 19 packs incontinence pads, normal absorbency -> INC-PAD-NORMAL Incontinence pads, normal absorbency x 19 (pack of 28)";ok;

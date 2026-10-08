@@ -1,0 +1,34 @@
+From: Mikel Iriarte <mikel.cli-016@example.com>
+To: orders@purchase-cycle.example
+Subject: Pamplona - second order
+Date: Sat, 31 Oct 2026 10:38:00 +0000
+Message-ID: <eml-0206@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0206-boundary=="
+
+--==EML-0206-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+Another order attached, for the new outpatient area.
+
+Mikel
+Centro Medico Pamplona
+
+--==EML-0206-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0206.txt"
+MIME-Version: 1.0
+
+80 sharps containers 5 litres
+15 boxes Foley catheter 2-way, 100% silicone, 18 Fr
+200 elastic knee supports, size XL
+10 boxes lightly powdered latex exam gloves, size L
+19 elastic elbow supports, size M
+3 boxes surgical face mask type IIR, ear loops
+75 packs incontinence pads, maxi absorbency
+
+--==EML-0206-boundary==--

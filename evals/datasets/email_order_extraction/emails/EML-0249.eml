@@ -1,0 +1,36 @@
+From: Ines Martin <ines.far-012@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Farmacia Plaza Mayor
+Date: Thu, 12 Nov 2026 23:57:00 +0000
+Message-ID: <eml-0249@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0249-boundary=="
+
+--==EML-0249-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+Our order is attached. Please let us know if anything is back-ordered.
+
+Regards,
+Ines
+Farmacia Plaza Mayor
+
+--==EML-0249-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0249.txt"
+MIME-Version: 1.0
+
+8 bottles gentle liquid soup 500 ml
+14 boxes microporous paper tape 5 cm x 9.1 m
+120 boxes nitrile examination gloves, powder-free, value pack, size L
+20 boxes FFP1 masks
+11 packs emergancy foil blanket
+a dozen sharps containers 30 litres
+4 packs sterile gauze swabs 10 x 10 cm, 8 ply
+6 boxes nitrile examination gloves, powder-free, size XL
+
+--==EML-0249-boundary==--

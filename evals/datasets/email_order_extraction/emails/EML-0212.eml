@@ -1,0 +1,30 @@
+From: Raquel Pastor <raquel.res-013@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Sol de Levante (attached)
+Date: Mon, 02 Nov 2026 04:56:00 +0000
+Message-ID: <eml-0212@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0212-boundary=="
+
+--==EML-0212-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Please see the attached order.
+
+Thank you,
+Raquel
+Residencia Sol de Levante
+
+--==EML-0212-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0212.txt"
+MIME-Version: 1.0
+
+500 bouffant caps, non-woven
+3 large bottles of SPF 50+ sunscreen, 200 ml
+
+--==EML-0212-boundary==--

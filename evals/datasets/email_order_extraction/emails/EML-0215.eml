@@ -1,0 +1,37 @@
+From: Adrian Menendez <adrian.res-014@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Valle Verde - see file
+Date: Tue, 03 Nov 2026 01:35:00 +0000
+Message-ID: <eml-0215@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0215-boundary=="
+
+--==EML-0215-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Dear team,
+
+The attached file lists everything we need this month. Please split the deliv=
+ery if needed.
+
+Best regards,
+Adrian
+Residencia Valle Verde
+
+--==EML-0215-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0215.txt"
+MIME-Version: 1.0
+
+eighteen sharps containers 15 litres
+19 boxes FFP2 respirator mask with exhalation valve
+13 bottles moisturising body cream 500 ml with pump
+13 dental implants
+9 boxes blood glucose test strips, box of 50
+1 replacement blood pressure cuff, small adult 17-22 cm
+five packs non-sterile gauze swabs 7.5 x 7.5 cm, 8 ply
+a dozen boxes round spot plasters 22 mm
+
+--==EML-0215-boundary==--

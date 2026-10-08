@@ -1,0 +1,29 @@
+From: Paula Gutierrez <paula.cli-018@example.com>
+To: orders@purchase-cycle.example
+Subject: Order attached
+Date: Sat, 10 Oct 2026 10:02:00 +0000
+Message-ID: <eml-0134@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0134-boundary=="
+
+--==EML-0134-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+Two items for the clinic, see the file attached.
+
+Paula
+Centro de Estetica Medica Santander
+
+--==EML-0134-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0134.txt"
+MIME-Version: 1.0
+
+16 tubes sunscreen SPF 50+, 50 ml
+5 elastic ankle supports, size M
+
+--==EML-0134-boundary==--

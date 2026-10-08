@@ -1,0 +1,31 @@
+From: Unai Elorza <unai.far-002@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Casco Viejo
+Date: Sun, 27 Sep 2026 07:17:00 +0000
+Message-ID: <eml-0089@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0089-boundary=="
+
+--==EML-0089-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Please find the order attached.
+
+Regards,
+Unai
+Farmacia Casco Viejo
+
+--==EML-0089-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0089.txt"
+MIME-Version: 1.0
+
+eight boxes surgical gloves size 9
+16 rolls cut-to-size plaster stirp 6 cm x 1 m
+three bottles ethyl alcohol 70% 250 ml
+
+--==EML-0089-boundary==--

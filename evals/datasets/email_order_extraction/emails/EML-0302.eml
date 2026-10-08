@@ -1,0 +1,56 @@
+From: Ane Goikoetxea <ane.cli-003@example.com>
+To: orders@purchase-cycle.example
+Subject: Deusto physio clinic order
+Date: Sat, 28 Nov 2026 10:26:00 +0000
+Message-ID: <eml-0302@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0302-boundary=="
+
+--==EML-0302-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+Attached is our order. One of our patients is diabetic, so we are adding a me=
+ter for the clinic.
+
+Thanks a lot,
+Ane Goikoetxea
+Clinica Fisioterapia Deusto
+
+--==EML-0302-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0302.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQyMAo+PgpzdHJlYW0KeJx9
+k81ymzAURvd5irvpTLvIjf4R3tWOPZ1unDrkAQjIiVoZZYSYNm9fbJng4g5bxHf0HV2JwfcbgjKD
+3zfLAu42FKhAQqDYw7o4fuIUqQYpNEoFRQ2fH552q29fH9ew3d2vd1+g+Hn+827DgJL/hVmGRJ/C
+q66N/mDCAlbONrYqYWNb66MJ5Zst4d4c1y+YZ8ARmwDbUJsAwexNME1lFvCwvSWcsKuMyDmSLG1q
+4/sCltY9l/6fvhTysS7TyCWITCFjIDRFncMtzVGLfjt4hJGsOCqSziL4uqviAD32ZGJgaIlETBGS
+nmpdMH50ZRP7hh+QXCLTA4QKihm/ouQaKb2kPDU2TmZx7SYVcj3vJjhmac5FKJv2reyPOcLeugPU
+wbStbV5AwR/IoDpMtRN+VnvEc0mmxik/bzwCut64HRBnQa5QinlBxjFnJ8DSeV/Di+sq3xo4mP4S
+wi97NczEnLUamWLqlNLzTmO8u5jiWYkqzMi8EhHD61jH13cHpav8q3eQq09AwdkYzFQqUWelRmo+
+lUrpeakx/uxjdB8N/gI1DAusCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQg
+L0hlbHZldGljYS1Cb2xkCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBl
+MQovVHlwZSAvRm9udAo+PgplbmRvYmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQov
+RW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4K
+ZW5kb2JqCjcgMCBvYmoKPDwKL0ZvbnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQg
+Wy9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8
+Ci9BdXRob3IgKENsaW5pY2EgRmlzaW90ZXJhcGlhIERldXN0bykKL0NyZWF0aW9uRGF0ZSAoRDoy
+MDI2MDkwMTA4MDAwMFopCi9UaXRsZSAocHVyY2hhc2Utb3JkZXItMDMwMi5wZGYpCj4+CmVuZG9i
+agp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAw
+MDEwMiAwMDAwMCBuIAowMDAwMDAwMjA1IDAwMDAwIG4gCjAwMDAwMDAyODUgMDAwMDAgbiAKMDAw
+MDAwMDc3NyAwMDAwMCBuIAowMDAwMDAwODc5IDAwMDAwIG4gCjAwMDAwMDA5NzYgMDAwMDAgbiAK
+MDAwMDAwMTA3MyAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8g
+OCAwIFIKL0lEIFs8NEEwNzJBRDgzMDcyNEY2Nzc1MUJFMjg0NkY2QkRBQUY+PDRBMDcyQUQ4MzA3
+MjRGNjc3NTFCRTI4NDZGNkJEQUFGPl0KPj4Kc3RhcnR4cmVmCjExOTkKJSVFT0YK
+
+--==EML-0302-boundary==--

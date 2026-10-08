@@ -7,7 +7,7 @@ import pytest
 
 from purchase_cycle import db, web_form
 from purchase_cycle.config import MATCHING_RECORDINGS_PATH
-from purchase_cycle.evaluation import harness, web_form_eval
+from purchase_cycle.evaluation import email_eval, harness, web_form_eval
 from purchase_cycle.evaluation import web_form_dataset as wf
 from purchase_cycle.llm import MATCHING, build_system_prompt, recording_key
 
@@ -94,6 +94,7 @@ def test_missing_recordings_exit_with_error(tmp_path, capsys):
 def test_eval_command_runs_both_suites_and_keeps_the_worst_exit(monkeypatch, capsys):
     monkeypatch.setattr(harness, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(web_form_eval, "evaluate", lambda *args, **kwargs: 1)
+    monkeypatch.setattr(email_eval, "evaluate", lambda *args, **kwargs: 0)
     args = argparse.Namespace(suite="all", mode="replay", split="test", set_baseline=False, workers=1)
     assert harness.cmd_eval(args) == 1
     args.suite = "order_line_extraction"
@@ -145,11 +146,12 @@ def test_schema_invalid_answer_does_not_trip_the_call_gate(baseline_copy, tmp_pa
     assert "GATE FAILED: the client made" not in out
 
 
-def test_upload_command_uploads_both_suites_and_keeps_the_worst_exit(monkeypatch):
+def test_upload_command_uploads_every_suite_and_keeps_the_worst_exit(monkeypatch):
     from purchase_cycle.cli import main
 
     uploaded = []
     monkeypatch.setattr(harness, "upload_datasets", lambda: uploaded.append("order_line_extraction") or 0)
     monkeypatch.setattr(web_form_eval, "upload_datasets", lambda: uploaded.append("web_form_matching") or 1)
+    monkeypatch.setattr(email_eval, "upload_datasets", lambda: uploaded.append("email_order_extraction") or 0)
     assert main(["eval-upload"]) == 1
-    assert uploaded == ["order_line_extraction", "web_form_matching"]
+    assert uploaded == ["order_line_extraction", "web_form_matching", "email_order_extraction"]

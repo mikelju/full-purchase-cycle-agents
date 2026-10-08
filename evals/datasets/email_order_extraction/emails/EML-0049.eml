@@ -1,0 +1,55 @@
+From: Marta Puig <marta.cli-009@example.com>
+To: orders@purchase-cycle.example
+Subject: Small order attached
+Date: Tue, 15 Sep 2026 15:37:00 +0000
+Message-ID: <eml-0049@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0049-boundary=="
+
+--==EML-0049-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hola,
+
+A small order from the podiatry clinic, attached as PDF.
+
+Gracies,
+Marta Puig
+Clinica Podologica Gracia
+
+--==EML-0049-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0049.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDM4Mgo+PgpzdHJlYW0KeJx9
+k11PwjAUhu/9FedSEzn2c+u4UwSNMQFhel+3QqqzNWWI+utlDBwOs6stS9/nvM/aMrg7IShjWJ9c
+pXAxokAFEgLpHIZp9YlTpAqkUCgjSHM4nTxOB7eXsyGMp9fD6RmkL7uVFyMGlPwXZjEStQ0PVsvS
+v5nQh0Fhnc00THzuC7+oXm+Czqw+IO7iFbSOj0NuAgQzN8G4zPRhMu4RIpKjjEg4krgeacuvPlzp
+kJnCO/2nMIWk6csUcgkijpAxEIqiSqBHE1RiMxFm0MAjjhGpf0bw+Sor99CqKhN7hpJIRBsh6bbZ
+AeNhpV25KfkLSSQytYdQQTHmR5REIaWHlEdny9ZmHLvJCLnqdhMc43qjR77IrVvAWhev1XNZ2uy1
+bVoTO00bImsr1uluxSa+OlDcCfEIpegWYhwTts0/WfdVgPnUb9bp0noHi8J/mOU5vPv15mD15sGY
+c1jabwP3bdF6UqdoM4lGbdM63m3a5J/9J/j55jaRPecHBkDfbwplbmRzdHJlYW0KZW5kb2JqCjUg
+MCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNv
+ZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jh
+c2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5
+cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9G
+MiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+
+PgplbmRvYmoKOCAwIG9iago8PAovQXV0aG9yIChDbGluaWNhIFBvZG9sb2dpY2EgR3JhY2lhKQov
+Q3JlYXRpb25EYXRlIChEOjIwMjYwOTAxMDgwMDAwWikKL1RpdGxlIChwdXJjaGFzZS1vcmRlci0w
+MDQ5LnBkZikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAx
+NSAwMDAwMCBuIAowMDAwMDAwMTAyIDAwMDAwIG4gCjAwMDAwMDAyMDUgMDAwMDAgbiAKMDAwMDAw
+MDI4NSAwMDAwMCBuIAowMDAwMDAwNzM5IDAwMDAwIG4gCjAwMDAwMDA4NDEgMDAwMDAgbiAKMDAw
+MDAwMDkzOCAwMDAwMCBuIAowMDAwMDAxMDM1IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQov
+Um9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzw0RDMxNUZENDA5Q0Q1ODlDNEU4RjE0RTlCMERC
+NDVCQz48NEQzMTVGRDQwOUNENTg5QzRFOEYxNEU5QjBEQjQ1QkM+XQo+PgpzdGFydHhyZWYKMTE1
+OQolJUVPRgo=
+
+--==EML-0049-boundary==--

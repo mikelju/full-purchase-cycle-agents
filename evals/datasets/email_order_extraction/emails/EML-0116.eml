@@ -1,0 +1,57 @@
+From: Antonio Diaz <antonio.res-006@example.com>
+To: orders@purchase-cycle.example
+Subject: Santa Clara order form
+Date: Mon, 05 Oct 2026 04:08:00 +0000
+Message-ID: <eml-0116@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0116-boundary=="
+
+--==EML-0116-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+We have filled in your order form, attached. Please confirm receipt.
+
+Kind regards,
+Antonio Diaz
+
+--==EML-0116-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0116.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDYwMQo+PgpzdHJlYW0KeJx9
+lN9O2zAUh+95inODtElg/DdxuGOsaJs0AW15gDRxqVkaIycZdE8/N05x506+iZSov++cr8fHFH6c
+YSRyeDv7soSrOwKEI4xhuYbZcv+JEUQkCC6RyGBZw6eHp/ntt5vFDO7nX2fzz7B8mX55dUeB4P+F
+aY6wHMO3Q9ebrbLXMFedrlVb6RIWZduXcNuUtjzCTdk90Wfvba0sWLVW1uXUNTzcX2JCspMMLxjC
+ua+n+901LE2javNPqwSK0CmViAngeYYoBS4JkgVckgJJ7srBAgI5YyjD/m+wph6q/gDd90n5gSEF
+wjxGCDK2dcR4HJy56/ADUghE5QFCOEE5O6EUEhFyTHlqdR+N4dRNZIjJtBtnKPcjvqk3bjq/Feiu
+Kdsaaute22cQ8A45olBtY22PT2oHPKGxsI+nhUN+Zd7BrEHgA2ZyZBkSPO1IGSroCPnedkOjW+h2
+1qkpcEsA2wbedL+BtX5XNbRK1Y2KTX2RpGkoQvLY1MfTpiE/mRIcq5IM5TitivlhcWb9ZtdA2VRm
+YxrI8fmFm2QDL8raXVW2saFnJw0Dm8eCPp0WDPG4B6/HigxJkdRjkiPKvF5Tdr2u4JcbGHTD66ux
+/QV0+o+Cn5HbBE65HYFPzukUT8od5YejxZzEcncTkrRYxhErxvydKbfj7o3LR7DbPveothf+lK7M
+/kKMDX2FpGGoQHFs6ONpw5D/OJ+RpsgRydOanCMhRsiidHvoJmeaodemdZtYnMPaWNDW6udy/EYF
+dtsZu/oySddQJj6pUzqtGuIr0/fhNvgLf6yxsgplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwK
+L0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3Vi
+dHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9I
+ZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBl
+IC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+
+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoK
+OCAwIG9iago8PAovQXV0aG9yIChSZXNpZGVuY2lhIFNhbnRhIENsYXJhKQovQ3JlYXRpb25EYXRl
+IChEOjIwMjYwOTAxMDgwMDAwWikKL1RpdGxlIChwdXJjaGFzZS1vcmRlci0wMTE2LnBkZikKPj4K
+ZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAwMDAwMCBuIAow
+MDAwMDAwMTAyIDAwMDAwIG4gCjAwMDAwMDAyMDUgMDAwMDAgbiAKMDAwMDAwMDI4NSAwMDAwMCBu
+IAowMDAwMDAwOTU4IDAwMDAwIG4gCjAwMDAwMDEwNjAgMDAwMDAgbiAKMDAwMDAwMTE1NyAwMDAw
+MCBuIAowMDAwMDAxMjU0IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgov
+SW5mbyA4IDAgUgovSUQgWzw0ODY4RjU5MTNGQjZERkE1OTY0MEY0Qzc3RTVCOTFDMj48NDg2OEY1
+OTEzRkI2REZBNTk2NDBGNEM3N0U1QjkxQzI+XQo+PgpzdGFydHhyZWYKMTM3NQolJUVPRgo=
+
+--==EML-0116-boundary==--

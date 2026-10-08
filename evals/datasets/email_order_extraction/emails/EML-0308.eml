@@ -1,0 +1,31 @@
+From: Ines Martin <ines.far-012@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Plaza Mayor
+Date: Mon, 30 Nov 2026 04:44:00 +0000
+Message-ID: <eml-0308@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0308-boundary=="
+
+--==EML-0308-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good afternoon,
+
+Please find our order attached.
+
+Best,
+Ines
+Farmacia Plaza Mayor
+
+--==EML-0308-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0308.txt"
+MIME-Version: 1.0
+
+3 packs disposable isolation gown, non-woven, blue
+twenty boxes disposable sheaths for digital thermometer
+15 packs cohesive bandage 5 cm x 4.5 m
+
+--==EML-0308-boundary==--

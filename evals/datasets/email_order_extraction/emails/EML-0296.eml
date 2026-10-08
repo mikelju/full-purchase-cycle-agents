@@ -1,0 +1,13 @@
+From: Jordi Ferrer <jordi.cli-010@example.com>
+To: orders@purchase-cycle.example
+Subject: Request for an account statement
+Date: Thu, 26 Nov 2026 16:08:00 +0000
+Message-ID: <eml-0296@dataset.purchase-cycle.example>
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<html><body><p>Hello,</p><p>Could you send us a statement of our account show=
+ing all invoices and payments since July? Our figures and yours seem to diffe=
+r by a small amount and we would like to reconcile them.</p><p>Salutacions,<b=
+r>Jordi Ferrer<br>Centre Medic Eixample</p></body></html>

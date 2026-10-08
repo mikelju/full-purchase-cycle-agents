@@ -1,0 +1,29 @@
+From: Unai Elorza <unai.far-002@example.com>
+To: orders@purchase-cycle.example
+Subject: Order - first aid
+Date: Mon, 19 Oct 2026 18:58:00 +0000
+Message-ID: <eml-0166@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0166-boundary=="
+
+--==EML-0166-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Order in the attachment, please confirm the delivery date.
+
+Unai
+Farmacia Casco Viejo
+
+--==EML-0166-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0166.txt"
+MIME-Version: 1.0
+
+18 reusable hot and cold gel packs 10 x 15 cm
+5 first aid cabinets, wall-mounted, stocked
+
+--==EML-0166-boundary==--

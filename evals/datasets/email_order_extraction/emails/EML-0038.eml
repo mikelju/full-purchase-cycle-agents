@@ -1,0 +1,30 @@
+From: Diego Herrera <diego.far-007@example.com>
+To: orders@purchase-cycle.example
+Subject: Order list Farmacia Arguelles
+Date: Sat, 12 Sep 2026 10:14:00 +0000
+Message-ID: <eml-0038@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0038-boundary=="
+
+--==EML-0038-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+Our order is in the attached file. Please confirm when it ships.
+
+Diego
+Farmacia Arguelles
+
+--==EML-0038-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0038.txt"
+MIME-Version: 1.0
+
+4 dozen boxes safety lancets 28G, box of 100
+25 boxes FFP3 respirator mask, no valve
+75 disposable underpads 40 x 60 cm
+
+--==EML-0038-boundary==--

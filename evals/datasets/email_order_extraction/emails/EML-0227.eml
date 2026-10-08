@@ -1,0 +1,53 @@
+From: Marta Puig <marta.cli-009@example.com>
+To: orders@purchase-cycle.example
+Subject: Podiatry clinic - one product
+Date: Fri, 06 Nov 2026 13:11:00 +0000
+Message-ID: <eml-0227@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0227-boundary=="
+
+--==EML-0227-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Bon dia,
+
+Only one product this time, details in the attached PDF.
+
+Salutacions,
+Marta Puig
+
+--==EML-0227-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0227.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDMyMgo+PgpzdHJlYW0KeJx9
+kc1SwjAUhfc8xV3qgkuSJk3KTv503IBQHiCmwamWhgntqG9vS6nF4rDJZDI53znnXgbPA4JCwudg
+EsNoQYFyJATiHczj+imgSBUIrlCEECdwt9qup08Pmzks17P5+h7i9/PP0YIBJf+JmUSiTuJpeSzc
+3voxTLM0T42GlUtc5t7q66PXJtUXxLO8hjbypU+sB2931tvc2DGslkPCmLzS8ChAIhvLtPgew0R7
+YzOX6z+BKURdXqYwEMBliIwBVxRVBEMaoeKVI2ygg4cBhqQZhndJaYoWWkdlvGUogYT3EYKekl0w
+XkqdF1XIX0gkkKkWQjlFGVxRIoWUXlK2eVr0lnHdTYQYqNvdeICyWfQsPR7cUb9mFsq8mvtBJ1CZ
+fdWH2fcrN+iblTu07Hdt1Le7dvKDNh/gdsBEy/kBgIWo6AplbmRzdHJlYW0KZW5kb2JqCjUgMCBv
+YmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGlu
+ZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VG
+b250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUx
+Ci9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2
+IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+Pgpl
+bmRvYmoKOCAwIG9iago8PAovQXV0aG9yIChDbGluaWNhIFBvZG9sb2dpY2EgR3JhY2lhKQovQ3Jl
+YXRpb25EYXRlIChEOjIwMjYwOTAxMDgwMDAwWikKL1RpdGxlIChwdXJjaGFzZS1vcmRlci0wMjI3
+LnBkZikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAw
+MDAwMCBuIAowMDAwMDAwMTAyIDAwMDAwIG4gCjAwMDAwMDAyMDUgMDAwMDAgbiAKMDAwMDAwMDI4
+NSAwMDAwMCBuIAowMDAwMDAwNjc5IDAwMDAwIG4gCjAwMDAwMDA3ODEgMDAwMDAgbiAKMDAwMDAw
+MDg3OCAwMDAwMCBuIAowMDAwMDAwOTc1IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9v
+dCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzw2MDgxQTZDNjI2Q0ZFRjMxRTRCRkY2OTFBMjE3NjND
+Nz48NjA4MUE2QzYyNkNGRUYzMUU0QkZGNjkxQTIxNzYzQzc+XQo+PgpzdGFydHhyZWYKMTA5OQol
+JUVPRgo=
+
+--==EML-0227-boundary==--

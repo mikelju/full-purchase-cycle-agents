@@ -1,0 +1,30 @@
+From: Vicente Marti <vicente.res-008@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Residencia La Alameda
+Date: Mon, 21 Sep 2026 11:57:00 +0000
+Message-ID: <eml-0069@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0069-boundary=="
+
+--==EML-0069-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good afternoon,
+
+Please see the attached order.
+
+Many thanks,
+Vicente
+Residencia La Alameda
+
+--==EML-0069-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0069.txt"
+MIME-Version: 1.0
+
+8 boxes nitrile examination gloves, extended cuff 30 cm, size S
+18 boxes disposible syringe 5 ml, luer slip
+
+--==EML-0069-boundary==--

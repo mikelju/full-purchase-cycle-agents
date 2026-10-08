@@ -88,3 +88,29 @@ def get_product(conn: sqlite3.Connection, sku: str) -> dict | None:
         (sku,),
     ).fetchone()
     return dict(row) if row else None
+
+
+def insert_order(conn: sqlite3.Connection, customer_code: str, channel: str, status: str, lines: list[tuple]) -> int:
+    """Insert one order and its (sku, quantity) lines in one transaction: all of it, or nothing."""
+    with conn:
+        cursor = conn.execute(
+            "INSERT INTO orders (customer_code, channel, status) VALUES (?, ?, ?)", (customer_code, channel, status)
+        )
+        order_id = cursor.lastrowid
+        conn.executemany(
+            "INSERT INTO order_lines (order_id, sku, quantity) VALUES (?, ?, ?)",
+            [(order_id, sku, quantity) for sku, quantity in lines],
+        )
+    return order_id
+
+
+def order_line_details(conn: sqlite3.Connection, order_id: int) -> list[dict]:
+    """Stored lines of one order with the product name, sale unit and price from the database."""
+    return [
+        dict(r)
+        for r in conn.execute(
+            "SELECT p.name, p.sale_unit, p.price_eur, l.quantity FROM order_lines l "
+            "JOIN products p USING (sku) WHERE l.order_id = ? ORDER BY l.id",
+            (order_id,),
+        )
+    ]

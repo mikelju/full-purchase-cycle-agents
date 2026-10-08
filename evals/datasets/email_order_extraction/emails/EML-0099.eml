@@ -1,0 +1,56 @@
+From: Jon Arrieta <jon.cli-004@example.com>
+To: orders@purchase-cycle.example
+Subject: Purchase order attached
+Date: Wed, 30 Sep 2026 05:27:00 +0000
+Message-ID: <eml-0099@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0099-boundary=="
+
+--==EML-0099-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Kaixo,
+
+Please process the attached purchase order. If an item is not in your range, =
+just remove it from the order.
+
+Regards,
+Jon Arrieta
+
+--==EML-0099-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0099.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ2Nwo+PgpzdHJlYW0KeJx9
+k11vmzAUQN/7K+7jKjWuP2PTxypk6rRla6CT9khSE3l1cQRO2/XXLwQIzJ38hIR0zr0+GApfLjAS
+El4vbnO4XhIgHGEMeQlp3r5iBBEFgisk5pA/wqdF+vXuZ7r+BavveQozWKf3D2mWpwu4y9Nv2SXk
+v3v0ekmB4P/ZqERYdTZtzYuuwbsb+OGs2VpTmW0Bn83+8P7kCli52usryIoKMr0pGm+KajKjF7Zj
+OuHKeQ3V4Xmj6xtYrGYYJ8k/OxFIxpWoQkwATxiiDDhFgsKMJEhxqDVkcB7AFUZzchqw1uXgkxgp
+eaYFQ4KHuGRI4im+0M22Nntv3PkYgnLEyeDppIGmLUb51HPv/5z5RCCqBp5wgiT7IEgUImQqeKiM
+Dz7WxzDH9VkSDTPHSMqTkARZejaWZYQzr2tjNdjC6zdoDvXueAss7Kx70c0VNOZdwxyJMFk3I5ps
+nDEPg3V0PNiIb9wbuBIEhn1h6maQ9aXaY4poKY5Rwk4mGpTq2VipEc78cTpYU/omrNF5ojVGjwpr
+dHS8xogfJtenT8COq5JoAkqG35QFCXo2lmCEl84+mmoHr4V9ap9lXTzrMEZnjMYYjUSGNTo8XmPk
+pzX+AiTPOx0KZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNh
+LUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9G
+b250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAv
+V2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAw
+IG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4
+dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0F1dGhvciAo
+UG9saWNsaW5pY2EgR2lwdXprb2EgTm9ydGUpCi9DcmVhdGlvbkRhdGUgKEQ6MjAyNjA5MDEwODAw
+MDBaKQovVGl0bGUgKGRlbGl2ZXJ5LW5vdGUtMDA5OS5wZGYpCj4+CmVuZG9iagp4cmVmCjAgOQow
+MDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBu
+IAowMDAwMDAwMjA1IDAwMDAwIG4gCjAwMDAwMDAyODUgMDAwMDAgbiAKMDAwMDAwMDgyNCAwMDAw
+MCBuIAowMDAwMDAwOTI2IDAwMDAwIG4gCjAwMDAwMDEwMjMgMDAwMDAgbiAKMDAwMDAwMTEyMCAw
+MDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8
+NzM3RTlFRDU0NzAzNjExNjc4RTlFQjUzOTNENzg1NUY+PDczN0U5RUQ1NDcwMzYxMTY3OEU5RUI1
+MzkzRDc4NTVGPl0KPj4Kc3RhcnR4cmVmCjEyNDQKJSVFT0YK
+
+--==EML-0099-boundary==--

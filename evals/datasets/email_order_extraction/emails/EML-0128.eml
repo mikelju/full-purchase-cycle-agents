@@ -1,0 +1,58 @@
+From: Diego Herrera <diego.far-007@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Arguelles - see PDF
+Date: Thu, 08 Oct 2026 16:44:00 +0000
+Message-ID: <eml-0128@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0128-boundary=="
+
+--==EML-0128-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+Our order is in the PDF attached. There is one item a customer asked about; i=
+f you do not have it, no problem.
+
+Thanks,
+Diego Herrera
+
+--==EML-0128-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0128.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDU5MAo+PgpzdHJlYW0KeJx9
+lNtymzAQhu/zFHvZztiKjiByl6bOtJ2mTh3nARSQbTUYPBLk0KcvWDhQJaNbhv/b/bQrUfhxhpFI
+4fnsyxrOrwkQjjCG9QYW6/4TI4hIEFwikcC6gE+396urb5d3C1iuvi5Wn2H9Z/jz/JoCwR+FaYqw
+PIavWtfUe20v4FrZvcqNgku7bXVZajdBDbme5nNLW2gLVm+01VWuL+B2OceEyncZnjGEU1/LNK8X
+cKMKa4r/2iSQjV1SiZgAniaIUuCSIJnBnGRI8q4c3MFIThhKsD8CWxdt3pygfZ+UnxhSIMxDhCDH
+tiaM362qmq7DN0gmEJUnCOEEpewdJZOIkCnlvjJNMIL3biJBTMbdOEOpH+8v01hTatAvag/bsn7S
+Dg71c3f8843VegZPqmw1HFT+OIOb8Ah8qegRjKUIDuV9PC4/5h/qF6g3QPEbZxBmCRI8LkwZyqhf
+k3p/sNo5U1fwWGk935ntDro1zR9NtXWQl8o5+D4DZ/5q+Bka+1pR47EWC4V9Oi48xg/K2ECVJCjF
+cVXMT7forukAUJpN42BTW9h1VxFap0MnD406jVASOvl03GmMt5MN9k4sS5AUUScmOaJscNLHfS1V
+o1/AtXZrclUOmzsMrXu7AsWhRkxxUoPgcFOHfFRyAugH5wLLtHsUSdwy4YhlR8BK94huH2GnqgJy
+q7vJdW3BvgzNPDdqNnLD4Q3puNcYb9oHHWiJFJE0rsU5EuKYv6mNa1prXG/2UBevvVn37nxs5tFR
+sxEdXrUhHTcb41OzfzKnr88KZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAv
+SGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUx
+Ci9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9F
+bmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+Pgpl
+bmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBb
+L1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwK
+L0F1dGhvciAoRmFybWFjaWEgQXJndWVsbGVzKQovQ3JlYXRpb25EYXRlIChEOjIwMjYwOTAxMDgw
+MDAwWikKL1RpdGxlIChwdXJjaGFzZS1vcmRlci0wMTI4LnBkZikKPj4KZW5kb2JqCnhyZWYKMCA5
+CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwMTAyIDAwMDAw
+IG4gCjAwMDAwMDAyMDUgMDAwMDAgbiAKMDAwMDAwMDI4NSAwMDAwMCBuIAowMDAwMDAwOTQ3IDAw
+MDAwIG4gCjAwMDAwMDEwNDkgMDAwMDAgbiAKMDAwMDAwMTE0NiAwMDAwMCBuIAowMDAwMDAxMjQz
+IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQg
+WzxERDI2MDZDQzJGOTg4NzQxQTI5MUYzMUNGM0MyNUE0ND48REQyNjA2Q0MyRjk4ODc0MUEyOTFG
+MzFDRjNDMjVBNDQ+XQo+PgpzdGFydHhyZWYKMTM2MAolJUVPRgo=
+
+--==EML-0128-boundary==--

@@ -1,0 +1,60 @@
+From: Nuria Roca <nuria.far-008@example.com>
+To: orders@purchase-cycle.example
+Subject: Pharmacy order and two enquiries
+Date: Fri, 09 Oct 2026 20:36:00 +0000
+Message-ID: <eml-0132@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0132-boundary=="
+
+--==EML-0132-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hola,
+
+Attached is our order. Two of the lines are enquiries from a sports club; ple=
+ase tell us if you can source them.
+
+Gracies,
+Nuria Roca
+Farmacia Sants
+
+--==EML-0132-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0132.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDY0MAo+PgpzdHJlYW0KeJx9
+lMlu2zAURff5irdsgYQRJ1HKLmOLomjS2AG6pSXaYaPBoKTW7teXFuXSoQpuDd/zePQGAl/OEsQF
+/D67WcLlAwbMUJLAcg33y8NPFCOcAWcZ4iksS/jw9PJ8+/l6cQ+Pz3f3zx9h+XP65+UDAZz8L0wE
+SrIxfDt0fVsrcwUP0tSy0BIWsum7E8yUOZBc5tGUyoBRa2VUU6greHq8SDAlswzLKUqEq6P7/RXc
+SFOoqm3ku1diyP0jSYYoByZSRAiwDKMshwuco4zZirAAD08pShP3BUxbDkV/hB6eStiRkXGUsBDB
+8fiyE8b3wWrbR/6D5ByR7AjBDCNBZ5Q8QxifUl4a3QcdmLvxFNEs7sYoElN3VQONKstKASWfYAcM
+6jo0dcSoqSfiNHR08bijz6/aHbRrO1nJkTN50RRxFvciFOVkpFwPdu5kr0pQu16ZRlZQqrVeGV1V
+sm9NFzo6etTR00mo6NJxRR8fTto4yeEUiSQul7DjhiyNbLqttOvRw1pXNZRGdZ1uNpDaDgooZh10
++Kidx2Ma6rl4XM/npw7yoIE0T1HGo440Y4jQEbKo27Z/td2TtW5kr9sGinYoXsG0VQV2H4rautop
+gVB2qhOTPamDRSA7xaOyJ/mtLN4OtmkgK+wNxHHZlCGaj5A73W3bTq7sFr7pslF7KHX3eg7bodqG
+dg4ctfNgmoR2Lh638/mj3WwbKRcIi7gfY4hzd9J3+409NMW+0o097uHyTbCok4cRHjq5eNzJ5+fb
+R6lAlMZlCEMCj/lvurdXRL0bzU3V/lLd+XhsrGEJxbAGehjSc+j0HwU/vobOrmbU2dfEfNZIl49L
+e8BsJ/8CIQLilQplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRp
+Y2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUg
+L0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5n
+IC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3
+IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9U
+ZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQXV0aG9y
+IChGYXJtYWNpYSBTYW50cykKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDkwMTA4MDAwMFopCi9UaXRs
+ZSAocHVyY2hhc2Utb3JkZXItMDEzMi5wZGYpCj4+CmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAw
+IDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBuIAowMDAwMDAw
+MjA1IDAwMDAwIG4gCjAwMDAwMDAyODUgMDAwMDAgbiAKMDAwMDAwMDk5NyAwMDAwMCBuIAowMDAw
+MDAxMDk5IDAwMDAwIG4gCjAwMDAwMDExOTYgMDAwMDAgbiAKMDAwMDAwMTI5MyAwMDAwMCBuIAp0
+cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8MDdBMjVBRTAx
+QkJCRDU5NEQ4OEMzMzQ1MkVBMzY4QUY+PDA3QTI1QUUwMUJCQkQ1OTREODhDMzM0NTJFQTM2OEFG
+Pl0KPj4Kc3RhcnR4cmVmCjE0MDYKJSVFT0YK
+
+--==EML-0132-boundary==--

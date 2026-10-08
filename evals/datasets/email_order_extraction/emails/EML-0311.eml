@@ -1,0 +1,33 @@
+From: Lucia Soler <lucia.cli-011@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Clinica Dental Ruzafa
+Date: Tue, 01 Dec 2026 01:23:00 +0000
+Message-ID: <eml-0311@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0311-boundary=="
+
+--==EML-0311-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hola,
+
+Attached is our order for the dental clinic.
+
+Regards,
+Lucia
+Clinica Dental Ruzafa
+
+--==EML-0311-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0311.txt"
+MIME-Version: 1.0
+
+6 boxes FFP2 respirator mask, no valve, black
+7 boxes latex sterile surgical gloves, size 7
+19 boxes safety lancets 28G, box of 200
+16 boxes 2-way Foley catheters, full silicone, 16 Fr
+96 rolls silk tape 2.5 cm x 9.1 m
+
+--==EML-0311-boundary==--

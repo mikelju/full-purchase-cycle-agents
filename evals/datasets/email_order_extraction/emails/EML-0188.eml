@@ -1,0 +1,32 @@
+From: Mikel Iriarte <mikel.cli-016@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Centro Medico Pamplona
+Date: Mon, 26 Oct 2026 04:44:00 +0000
+Message-ID: <eml-0188@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0188-boundary=="
+
+--==EML-0188-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+Please find attached our order for the surgical area.
+
+Thank you,
+Mikel
+Centro Medico Pamplona
+
+--==EML-0188-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0188.txt"
+MIME-Version: 1.0
+
+13 boxes nitrile examination gloves, extended cuff 30 cm, size M
+3 dozen boxes sterile latex-free surgical gloves (neoprene), size 8
+80 x surface disinfectant wipes, alcohol-free, refill
+1 blood glucose meter kitt
+
+--==EML-0188-boundary==--

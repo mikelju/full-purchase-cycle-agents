@@ -1,0 +1,15 @@
+From: Ximo Peris <ximo.far-009@example.com>
+To: orders@purchase-cycle.example
+Subject: Expired product received
+Date: Thu, 24 Sep 2026 16:20:00 +0000
+Message-ID: <eml-0080@dataset.purchase-cycle.example>
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<html><body><p>Hola,</p><p>In last Thursday&#x27;s delivery we found two boxe=
+s of syringes with an expiry date of last month. We cannot sell or use them.<=
+/p><p>Please let me know how you want them returned and confirm that the valu=
+e will be credited to our account. I would also ask you to review stock rotat=
+ion at your warehouse.</p><p>Ximo Peris<br>Farmacia Benimaclet</p></body></ht=
+ml>

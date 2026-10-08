@@ -68,11 +68,17 @@ def validation_errors(error: ValidationError) -> list[str]:
     return [f"field '{'.'.join(str(p) for p in e['loc']) or 'submission'}': {e['msg']}" for e in error.errors()]
 
 
-def build_reply(customer: dict, submission: dict, order_id: int | None, stored: list[dict], lines: list[dict]) -> str:
-    """Fixed reply template; every figure comes from the stored rows."""
+def build_reply(
+    customer: dict, reference: str, order_id: int | None, stored: list[dict], unmatched: list[tuple[str, int]]
+) -> str:
+    """Fixed reply template; every figure comes from the stored rows.
+
+    `reference` names what the customer sent, for example "web form order WF-1";
+    `unmatched` holds the (text as the customer wrote it, quantity) of each line not in the catalog.
+    """
     out = [f"Dear {customer['contact_name']},", ""]
     if order_id is not None:
-        out.append(f"Thank you. Your web form order {submission['submission_id']} is registered as order {order_id}:")
+        out.append(f"Thank you. Your {reference} is registered as order {order_id}:")
         total = 0.0
         for row in stored:
             line_total = round(row["price_eur"] * row["quantity"], 2)
@@ -82,11 +88,10 @@ def build_reply(customer: dict, submission: dict, order_id: int | None, stored: 
             )
         out.append(f"Order total: {total:.2f} EUR")
     else:
-        out.append(f"We could not register your web form order {submission['submission_id']}.")
-    unmatched = [line for line in lines if line["sku"] is None]
+        out.append(f"We could not register your {reference}.")
     if unmatched:
         out += ["", "We could not find these products in our catalog, so they are not part of the order:"]
-        out += [f'- "{line["product"]}" ({line["quantity"]})' for line in unmatched]
+        out += [f'- "{text}" ({quantity})' for text, quantity in unmatched]
     out += ["", "Kind regards,", "Customer service"]
     return "\n".join(out)
 
@@ -134,16 +139,9 @@ def build_web_form_graph(client: ModelClient, db_path: Path | str, checkpointer=
             return {"order_id": None}
         conn = db.connect(db_path)
         try:
-            with conn:  # one transaction: the order and its lines, or nothing
-                cursor = conn.execute(
-                    "INSERT INTO orders (customer_code, channel, status) VALUES (?, ?, ?)",
-                    (state["customer"]["code"], CHANNEL, STATUS),
-                )
-                order_id = cursor.lastrowid
-                conn.executemany(
-                    "INSERT INTO order_lines (order_id, sku, quantity) VALUES (?, ?, ?)",
-                    [(order_id, line["sku"], line["quantity"]) for line in matched],
-                )
+            order_id = db.insert_order(
+                conn, state["customer"]["code"], CHANNEL, STATUS, [(line["sku"], line["quantity"]) for line in matched]
+            )
         finally:
             conn.close()
         return {"order_id": order_id}
@@ -153,18 +151,12 @@ def build_web_form_graph(client: ModelClient, db_path: Path | str, checkpointer=
         if state["order_id"] is not None:
             conn = db.connect(db_path)
             try:
-                stored = [
-                    dict(r)
-                    for r in conn.execute(
-                        "SELECT p.name, p.sale_unit, p.price_eur, l.quantity FROM order_lines l "
-                        "JOIN products p USING (sku) WHERE l.order_id = ? ORDER BY l.id",
-                        (state["order_id"],),
-                    )
-                ]
+                stored = db.order_line_details(conn, state["order_id"])
             finally:
                 conn.close()
-        text = build_reply(state["customer"], state["submission"], state["order_id"], stored, state["lines"])
-        return {"reply": text}
+        unmatched = [(line["product"], line["quantity"]) for line in state["lines"] if line["sku"] is None]
+        reference = f"web form order {state['submission']['submission_id']}"
+        return {"reply": build_reply(state["customer"], reference, state["order_id"], stored, unmatched)}
 
     builder = StateGraph(WebFormState)
     builder.add_node("validate", validate)

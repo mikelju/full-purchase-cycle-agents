@@ -1,0 +1,29 @@
+From: Ruben Alvarez <ruben.cli-017@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Gijon Centro
+Date: Wed, 14 Oct 2026 19:17:00 +0000
+Message-ID: <eml-0149@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0149-boundary=="
+
+--==EML-0149-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good afternoon,
+
+Attached is our order. Thanks for your help.
+
+Ruben
+Clinica Dental Gijon Centro
+
+--==EML-0149-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0149.txt"
+MIME-Version: 1.0
+
+2 dozen boxes transparent tape 1.25 cm x 9.1 m
+18 fingertip pulse oximeters, adult
+
+--==EML-0149-boundary==--

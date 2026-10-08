@@ -1,0 +1,54 @@
+From: Garazi Otegi <garazi.far-004@example.com>
+To: orders@purchase-cycle.example
+Subject: Gros pharmacy - attached
+Date: Tue, 17 Nov 2026 22:38:00 +0000
+Message-ID: <eml-0266@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0266-boundary=="
+
+--==EML-0266-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+Please find the attached order. Delivery to the shop, not the warehouse.
+
+Thanks,
+Garazi Otegi
+Farmacia Gros
+
+--==EML-0266-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0266.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDM2NQo+PgpzdHJlYW0KeJx9
+kctOwkAYRvc+xbfURH/n2k7ZeQGNMUGhPsBQBq2B1kzbqG8vMGCxmG6bnjPfmRF4OGGkY3yeXKe4
+HHFwRYwhXWCYbj5JTtxAK0M6QjrH6dPL5Ob+ajrEeHI7nJwhfd/9eTkS4Ow/WMTEzBa+aaq6XDk/
+wMj6lc1yiztfVgeWHbIRBWTs587Du4XzrsjcAE/jCyai6IhRiSQWh2Py+nuAqS0wdTNb1bkt/gzl
+SNqdwpDUUHFEQkAZTibBBU/IqPWpmKI9IJIUsXAJvpw3Wb2XbuYKtXcYTUx1FZpv1x04nhtb1Ouh
+v5JEkzB7CVecYnlkSQxxfmh5KfK68wjHbToiafrblKQ4PPCje0Xj88JhZl8Ra4bVshsahL2hrZCz
+bmLA+xNbflZ+oVyg1eyqZERa9VcJSYnYSq6WWflWLlE1fmEzh8/8w1XnyGxR5FXtfLcwyHsLWzmX
+3cKA9xe2/HrFdkTI/O38AVM02WgKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9u
+dCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5
+cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNh
+Ci9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+
+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1Nl
+dCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoK
+PDwKL0F1dGhvciAoRmFybWFjaWEgR3JvcykKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDkwMTA4MDAw
+MFopCi9UaXRsZSAocHVyY2hhc2Utb3JkZXItMDI2Ni5wZGYpCj4+CmVuZG9iagp4cmVmCjAgOQow
+MDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBu
+IAowMDAwMDAwMjA1IDAwMDAwIG4gCjAwMDAwMDAyODUgMDAwMDAgbiAKMDAwMDAwMDcyMiAwMDAw
+MCBuIAowMDAwMDAwODI0IDAwMDAwIG4gCjAwMDAwMDA5MjEgMDAwMDAgbiAKMDAwMDAwMTAxOCAw
+MDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDkKL1Jvb3QgMiAwIFIKL0luZm8gOCAwIFIKL0lEIFs8
+MUNCNDExQzcxQ0Y5NjNGMTZCMERDOTRBN0ZDRjFBOUY+PDFDQjQxMUM3MUNGOTYzRjE2QjBEQzk0
+QTdGQ0YxQTlGPl0KPj4Kc3RhcnR4cmVmCjExMzAKJSVFT0YK
+
+--==EML-0266-boundary==--

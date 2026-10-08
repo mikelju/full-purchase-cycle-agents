@@ -1,0 +1,32 @@
+From: Carlos Ruiz <carlos.cli-006@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Centro Medico Salamanca
+Date: Fri, 20 Nov 2026 13:35:00 +0000
+Message-ID: <eml-0275@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0275-boundary=="
+
+--==EML-0275-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+Please see our order attached to this email.
+
+Regards,
+Carlos
+Centro Medico Salamanca
+
+--==EML-0275-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0275.txt"
+MIME-Version: 1.0
+
+two dozen boxes disposable syringe 20 ml, luer lock
+7 fingertip pulse oximeters, paediatric
+14 boxes small powder-free latex exam gloves
+17 pump bottles hand sanitiser gel (hydroalcoholic), 500 ml
+
+--==EML-0275-boundary==--

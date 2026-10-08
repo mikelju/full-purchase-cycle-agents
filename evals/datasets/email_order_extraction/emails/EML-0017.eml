@@ -1,0 +1,21 @@
+From: Jordi Ferrer <jordi.cli-010@example.com>
+To: orders@purchase-cycle.example
+Subject: Purchase order, Centre Medic Eixample
+Date: Sun, 06 Sep 2026 07:41:00 +0000
+Message-ID: <eml-0017@dataset.purchase-cycle.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+Hi team,
+
+We would like to order:
+
+- 24 boxes of sterile urine containers 60 ml
+- 11 electric wheelchairs
+- 1 box nitrile examination gloves, powder-free, value pack, size M
+
+If anything is not in stock, let us know before shipping.
+
+Jordi
+Centre Medic Eixample

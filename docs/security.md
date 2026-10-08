@@ -10,6 +10,7 @@ Findings left open for the owner's decision.
 | SEC-004 | Low | `reply` node in `src/purchase_cycle/web_form.py` and `web-form-demo` output | Unmatched product texts are echoed verbatim in the reply and the terminal, so control characters or a phishing link typed by the customer would appear in the company's own reply once replies are sent by email or WhatsApp | open - revisit when phase 03 sends replies | phase 02, review round 1 |
 | SEC-005 | Low | `evaluate` in `src/purchase_cycle/evaluation/web_form_eval.py` and `harness.py` | The absolute threshold is read from the versioned baseline file, so an edit to that file could lower the gate with no test noticing | open - owner decision | phase 02, review round 1 |
 | SEC-006 | Low | Pattern in `tests/test_secrets.py` | The scan only matches Anthropic and LangSmith key prefixes and two auth headers; other providers' keys or generic secrets would pass, and no scanner such as gitleaks is installed | open - owner decision | phase 02, review round 1 |
+| SEC-007 | Low | `intake` node in `src/purchase_cycle/email_order.py` (`_parse_message` and `find_customer`) | The customer is identified from the `From` header only, with no SPF, DKIM or `Authentication-Results` check, so a forged sender address places an order for that customer; accepted for local `.eml` files, it must be addressed before mailbox ingestion | open - before mailbox ingestion | phase 03, review round 1 |
 
 ## Options
 

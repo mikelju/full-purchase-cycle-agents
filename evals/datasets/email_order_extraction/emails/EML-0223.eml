@@ -1,0 +1,57 @@
+From: Unai Elorza <unai.far-002@example.com>
+To: orders@purchase-cycle.example
+Subject: Casco Viejo - weekly list
+Date: Thu, 05 Nov 2026 09:19:00 +0000
+Message-ID: <eml-0223@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0223-boundary=="
+
+--==EML-0223-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Kaixo,
+
+This week's list is attached. We would like it by Wednesday if possible.
+
+Eskerrik asko,
+Unai Elorza
+
+--==EML-0223-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0223.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDU2MAo+PgpzdHJlYW0KeJx9
+lE2P2jAQhu/7K+ZSqZXA68/E4dZloVVVFQps7yYxyLshRvmgtL++JgkNNZWvSd5n/Mx4QuHLA0Yi
+hp8PTxt4nBMgHGEMmx3MNpdHjCAiQXCJRASbDN4vX1bTzx/XM1isnmerD7B57b98nFMg+H9hGiMs
+2/C0qWp70OUE5qo8qNQomKoqtfDD6Fd7A+uTF16XXJSZLqHUO13qItUTWC7GmFJ2l+EJQzjuqpn6
+1wSeTL5V9p+DEkiGc1KJmAAeR4hS4JIgmcCYJEhyVw7WMJAjhiLcNaG0WZPWV+jlnJRfGVIgzH2E
+IO2xbhjfG1XU7oR/IYlAVF4hhBMUsztKIhEht5SXwtTeEO7dRISYDLtxhuJuwM+mOtpKbXMNTeGa
+flQZuGJnSDCkB1+5QweVBzQR2Lft8mHbAXBU6RvYHVBx5fSGLEKChw0pQwltKfP5krq31dGUqrYl
+HFT1NoLCwknlJ+0bduig4YAmvl+XDvsN8a09t3rY0yMRinFYD/PrqqxVbgoNlc2b2tgCMErejaAy
+xT7X48xW2q0pHHLfs6sR9BxqEOqLdvGw6JDvRZknypIISREUZZIjylrIJ9X81rBVRab2Gkqb5yDc
+FXVXlYN/UXtySO+GHHt2fTpodxPfqv3FbmhSbxe7HyEJ20UcsaSFfDN1adwS6rM6mEK1o9zn9qSr
+kXtWa7ebGaTN7tJFZ32ZsOvGV9+7qxn0Hmoy37tLh72HeD/VYcv/AEFofmEKZW5kc3RyZWFtCmVu
+ZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5B
+bnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2Jq
+Cjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0
+eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1
+IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0lt
+YWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0F1dGhvciAoRmFybWFjaWEgQ2FzY28gVmllam8p
+Ci9DcmVhdGlvbkRhdGUgKEQ6MjAyNjA5MDEwODAwMDBaKQovVGl0bGUgKHB1cmNoYXNlLW9yZGVy
+LTAyMjMucGRmKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAw
+MDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIgMDAwMDAgbiAKMDAwMDAwMDIwNSAwMDAwMCBuIAowMDAw
+MDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA5MTcgMDAwMDAgbiAKMDAwMDAwMTAxOSAwMDAwMCBuIAow
+MDAwMDAxMTE2IDAwMDAwIG4gCjAwMDAwMDEyMTMgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5
+Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDAwNzI2MjY5MDQ1NkUwQjZDRjZFNUYwNEE3
+OEEzNDJCPjwwMDcyNjI2OTA0NTZFMEI2Q0Y2RTVGMDRBNzhBMzQyQj5dCj4+CnN0YXJ0eHJlZgox
+MzMyCiUlRU9GCg==
+
+--==EML-0223-boundary==--

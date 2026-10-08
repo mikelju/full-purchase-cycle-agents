@@ -1,0 +1,37 @@
+From: Nuria Roca <nuria.far-008@example.com>
+To: orders@purchase-cycle.example
+Subject: Weekly order (see attachment)
+Date: Sun, 20 Sep 2026 14:18:00 +0000
+Message-ID: <eml-0066@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0066-boundary=="
+
+--==EML-0066-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+The attached file has our full weekly order. Let us know about any items you =
+cannot supply.
+
+Regards,
+Nuria
+Farmacia Sants
+
+--==EML-0066-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0066.txt"
+MIME-Version: 1.0
+
+13 automated external defibrillators
+18 boxes foley cathether 2-way, 100% silicone, 14 Fr
+one box microporous paper tape 1.25 cm x 9.1 m
+6 boxes sterile latex surgical gloves, size 7.5
+eighty boxes FFP1 masks
+2 packs adult incontinence brief, size XL
+2 boxes nitrile examination gloves, powder-free, value pack, size S
+14 boxes sterile urine container 100 ml
+
+--==EML-0066-boundary==--

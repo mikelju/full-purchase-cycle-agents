@@ -5,7 +5,18 @@ import pytest
 from conftest import SENTENCE
 from purchase_cycle import db
 from purchase_cycle.graph import build_graph
-from purchase_cycle.llm import EXTRACTION, MATCHING, InvalidModelOutput, MissingRecording, ModelClient, recording_key
+from purchase_cycle.llm import (
+    EMAIL_EXTRACTION,
+    EMAIL_INTAKE,
+    EXTRACTION,
+    MATCHING,
+    InvalidModelOutput,
+    MissingRecording,
+    ModelClient,
+    build_system_prompt,
+    recording_key,
+    tool_definition,
+)
 from purchase_cycle.web_form import build_web_form_graph
 
 
@@ -90,3 +101,76 @@ def test_prompt_carries_cache_breakpoint_and_full_catalog(seeded_db):
     assert all(row["sku"] in client.system_prompt for row in catalog)
     # About 4 characters per token: the cached prefix must exceed Haiku 4.5's 4,096-token minimum.
     assert len(client.system_prompt) / 4 > 4096
+
+
+EMAIL_TEXT = (
+    "Subject: Order\n\nBody:\nPlease send 40 boxes of nitrile gloves M\n\nAttachment: extra.txt\n12 x alcohol 70 250 ml"
+)
+
+
+def test_email_intake_answer_is_parsed_in_replay(seeded_db, write_recording, no_network):
+    _, catalog = seeded_db
+    path = write_recording(catalog, EMAIL_TEXT, {"is_order": True, "reason": "Asks for gloves."}, task=EMAIL_INTAKE)
+    decision = ModelClient("replay", catalog, path, task=EMAIL_INTAKE).extract(EMAIL_TEXT, case_id="EML-1")
+    assert (decision.is_order, decision.reason) == (True, "Asks for gloves.")
+    assert no_network == []
+
+
+def test_email_extraction_answer_is_parsed_in_replay(seeded_db, write_recording, no_network):
+    _, catalog = seeded_db
+    lines = [
+        {"source": "body", "source_text": "40 boxes of nitrile gloves M", "sku": "GLV-NIT-M", "quantity": 40},
+        {"source": "extra.txt", "source_text": "12 x alcohol 70 250 ml", "sku": None, "quantity": 12},
+    ]
+    path = write_recording(catalog, EMAIL_TEXT, {"lines": lines}, task=EMAIL_EXTRACTION)
+    answer = ModelClient("replay", catalog, path, task=EMAIL_EXTRACTION).extract(EMAIL_TEXT, case_id="EML-1")
+    assert [line.model_dump() for line in answer.lines] == lines
+    assert no_network == []
+
+
+@pytest.mark.parametrize(
+    ("task", "answer", "field"),
+    [
+        (EMAIL_INTAKE, {"is_order": "yes", "reason": "x"}, "is_order"),
+        (EMAIL_INTAKE, {"is_order": True}, "reason"),
+        (EMAIL_INTAKE, {"is_order": False, "reason": ""}, "reason"),
+        (EMAIL_EXTRACTION, {"lines": [{"source": "body", "source_text": "x", "sku": None}]}, "lines.0.quantity"),
+        (
+            EMAIL_EXTRACTION,
+            {"lines": [{"source": "body", "source_text": "x", "sku": None, "quantity": 0}]},
+            "lines.0.quantity",
+        ),
+        (
+            EMAIL_EXTRACTION,
+            {"lines": [{"source": "body", "source_text": "x", "sku": None, "quantity": 2.0}]},
+            "lines.0.quantity",
+        ),
+        (EMAIL_EXTRACTION, {"lines": "none"}, "lines"),
+        (EMAIL_EXTRACTION, {"lines": [], "note": "x"}, "note"),
+    ],
+)
+def test_invalid_email_answers_are_rejected_by_schema(seeded_db, write_recording, task, answer, field):
+    _, catalog = seeded_db
+    path = write_recording(catalog, EMAIL_TEXT, answer, task=task)
+    with pytest.raises(InvalidModelOutput) as raised:
+        ModelClient("replay", catalog, path, task=task).extract(EMAIL_TEXT, case_id="EML-1")
+    assert field in raised.value.fields
+
+
+def test_email_tasks_have_own_recordings_and_cached_catalog_prompt(seeded_db):
+    _, catalog = seeded_db
+    intake = ModelClient("live", catalog, task=EMAIL_INTAKE)
+    extraction = ModelClient("live", catalog, task=EMAIL_EXTRACTION)
+    assert intake.recordings_path.name == "email_intake.jsonl"
+    assert extraction.recordings_path.name == "email_order_extraction.jsonl"
+    keys = {
+        recording_key(build_system_prompt(catalog, t), "x", t)
+        for t in (EXTRACTION, MATCHING, EMAIL_INTAKE, EMAIL_EXTRACTION)
+    }
+    assert len(keys) == 4
+    for client in (intake, extraction):
+        assert all(row["sku"] in client.system_prompt for row in catalog)
+        assert len(client.system_prompt) / 4 > 4096
+    assert tool_definition(EMAIL_EXTRACTION)["name"] == "record_email_order_lines"
+    assert tool_definition(EMAIL_INTAKE)["name"] == "record_email_intake"
+    assert (EXTRACTION.max_tokens, MATCHING.max_tokens, EMAIL_INTAKE.max_tokens) == (256, 256, 256)

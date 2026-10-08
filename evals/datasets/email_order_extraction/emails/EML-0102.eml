@@ -1,0 +1,55 @@
+From: Nerea Ochoa <nerea.res-003@example.com>
+To: orders@purchase-cycle.example
+Subject: Order from San Prudencio
+Date: Thu, 01 Oct 2026 02:06:00 +0000
+Message-ID: <eml-0102@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0102-boundary=="
+
+--==EML-0102-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+Attached is our order form, signed by the director.
+
+Thank you,
+Nerea Ochoa
+Residencia San Prudencio
+
+--==EML-0102-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0102.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDM4NQo+PgpzdHJlYW0KeJx9
+kl1vmzAYhe/7K87lJrVv/Qkmd12bapomJUvo7gk4k1eKKwPaul8/CEnJyMSlLZ/H5/FrgS9XjHSM
+X1efUtw+cnBFjCHdY5n2W5ITN9DKkI6QFviwftrcf77bLrHaPCw3H5H+PJ68fRTg7H9hERMzh/B9
+Wzf+xYYFNrZ2ha1yl2GbVViH9rDyZ8BjumcO6VUobECwexu6s3aB9eqGcSYuMiqRxOLhRte8LfDd
+NT647J+2HMlYVhiSGiqOSAgow8kkuOEJGdXdhy1GdCQpYsNLBF+0eXOC9kWFOjGMJqamCM0Pvc4Y
+39qsarqK75BEkzAnCFecYnlBSQxxfk55qlwzmcSlm45Imnk3JSkepvzg6ldfZ7vSon4LrvphoRle
+ymuUbTeD0ufPU++BP+s98rmaGg/xeeMxv/O/4ffdf2MnztFSRqTVvKWQlIgD5a5oywauyn03hKr/
+U9gFZ/f1NWr3x+Lr1HGgzzqO9GSqOKTnFcf4a5Y/947iXfEvJ3LfyQplbmRzdHJlYW0KZW5kb2Jq
+CjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lF
+bmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwK
+L0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUg
+L1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBS
+Ci9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJ
+XQo+PgplbmRvYmoKOCAwIG9iago8PAovQXV0aG9yIChSZXNpZGVuY2lhIFNhbiBQcnVkZW5jaW8p
+Ci9DcmVhdGlvbkRhdGUgKEQ6MjAyNjA5MDEwODAwMDBaKQovVGl0bGUgKHB1cmNoYXNlLW9yZGVy
+LTAxMDIucGRmKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAw
+MDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIgMDAwMDAgbiAKMDAwMDAwMDIwNSAwMDAwMCBuIAowMDAw
+MDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA3NDIgMDAwMDAgbiAKMDAwMDAwMDg0NCAwMDAwMCBuIAow
+MDAwMDAwOTQxIDAwMDAwIG4gCjAwMDAwMDEwMzggMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5
+Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDY3QjlBMUQ1QjBCMEU0RkYwQzg0RURDQzM0
+RkRDQUUxPjw2N0I5QTFENUIwQjBFNEZGMEM4NEVEQ0MzNEZEQ0FFMT5dCj4+CnN0YXJ0eHJlZgox
+MTYxCiUlRU9GCg==
+
+--==EML-0102-boundary==--

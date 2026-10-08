@@ -1,0 +1,54 @@
+From: Begona Larrea <begona.res-001@example.com>
+To: orders@purchase-cycle.example
+Subject: Los Robles residence order
+Date: Sun, 08 Nov 2026 21:55:00 +0000
+Message-ID: <eml-0235@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0235-boundary=="
+
+--==EML-0235-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Attached is the residence order signed by our head nurse.
+
+Thank you,
+Begona Larrea
+Residencia Los Robles
+
+--==EML-0235-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="purchase-order-0235.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDM2NAo+PgpzdHJlYW0KeJx9
+kstugkAUQPd+xV22Sb3OEwZ31WKapokW8QNAxoYWoRkgfXx9RxGx0rAlc87cMxcGTyOC0oXP0SyE
+yYICFUgIhDvww8MnTpEqkEKhdCBM4Ga1CeaP92sflsGDH9xC+HY6OVkwoOQ/mLlI1BGe12VV7LWZ
+QqDLNNH5No3guSghKOJMlxe2E3oQNujSJNqA0TttLKansFqOCeOyxwiPI3Gb69LqewqzNIuj4s+k
+FLxuUKaQSxCug4yBUBSVB2PqoRL2OlhDZ3Y4OqR5BVMk9bZqpYc5mWgdSiIR1wpJj2NdOF7qKK/s
+hGeJJ5GpVkIFRZf3LJ5CSi8tmzytrrbQb5MOcjXcJji6zYbDOq6zyEAc5Un0qqFMfzT4d3a5sL8O
+bsSDwZ2YMnLd2vDDrZ3AFFnWGk5l3EEphssYR48d+fV7msM2K8raHikrk36U4MCXLbNpvbZGPdjW
+qWUvrcGH0zq+tms8//+/5rzW+gplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250
+IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlw
+ZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EK
+L0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+
+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0
+IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8
+PAovQXV0aG9yIChSZXNpZGVuY2lhIExvcyBSb2JsZXMpCi9DcmVhdGlvbkRhdGUgKEQ6MjAyNjA5
+MDEwODAwMDBaKQovVGl0bGUgKHB1cmNoYXNlLW9yZGVyLTAyMzUucGRmKQo+PgplbmRvYmoKeHJl
+ZgowIDkKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIg
+MDAwMDAgbiAKMDAwMDAwMDIwNSAwMDAwMCBuIAowMDAwMDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA3
+MjEgMDAwMDAgbiAKMDAwMDAwMDgyMyAwMDAwMCBuIAowMDAwMDAwOTIwIDAwMDAwIG4gCjAwMDAw
+MDEwMTcgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBS
+Ci9JRCBbPDZBMkY5ODExMjI1MTM5OTlDMzQ0MzJDMzk1QjBCNjA0Pjw2QTJGOTgxMTIyNTEzOTk5
+QzM0NDMyQzM5NUIwQjYwND5dCj4+CnN0YXJ0eHJlZgoxMTM3CiUlRU9GCg==
+
+--==EML-0235-boundary==--

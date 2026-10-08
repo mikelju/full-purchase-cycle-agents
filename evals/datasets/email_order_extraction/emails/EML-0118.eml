@@ -1,0 +1,28 @@
+From: Diego Herrera <diego.far-007@example.com>
+To: orders@purchase-cycle.example
+Subject: Order - see attached
+Date: Mon, 05 Oct 2026 18:34:00 +0000
+Message-ID: <eml-0118@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0118-boundary=="
+
+--==EML-0118-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Please see our attached order and send it with the next delivery.
+
+Diego
+Farmacia Arguelles
+
+--==EML-0118-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0118.txt"
+MIME-Version: 1.0
+
+10 patient lifts
+
+--==EML-0118-boundary==--

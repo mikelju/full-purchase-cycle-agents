@@ -1,0 +1,28 @@
+From: Alvaro Benitez <alvaro.far-011@example.com>
+To: orders@purchase-cycle.example
+Subject: Briefs order
+Date: Mon, 09 Nov 2026 04:08:00 +0000
+Message-ID: <eml-0236@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0236-boundary=="
+
+--==EML-0236-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Buenos dias,
+
+Small order attached. Thanks.
+
+Alvaro
+Farmacia del Puerto
+
+--==EML-0236-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0236.txt"
+MIME-Version: 1.0
+
+80 adult incontinence briefs, size M
+
+--==EML-0236-boundary==--

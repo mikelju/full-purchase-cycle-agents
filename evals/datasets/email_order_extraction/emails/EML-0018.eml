@@ -1,0 +1,58 @@
+From: Encarna Sanchez <encarna.res-015@example.com>
+To: orders@purchase-cycle.example
+Subject: Purchase order from the residence
+Date: Sun, 06 Sep 2026 14:54:00 +0000
+Message-ID: <eml-0018@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0018-boundary=="
+
+--==EML-0018-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Good morning,
+
+I am sending the attached purchase order on behalf of the residence. The quan=
+tities are in the document.
+
+Kind regards,
+Encarna Sanchez
+Residencia Las Acacias
+
+--==EML-0018-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0018.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDUwMAo+PgpzdHJlYW0KeJx9
+lFtvmzAYQN/7K77HTQqurwH6ti1UypRmakJ3efQSJ/FKANmk7fbrBwECcya/IaRzPnNsQ+HzDUYi
+hNebjync3hMgHGEM6Q6StHnFCCIRCB4hMYV0C+9myWL+NVn9gOWXNIEAVsnjU7JOkxnM0+Rh/R7S
+Xx16e0+B4P/ZaIhw1NpUpl+Ugaq4g5WyeqvyjZawkBY+bGT9aCfwcDL1w0jcWRp3a1kWlYL8dPyp
+zB3MlgHGJPpnIQTiYR00QkwAjxmiDDhFgkJAYhRxMArWcBnAI4ym5DxgpXa9L8QoCi+0YEhwFw8Z
+CvEYnym7MbqsdJH3GkE54qT3tFJH02SifOx5rH5f+FggGvU84QSF7EoQR4iQseAp15WzQ9dh6uWz
+2BtmilEYnoXEydKxviwD/Kk4lkZZW2eB51yp4KD3B7BVsXnW+d7CJpPWwnwCVv9RsHDTtbO86UYL
+Dd1yLe4vN/Cl1KY3dJ2ajxTeThyjmJ1x6nTqWF+nAf4mswy22pYqt/Vd2RUGDjLfgpX1dur61QQI
+ZLoyyk3UjvEmGsYIt1BL+wsN+Gl0trpCrP4S4i1ESX+HmVOoY32FBnghK/UG6k0edS6bawb7rHhR
+9c+jLF63ygQ7o1R3jr5fHaR2lLfSMEpg7HZqeX+nQdB0sr3iL/NNSy4KZW5kc3RyZWFtCmVuZG9i
+ago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQKL0VuY29kaW5nIC9XaW5BbnNp
+RW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago2IDAgb2JqCjw8
+Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBl
+IC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9iago8PAovRm9udCA8PC9GMSA1IDAg
+UgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdl
+SV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0F1dGhvciAoUmVzaWRlbmNpYSBMYXMgQWNhY2lhcykK
+L0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDkwMTA4MDAwMFopCi9UaXRsZSAoZGVsaXZlcnktbm90ZS0w
+MDE4LnBkZikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAx
+NSAwMDAwMCBuIAowMDAwMDAwMTAyIDAwMDAwIG4gCjAwMDAwMDAyMDUgMDAwMDAgbiAKMDAwMDAw
+MDI4NSAwMDAwMCBuIAowMDAwMDAwODU3IDAwMDAwIG4gCjAwMDAwMDA5NTkgMDAwMDAgbiAKMDAw
+MDAwMTA1NiAwMDAwMCBuIAowMDAwMDAxMTUzIDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQov
+Um9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzxEQkQ3ODYyNDk2MzEyNDNGNERENzVEMzk2QTRG
+QUY4OT48REJENzg2MjQ5NjMxMjQzRjRERDc1RDM5NkE0RkFGODk+XQo+PgpzdGFydHhyZWYKMTI3
+MwolJUVPRgo=
+
+--==EML-0018-boundary==--

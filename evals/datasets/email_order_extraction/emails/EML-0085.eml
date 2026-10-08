@@ -1,0 +1,29 @@
+From: Raquel Pastor <raquel.res-013@example.com>
+To: orders@purchase-cycle.example
+Subject: Catheters and tape
+Date: Sat, 26 Sep 2026 03:25:00 +0000
+Message-ID: <eml-0085@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0085-boundary=="
+
+--==EML-0085-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+Attached you will find our order. Thank you.
+
+Raquel
+Residencia Sol de Levante
+
+--==EML-0085-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0085.txt"
+MIME-Version: 1.0
+
+17 boxes Foley catheter 2-way, silicone-coated latex, 18 Fr
+12 boxes transparent tape 2.5 cm x 9.1 m
+
+--==EML-0085-boundary==--

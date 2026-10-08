@@ -1,0 +1,30 @@
+From: Beatriz Fernandez <beatriz.res-011@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Residencia Camino de Santiago
+Date: Mon, 26 Oct 2026 18:10:00 +0000
+Message-ID: <eml-0190@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0190-boundary=="
+
+--==EML-0190-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+Attached is a short order from the residence.
+
+Best regards,
+Beatriz
+Residencia Camino de Santiago
+
+--==EML-0190-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0190.txt"
+MIME-Version: 1.0
+
+6 x arm sling, ajustable
+80 cotton wool rolls 1 kg
+
+--==EML-0190-boundary==--

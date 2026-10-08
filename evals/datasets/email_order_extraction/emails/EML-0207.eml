@@ -1,0 +1,36 @@
+From: Maite Ugarte <maite.cli-005@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Centro Medico Lakua
+Date: Sat, 31 Oct 2026 17:51:00 +0000
+Message-ID: <eml-0207@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0207-boundary=="
+
+--==EML-0207-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good afternoon,
+
+Our order is attached in a text file. Please deliver to reception.
+
+Thanks,
+Maite
+Centro Medico Lakua
+
+--==EML-0207-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0207.txt"
+MIME-Version: 1.0
+
+14 boxes vinyl examination gloves, powder-free, size XL
+1 box alcohol prep pads, single-use, box of 100
+15 packs elastic crepe bandage 10 cm x 4.5 m
+19 tubes barrier cream for skin protection 100 g
+24 boxes foam dresing 15 x 15 cm, with border
+8 boxes surgical gloves size 9
+7 boxes instant cold pack, single-use
+8 boxes sterile latex-free surgical gloves (neoprene), size 6.5
+
+--==EML-0207-boundary==--

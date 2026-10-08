@@ -1,0 +1,54 @@
+From: Mikel Iriarte <mikel.cli-016@example.com>
+To: orders@purchase-cycle.example
+Subject: Pamplona medical centre - delivery note
+Date: Wed, 18 Nov 2026 19:17:00 +0000
+Message-ID: <eml-0269@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0269-boundary=="
+
+--==EML-0269-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+Attached is our order in delivery note format, as agreed with your sales rep.
+
+Regards,
+Mikel Iriarte
+
+--==EML-0269-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0269.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQwNwo+PgpzdHJlYW0KeJx9
+kc1um0AYRfd5irtspPrL/DJDdm1NpFSNm9ikUpbYnqhUhrH4qdu3r23AUBKxQ0jnfJeDwNcrRtrg
+cPU5xs0dB1fEGOJXRPHpleTELbSypAPEW3yYR9/uf0TLFyy+xxFmWEZPz9Eqjua4j6OH1TXiXy16
+cyfA2Xs2YYjZxuZ26W9XoPK3+OLyqvB4cNt04/GYZPudz5OPl6eBuvWc7I1n4SuHvM7WrrjFfDFj
+Igj/m8IR9kuEJamhQklCQgnSAjMeklUoHFa4HFCWUcDPB5butfMZRtZcaC1JqzFuJBk2xOeu3BTp
+vkp93mm0UKR452mkI80plFBDz1P198KHmoTteK44GflGEFrifCh4ztNq9I/ehjnOl+FkmICRMWch
+H2Vp2aksPbx0dZmsdw6HpPx5fli7LfbJFkbjD0KGTTbu1RyY7DVYF4xzNfh0rp6vB7naOKcv05Nx
+FKNQnnExitOyU3F6+FNd+Syp0g0ORVpWWO+8P8YpXFnWRyjzx22+GOdpTkzmeWdfV6ehp+v0+LDO
+P0bqALoKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJv
+bGQKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250
+Cj4+CmVuZG9iago2IDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhCi9FbmNvZGluZyAvV2lu
+QW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlwZSAvRm9udAo+PgplbmRvYmoKNyAwIG9i
+ago8PAovRm9udCA8PC9GMSA1IDAgUgovRjIgNiAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAv
+SW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjggMCBvYmoKPDwKL0F1dGhvciAoQ2Vu
+dHJvIE1lZGljbyBQYW1wbG9uYSkKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDkwMTA4MDAwMFopCi9U
+aXRsZSAoZGVsaXZlcnktbm90ZS0wMjY5LnBkZikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAw
+MDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwMTAyIDAwMDAwIG4gCjAwMDAw
+MDAyMDUgMDAwMDAgbiAKMDAwMDAwMDI4NSAwMDAwMCBuIAowMDAwMDAwNzY0IDAwMDAwIG4gCjAw
+MDAwMDA4NjYgMDAwMDAgbiAKMDAwMDAwMDk2MyAwMDAwMCBuIAowMDAwMDAxMDYwIDAwMDAwIG4g
+CnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzwzMjY2OThG
+ODM3REE4MDQ2MDg4MDhEQTE2NkJBOEExNj48MzI2Njk4RjgzN0RBODA0NjA4ODA4REExNjZCQThB
+MTY+XQo+PgpzdGFydHhyZWYKMTE4MAolJUVPRgo=
+
+--==EML-0269-boundary==--

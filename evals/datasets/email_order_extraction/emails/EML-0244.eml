@@ -1,0 +1,31 @@
+From: Jordi Ferrer <jordi.cli-010@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Centre Medic Eixample - October
+Date: Wed, 11 Nov 2026 12:52:00 +0000
+Message-ID: <eml-0244@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0244-boundary=="
+
+--==EML-0244-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+Please process the order in the attached file.
+
+Thanks,
+Jordi
+Centre Medic Eixample
+
+--==EML-0244-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0244.txt"
+MIME-Version: 1.0
+
+eleven boxes small island dressings, adhesive, 5 x 7.2 cm
+18 boxes FFP2 masks with exhalation valve
+4 boxes hypodermic needle 20G x 40 mm
+
+--==EML-0244-boundary==--

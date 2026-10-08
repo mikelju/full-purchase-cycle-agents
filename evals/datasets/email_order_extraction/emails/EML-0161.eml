@@ -1,0 +1,32 @@
+From: Antonio Diaz <antonio.res-006@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Residencia Santa Clara - October
+Date: Sun, 18 Oct 2026 07:53:00 +0000
+Message-ID: <eml-0161@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0161-boundary=="
+
+--==EML-0161-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Good morning,
+
+Attached is the order from the nursing team.
+
+Thank you,
+Antonio
+Residencia Santa Clara
+
+--==EML-0161-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0161.txt"
+MIME-Version: 1.0
+
+12 boxes hypodermic neddle 25G x 16 mm
+50 bottles ethyl alchohol 96% 1 litre
+5 boxes zinc oxide tape 5 cm x 5 m
+4 dozen boxes saline solution 0.9%, single-dose 5 ml
+
+--==EML-0161-boundary==--

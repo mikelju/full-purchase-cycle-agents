@@ -1,0 +1,57 @@
+From: Oier Bengoa <oier.far-005@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Lakua (delivery note format)
+Date: Thu, 05 Nov 2026 16:32:00 +0000
+Message-ID: <eml-0224@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0224-boundary=="
+
+--==EML-0224-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+We have used our own delivery note format for this order, attached. Quantitie=
+s are as listed.
+
+Thanks,
+Oier Bengoa
+Farmacia Lakua
+
+--==EML-0224-boundary==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="delivery-note-0224.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJv
+eCBbMCAwIDg0MS44OSA1OTUuMjhdCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAov
+T3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFn
+ZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQg
+MCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoK
+NCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDQ3MQo+PgpzdHJlYW0KeJx9
+k11vmzAYRu/7K57LTUpcfwbTu00hUqc2WxNaaZeUOqtXApFx9vXrSwKEjFa+RTrHL+e1Ob5cUKIi
+/L74nOJywcAkoRTpBkl6+CQYYRpKaqJmSJ/wYZ7cXD8kq+9Yfk0TTLFK7u6TdZrMcZ0mt+uPSH92
+6OWCg9H3bDwiVLc2U9hfxsFXV1hkbpvlNsNN9rLPJniwvnI2OzN2+EHa4svKG5T77aNxV5gvp5Rz
++d8EDPEwANdEKMhYEC4gOVEcUxYTLeEM1jgdIDUlM3Y8YGU2vS+iREcnWgmi5BiPBInoOT43de7s
+ztuq7DWKSyJZ72mlI82hD5fnnjv/98THinDd80wyEok3glgTxs4F96X1o9W8DdOML+JgmBklUXQU
+slGWjg1lGeBvRVb7Zuu1b+I0u0e+9xNo5Fv8AcN23KqVB1sNcjEu1dLhUgPuqqLoDV2Xw0+pYBdJ
+SSyOOB916dhQlwFeP2duVyOvSp/Z0rh6AqZQWO9MPW7SioNNBjHT4ygtHo4y8Puz69NFEc3wLBiF
+s/6ZilGUjg1FGeBPT/vCw5aHKk2UMjd4dNZsmjil/fHcXJza/jO4HQdqDwkGemfCvk9Lh/sM+C7L
+X1Btmm31nlc6NDtGCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZl
+dGljYS1Cb2xkCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCi9TdWJ0eXBlIC9UeXBlMQovVHlw
+ZSAvRm9udAo+PgplbmRvYmoKNiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2Rp
+bmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2Jq
+CjcgMCBvYmoKPDwKL0ZvbnQgPDwvRjEgNSAwIFIKL0YyIDYgMCBSPj4KL1Byb2NTZXQgWy9QREYg
+L1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUldCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9BdXRo
+b3IgKEZhcm1hY2lhIExha3VhKQovQ3JlYXRpb25EYXRlIChEOjIwMjYwOTAxMDgwMDAwWikKL1Rp
+dGxlIChkZWxpdmVyeS1ub3RlLTAyMjQucGRmKQo+PgplbmRvYmoKeHJlZgowIDkKMDAwMDAwMDAw
+MCA2NTUzNSBmIAowMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDAxMDIgMDAwMDAgbiAKMDAwMDAw
+MDIwNSAwMDAwMCBuIAowMDAwMDAwMjg1IDAwMDAwIG4gCjAwMDAwMDA4MjggMDAwMDAgbiAKMDAw
+MDAwMDkzMCAwMDAwMCBuIAowMDAwMDAxMDI3IDAwMDAwIG4gCjAwMDAwMDExMjQgMDAwMDAgbiAK
+dHJhaWxlcgo8PAovU2l6ZSA5Ci9Sb290IDIgMCBSCi9JbmZvIDggMCBSCi9JRCBbPDQ3OTgyNDE2
+MjY0ODk4NTMwQkU3QkE3N0UzNTI5MjE1Pjw0Nzk4MjQxNjI2NDg5ODUzMEJFN0JBNzdFMzUyOTIx
+NT5dCj4+CnN0YXJ0eHJlZgoxMjM2CiUlRU9GCg==
+
+--==EML-0224-boundary==--

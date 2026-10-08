@@ -1,0 +1,33 @@
+From: Amaia Urrutia <amaia.far-003@example.com>
+To: orders@purchase-cycle.example
+Subject: Order Farmacia Abando
+Date: Thu, 26 Nov 2026 09:55:00 +0000
+Message-ID: <eml-0295@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0295-boundary=="
+
+--==EML-0295-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Kaixo,
+
+Order attached. Please quote separately anything you do not stock.
+
+Thanks,
+Amaia
+Farmacia Abando
+
+--==EML-0295-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0295.txt"
+MIME-Version: 1.0
+
+12 boxes FFP1 masks
+8 boxes nitrile examination gloves, powder-free, size M
+150 bottles saline solution 0.9% for irrigation 500 ml
+11 bags 7.5 cm gauze roll bandages, 4 m
+100 massage tables
+
+--==EML-0295-boundary==--

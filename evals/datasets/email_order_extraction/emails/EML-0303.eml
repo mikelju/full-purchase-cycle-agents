@@ -1,0 +1,30 @@
+From: Oier Bengoa <oier.far-005@example.com>
+To: orders@purchase-cycle.example
+Subject: Lakua order - supports
+Date: Sat, 28 Nov 2026 17:39:00 +0000
+Message-ID: <eml-0303@dataset.purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==EML-0303-boundary=="
+
+--==EML-0303-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+
+See the attached file for our order.
+
+Thanks,
+Oier
+Farmacia Lakua
+
+--==EML-0303-boundary==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="order-0303.txt"
+MIME-Version: 1.0
+
+1 dozen elastic ankle supports, size M
+18 boxes X-ray film
+
+--==EML-0303-boundary==--
