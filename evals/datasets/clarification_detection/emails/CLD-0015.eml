@@ -1,0 +1,20 @@
+From: Iker Zubiri <iker.cli-002@example.com>
+To: orders@purchase-cycle.example
+Subject: Bandages, masks and briefs
+Date: Fri, 04 Sep 2026 11:15:00 +0000
+Message-ID: <cld-0015@dataset.purchase-cycle.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+Hello,
+
+Please process this order for Centro Medico Indautxu:
+
+- 50 packs of cohesive bandage 5 cm x 4.5 m
+- 2 dozen boxes of FFP3 respirator masks with exhalation valve
+- a dozen packs of elastic crepe bandage 10 cm x 4.5 m
+- 2000 packs of adult incontinence briefs, night, size M
+
+Thanks in advance,
+Iker Zubiri

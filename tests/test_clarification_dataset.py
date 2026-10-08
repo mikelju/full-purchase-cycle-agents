@@ -305,3 +305,16 @@ def test_check_and_build_commands_report_rejections(tmp_path, monkeypatch, capsy
     assert cd.cmd_build(Namespace(dataset="detection")) == 1
     assert not (folder / "dataset.jsonl").exists()
 
+
+def test_versioned_datasets_are_the_build_of_the_versioned_texts(tmp_path):
+    for name, directory in (("detection", cd.DETECTION_DIR), ("answers", cd.ANSWERS_DIR)):
+        rebuilt = tmp_path / name
+        (rebuilt / "texts").mkdir(parents=True)
+        (rebuilt / "plan.jsonl").write_bytes((directory / "plan.jsonl").read_bytes())
+        for text_file in (directory / "texts").glob("*.jsonl"):
+            (rebuilt / "texts" / text_file.name).write_bytes(text_file.read_bytes())
+        assert cd.build_files(name, rebuilt) == {}
+        built = {k: v for k, v in _snapshot(rebuilt).items() if not k.startswith(("texts", "plan"))}
+        versioned = {k: v for k, v in _snapshot(directory).items() if k in built or k.startswith("emails")}
+        assert built == versioned
+        assert "dataset.jsonl" in built
