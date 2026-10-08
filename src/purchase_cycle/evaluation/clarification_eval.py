@@ -64,6 +64,14 @@ RECALLS = tuple(f"recall_{t}" for t in DOUBT_TYPES)
 PRECISIONS = tuple(f"precision_{t}" for t in DOUBT_TYPES)
 DETECTION_METRICS = (*RECALLS, *PRECISIONS, "false_question_rate")
 ANSWER_METRICS = ("resolution_accuracy", "case_exact_match")
+# Detection gates on the test split after deviation 04.1: recall of each doubt type at the level the owner
+# accepted from the replay measured after the rule change (spec amended 2026-10-08), false question rate at most 5%.
+DETECTION_THRESHOLDS = {
+    "recall_ambiguous": 49 / 55,
+    "recall_unknown": 50 / 53,
+    "recall_quantity": 42 / 46,
+    "false_question_rate": 1 - DEFAULT_THRESHOLD,
+}
 
 
 def rate(hits: int, n: int) -> dict:
@@ -163,22 +171,29 @@ def summarise_detection(results: list[dict]) -> dict:
     return summary
 
 
-def detection_gates(summary: dict, threshold: float | None) -> list[str]:
+def _limit(threshold: float | dict, metric: str, op: str) -> float:
+    """Gate limit of one metric from a single threshold or from per-metric limits."""
+    if isinstance(threshold, dict):
+        return threshold[metric]
+    return threshold if op == ">=" else 1 - threshold
+
+
+def detection_gates(summary: dict, threshold: float | dict | None) -> list[str]:
     if threshold is None:
         return ["no threshold set in the baseline"]
     failures = [
-        f"{m} {summary[m]['value']:.1%} below threshold {threshold:.1%}"
+        f"{m} {summary[m]['value']:.1%} below threshold {_limit(threshold, m, '>='):.1%}"
         for m in RECALLS
-        if summary[m]["value"] < threshold
+        if summary[m]["value"] < _limit(threshold, m, ">=") - 1e-9
     ]
-    ceiling = 1 - threshold
+    ceiling = _limit(threshold, "false_question_rate", "<=")
     if summary["false_question_rate"]["value"] > ceiling + 1e-9:
         failures.append(f"false_question_rate {summary['false_question_rate']['value']:.1%} above {ceiling:.1%}")
     return failures
 
 
 def detection_meets(summary: dict) -> bool:
-    return not detection_gates(summary, DEFAULT_THRESHOLD)
+    return not detection_gates(summary, DETECTION_THRESHOLDS)
 
 
 def _recall_pairs(results: list[dict]) -> dict[str, bool]:
@@ -287,8 +302,9 @@ def save_detection_baseline(path: Path, mode: str, split: str, summary: dict, re
         mode,
         split,
         summary,
-        "95% if recall of every doubt type reaches 95% and the false question rate is at most 5% on the test split; "
-        "otherwise the owner decides (deviation 04.1)",
+        "recall of each doubt type at the level measured after the rule change of deviation 04.1, accepted by the owner "
+        "on 2026-10-08 as a phase 03 extractor limitation (change 001); false question rate at most 5% on the test split",
+        threshold=DETECTION_THRESHOLDS,
         orders={r["id"]: {k: r[k] for k in ("error", "question", "lines")} for r in results},
         doubts=_recall_pairs(results),
     )
@@ -339,7 +355,7 @@ def evaluate_detection(
         regression=detection_regression,
         save=save_detection_baseline,
         report=print_detection,
-        stop="recall of every doubt type and a false question rate of at most 5%",
+        stop="recall of every doubt type at its accepted level and a false question rate of at most 5%",
     )
 
 
@@ -532,7 +548,7 @@ def _answer_outputs(r: dict) -> dict:
 # Shared run, report and gate steps
 
 
-def _print_table(summary: dict, metrics, threshold: float | None, gated: dict[str, str]) -> None:
+def _print_table(summary: dict, metrics, threshold: float | dict | None, gated: dict[str, str]) -> None:
     print(f"{'metric':<24}{'value':<8}{'95% CI':<16}{'n':<6}{'threshold':<11}result")
     for m in metrics:
         s = summary[m]
@@ -542,8 +558,8 @@ def _print_table(summary: dict, metrics, threshold: float | None, gated: dict[st
         elif threshold is None:
             thr, result = "none", "FAIL"
         else:
-            limit = threshold if gated[m] == ">=" else 1 - threshold
-            ok = s["value"] >= limit if gated[m] == ">=" else s["value"] <= limit + 1e-9
+            limit = _limit(threshold, m, gated[m])
+            ok = s["value"] >= limit - 1e-9 if gated[m] == ">=" else s["value"] <= limit + 1e-9
             thr, result = f"{gated[m]}{_pct(limit)}", "PASS" if ok else "FAIL"
         print(f"{m:<24}{_pct(s['value']):<8}{ci:<16}{s['n']:<6}{thr:<11}{result}")
 
@@ -566,14 +582,16 @@ def _print_group(name: str, size: str, summary: dict, metrics) -> None:
         print("    " + "   ".join(cells[i : i + 3]))
 
 
-def _write_baseline(path: Path, mode: str, split: str, summary: dict, rule: str, **items) -> None:
+def _write_baseline(
+    path: Path, mode: str, split: str, summary: dict, rule: str, threshold: float | dict = DEFAULT_THRESHOLD, **items
+) -> None:
     payload = {
         "model": MODEL_ID,
         "dataset_version": cd.DATASET_VERSION,
         "measured_at": date.today().isoformat(),
         "mode": mode,
         "split": split,
-        "threshold": DEFAULT_THRESHOLD,
+        "threshold": threshold,
         "threshold_rule": rule,
         "metrics": summary,
         **items,
@@ -625,7 +643,7 @@ def _finish(results, summary, mode, split, baseline_path, set_baseline, clients,
         )
     if set_baseline and not meets:
         print(
-            f"STOP: Haiku did not reach 95% on {suite['stop']}; the stored baseline was not changed and the owner decides the threshold (deviation 04.1)."
+            f"STOP: Haiku did not reach the gate on {suite['stop']}; the stored baseline was not changed and the owner decides the threshold."
         )
         return 3
     failures = suite["gates"](summary, threshold) + (regression[0] if regression else [])

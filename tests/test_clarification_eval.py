@@ -227,8 +227,8 @@ def test_detection_passes_against_its_own_baseline_and_fails_each_gate(tmp_path,
     ):
         assert text in out
     data = json.loads(baseline.read_text(encoding="utf-8"))
-    assert data["threshold"] == 0.95 and len(data["doubts"]) >= 120 and len(data["orders"]) == 150
-    # Exit 1: recall of each doubt type under 95%.
+    assert data["threshold"] == ce.DETECTION_THRESHOLDS and len(data["doubts"]) >= 120 and len(data["orders"]) == 150
+    # Exit 1: recall of each doubt type under its accepted level.
     for kind in (AMBIGUOUS, UNKNOWN, QUANTITY):
         assert _detection(tmp_path, monkeypatch, catalog, _drop(kind, 10), baseline_path=baseline) == 1
         assert f"GATE FAILED: recall_{kind}" in capsys.readouterr().out
@@ -246,7 +246,7 @@ def test_detection_passes_against_its_own_baseline_and_fails_each_gate(tmp_path,
     assert _detection(tmp_path, monkeypatch, catalog, _drop(AMBIGUOUS, FLIPPED), baseline_path=baseline) == 1
     out = capsys.readouterr().out
     assert "GATE FAILED: detection recall dropped against the baseline" in out and "below threshold" not in out
-    # Exit 3: a baseline run under 95% leaves the stored baseline unchanged.
+    # Exit 3: a baseline run under the accepted level leaves the stored baseline unchanged.
     before = baseline.read_text(encoding="utf-8")
     assert (
         _detection(tmp_path, monkeypatch, catalog, _drop(QUANTITY, 10), baseline_path=baseline, set_baseline=True) == 3
