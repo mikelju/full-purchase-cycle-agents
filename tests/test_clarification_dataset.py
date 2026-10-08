@@ -54,3 +54,41 @@ def test_detection_split_is_stratified_by_channel_and_doubt():
 def test_detection_plan_is_the_same_for_the_same_seed():
     assert cd.build_detection_plan() == cd.build_detection_plan()
     assert cd.build_detection_plan(1) != cd.build_detection_plan()
+
+
+def test_answers_plan_meets_the_minimums_with_expected_resolutions():
+    plan = cd.build_answers_plan()
+    assert len(plan) >= 200
+    categories = Counter(case["category"] for case in plan)
+    assert set(categories) == set(cd.ANSWER_CATEGORIES) and min(categories.values()) >= 25
+    assert len({case["id"] for case in plan}) == len(plan)
+    for case in plan:
+        ids = [doubt["line_id"] for doubt in case["doubts"]]
+        assert ids == sorted(set(ids))
+        actions = [doubt["expected"]["action"] for doubt in case["doubts"]]
+        category = case["category"]
+        if category in ("pick_variant", "pick_description"):
+            (doubt,) = case["doubts"]
+            assert doubt["types"] == ["ambiguous"] and doubt["expected"]["sku"] in doubt["candidates"]
+        elif category == "give_quantity":
+            (doubt,) = case["doubts"]
+            assert doubt["types"] == ["quantity"] and doubt["expected"]["sku"] == doubt["expected_sku"]
+            assert 1 <= doubt["expected"]["quantity"] <= 500
+        elif category == "remove_line":
+            assert actions == ["remove"]
+        elif category == "several_lines":
+            assert len(actions) >= 2
+        else:
+            assert set(actions) == {"unclear"} and case["answer_style"] in ("unclear", "off_topic")
+        for doubt in case["doubts"]:
+            expected = doubt["expected"]
+            assert (expected["sku"] is None) == (expected["action"] != "set")
+            assert doubt["quantity"] >= 1
+
+
+def test_answers_split_is_stratified_by_category_and_same_for_the_same_seed():
+    plan = cd.build_answers_plan()
+    dev = Counter(case["category"] for case in plan if case["split"] == "dev")
+    assert dev == {category: round(0.25 * cd.CASES_PER_CATEGORY) for category in cd.ANSWER_CATEGORIES}
+    assert plan == cd.build_answers_plan()
+    assert cd.build_answers_plan(1) != plan

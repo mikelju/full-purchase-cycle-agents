@@ -1,4 +1,4 @@
-"""Golden datasets of phase 04: `clarification_detection` and, next, `clarification_answers`.
+"""Golden datasets of phase 04: `clarification_detection` and `clarification_answers`.
 
 The seeded planners fix every label before any text exists; the coding agent
 writes the texts later, and `check` and `build` validate them with the runtime
@@ -21,6 +21,7 @@ from purchase_cycle.quantities import NUMBER_WORDS
 
 DATASET_VERSION = "1.0"
 DETECTION_SEED = 20261009
+ANSWERS_SEED = 20261010
 WEB_FORM, EMAIL = "web_form", "email"
 CHANNELS = (WEB_FORM, EMAIL)
 DEV_SHARE = 0.25
@@ -44,7 +45,20 @@ EXTRA_CLEAR_LINES = (0, 1, 1, 2, 2, 3)
 OVER_CEILING_QUANTITIES = (501, 600, 750, 800, 900, 1000, 1200, 1500, 2000, 2500)
 MAX_CONVERSATIONAL_LINES = 4  # phase 03 limit of conversational bodies
 
+# Answers: six categories of 35 cases.
+ANSWER_CATEGORIES = (
+    "pick_variant",
+    "pick_description",
+    "give_quantity",
+    "remove_line",
+    "several_lines",
+    "still_unclear",
+)
+CASES_PER_CATEGORY = 35
+UNCLEAR_STYLES = ("unclear", "off_topic")
+
 DETECTION_DIR = EVALS_DIR / "datasets" / "clarification_detection"
+ANSWERS_DIR = EVALS_DIR / "datasets" / "clarification_answers"
 
 CATALOG = [{"sku": p.sku, "name": p.name, "sale_unit": p.sale_unit} for p in PRODUCTS]
 PRODUCT_BY_SKU = {p.sku: p for p in PRODUCTS}
@@ -185,7 +199,76 @@ def build_detection_plan(seed: int = DETECTION_SEED) -> list[dict]:
     return orders
 
 
+def _answer_doubt(rng, picker: _Picker, kind: str, action: str, channel: str) -> dict:
+    """One doubtful line of an answer case with the resolution the answer must lead to."""
+    doubt = _detection_line(rng, picker, kind, channel)
+    del doubt["expected_doubts"]
+    doubt["types"] = list(EXPECTED_DOUBTS[kind])
+    if doubt["quantity"] is None:  # what the extractor read from a text stating no number
+        doubt["quantity"] = 1
+    if action == "set" and kind == "ambiguous":
+        expected = {"action": "set", "sku": rng.choice(doubt["candidates"]), "quantity": doubt["quantity"]}
+    elif action == "set":
+        expected = {"action": "set", "sku": doubt["expected_sku"], "quantity": rng.randint(1, 120)}
+    else:
+        expected = {"action": action, "sku": None, "quantity": None}
+    doubt["expected"] = expected
+    return doubt
+
+
+def _quantity_kind(rng, channel: str) -> str:
+    return "over_ceiling" if channel == WEB_FORM else rng.choice(("over_ceiling", "unsupported"))
+
+
+def _answer_doubts(rng, picker: _Picker, category: str, channel: str) -> tuple[list[dict], dict]:
+    if category in ("pick_variant", "pick_description"):
+        return [_answer_doubt(rng, picker, "ambiguous", "set", channel)], {}
+    if category == "give_quantity":
+        return [_answer_doubt(rng, picker, _quantity_kind(rng, channel), "set", channel)], {}
+    if category == "remove_line":
+        kind = rng.choice(("ambiguous", "unknown", _quantity_kind(rng, channel)))
+        return [_answer_doubt(rng, picker, kind, "remove", channel)], {}
+    if category == "several_lines":
+        options = [("ambiguous", "set"), ("unknown", "remove"), ("quantity", "set"), ("ambiguous", "remove")]
+        chosen = rng.sample(options, rng.choice((2, 2, 3)))
+        doubts = [
+            _answer_doubt(rng, picker, _quantity_kind(rng, channel) if kind == "quantity" else kind, action, channel)
+            for kind, action in chosen
+        ]
+        return doubts, {}
+    kinds = rng.sample(("ambiguous", "unknown", _quantity_kind(rng, channel)), rng.choice((1, 1, 2)))
+    return [_answer_doubt(rng, picker, kind, "unclear", channel) for kind in kinds], {
+        "answer_style": rng.choice(UNCLEAR_STYLES)
+    }
+
+
+def build_answers_plan(seed: int = ANSWERS_SEED) -> list[dict]:
+    rng = random.Random(seed)
+    picker = _Picker(rng)
+    strata = []
+    for category in ANSWER_CATEGORIES:
+        group = []
+        for i in range(CASES_PER_CATEGORY):
+            channel = CHANNELS[i % 2]
+            doubts, extra = _answer_doubts(rng, picker, category, channel)
+            # Doubtful lines sit at seeded positions of an order of up to five lines.
+            positions = sorted(rng.sample(range(1, 6), len(doubts)))
+            for position, doubt in zip(positions, doubts, strict=True):
+                doubt["line_id"] = position
+            group.append({"category": category, "channel": channel, "doubts": doubts, **extra})
+        strata.append(group)
+    _split(rng, strata)
+    cases = [case for group in strata for case in group]
+    rng.shuffle(cases)
+    for number, case in enumerate(cases, start=1):
+        case["id"] = f"CLA-{number:04d}"
+        case["dataset_version"] = DATASET_VERSION
+        case["customer_code"] = rng.choice(CUSTOMERS).code
+    return cases
+
+
 PLANNERS = {"detection": (build_detection_plan, DETECTION_SEED, DETECTION_DIR)}
+PLANNERS["answers"] = (build_answers_plan, ANSWERS_SEED, ANSWERS_DIR)
 
 
 def cmd_plan(args) -> int:
