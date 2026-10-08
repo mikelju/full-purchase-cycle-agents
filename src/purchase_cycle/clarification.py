@@ -5,6 +5,7 @@ or when its quantity is doubtful. The rules are deterministic and read only
 the lines the channel already produced and the catalog.
 """
 
+import re
 from pathlib import Path
 from typing import NamedTuple, TypedDict
 
@@ -46,6 +47,14 @@ def _words(text: str) -> set[str]:
     return {_singular(w) for w in match_key(text).split()}
 
 
+# A figure is a whole or decimal number standing alone, so "7.5" is one figure, not 7 and 5.
+FIGURE = re.compile(r"(?<![\w.])\d+(?:\.\d+)?(?!\w|\.\d)")
+
+
+def _figures(text: str) -> set[str]:
+    return set(FIGURE.findall(text))
+
+
 def candidate_search(text: str, catalog: list, limit: int = MAX_CANDIDATES) -> list[dict]:
     """Catalog products the text may mean, best first; empty when nothing fits.
 
@@ -54,21 +63,27 @@ def candidate_search(text: str, catalog: list, limit: int = MAX_CANDIDATES) -> l
     sharing more figures with the text come first, and only the products with
     the fewest name words the text does not mention are kept, so a generic text
     returns the plain variants of one family rather than every related product.
+    When the text shares a figure with them, a product whose name holds fewer
+    figures the text does not state wins a remaining tie, so "size 8" picks
+    size 8 over 8.5, while a size no sibling has keeps every sibling.
     """
     words = _words(text)
     required = {w for w in words if not w.isdigit() and w not in FILLER_WORDS and w not in NUMBER_WORDS}
     if not required:
         return []
-    figures = {w for w in words if w.isdigit()}
+    figures = _figures(text)
     scored = []
     for row in catalog:
         name = _words(row["name"])
         if required <= name:
             extra = len({w for w in name - words if not w.isdigit()})
-            scored.append((-len(figures & name), extra, row["sku"], row["name"]))
+            name_figures = _figures(row["name"])
+            matched = len(figures & name_figures)
+            unstated = len(name_figures - figures) if matched else 0
+            scored.append((-matched, extra, unstated, row["sku"], row["name"]))
     if not scored:
         return []
-    best = min(s[:2] for s in scored)
+    best = min(s[:3] for s in scored)
     return [{"sku": sku, "name": name} for *rank, sku, name in sorted(scored) if tuple(rank) == best][:limit]
 
 

@@ -47,6 +47,32 @@ def test_figures_narrow_the_candidates(seeded_db):
     assert _skus("nitrile gloves size M", catalog) == ["GLV-NIT-M"]
 
 
+@pytest.mark.parametrize(
+    "text, sku, generic",
+    [
+        ("neoprene surgical gloves size 8", "GLV-SURG-NEO-8", "neoprene surgical gloves"),
+        ("neoprene surgical gloves size 7", "GLV-SURG-NEO-7", "neoprene surgical gloves"),
+        ("latex surgical gloves size 7", "GLV-SURG-LTX-7", "latex surgical gloves"),
+        ("examination couch paper roll 50 cm", "COUCH-50", "examination couch paper roll"),
+        ("non-sterile gauze swabs 5 x 5 cm, 12 ply", "GAUZE-NS-5-12", "non-sterile gauze swabs"),
+        ("non-sterile gauze swabs 5 x 5 cm, 8 ply", "GAUZE-NS-5", "non-sterile gauze swabs"),
+        ("gauze bandage roll 5 cm", "GAUZE-ROLL-5", "gauze bandage roll"),
+        ("elastic crepe bandage 5 cm", "BND-ELA-5", "elastic crepe bandage"),
+        ("sunscreen SPF 50+, 50 ml", "SUN-50-50", "sunscreen"),
+    ],
+)
+def test_a_stated_size_picks_that_sibling_alone(seeded_db, text, sku, generic):
+    _, catalog = seeded_db
+    assert _skus(text, catalog) == [sku]
+    assert sku in _skus(generic, catalog) and len(_skus(generic, catalog)) >= 2
+
+
+def test_a_size_no_sibling_has_keeps_every_sibling(seeded_db):
+    _, catalog = seeded_db
+    assert _skus("sunscreen SPF 15", catalog) == _skus("sunscreen", catalog)
+    assert len(_skus("surgical gloves size 9", catalog)) == 5
+
+
 def test_unknown_text_gives_no_candidates(seeded_db):
     _, catalog = seeded_db
     assert candidate_search("flux capacitor", catalog) == []
