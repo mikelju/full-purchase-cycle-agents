@@ -72,7 +72,17 @@ def _unwritable(line: dict, channel: str) -> list[str]:
         return [f"{line['requested_item']} has candidates"] if found(line["requested_item"]) else []
     if kind == "ambiguous":
         return [] if found(line["hint"]) == line["candidates"] else [f"{line['hint']} misses its candidates"]
-    return [] if found(cd.PRODUCT_BY_SKU[sku].name) == [sku] else [f"{sku} cannot be named alone"]
+    name = cd.PRODUCT_BY_SKU[sku].name
+    if found(name) != [sku]:
+        return [f"{sku} cannot be named alone"]
+    # An email line writes a sale-unit quantity as a figure, which must not tie the product with a sibling size.
+    if (
+        channel == cd.EMAIL
+        and line.get("unit_style") == "sale_units"
+        and found(f"{line['quantity']} x {name}") != [sku]
+    ):
+        return [f"{sku}: quantity {line['quantity']} is a sibling size figure"]
+    return []
 
 
 def test_every_planned_line_is_writable():
@@ -294,3 +304,4 @@ def test_check_and_build_commands_report_rejections(tmp_path, monkeypatch, capsy
     (folder / "dataset.jsonl").unlink()
     assert cd.cmd_build(Namespace(dataset="detection")) == 1
     assert not (folder / "dataset.jsonl").exists()
+

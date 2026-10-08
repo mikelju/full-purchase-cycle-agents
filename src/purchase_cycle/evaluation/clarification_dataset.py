@@ -129,6 +129,12 @@ def named_without_figures(sku: str) -> bool:
     return _skus(candidate_search(figure_free_name(sku), CATALOG, limit=len(CATALOG))) == [sku]
 
 
+def names_alone_with(sku: str, quantity: int) -> bool:
+    """Whether a line stating this quantity as a figure beside the product name still names only this product."""
+    text = f"{quantity} x {PRODUCT_BY_SKU[sku].name}"
+    return _skus(candidate_search(text, CATALOG, limit=len(CATALOG))) == [sku]
+
+
 def has_no_candidates(item: str) -> bool:
     return not candidate_search(item, CATALOG, limit=len(CATALOG))
 
@@ -156,6 +162,11 @@ class _Picker:
     def product(self, eligible=lambda p: True):
         key = lambda p: p.sku  # noqa: E731
         return self._repair(_least_used(self.rng, self.products, self.uses, key), self.products, eligible, key)
+
+    @staticmethod
+    def quantity(choice: int, eligible) -> int:
+        """The planned quantity, or the next one up a line can state; no seeded stream moves, so later picks stay."""
+        return next(q for q in range(choice, choice + 1000) if eligible(q))
 
     def ambiguity(self) -> dict:
         return _least_used(self.rng, self.sets, self.uses, lambda s: "set:" + "|".join(s["candidates"]))
@@ -187,6 +198,9 @@ def _detection_line(rng, picker: _Picker, kind: str, channel: str) -> dict:
         unit, quantity, extra = _unit(rng, "written", product)
     else:
         unit, quantity, extra = "sale_units", rng.randint(1, 50), {}
+    if channel == EMAIL and unit == "sale_units" and product is not None:
+        # A clear line writes this figure, so it must not be a sibling size that ties the search.
+        quantity = picker.quantity(quantity, lambda q: names_alone_with(product.sku, q))
     line["quantity"] = quantity
     if channel == EMAIL:
         line["unit_style"] = unit
