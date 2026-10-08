@@ -194,7 +194,7 @@ The phase can be ready locally with C12 or C15 pending, but it does not close un
 |---|---|---|---|
 | 04.1 | The Haiku 4.5 detection baseline on the test split misses the 95% recall gate: ambiguous 58.2% [45.0, 70.3] n=55, unknown 94.3% [84.6, 98.1] n=53, quantity 91.3% [79.7, 96.6] n=46; false question rate 0.0% meets it. Ambiguous misses: the frozen phase 02 matcher and phase 03 extractor give a SKU to a generic text such as "Zinc oxide tape", and the spec rule raises an ambiguous doubt only for a line without a SKU. Unknown and quantity misses: email lines the extractor drops, and three email orders whose extractor answer has a non-integer quantity and is rejected by the schema. Prompt tuning on the two new instructions cannot change detection. The owner decides the thresholds or a change of rule; answers met their gate (99.5%) and its baseline is stored. | C13, C14 | Closed 2026-10-08. Round 1: Q1=A (candidate search on every line) raised ambiguous recall from 58.2% to 89.1% [78.2, 94.9]; Q2=A gated unknown (94.3%) and quantity (91.3%) at the measured level, change 001 opened. Round 2: option A gated ambiguous at the measured 89.1%, purpose-clause cause added to change 001, rule not tuned on test. Detection baseline stored, five suites PASS (see increment 14) |
 
-Pending, out of scope for phase 04: the `check:puerta` stop hook times out at 120 s under concurrent subagent load and takes about 117 s alone (all checks green); the hook is unchanged.
+Pending, out of scope for phase 04: the `check:puerta` stop hook times out at 120 s under concurrent subagent load and takes about 117 s alone (all checks green); the hook is unchanged on this branch: the owner decided (2026-10-08) to raise it to 300 s in separate change 002 (own PR).
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
@@ -241,7 +241,7 @@ Summary: 15 criteria met, C14 met at the measured level by owner decision, and C
 
 ### Open items
 - C15 and increment 19: LangSmith trace and experiments, blocked by the trace quota until about 2026-11-05.
-- The `check:puerta` stop hook times out at 120 s: under concurrent subagent load it fails, and alone it takes about 117 s; at closing the pytest run of `npm run check` alone took 158 s; the hook is unchanged, pending an owner decision on a separate change.
+- The `check:puerta` stop hook times out at 120 s: under concurrent subagent load it fails, and alone it takes about 117 s; at closing the pytest run of `npm run check` alone took 158 s; the hook is unchanged on this branch: owner decided to raise it to 300 s in separate change 002 (own PR).
 - Change `docs/changes/001-email-extractor-dropped-lines.md`: email lines the phase 03 extractor drops, non-integer quantities rejected by the schema, and purpose clauses that hide ambiguity; it limits detection recall (C14).
 - No Mistakes pending: the binary is not installed, so delivery used the local pipeline and no gate is claimed.
 
