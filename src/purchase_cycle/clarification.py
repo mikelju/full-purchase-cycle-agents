@@ -201,8 +201,13 @@ def check_question(question: str, doubts: list[dict]) -> None:
 
 
 def check_resolutions(resolutions: list, doubts: list[dict], catalog: list) -> None:
-    """Every doubtful line answered exactly once, every set SKU in the catalog, every set quantity positive."""
+    """Every doubtful line answered exactly once, every set SKU in the catalog, every set quantity positive.
+
+    The answer meets the order controls too: a set quantity is at most MAX_LINE_QUANTITY and,
+    on an ambiguous line, the set SKU is one of the candidates offered for that line.
+    """
     expected = {doubt["line_id"] for doubt in doubts}
+    offered = {d["line_id"]: {c["sku"] for c in d["candidates"]} for d in doubts if AMBIGUOUS in d["types"]}
     known_skus = {row["sku"] for row in catalog}
     errors = []
     seen = set()
@@ -215,8 +220,12 @@ def check_resolutions(resolutions: list, doubts: list[dict], catalog: list) -> N
         if r.action == "set":
             if r.sku not in known_skus:
                 errors.append(f"line {r.line_id}: SKU '{r.sku}' is not in the catalog")
+            elif r.line_id in offered and r.sku not in offered[r.line_id]:
+                errors.append(f"line {r.line_id}: SKU '{r.sku}' is not one of the offered candidates")
             if r.quantity is None or r.quantity <= 0:
                 errors.append(f"line {r.line_id}: quantity {r.quantity} is not a positive whole number")
+            elif r.quantity > MAX_LINE_QUANTITY:
+                errors.append(f"line {r.line_id}: quantity is above the limit of {MAX_LINE_QUANTITY}")
     errors += [f"line {line_id} is not answered" for line_id in sorted(expected - seen)]
     if errors:
         raise InvalidAnswer("Clarification answer rejected: " + "; ".join(errors))

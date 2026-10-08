@@ -231,6 +231,35 @@ def test_invalid_answer_stops_with_no_rows(seeded_db, write_recording, tmp_path)
     assert (orders, lines, pending[0]["status"], pending[0]["round"]) == ([], [], "pending", 1)
 
 
+@pytest.mark.parametrize(
+    ("answer", "changed", "message"),
+    [
+        ("Size L for the gloves, 501 boxes.", {"quantity": 501}, "quantity is above the limit of 500"),
+        ("Size L for the gloves, a huge amount.", {"quantity": 10**30}, "quantity is above the limit of 500"),
+        ("Gel for the gloves line.", {"sku": "GEL-500"}, "SKU 'GEL-500' is not one of the offered candidates"),
+    ],
+)
+def test_answer_above_the_ceiling_or_outside_the_candidates_waits_again(
+    seeded_db, write_recording, tmp_path, answer, changed, message
+):
+    db_path, catalog = seeded_db
+    _record_form(catalog, write_recording)
+    doubts = detect(_form_lines(catalog), catalog, "web_form")
+    bad = [{**RESOLUTIONS_1[0], **changed}, *RESOLUTIONS_1[1:]]
+    _record_round(catalog, write_recording, doubts, QUESTION_1, answer, bad)
+    _record_round(catalog, write_recording, doubts, QUESTION_1, ANSWER_1, RESOLUTIONS_1)
+    recordings = _record_round(catalog, write_recording, doubts[2:], QUESTION_2)
+    graph = _form_graph(seeded_db, recordings, tmp_path, _clients(catalog, recordings))
+    graph.invoke({"submission": DOUBT_FORM}, RUN)
+    waiting = graph.invoke(Command(resume={"answer": answer}), RUN)["__interrupt__"][0].value
+    assert waiting["rejected"] == f"Clarification answer rejected: line 2: {message}"
+    assert (waiting["question"], waiting["round"]) == (QUESTION_1, 1)
+    orders, lines, pending = _rows(db_path)
+    assert (orders, lines, pending[0]["status"], pending[0]["round"]) == ([], [], "pending", 1)
+    second = graph.invoke(Command(resume={"answer": ANSWER_1}), RUN)
+    assert second["__interrupt__"][0].value["question"] == QUESTION_2
+
+
 def test_unreadable_answer_leaves_the_thread_answerable(seeded_db, write_recording, tmp_path, no_network):
     db_path, catalog = seeded_db
     _record_form(catalog, write_recording)

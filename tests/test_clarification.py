@@ -282,6 +282,9 @@ def test_answer_resolving_every_line_once_passes(seeded_db):
             ((1, "set", "GLV-NIT-M", None), (2, "remove", None, None), (3, "unclear", None, None)),
             "positive whole number",
         ),
+        (((1, "set", "GLV-NIT-M", 501), (2, "remove", None, None), (3, "unclear", None, None)), "above the limit"),
+        (((1, "set", "GLV-NIT-M", 10**30), (2, "remove", None, None), (3, "unclear", None, None)), "above the limit"),
+        (((1, "set", "GEL-500", 10), (2, "remove", None, None), (3, "unclear", None, None)), "offered candidates"),
     ],
 )
 def test_answer_breaking_a_check_is_rejected(seeded_db, rows, message):
