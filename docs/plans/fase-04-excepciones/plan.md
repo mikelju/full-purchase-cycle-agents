@@ -1,0 +1,108 @@
+# Phase 04 - Exceptions: plan and results
+
+Status: planned; execution has not started (the master plan row becomes "in progress" when batch A starts)
+Spec: `spec.md` (frozen, approved by the owner on 2026-10-08)
+Base: branch `fase-04-excepciones` from `main` at commit `037f66d`; the spec was frozen in `ff4f2ec`.
+
+## Design notes
+- New module `purchase_cycle/clarification.py` holds the doubt rules, the candidate search, the question and answer checks and the shared subgraph `clarification` with the nodes `detect`, `ask`, `wait` and `interpret`.
+- Constants in that module: `MAX_LINE_QUANTITY = 500` sale units (spec assumption), `MAX_CANDIDATES = 6`, `MAX_ROUNDS = 2`.
+- Each line the channel produced gets a stable `line_id` (its position) so doubts, answers and the reply refer to lines without ambiguity.
+- Candidate search: deterministic token match of the line text against catalog names, reusing `match_key` and `catalog_index` from `web_form.py`; it is a pure function over `db.catalog_rows`, tested on its own.
+- Quantity evidence for email lines: the number check reuses `has_number` and `pack_size` from `evaluation/planning.py` and the number-word and dozen handling of `evaluation/email_dataset.py`; the helpers move to a runtime module (for example `purchase_cycle/quantities.py`) so `clarification.py` does not import the evaluation package, and the evaluation modules import them back with no behaviour change.
+- The model client in `purchase_cycle/llm.py` gains two tasks without touching the four existing ones, so the phase 01 to 03 recordings and baselines stay valid:
+  - `CLARIFICATION_QUESTION`: tool `record_clarification_question`, answer `{"question": str}`, recordings `evals/recordings/clarification_question.jsonl`.
+  - `CLARIFICATION_ANSWER`: tool `record_clarification_resolutions`, answer `{"resolutions": [{"line_id": int, "action": "set" | "remove" | "unclear", "sku": str | null, "quantity": int | null}]}`, recordings `evals/recordings/clarification_answers.jsonl`.
+  - The user message of both calls is built from the doubtful lines (id, customer text, doubt type, candidates with SKU and name, quantity) and, for the answer, the question and the answer text, in a fixed layout, so the recording key does not depend on thread ids or timestamps.
+- Question check (C5): every doubtful line's customer text appears in the question after normalisation, and every candidate name of an ambiguous line too; a failure raises before `wait`, so nothing is paused and nothing is written.
+- Answer checks (C7): every doubtful line answered exactly once, every `set` SKU in the catalog, every `set` quantity a positive whole number; a failure raises before any write.
+- `ask` drafts the question in its own node before `wait`, because `interrupt` re-runs the paused node from its start on resumption (spec risk).
+- Parent graphs: `build_web_form_graph` and `build_email_order_graph` gain an optional clarification client; when it is given, a `clarify` node (the compiled subgraph) runs between `match` or `extract` and `store`; when it is not, the graph is the phase 02 or phase 03 graph.
+  This keeps the three existing evaluations, which build the graphs with no checkpointer, unchanged, and the existing `web-form-demo` and `email-demo` keep their phase 02 and 03 behaviour; the new exceptions demo and the answer command build the graphs with clarification.
+- `store` stores the clear lines plus the `set` resolutions as one order; removals and unresolved or unanswered lines are carried to `reply`, which lists them with the customer text after the phase 02 and 03 reply text, so a no-doubt reply stays byte-identical (C2).
+- New table `clarifications` in `db.SCHEMA` (thread id primary key, channel, customer code, question, round, status `pending` / `answered` / `closed`, created and updated timestamps); existing tables unchanged.
+  The pending row is written in `ask` after the question check; the status change and the order insert share one business transaction in `store`, and the checkpoint is written after it (spec risk).
+- CLI: `purchase-cycle exceptions-demo` (runs the samples, prints doubts, question and thread id, stops), and a `clarify` command group with `answer <thread_id> (--text TEXT | --file PATH)`, `list` and `close <thread_id>`.
+  `answer` and `close` read the channel from the `clarifications` row, build that parent graph with the same checkpoint file and resume with `Command(resume=...)`; `close` resumes with a close marker, so the clear lines go through the same `store` and `reply`.
+- Detection evaluation runs each order through its channel graph without clarification and then the `detect` function on the resulting lines, so it measures the rules on real matcher and extractor output; the matcher, intake and extractor answers for the new orders go to their own recordings files (`evals/recordings/clarification_detection_matching.jsonl`, `clarification_detection_email_intake.jsonl`, `clarification_detection_email_extraction.jsonl`), never into the phase 02 and 03 files.
+- Answer evaluation calls the interpreter directly with the case's doubtful lines, candidates, written question and answer.
+- Dataset folders `evals/datasets/clarification_detection/` and `evals/datasets/clarification_answers/`, each with `plan.jsonl`, `texts/`, `dataset.jsonl` and `second_pass_review.jsonl`; detection emails rendered as `.eml` with the phase 03 renderer (body orders only unless the planner draws attachment layouts).
+- Dataset modules `purchase_cycle/evaluation/clarification_dataset.py` (both planners, validation, build, commands) and evaluation module `purchase_cycle/evaluation/clarification_eval.py` with two suites registered in `SUITES` of `harness.py`.
+- Live and record runs set every LangSmith and LangChain tracing variable to `false` and `LANGSMITH_API_KEY` to empty in the command environment until the quota resets (C15), as in phase 03.
+
+## Rules for executors
+- Each batch is sized for one writer agent with about 90k tokens of context; it starts in a fresh session from this file and Git, implements its increments in order, marks each one `[x]` with its evidence and commits before the context runs out.
+- Before closing a batch, `npm run check` passes (pytest quiet) and the batch commit is made; the next batch only starts from a green check.
+- Search before reading; read large files by chunks; reuse the phase 02 and 03 functions named in the design notes.
+- No new dependencies (spec constraint).
+- Live API runs (`--mode live` or `--mode record`) use the owner's Anthropic key, which the CLI loads from `.env` through `load_dotenv`.
+  The agent never opens, prints or copies `.env`; it only runs the command.
+  If the command fails for a missing key, the agent stops that increment, marks it pending with the error text and continues with the work that does not need the key.
+- Owner actions stop the increment that needs them: the audit of 40 items (C12), a baseline under the 95% rule (deviation `04.1`), and C15 until the LangSmith quota resets around 2026-11-05.
+- Evidence files go to `.evidence/fase-04/`.
+
+## Increments
+Each increment leaves the product working and covers concrete criteria.
+This file is the durable state: a new session resumes from here and from Git.
+
+### Batch A - Rules, candidates and model tasks (no live calls)
+- [ ] 1. `clarifications` table in the schema, quantity helpers moved to a runtime module, candidate search over catalog names (C3, C4) - check: `tests/test_seed.py` sees the new empty table and unchanged counts for the existing ones; new `tests/test_clarification.py` covers the candidate search ("nitrile gloves" gives the five `GLV-NIT` sizes, at most 6 candidates, an unknown text gives none); `tests/test_email_dataset.py` and `tests/test_dataset.py` pass unchanged after the helper move.
+- [ ] 2. Doubt rules: ambiguous with candidates, unknown, doubtful quantity over 500 and unsupported by the email source text (digits, number words, dozens, pack conversion), nothing for a clear line (C3) - check: pytest per rule over fixture lines of both channels, shaped like the real `match` and `extract` output.
+- [ ] 3. Model tasks `CLARIFICATION_QUESTION` and `CLARIFICATION_ANSWER` with instructions, schemas, tools and recordings files, plus the question check and the answer checks as pure functions (C5, C7) - check: `tests/test_llm.py` cases for both tasks in replay with hand-written recordings in a temporary file, schema-invalid answers included; check tests reject a question missing a line or a candidate name, and answers with a missing or repeated line, a foreign SKU or a non-positive quantity; `uv run purchase-cycle eval --mode replay --split test` passes the three existing suites and `git diff --stat evals/recordings` is empty.
+
+### Batch B - Subgraph, pause, resumption and CLI (no live calls)
+- [ ] 4. Subgraph `clarification` (`detect`, `ask`, `wait`, `interpret`, loop back to `detect`, at most 2 rounds) and the optional `clarify` step in both parent graphs (C2, C4, C5, C7, C8) - check: `tests/test_web_form.py` and `tests/test_email_order.py` pass unchanged; new tests with recorded answers in temporary files: a no-doubt submission and a no-doubt email make 0 clarification calls, never pause and store the same rows and reply as the phase 02 and 03 expected values (C2); an order with a doubt ends paused with the question in the state, one `pending` row and 0 rows in `orders` and `order_lines` (C4); an invalid recorded question stops before the pause (C5); an invalid recorded answer stops with 0 rows (C7); a two-round fixture stores clear and resolved lines in one transaction and the reply lists removed and unresolved lines with the customer text (C8).
+- [ ] 5. CLI `clarify answer`, `clarify list` and `clarify close`, with the transaction shared by `store` and the status change (C6, C9) - check: pytest per command on a temporary database: listing shows channel, customer, round and age; close stores the clear lines, lists the rest as unanswered and marks the row `closed`; answering or closing a non-pending or unknown thread fails with a message and changes no row; C6 test pauses a web form order in one subprocess, asserts it exited, resumes it with `clarify answer` in a second subprocess and compares rows and reply with expected values (replay recordings in a temporary file, network blocked).
+
+### Batch C - Dataset planners, validation and build (no live calls)
+- [ ] 6. Seeded planner of `clarification_detection`: 200 orders or more, half web form and half email, 500 lines or more, at least 60 lines per doubt type and 60 no-doubt orders, expected doubts by line and type, stratified 25/75 split by order (C11) - check: `uv run purchase-cycle clarification-dataset plan --dataset detection` writes `plan.jsonl`; tests assert the minimums, the split and the same plan for the same seed.
+- [ ] 7. Seeded planner of `clarification_answers`: 200 cases or more in six categories of at least 25 (pick by size or variant, pick by description, give a quantity, remove a line, several lines at once, still unclear or off topic), expected resolution per doubtful line, same split rule (C11) - check: same as increment 6 with `--dataset answers`.
+- [ ] 8. Automatic validation and deterministic build of both datasets: web form submissions as JSON, emails rendered with the phase 03 renderer, labels in `dataset.jsonl` (C11) - check: tests with placeholder texts in a temporary folder prove rejections (planned line missing from the text, quantity rule broken, duplicate text after normalisation, answer naming a SKU outside the candidates when the category requires a candidate) and identical bytes over two builds.
+
+### Batch D - Written content, second pass and audit file (owner needed for the audit)
+- [ ] 9. Agent-written texts for both datasets, then `check` and `build` (C11) - check: writer agents (at most four at a time, each owning its text files) write in `texts/`; every file passes `check` with 0 rejected; `build` writes both `dataset.jsonl` files; output in `.evidence/fase-04/dataset-build.txt`; a test rebuilds from the versioned texts and compares byte for byte.
+- [ ] 10. Second-pass review by clean-context subagents that see only the catalog and the texts, never the labels, compared with the plans (C11) - check: both `second_pass_review.jsonl` versioned, every disagreement fixed or justified, counts recorded here, a test requires a decision per disagreement.
+- [ ] 11. Audit sample of 40 random items across both datasets and audit report with Wilson interval (C12) - check: `clarification-audit create` writes `evals/audit/clarification-audit-v1.0.csv`; tests for create and report on temporary files.
+  Owner action: the owner reviews the 40 items (about 20 minutes, Lavish page as in phases 02 and 03); the executor stops this increment after creating the file and continues with batch E; then `clarification-audit report` goes to `.evidence/fase-04/audit-report.txt`.
+  Pass: at most 1 wrong label; more than 1 stops the phase for an owner decision.
+
+### Batch E - Evaluation code and gates (no live calls)
+- [ ] 12. Suites `clarification_detection` and `clarification_answers`: deterministic graders, precision and recall per doubt type, false question rate, resolution accuracy, case exact match (reported), Wilson intervals globally, per channel and per category, failures by category, absolute and McNemar regression gates, registered in `SUITES` and in `eval-upload` (C13) - check: `tests/test_clarification_eval.py` forces each new gate to fail and proves exit 1, exit 2 for missing recordings and exit 3 for a baseline under 95%; `npm run check` green with `npm run eval` naming the three existing suites until batch F stores recordings and baselines.
+
+### Batch F - Recordings, prompt tuning and baselines (live calls)
+- [ ] 13. Recordings on the dev splits and prompt tuning on dev only, only on the two new instructions (C14) - needs the owner's key: `eval --suite clarification_detection --mode record --split dev` and the same for `clarification_answers`, tracing off; output in `.evidence/fase-04/eval-dev.txt`.
+  Estimated cost about 0.5 USD (matcher, intake and extractor on about 50 dev orders, interpreter on about 50 dev cases, two or three tuning rounds).
+- [ ] 14. Haiku 4.5 baselines on the test splits with per-item results and thresholds by the spec rule (C14) - needs the owner's key: `--mode record --split test --set-baseline` for both suites; baselines in `evals/baselines/clarification_detection.json` and `evals/baselines/clarification_answers.json`; output in `.evidence/fase-04/eval-test-baseline.txt`; then `npm run eval` is the plain command again and replays the five suites.
+  If detection recall of any doubt type, the false question rate or resolution accuracy misses its gate, the executor stops, writes deviation `04.1` with the measured figures and leaves the threshold to the owner.
+  Estimated cost about 1 to 2 USD; the total live spend of the phase is recorded here.
+
+### Batch G - Demo, README, secrets and fresh clone (one small live run)
+- [ ] 15. Sample inputs `examples/exceptions/` (one web form submission and one email with doubts, copied from detection test items whose recorded answers are correct) and `purchase-cycle exceptions-demo`; question and interpretation recordings for the samples and their sample answers (C10) - check: a pytest runs the demo and then `clarify answer` as a separate process in replay with the network blocked and asserts doubts, question, thread id, interpretation, order number and reply; replay output in `.evidence/fase-04/demo-replay.txt`; live run with the owner's key and tracing off in `.evidence/fase-04/demo-live.txt` (a few cents).
+- [ ] 16. README sections for the exceptions demo and the answer, list and close commands in replay and live mode, how both datasets were built, how to run the new evaluations with the baseline tables, and the known limitations of the spec (C17) - check: follow them in the clean clone of increment 18.
+- [ ] 17. Secret scan of the new recordings, sample inputs, dataset, audit and baseline files, asserting they are tracked (C16) - check: `tests/test_secrets.py` gains a phase 04 test.
+- [ ] 18. `npm run check` and fresh-clone run with the Anthropic and LangSmith variables unset and no `.env` (C1, C17) - check: `uv sync`, `npm ci` and `npm run check` in a clean clone, five evaluations in replay, README sections followed; output and replay time in `.evidence/fase-04/fresh-clone.txt`.
+- [ ] 19. LangSmith trace of a live demo run as one thread with the pause and the resumption, one span per node of the parent graph and of `clarify`, and experiments of both new evaluations against their uploaded splits (C15) - blocked: the trace quota is exhausted until about 2026-11-05; executors skip it and leave it pending.
+  When unblocked: `eval-upload` for both suites, live demo and live evaluations with tracing on, links and the owner's screenshot as evidence.
+
+### Closing
+- [ ] 20. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` and the five replay evaluations after the fixes.
+- [ ] 21. Results per criterion in the table below, master plan row 04 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+The phase can be ready locally with C12 or C15 pending, but it does not close until both are met.
+
+## Deviations
+| ID | Summary | Affects criteria | Status |
+|---|---|---|---|
+
+## Adversarial review
+| Round | Backend | Range | Lenses | Findings | Status |
+|---|---|---|---|---|---|
+
+## Results
+Per criterion: command or path run, observed result and evidence reference.
+Pending items, limitations and what could not be checked, stated plainly.
+
+| Criterion | Result | Evidence |
+|---|---|---|
+
+## Candidate learnings
+Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
