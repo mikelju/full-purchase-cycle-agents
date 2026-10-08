@@ -419,6 +419,7 @@ def build_email_order_graph(
             "removed": state.get("removed", []),
             "unresolved": state.get("unresolved", []),
             "closed": state.get("clarification") == "closed",
+            "answered": state.get("clarification") == "answered",
         }
         return {
             "reply": build_email_reply(

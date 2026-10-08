@@ -40,6 +40,7 @@ Out:
 - Automatic timeouts and reminders; the simulated clock arrives in phase 06 (owner decision 5).
 - Unknown senders and unknown customer codes: they stay rejected as in phases 02 and 03.
 - New products the customer adds in the answer; they are ignored and the reply says so.
+  The reply after any answer carries this note unconditionally, whether or not the answer added products (owner-approved wording amendment 2026-10-08, adversarial review round 1 F4, option A).
 - Detecting a wrong variant the matcher or extractor picked with confidence (a SKU was returned) when the line text fits a single catalog product or none; such a line raises a doubt only for its quantity (owner decision 1, as amended with C3 by the owner decision on deviation 04.1).
 - Changes to the phase 01 to 03 prompts, recordings, datasets and gates.
 - Stock checks, duplicate protection and retries: phases 05 and 06.

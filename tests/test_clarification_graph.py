@@ -23,7 +23,7 @@ from purchase_cycle.llm import (
     MATCHING,
     ModelClient,
 )
-from purchase_cycle.web_form import build_web_form_graph
+from purchase_cycle.web_form import build_reply, build_web_form_graph
 
 NAMES = {size: f"Nitrile examination gloves, powder-free, size {size}" for size in ("L", "M", "S", "XL", "XS")}
 CLEAR_FORM = {
@@ -68,6 +68,8 @@ As you asked, these lines are removed from the order:
 
 These lines are not part of the order because we could not clarify them:
 - "GLV-NIT-S" (900)
+
+Products not in your original order are not added from your answer; please send them as a new order.
 
 Kind regards,
 Customer service"""
@@ -293,6 +295,15 @@ def test_two_rounds_store_resolved_lines_and_list_the_rest(seeded_db, write_reco
     ]
     assert pending == [{"thread_id": "thread-1", "channel": "web_form", "round": 2, "status": "answered"}]
     assert state["reply"] == TWO_ROUND_REPLY
+
+
+def test_reply_after_an_answer_says_new_products_are_ignored():
+    customer = {"contact_name": "Iker Zubiri"}
+    note = "Products not in your original order are not added from your answer; please send them as a new order."
+    answered = build_reply(customer, "web form order WF-1", None, [], [], answered=True)
+    assert note in answered
+    assert answered.isascii()
+    assert note not in build_reply(customer, "web form order WF-1", None, [], [], closed=True)
 
 
 def test_store_and_status_change_share_one_transaction(seeded_db, write_recording, tmp_path):

@@ -82,13 +82,15 @@ def build_reply(
     removed: list[dict] = (),
     unresolved: list[dict] = (),
     closed: bool = False,
+    answered: bool = False,
 ) -> str:
     """Fixed reply template; every figure comes from the stored rows.
 
     `reference` names what the customer sent, for example "web form order WF-1";
     `unmatched` holds the (text as the customer wrote it, quantity) of each line not in the catalog.
     `removed` and `unresolved` hold the {text, quantity} of the lines a clarification left out;
-    `closed` says the thread was closed without an answer.
+    `closed` says the thread was closed without an answer; `answered` says the customer answered a
+    clarification, whose new products are ignored, so the reply says so.
     """
     out = [f"Dear {customer['contact_name']},", ""]
     if order_id is not None:
@@ -113,6 +115,11 @@ def build_reply(
         reason = "we received no answer about them" if closed else "we could not clarify them"
         out += ["", f"These lines are not part of the order because {reason}:"]
         out += [f'- "{line["text"]}" ({line["quantity"]})' for line in unresolved]
+    if answered:
+        out += [
+            "",
+            "Products not in your original order are not added from your answer; please send them as a new order.",
+        ]
     out += ["", "Kind regards,", "Customer service"]
     return "\n".join(out)
 
@@ -199,6 +206,7 @@ def build_web_form_graph(
             "removed": state.get("removed", []),
             "unresolved": state.get("unresolved", []),
             "closed": state.get("clarification") == "closed",
+            "answered": state.get("clarification") == "answered",
         }
         return {"reply": build_reply(state["customer"], reference, state["order_id"], stored, unmatched, **left_out)}
 
