@@ -126,8 +126,14 @@ This file is the durable state: a new session resumes from here and from Git.
   Pending for batch F: the real recordings, the baselines and the real figures; `npm run eval:live` already runs all five suites, so live runs of the new suites go through `--suite`; increment 14 restores the plain `npm run eval`.
 
 ### Batch F - Recordings, prompt tuning and baselines (live calls)
-- [ ] 13. Recordings on the dev splits and prompt tuning on dev only, only on the two new instructions (C14) - needs the owner's key: `eval --suite clarification_detection --mode record --split dev` and the same for `clarification_answers`, tracing off; output in `.evidence/fase-04/eval-dev.txt`.
+- [x] 13. Recordings on the dev splits and prompt tuning on dev only, only on the two new instructions (C14) - needs the owner's key: `eval --suite clarification_detection --mode record --split dev` and the same for `clarification_answers`, tracing off; output in `.evidence/fase-04/eval-dev.txt`.
   Estimated cost about 0.5 USD (matcher, intake and extractor on about 50 dev orders, interpreter on about 50 dev cases, two or three tuning rounds).
+  Evidence: both suites recorded live on dev with Haiku 4.5, tracing off and the LangSmith key unset; four new recordings files in `evals/recordings/`; output and tuning log in `.evidence/fase-04/eval-dev.txt`.
+  Detection on 50 dev orders and 167 lines: recall ambiguous 53.3% [30.1, 75.2] n=15, unknown 94.1% [73.0, 99.0] n=17, quantity 95.8% [79.8, 99.3] n=24, false question rate 0.0% [0.0, 19.4] n=16.
+  Answers on 54 dev cases: resolution accuracy 98.6% [92.2, 99.7] n=69, case exact match 98.1%; the only failure is CLA-0141, "46 caps" read as 5 packs of 10.
+  Tuning: one interpreter round said the quantity read is already in sale units; CLA-0141 did not change, so the prompt was reverted and dev re-recorded; both new instructions stay as in increment 12.
+  Detection cannot be tuned on the new instructions: 6 of the 7 missed ambiguous lines got a SKU from the frozen phase 02 matcher or phase 03 extractor, and the spec rule raises an ambiguous doubt only for a line without a SKU.
+  Spend measured from the token lines at Haiku 4.5 prices: 0.33 USD detection, 0.46 USD answers over three runs, about 0.79 USD in total.
 - [ ] 14. Haiku 4.5 baselines on the test splits with per-item results and thresholds by the spec rule (C14) - needs the owner's key: `--mode record --split test --set-baseline` for both suites; baselines in `evals/baselines/clarification_detection.json` and `evals/baselines/clarification_answers.json`; output in `.evidence/fase-04/eval-test-baseline.txt`; then `npm run eval` is the plain command again and replays the five suites.
   If detection recall of any doubt type, the false question rate or resolution accuracy misses its gate, the executor stops, writes deviation `04.1` with the measured figures and leaves the threshold to the owner.
   Estimated cost about 1 to 2 USD; the total live spend of the phase is recorded here.
