@@ -1,6 +1,6 @@
 # Phase 04 - Exceptions: plan and results
 
-Status: in progress; batches A to G done except increments 11 (owner audit) and 19 (LangSmith, blocked by quota); closing under way
+Status: delivered for review on 2026-10-08; every increment done except 19 (LangSmith trace and experiments, C15), blocked by the trace quota until about 2026-11-05, so the phase is ready locally but not closed
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-08)
 Base: branch `fase-04-excepciones` from `main` at commit `037f66d`; the spec was frozen in `ff4f2ec`.
 
@@ -111,7 +111,7 @@ This file is the durable state: a new session resumes from here and from Git.
   `uv run purchase-cycle clarification-audit report > .evidence/fase-04/audit-report.txt` exits 0: n=40, wrong labels=1, error rate 2.5%, 95% CI [0.4%, 12.9%], PASS (at most 1 wrong).
   The wrong item, CLD-0034 line 3 ("powder-free vinyl gloves S", quantity 1000, labelled a quantity doubt over 500): the owner reads 1000 as units, that is 10 boxes of 100; the label already makes the system ask to confirm or correct the quantity, so the label and the rules are kept.
   CLD-0135 is ok with the owner question "Is there no default size?": the catalog has no default size for the elastic wrist support (sizes S, M and L), so the line asks which size, as C3 requires.
-  Not part of these verdicts: the owner answer on the 4 generic-hint lines of increment 10 is still pending; they stay a recorded limitation.
+  Not part of these verdicts: the owner accepted (2026-10-08) the 4 generic-hint lines of increment 10 as a recorded limitation, stated in the README limits.
 
 ### Batch E - Evaluation code and gates (no live calls)
 - [x] 12. Suites `clarification_detection` and `clarification_answers`: deterministic graders, precision and recall per doubt type, false question rate, resolution accuracy, case exact match (reported), Wilson intervals globally, per channel and per category, failures by category, absolute and McNemar regression gates, registered in `SUITES` and in `eval-upload` (C13) - check: `tests/test_clarification_eval.py` forces each new gate to fail and proves exit 1, exit 2 for missing recordings and exit 3 for a baseline under 95%; `npm run check` green with `npm run eval` naming the three existing suites until batch F stores recordings and baselines.
@@ -166,7 +166,7 @@ This file is the durable state: a new session resumes from here and from Git.
   New `tests/test_exceptions_demo.py` 1 passed: the demo, both `clarify answer` runs and `clarify list` each run as a separate process with the network blocked and no key, asserting doubts, question, thread ids, interpretation, order numbers 1 and 2 and the replies; replay output in `.evidence/fase-04/demo-replay.txt`.
   Live run with tracing off in `.evidence/fase-04/demo-live.txt`: same doubts, questions, interpretations and orders as the recordings; record and live runs together about 0.07 USD; `npm run check` exit 0 with 307 passed.
 - [x] 16. README sections for the exceptions demo and the answer, list and close commands in replay and live mode, how both datasets were built, how to run the new evaluations with the baseline tables, and the known limitations of the spec (C17) - check: follow them in the clean clone of increment 18.
-  Evidence: `README.md` gains "Run the exceptions demo" (the `clarify` step, `exceptions-demo`, `clarify list`, `clarify answer` with `--text` or `--file`, `clarify close`, replay and live mode), "Clarification datasets" (sizes, splits and the five build steps, audit pending), the two new evaluations with their baseline tables in "Run the evaluation", a phase 04 status line, and the phase 04 limits.
+  Evidence: `README.md` gains "Run the exceptions demo" (the `clarify` step, `exceptions-demo`, `clarify list`, `clarify answer` with `--text` or `--file`, `clarify close`, replay and live mode), "Clarification datasets" (sizes, splits and the five build steps; the audit step now states its result), the two new evaluations with their baseline tables in "Run the evaluation", a phase 04 status line, and the phase 04 limits.
   The detection table states the thresholds at the measured level by the owner decision on deviation 04.1 and links change 001; the limits add the spec's known limitations, the extractor limitation, the 4 generic-hint lines of increment 10 accepted by the owner as a recorded limitation, and C15 pending until about 2026-11-05.
   Commands run as documented in replay: `seed`, `exceptions-demo`, `clarify list`, `clarify answer <thread_id> --file ...` (order 1 and reply), `clarify close <thread_id>` (order 2, unanswered lines listed), a second `clarify close` failing with "not pending", `clarification-dataset check`, `eval --suite clarification_detection` and `--suite clarification_answers` (PASS) and `npm run eval` (five suites, exit 0); the live forms were not run in this increment (no live calls); the clean-clone follow-through is increment 18.
 - [x] 17. Secret scan of the new recordings, sample inputs, dataset, audit and baseline files, asserting they are tracked (C16) - check: `tests/test_secrets.py` gains a phase 04 test.
@@ -181,8 +181,12 @@ This file is the durable state: a new session resumes from here and from Git.
   When unblocked: `eval-upload` for both suites, live demo and live evaluations with tracing on, links and the owner's screenshot as evidence.
 
 ### Closing
-- [ ] 20. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` and the five replay evaluations after the fixes.
-- [ ] 21. Results per criterion in the table below, master plan row 04 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+- [x] 20. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` and the five replay evaluations after the fixes.
+  Evidence: two rounds on the local backend, recorded in the table below: round 1 over `037f66d..428e49b` with four lenses (correctness, security, spec consistency, evidence), round 2 over `428e49b..f04a4ac` with one lens on the fixes; every finding is fixed with a regression test or decided by the owner (F4 and the answer controls, option A on 2026-10-08), and none is open.
+  After the last fix (`f6b4db8`), `npm run check` exits 0 with 323 passed and the five replay evaluations PASS (`.evidence/fase-04/check-close.txt`).
+  No Mistakes pending: the binary is not installed, so the local pipeline was used and no gate is claimed.
+- [x] 21. Results per criterion in the table below, master plan row 04 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+  Evidence: results table, open items and candidate learnings below; master plan row 04 set to delivered for review with C15 pending; README status and audit lines brought up to date; live demo re-run after `plain_question` and the F4 note (`.evidence/fase-04/demo-live.txt`); branch pushed and PR to `main` opened, not merged.
 The phase can be ready locally with C12 or C15 pending, but it does not close until both are met.
 
 ## Deviations
@@ -204,6 +208,10 @@ Pending, out of scope for phase 04: the `check:puerta` stop hook times out at 12
 | 2 | Local | `428e49b..f04a4ac` | security | R2-1 (important, C8 C9): `save_clarification` upserted the round 2 question with `status = 'pending'` and no guard, so a thread another process closed or answered after the CLI pending check was reopened and a later answer stored a second order | Confirmed with a replay repro (2 orders), fixed: the round 2 update only touches a pending row and raises `NotPending`, the CLI prints not pending, nothing changed; regression `test_round_two_question_does_not_reopen_a_thread_closed_meanwhile` |
 | 2 | Local | `428e49b..f04a4ac` | correctness | R2-2 (minor): `ask` and `interpret` caught every exception, hiding programming errors, and `ask` read `before_answer` without a default | Fixed: both catch only `STEP_FAILURES` (missing recording, invalid model output, invalid question, invalid answer, Anthropic API error); `before_answer` defaults to empty; F1 regressions still pass |
 | 2 | Local | `428e49b..f04a4ac` | spec consistency | R2-3 (minor): the scope and limitation lines on ambiguous doubts lacked the "none singled out" qualifier of amended C3 | Fixed: wording aligned with C3; no criterion changed |
+| 2 | Local | `428e49b..f04a4ac` | dependencies | Note on the R2-2 fix: `clarification.py` now imports `anthropic.APIError` directly; `anthropic` (1.11.0 in `uv.lock`) was already installed as a dependency of `langchain-anthropic`, so it is a transitive dependency now used directly | Recorded, not declared: the spec forbids new dependencies, `pyproject.toml` and `uv.lock` are unchanged, and the version follows `langchain-anthropic`; declaring it would be a separate owner decision |
+
+No finding is open; no Critical or High security finding was raised in the range.
+No Mistakes pending: the binary is not installed; both rounds used the local pipeline.
 
 ## Results
 Per criterion: command or path run, observed result and evidence reference.
@@ -211,6 +219,44 @@ Pending items, limitations and what could not be checked, stated plainly.
 
 | Criterion | Result | Evidence |
 |---|---|---|
+| C1 | Met: fresh clone at `f6b4db8` (after the last review fix) with every Anthropic, LangSmith and LangChain variable unset and no `.env`; `uv sync`, `npm ci` and `npm run check` exit 0 with 323 passed, `npm run eval` replays the five suites with every gate PASS in 19 s, and `exceptions-demo` in replay pauses both samples (2 pending); the clone stays clean | `.evidence/fase-04/fresh-clone-close.txt`; earlier run at `dbf06be` in `.evidence/fase-04/fresh-clone.txt` |
+| C2 | Met: a no-doubt submission and a no-doubt email make 0 clarification calls, never pause, and store the phase 02 and 03 rows and byte-identical replies | `tests/test_clarification_graph.py::test_clear_submission_goes_through_clarify_like_phase_02`, `::test_clear_email_goes_through_clarify_like_phase_03` |
+| C3 | Met with the rule amended by the owner (deviation 04.1, Q1=A): ambiguous with candidates also on lines with a SKU, unknown, over-ceiling and unsupported quantity, nothing for a clear line | `tests/test_clarification.py` (rule tests per doubt type and channel, increments 2 and 14) |
+| C4 | Met: an order with a doubt ends paused with the question in the state, one pending `clarifications` row and 0 rows in `orders` and `order_lines` | `tests/test_clarification_graph.py::test_order_with_doubts_pauses_with_question_and_no_order` |
+| C5 | Met: a recorded question missing a doubtful line or a candidate name stops before the pause; printed and stored questions are plain ASCII | `tests/test_clarification_graph.py::test_question_missing_a_line_stops_before_the_pause`; `tests/test_clarification.py` (question check, `plain_question`) |
+| C6 | Met: the order pauses in one subprocess, which exits, and resumes with `clarify answer` in further subprocesses (two rounds, network blocked) with the expected rows and reply | `tests/test_clarify_cli.py::test_paused_thread_resumes_from_a_new_process`; `tests/test_exceptions_demo.py` |
+| C7 | Met, including the answer controls added by owner decision A: a missing or repeated line, a foreign SKU, a non-positive quantity, a quantity above 500 and, on an ambiguous line, a SKU outside its candidates are rejected, write nothing and leave the thread pending, answerable and closable; replay, record and live modes through the existing client | `tests/test_clarification.py`; `tests/test_clarification_graph.py::test_invalid_answer_stops_with_no_rows`, `::test_answer_above_the_ceiling_or_outside_the_candidates_waits_again`, `::test_unreadable_answer_leaves_the_thread_answerable`; `tests/test_llm.py`; live in `.evidence/fase-04/demo-live.txt` |
+| C8 | Met: a second question for lines still unclear; clear and resolved lines stored in one transaction; the reply lists removed and unresolved lines with the customer text and, after an answer, the F4 note on new products | `tests/test_clarification_graph.py::test_two_rounds_store_resolved_lines_and_list_the_rest`, `::test_store_and_status_change_share_one_transaction`, `::test_reply_after_an_answer_says_new_products_are_ignored` |
+| C9 | Met: `clarify list` shows channel, customer, round and age; `clarify close` stores the clear lines, lists the rest as unanswered and marks the row closed; answering or closing a thread that is not pending, also when another process finished it after the check, fails and changes nothing | `tests/test_clarify_cli.py` (list, close, not pending, and the race regressions of review rounds 1 and 2) |
+| C10 | Met: replay with no key and the network blocked runs in `check`; live against Claude Haiku 4.5 on 2026-10-08 after the last fix, tracing off: the demo printed the doubts, ASCII questions and thread ids of both samples and stopped, then `clarify answer --mode live` on each thread, as separate processes, printed the interpretation, orders 3 and 4 and replies ending with the F4 note; `clarify list` then showed none pending; about 0.03 USD at Haiku 4.5 prices | `tests/test_exceptions_demo.py`; `.evidence/fase-04/demo-replay.txt`; `.evidence/fase-04/demo-live.txt` |
+| C11 | Met: detection 200 orders (100 web form, 100 email), 620 lines, 70 lines per doubt type, 64 no-doubt orders, 50 dev and 150 test; answers 210 cases, 35 per category, 54 dev and 156 test; every item passes validation; the same seed gives the same plans; second pass with every disagreement decided | `tests/test_clarification_dataset.py`, `tests/test_second_pass_review.py`; `.evidence/fase-04/dataset-build.txt` |
+| C12 | Met: owner audit of 40 items, 1 wrong label, error rate 2.5%, 95% Wilson interval [0.4%, 12.9%], PASS | `evals/audit/clarification-audit-v1.0.csv`; `.evidence/fase-04/audit-report.txt` |
+| C13 | Met: `npm run eval` replays the five evaluations with metrics and 95% Wilson intervals globally, per channel and per category; each new gate forced to fail exits non-zero | `.evidence/fase-04/check-close.txt`; `tests/test_clarification_eval.py` |
+| C14 | Met at the measured level by owner decision on deviation 04.1: answers resolution accuracy 99.5% [97.2, 99.9] n=195 against the 95% rule; detection gated at the measured recall, ambiguous 89.1% (49/55), unknown 94.3% (50/53), quantity 91.3% (42/46), and false question rate 0.0% (at most 5%); both baselines stored with per-item results | `evals/baselines/clarification_detection.json`, `evals/baselines/clarification_answers.json`; `.evidence/fase-04/eval-test-baseline.txt`, `eval-test-detection-baseline.txt` |
+| C15 | Pending, not met: the LangSmith trace of a live demo with the pause and the resumption and the experiments of both new evaluations need the trace quota, exhausted until about 2026-11-05 (increment 19) | None yet |
+| C16 | Met: the phase 04 recordings, baselines, audit, sample inputs and dataset files are tracked and hold no key or auth header, also in decoded `.eml` text | `tests/test_secrets.py::test_phase_04_files_are_tracked_and_their_decoded_text_holds_no_keys` |
+| C17 | Met: the README phase 04 sections were followed in a clean clone in replay, and the live forms were run in the working copy (C10); status and audit lines updated at closing | `.evidence/fase-04/fresh-clone.txt`, `fresh-clone-close.txt`; `README.md` |
+
+Summary: 15 criteria met, C14 met at the measured level by owner decision, and C15 pending; the phase is delivered for review but does not close until C15 is met.
+
+### Open items
+- C15 and increment 19: LangSmith trace and experiments, blocked by the trace quota until about 2026-11-05.
+- The `check:puerta` stop hook times out at 120 s: under concurrent subagent load it fails, and alone it takes about 117 s; at closing the pytest run of `npm run check` alone took 158 s; the hook is unchanged, pending an owner decision on a separate change.
+- Change `docs/changes/001-email-extractor-dropped-lines.md`: email lines the phase 03 extractor drops, non-integer quantities rejected by the schema, and purpose clauses that hide ambiguity; it limits detection recall (C14).
+- No Mistakes pending: the binary is not installed, so delivery used the local pipeline and no gate is claimed.
+
+### Limitations
+- Detection gates sit at the measured level (deviation 04.1), below the 95% rule for ambiguous, unknown and quantity recall.
+- The `.claude/hooks` guard, run by `npm run check` as a real process, measures 400 to 510 ms at worst against its 200 ms target (method tooling, not product code); it is reported, not gated.
+- SEC-003, SEC-004 and SEC-007 of `docs/security.md` (undelimited text to the model, echoed customer text, sender identified by `From` only) also apply to the answer channel, since the customer answer reaches the interpreter and the reply the same way.
+- No SAST or dependency scanner is installed; the security review was manual, and SEC-006 already records that no secret scanner such as gitleaks is installed.
+- `anthropic` is imported directly in `clarification.py` while it is only declared through `langchain-anthropic` (review table).
+- The 4 generic-hint lines of increment 10, accepted by the owner as a recorded limitation, and the known limitations of the spec are listed in the README limits.
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
+
+Candidates for the owner to accept or drop at the learning pass; none is applied yet.
+- A pending check before a resume is not enough under concurrency: every status change guards on the pending status in the same statement and fails otherwise (review round 1 F2, "concurrent `clarify answer` calls stored 3 orders for one thread", and round 2 R2-1, "a later answer stored a second order"); candidate for the security lens of `sdd-review`.
+- A failure after an `interrupt` resume must route back to the wait instead of raising, or the checkpoint moves past the pause (increment 5 fix and review F1, "later answers and `clarify close` replayed the stale answer"); candidate for a LangGraph note in the project skills.
+- Re-run live and fresh-clone evidence after the last fix of the range, not only in the increment that first produced it (at closing, `demo-live.txt` predated `plain_question` and the F4 note); `sdd-delivery` step 2 already says so, so at most a gotcha line.
