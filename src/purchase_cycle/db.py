@@ -41,6 +41,16 @@ CREATE TABLE IF NOT EXISTS order_lines (
     sku TEXT NOT NULL REFERENCES products (sku),
     quantity INTEGER NOT NULL CHECK (quantity > 0)
 );
+CREATE TABLE IF NOT EXISTS clarifications (
+    thread_id TEXT PRIMARY KEY,
+    channel TEXT NOT NULL,
+    customer_code TEXT NOT NULL REFERENCES customers (code),
+    question TEXT NOT NULL,
+    round INTEGER NOT NULL CHECK (round > 0),
+    status TEXT NOT NULL CHECK (status IN ('pending', 'answered', 'closed')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")

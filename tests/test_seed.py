@@ -22,6 +22,27 @@ def test_seed_creates_tables_and_catalog(tmp_path):
     assert conn.execute("SELECT COUNT(*) FROM products WHERE sterile = 1").fetchone()[0] > 0
 
 
+def test_seed_creates_empty_clarifications_table(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    counts = db.seed(conn)
+    columns = [r["name"] for r in conn.execute("PRAGMA table_info(clarifications)")]
+    assert columns == [
+        "thread_id",
+        "channel",
+        "customer_code",
+        "question",
+        "round",
+        "status",
+        "created_at",
+        "updated_at",
+    ]
+    assert conn.execute("SELECT COUNT(*) FROM clarifications").fetchone()[0] == 0
+    # the existing tables and the seed summary are unchanged
+    assert set(counts) == {"customers", "products", "stock", "orders", "order_lines"}
+    assert (counts["orders"], counts["order_lines"]) == (0, 0)
+    assert counts["stock"] == counts["products"]
+
+
 def test_seed_is_idempotent(tmp_path):
     conn = db.connect(tmp_path / "seed.db")
     first = db.seed(conn)

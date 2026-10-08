@@ -6,12 +6,12 @@ any sentence exists, so labels are decided by construction.
 
 import json
 import random
-import re
 from collections import defaultdict
 from difflib import SequenceMatcher
 from pathlib import Path
 
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
+from purchase_cycle.quantities import has_number, pack_size
 
 DATASET_VERSION = "1.0"
 SEED = 20261006
@@ -89,18 +89,6 @@ OUT_OF_CATALOG_ITEMS = (
     "massage tables",
     "scrubs uniforms",
 )
-
-PACK_SIZE = re.compile(r"\bof (\d+)\b")
-
-
-def has_number(text: str, number: int) -> bool:
-    """True when the number appears in the text as a standalone figure."""
-    return re.search(rf"(?<![\d.,]){number}(?![\d]|[.,]\d)", text) is not None
-
-
-def pack_size(sale_unit: str) -> int | None:
-    match = PACK_SIZE.search(sale_unit)
-    return int(match.group(1)) if match else None
 
 
 def _siblings():

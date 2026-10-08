@@ -1,6 +1,6 @@
 # Phase 04 - Exceptions: plan and results
 
-Status: planned; execution has not started (the master plan row becomes "in progress" when batch A starts)
+Status: in progress; batch A started
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-08)
 Base: branch `fase-04-excepciones` from `main` at commit `037f66d`; the spec was frozen in `ff4f2ec`.
 
@@ -46,7 +46,8 @@ Each increment leaves the product working and covers concrete criteria.
 This file is the durable state: a new session resumes from here and from Git.
 
 ### Batch A - Rules, candidates and model tasks (no live calls)
-- [ ] 1. `clarifications` table in the schema, quantity helpers moved to a runtime module, candidate search over catalog names (C3, C4) - check: `tests/test_seed.py` sees the new empty table and unchanged counts for the existing ones; new `tests/test_clarification.py` covers the candidate search ("nitrile gloves" gives the five `GLV-NIT` sizes, at most 6 candidates, an unknown text gives none); `tests/test_email_dataset.py` and `tests/test_dataset.py` pass unchanged after the helper move.
+- [x] 1. `clarifications` table in the schema, quantity helpers moved to a runtime module, candidate search over catalog names (C3, C4) - check: `tests/test_seed.py` sees the new empty table and unchanged counts for the existing ones; new `tests/test_clarification.py` covers the candidate search ("nitrile gloves" gives the five `GLV-NIT` sizes, at most 6 candidates, an unknown text gives none); `tests/test_email_dataset.py` and `tests/test_dataset.py` pass unchanged after the helper move.
+  Evidence: helpers in `purchase_cycle/quantities.py` (`has_number`, `pack_size`, plus `stated_numbers` and `supports_quantity` for increment 2); `pytest -q tests/test_clarification.py tests/test_seed.py tests/test_dataset.py tests/test_email_dataset.py` 57 passed; `npm run check` exit 0 with 220 passed.
 - [ ] 2. Doubt rules: ambiguous with candidates, unknown, doubtful quantity over 500 and unsupported by the email source text (digits, number words, dozens, pack conversion), nothing for a clear line (C3) - check: pytest per rule over fixture lines of both channels, shaped like the real `match` and `extract` output.
 - [ ] 3. Model tasks `CLARIFICATION_QUESTION` and `CLARIFICATION_ANSWER` with instructions, schemas, tools and recordings files, plus the question check and the answer checks as pure functions (C5, C7) - check: `tests/test_llm.py` cases for both tasks in replay with hand-written recordings in a temporary file, schema-invalid answers included; check tests reject a question missing a line or a candidate name, and answers with a missing or repeated line, a foreign SKU or a non-positive quantity; `uv run purchase-cycle eval --mode replay --split test` passes the three existing suites and `git diff --stat evals/recordings` is empty.
 
