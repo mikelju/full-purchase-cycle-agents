@@ -249,6 +249,12 @@ def _resume(args, received: dict) -> int:
         saved = clients.question.save_recordings() + clients.answer.save_recordings()
     print(f"mode={args.mode}  thread_id={args.thread_id}  channel={row['channel']}  customer={row['customer_code']}")
     paused = state.get("__interrupt__")
+    if paused and paused[0].value.get("rejected"):
+        print(
+            f"Error: {paused[0].value['rejected']}; nothing changed, the thread still waits for an answer",
+            file=sys.stderr,
+        )
+        return 1
     resolutions = state.get("resolutions")
     if paused:
         resolutions = graph.get_state(run_config, subgraphs=True).tasks[0].state.values.get("resolutions")

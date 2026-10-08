@@ -206,3 +206,21 @@ def test_paused_thread_resumes_from_a_new_process(seeded_db, write_recording, tm
     orders, lines, pending = _rows(db_path)
     assert [(line["sku"], line["quantity"]) for line in lines] == [("GLV-NIT-M", 40), ("GLV-NIT-L", 10)]
     assert pending[0]["status"] == "answered"
+
+
+def test_answer_failing_its_checks_leaves_the_thread_answerable(
+    paused, seeded_db, write_recording, tmp_path, capsys, no_network
+):
+    _, catalog = seeded_db
+    doubts = detect(_form_lines(catalog), catalog, "web_form")
+    bad = [RESOLUTIONS_1[0], {"line_id": 3, "action": "set", "sku": "BED-1", "quantity": 1}]
+    _record_round(catalog, write_recording, doubts, QUESTION_1, "Size L, and a bed.", bad)
+    assert _run(tmp_path, "answer", "web-1", "--text", "Size L, and a bed.") == 1
+    assert "SKU 'BED-1' is not in the catalog" in capsys.readouterr().err
+    assert _rows(paused)[:2] == ([], [])
+    assert _run(tmp_path, "list") == 0
+    assert "web-1  channel=web_form  customer=CLI-002  round=1" in capsys.readouterr().out
+    assert _run(tmp_path, "answer", "web-1", "--text", ANSWER_1) == 0
+    out = capsys.readouterr().out
+    assert "line 2: set GLV-NIT-L x 10\n  line 3: remove\n  line 4: unclear" in out
+    assert f"new question (round 2):\n{QUESTION_2}" in out

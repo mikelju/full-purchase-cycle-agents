@@ -201,6 +201,7 @@ class ClarificationState(TypedDict, total=False):
     removed: list[dict]
     unresolved: list[dict]
     clarification: str | None
+    rejected: str | None
 
 
 def settle(lines: list[dict], resolutions: list[dict], open_doubts: list[dict]) -> tuple[list, list, list]:
@@ -267,10 +268,18 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
 
     def wait(state: ClarificationState) -> ClarificationState:
         # Resumed with {"answer": text} or {"close": True}; the question was drafted before the pause.
-        received = interrupt({"question": state["question"], "round": state["round"], "doubts": state["doubts"]})
+        # `rejected` holds why the previous answer failed its checks; the same question waits again.
+        received = interrupt(
+            {
+                "question": state["question"],
+                "round": state["round"],
+                "doubts": state["doubts"],
+                "rejected": state.get("rejected"),
+            }
+        )
         if received.get("close"):
-            return {"closed": True}
-        return {"answer": received["answer"]}
+            return {"closed": True, "rejected": None}
+        return {"answer": received["answer"], "rejected": None}
 
     def interpret(state: ClarificationState, config: RunnableConfig) -> ClarificationState:
         if state.get("closed"):
@@ -278,7 +287,11 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
         thread_id = config["configurable"]["thread_id"]
         message = answer_message(state["doubts"], state["question"], state["answer"])
         read = clients.answer.extract(message, case_id=f"{thread_id}-answer-{state['round']}")
-        check_resolutions(read.resolutions, state["doubts"], catalog)
+        try:
+            check_resolutions(read.resolutions, state["doubts"], catalog)
+        except InvalidAnswer as error:
+            # Nothing is written; the run stops paused on the same question, so the thread stays answerable.
+            return {"rejected": str(error)}
         return {"resolutions": state.get("resolutions", []) + [r.model_dump() for r in read.resolutions]}
 
     builder = StateGraph(ClarificationState)
@@ -290,5 +303,5 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
     builder.add_conditional_edges("detect", lambda s: "ask" if "unresolved" not in s else END, ["ask", END])
     builder.add_edge("ask", "wait")
     builder.add_edge("wait", "interpret")
-    builder.add_edge("interpret", "detect")
+    builder.add_conditional_edges("interpret", lambda s: "wait" if s.get("rejected") else "detect", ["wait", "detect"])
     return builder.compile(name="clarification")

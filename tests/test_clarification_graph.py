@@ -8,7 +8,6 @@ from purchase_cycle import db
 from purchase_cycle.catalog import CUSTOMERS
 from purchase_cycle.clarification import (
     ClarificationClients,
-    InvalidAnswer,
     InvalidQuestion,
     answer_message,
     detect,
@@ -222,10 +221,12 @@ def test_invalid_answer_stops_with_no_rows(seeded_db, write_recording, tmp_path)
     recordings = _record_round(catalog, write_recording, doubts, QUESTION_1, ANSWER_1, bad)
     graph = _form_graph(seeded_db, recordings, tmp_path, _clients(catalog, recordings))
     graph.invoke({"submission": DOUBT_FORM}, RUN)
-    with pytest.raises(InvalidAnswer, match="SKU 'BED-1' is not in the catalog; line 4 is not answered"):
-        graph.invoke(Command(resume={"answer": ANSWER_1}), RUN)
+    state = graph.invoke(Command(resume={"answer": ANSWER_1}), RUN)
+    waiting = state["__interrupt__"][0].value
+    assert "SKU 'BED-1' is not in the catalog; line 4 is not answered" in waiting["rejected"]
+    assert (waiting["question"], waiting["round"]) == (QUESTION_1, 1)
     orders, lines, pending = _rows(db_path)
-    assert (orders, lines, pending[0]["status"]) == ([], [], "pending")
+    assert (orders, lines, pending[0]["status"], pending[0]["round"]) == ([], [], "pending", 1)
 
 
 def test_two_rounds_store_resolved_lines_and_list_the_rest(seeded_db, write_recording, tmp_path, no_network):
