@@ -10,12 +10,13 @@ import re
 from pathlib import Path
 from typing import NamedTuple, TypedDict
 
+from anthropic import APIError
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
 from purchase_cycle import db
-from purchase_cycle.llm import ModelClient
+from purchase_cycle.llm import InvalidModelOutput, MissingRecording, ModelClient
 from purchase_cycle.quantities import NUMBER_WORDS, supports_quantity
 from purchase_cycle.web_form import match_key
 
@@ -231,6 +232,10 @@ def check_resolutions(resolutions: list, doubts: list[dict], catalog: list) -> N
         raise InvalidAnswer("Clarification answer rejected: " + "; ".join(errors))
 
 
+# Failures of one model step that leave the thread waiting; any other error is a defect and stops the run.
+STEP_FAILURES = (MissingRecording, InvalidModelOutput, InvalidQuestion, InvalidAnswer, APIError)
+
+
 class ClarificationClients(NamedTuple):
     """Model clients of the clarify step: one drafts the question, one reads the answer."""
 
@@ -312,13 +317,13 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
                 doubts_message(state["doubts"]), case_id=f"{thread_id}-question-{rounds}"
             )
             check_question(drafted.question, state["doubts"])
-        except Exception as error:
+        except STEP_FAILURES as error:
             if rounds == 1:
                 raise  # nothing is paused yet, so the run stops with nothing written
             # The answer that led here is undone and the previous question waits again, so the thread
             # stays answerable and closable instead of resting on a question never sent.
             return {
-                **state["before_answer"],
+                **state.get("before_answer", {}),
                 "rejected": f"Clarification answer not applied, the next question could not be drafted: {error}",
             }
         conn = db.connect(db_path)
@@ -355,7 +360,7 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
         try:
             read = clients.answer.extract(message, case_id=f"{thread_id}-answer-{state['round']}")
             check_resolutions(read.resolutions, state["doubts"], catalog)
-        except Exception as error:
+        except STEP_FAILURES as error:
             # A rejected answer, an invalid model output, a missing recording or a model error writes nothing;
             # the run stops paused on the same question, so the thread stays answerable and closable.
             reason = str(error) if isinstance(error, InvalidAnswer) else f"Clarification answer not read: {error}"

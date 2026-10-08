@@ -141,14 +141,20 @@ def order_line_details(conn: sqlite3.Connection, order_id: int) -> list[dict]:
 def save_clarification(
     conn: sqlite3.Connection, thread_id: str, channel: str, customer_code: str, question: str, round_: int
 ) -> None:
-    """Record the pending question of a thread; a later round replaces the question and the round."""
+    """Record the pending question of a thread; a later round replaces the question and the round.
+
+    A later round only updates a row that is still pending, so a thread another process closed or answered
+    meanwhile is not reopened; it raises NotPending and nothing changes.
+    """
     with conn:
-        conn.execute(
+        cursor = conn.execute(
             "INSERT INTO clarifications (thread_id, channel, customer_code, question, round, status) "
             "VALUES (?, ?, ?, ?, ?, 'pending') ON CONFLICT (thread_id) DO UPDATE SET question = excluded.question, "
-            "round = excluded.round, status = 'pending', updated_at = datetime('now')",
+            "round = excluded.round, updated_at = datetime('now') WHERE clarifications.status = 'pending'",
             (thread_id, channel, customer_code, question, round_),
         )
+    if cursor.rowcount == 0:
+        raise NotPending(f"thread {thread_id} is not pending; nothing changed")
 
 
 class NotPending(RuntimeError):

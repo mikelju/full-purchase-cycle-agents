@@ -136,6 +136,27 @@ def test_thread_finished_by_another_process_after_the_check_stores_nothing(pause
     assert (orders, lines, pending[0]["status"]) == ([], [], "answered")
 
 
+def test_round_two_question_does_not_reopen_a_thread_closed_meanwhile(paused, tmp_path, capsys, monkeypatch):
+    checked = cli._pending_row
+
+    def closed_after_check(args):
+        row = checked(args)
+        # Another process closes the thread and stores its order after the pending check.
+        conn = db.connect(paused)
+        db.insert_order(conn, "CLI-002", "web_form", "received", [("GLV-NIT-M", 40)], (args.thread_id, "closed"))
+        conn.close()
+        return row
+
+    monkeypatch.setattr(cli, "_pending_row", closed_after_check)
+    assert _run(tmp_path, "answer", "web-1", "--text", ANSWER_1) == 1
+    assert "thread web-1 is not pending; nothing changed" in capsys.readouterr().err
+    monkeypatch.setattr(cli, "_pending_row", checked)
+    assert _run(tmp_path, "answer", "web-1", "--text", ANSWER_2) == 1
+    assert "thread web-1 is not pending (status closed); nothing changed" in capsys.readouterr().err
+    orders, _, pending = _rows(paused)
+    assert (len(orders), pending[0]["status"], pending[0]["round"]) == (1, "closed", 1)
+
+
 def test_answer_from_a_file_prints_interpretation_order_and_reply(paused, tmp_path, capsys, no_network):
     answer = tmp_path / "answer.txt"
     answer.write_text(EMAIL_ANSWER + "\n", encoding="utf-8")
