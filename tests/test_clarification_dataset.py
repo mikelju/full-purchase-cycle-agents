@@ -1,11 +1,15 @@
 import copy
+import csv
 from argparse import Namespace
 from collections import Counter
+
+import pytest
 
 from purchase_cycle.catalog import PRODUCTS
 from purchase_cycle.clarification import candidate_search
 from purchase_cycle.evaluation import clarification_dataset as cd
-from purchase_cycle.evaluation.planning import write_jsonl
+from purchase_cycle.evaluation.planning import read_jsonl, write_jsonl
+from purchase_cycle.evaluation.stats import wilson_interval
 from purchase_cycle.quantities import NUMBER_WORDS
 
 
@@ -318,3 +322,59 @@ def test_versioned_datasets_are_the_build_of_the_versioned_texts(tmp_path):
         versioned = {k: v for k, v in _snapshot(directory).items() if k in built or k.startswith("emails")}
         assert built == versioned
         assert "dataset.jsonl" in built
+
+
+# ---------- owner audit (increment 11) ----------
+
+
+def _read_audit(path):
+    with path.open(encoding="utf-8-sig", newline="") as fh:
+        return list(csv.DictReader(fh, delimiter=";"))
+
+
+def _audit_file(path, wrong: int, pending: int = 0):
+    rows = []
+    for i in range(2 * cd.AUDIT_PER_DATASET):
+        verdict = "" if i < pending else "wrong" if i < pending + wrong else "ok"
+        rows.append(dict.fromkeys(cd.AUDIT_COLUMNS, "") | {"id": f"CLD-{i:04d}", "verdict": verdict})
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=cd.AUDIT_COLUMNS, delimiter=";")
+        writer.writeheader()
+        writer.writerows(rows)
+    return path
+
+
+@pytest.mark.parametrize(("wrong", "code"), [(0, 0), (1, 0), (2, 1)])
+def test_audit_report_passes_with_at_most_one_wrong_label(tmp_path, capsys, wrong, code):
+    assert cd.MAX_WRONG == 1
+    assert cd.report_audit(_audit_file(tmp_path / "audit.csv", wrong)) == code
+    low, high = wilson_interval(wrong, 40)
+    out = capsys.readouterr().out
+    assert f"n=40 wrong labels={wrong} " in out
+    assert f"95% CI [{low:.1%}, {high:.1%}]" in out
+
+
+def test_audit_report_refuses_rows_without_a_verdict(tmp_path):
+    assert cd.report_audit(_audit_file(tmp_path / "audit.csv", 0, pending=1)) == 2
+
+
+def test_audit_create_samples_forty_seeded_items_of_both_datasets_and_never_overwrites(tmp_path):
+    path = tmp_path / "audit.csv"
+    assert cd.create_audit(path) == 0
+    rows = _read_audit(path)
+    assert len(rows) == 40
+    assert Counter(r["dataset"] for r in rows) == {"clarification_detection": 20, "clarification_answers": 20}
+    known = {i["id"] for d in (cd.DETECTION_DIR, cd.ANSWERS_DIR) for i in read_jsonl(d / "dataset.jsonl")}
+    assert {r["id"] for r in rows} <= known and len({r["id"] for r in rows}) == 40
+    assert all(r["verdict"] == "" and r["item_text"] and r["expected_labels"] for r in rows)
+    first = path.read_bytes()
+    assert cd.create_audit(path) == 1 and path.read_bytes() == first
+    second = tmp_path / "again.csv"
+    cd.create_audit(second)
+    assert second.read_bytes() == first
+
+    # The versioned file must be this output; the owner fills verdict and comment, so those are left out.
+    def generated(r):
+        return {k: v for k, v in r.items() if k not in ("verdict", "comment")}
+
+    assert [generated(r) for r in _read_audit(cd.AUDIT_PATH)] == [generated(r) for r in rows]

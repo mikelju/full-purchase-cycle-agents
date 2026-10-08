@@ -5,6 +5,7 @@ writes the texts later, and `check` and `build` validate them with the runtime
 doubt rules, the phase 02 text rules and the phase 03 email renderer.
 """
 
+import csv
 import random
 from collections import Counter
 from datetime import timedelta
@@ -17,6 +18,7 @@ from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
 from purchase_cycle.clarification import (
     AMBIGUOUS,
     FILLER_WORDS,
+    MAX_LINE_QUANTITY,
     QUANTITY,
     UNKNOWN,
     InvalidQuestion,
@@ -37,6 +39,7 @@ from purchase_cycle.evaluation.email_dataset import (
     validate_email,
 )
 from purchase_cycle.evaluation.planning import OUT_OF_CATALOG_ITEMS, read_jsonl, write_jsonl
+from purchase_cycle.evaluation.stats import wilson_interval
 from purchase_cycle.evaluation.web_form_dataset import MAX_CHARS as MAX_FORM_CHARS
 from purchase_cycle.quantities import NUMBER_WORDS, stated_numbers, supports_quantity
 from purchase_cycle.web_form import match_key
@@ -83,6 +86,12 @@ MAX_QUESTION_CHARS = 1500
 
 DETECTION_DIR = EVALS_DIR / "datasets" / "clarification_detection"
 ANSWERS_DIR = EVALS_DIR / "datasets" / "clarification_answers"
+AUDIT_PATH = EVALS_DIR / "audit" / f"clarification-audit-v{DATASET_VERSION}.csv"
+AUDIT_SEED = 40
+AUDIT_PER_DATASET = 20  # 40 items, about proportional to the 200 orders and 210 answer cases
+MAX_WRONG = 1
+AUDIT_COLUMNS = ("id", "dataset", "channel", "category", "item_text", "expected_labels", "verdict", "comment")
+VERDICTS = ("ok", "wrong")
 
 CATALOG = [{"sku": p.sku, "name": p.name, "sale_unit": p.sale_unit} for p in PRODUCTS]
 PRODUCT_BY_SKU = {p.sku: p for p in PRODUCTS}
@@ -579,6 +588,109 @@ def cmd_build(args) -> int:
     return 0
 
 
+# ---------- owner audit ----------
+
+
+def _product(sku: str | None) -> str:
+    product = PRODUCT_BY_SKU.get(sku)
+    return f"{product.sku} {product.name} (sold per {product.sale_unit})" if product else "NOT IN CATALOG"
+
+
+def _detection_label(line: dict) -> str:
+    kind = line["kind"]
+    if kind == "clear":
+        return f"clear -> {_product(line['expected_sku'])} x {line['quantity']}"
+    if kind == "ambiguous":
+        return "ambiguous, ask which of: " + "; ".join(_product(sku) for sku in line["candidates"])
+    if kind == "unknown":
+        return f"unknown, not in the catalog (asked for: {line['requested_item']})"
+    if kind == "over_ceiling":
+        return f"quantity doubt, {line['quantity']} is over {MAX_LINE_QUANTITY} -> {_product(line['expected_sku'])}"
+    return f"quantity doubt, no quantity in sale units -> {_product(line['expected_sku'])}"
+
+
+def _detection_row(order: dict) -> dict:
+    if order["channel"] == EMAIL:
+        text = f"Subject: {order['subject']}\n\n{order['body']}"
+    else:
+        text = "\n".join(f"{line['text']} | quantity {line['quantity']}" for line in order["lines"])
+    labels = [f"{line['line_id']}: {_detection_label(line)}" for line in order["lines"]]
+    return {"category": "has doubt" if order["has_doubt"] else "no doubt", "item_text": text, "expected_labels": labels}
+
+
+def _answer_label(doubt: dict) -> str:
+    expected = doubt["expected"]
+    if expected["action"] == "set":
+        outcome = f"set {_product(expected['sku'])} x {expected['quantity']}"
+    elif expected["action"] == "remove":
+        outcome = "remove the line"
+    else:
+        outcome = "still unclear, ask again"
+    return f"line {doubt['line_id']}: {outcome}"
+
+
+def _answer_row(case: dict) -> dict:
+    lines = []
+    for doubt in case["doubts"]:
+        quantity = "no quantity" if doubt["quantity"] is None else f"quantity {doubt['quantity']}"
+        options = f"; options: {', '.join(doubt['candidates'])}" if doubt["candidates"] else ""
+        lines.append(f"line {doubt['line_id']}: {doubt['text']} | {quantity} | doubt {doubt['kind']}{options}")
+    text = "Lines in doubt:\n" + "\n".join(lines) + f"\n\nQuestion:\n{case['question']}\n\nAnswer:\n{case['answer']}"
+    return {
+        "category": case["category"],
+        "item_text": text,
+        "expected_labels": [_answer_label(d) for d in case["doubts"]],
+    }
+
+
+def create_audit(path: Path = AUDIT_PATH) -> int:
+    if path.exists():
+        print(f"{path} already exists; it may hold the owner's verdicts, so it is not overwritten")
+        return 1
+    rng = random.Random(AUDIT_SEED)
+    rows = []
+    for name, directory, to_row in (
+        ("clarification_detection", DETECTION_DIR, _detection_row),
+        ("clarification_answers", ANSWERS_DIR, _answer_row),
+    ):
+        for item in sorted(
+            rng.sample(read_jsonl(directory / "dataset.jsonl"), AUDIT_PER_DATASET), key=lambda i: i["id"]
+        ):
+            row = to_row(item)
+            row.update(id=item["id"], dataset=name, channel=item["channel"], verdict="", comment="")
+            row["expected_labels"] = "\n".join(row["expected_labels"])
+            rows.append(row)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Semicolons and a BOM so a Spanish-locale Excel opens the columns directly, as in phases 01 to 03.
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=AUDIT_COLUMNS, delimiter=";")
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"Wrote {len(rows)} items ({AUDIT_PER_DATASET} per dataset) -> {path}")
+    return 0
+
+
+def report_audit(path: Path = AUDIT_PATH) -> int:
+    with path.open(encoding="utf-8-sig", newline="") as fh:
+        rows = list(csv.DictReader(fh, delimiter=";"))
+    pending = [r["id"] for r in rows if r["verdict"].strip().lower() not in VERDICTS]
+    if pending:
+        print(f"{len(pending)} rows still without a verdict (ok or wrong), first: {', '.join(pending[:5])}")
+        return 2
+    wrong = [r for r in rows if r["verdict"].strip().lower() == "wrong"]
+    low, high = wilson_interval(len(wrong), len(rows))
+    print(
+        f"clarification audit n={len(rows)} wrong labels={len(wrong)} "
+        f"error rate={len(wrong) / len(rows):.1%}  95% CI [{low:.1%}, {high:.1%}]"
+    )
+    for r in wrong:
+        print(f"  {r['id']} ({r['dataset']}): {r['comment'] or 'no comment'}")
+    if len(wrong) > MAX_WRONG:
+        print(f"FAILED: more than {MAX_WRONG} wrong label in the audit sample")
+        return 1
+    return 0
+
+
 def add_commands(sub) -> None:
     dataset = sub.add_parser("clarification-dataset", help="plan, check and build the phase 04 datasets")
     dsub = dataset.add_subparsers(dest="clarification_dataset_command", required=True)
@@ -593,3 +705,7 @@ def add_commands(sub) -> None:
     build = dsub.add_parser("build", help="validate every text and write the dataset")
     build.add_argument("--dataset", choices=sorted(PLANNERS), required=True)
     build.set_defaults(handler=cmd_build)
+    audit = sub.add_parser("clarification-audit", help="owner audit of the phase 04 dataset labels")
+    asub = audit.add_subparsers(dest="clarification_audit_command", required=True)
+    asub.add_parser("create", help="write the review file").set_defaults(handler=lambda args: create_audit())
+    asub.add_parser("report", help="compute the label error rate").set_defaults(handler=lambda args: report_audit())
