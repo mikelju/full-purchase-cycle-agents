@@ -117,23 +117,53 @@ def _least_used(rng, items, uses: Counter, key):
     return choice
 
 
-class _Picker:
-    """Seeded choice of products, candidate sets and out-of-catalog items, spreading their use."""
+def figure_free_name(sku: str) -> str:
+    """The catalog name of a product without any word that states or holds a number."""
+    words = match_key(PRODUCT_BY_SKU[sku].name).split()
+    return " ".join(w for w in words if not any(c.isdigit() for c in w) and not stated_numbers(w))
 
-    def __init__(self, rng):
+
+@cache
+def named_without_figures(sku: str) -> bool:
+    """Whether a text with no number can name exactly this product, as an unsupported line must."""
+    return _skus(candidate_search(figure_free_name(sku), CATALOG, limit=len(CATALOG))) == [sku]
+
+
+def has_no_candidates(item: str) -> bool:
+    return not candidate_search(item, CATALOG, limit=len(CATALOG))
+
+
+class _Picker:
+    """Seeded choice of products, candidate sets and out-of-catalog items, spreading their use.
+
+    A pick a line cannot be written with is replaced from a separate seeded stream,
+    so the main stream and every other line stay as they were.
+    """
+
+    def __init__(self, rng, seed: int):
         self.rng = rng
         self.uses = Counter()
         self.products = sorted(PRODUCTS, key=lambda p: p.sku)
         self.sets = ambiguity_sets()
+        self.repair_rng = random.Random(f"{seed}:repair")
+        self.repair_uses = Counter()
 
-    def product(self):
-        return _least_used(self.rng, self.products, self.uses, lambda p: p.sku)
+    def _repair(self, choice, items, eligible, key):
+        if eligible(choice):
+            return choice
+        return _least_used(self.repair_rng, [i for i in items if eligible(i)], self.repair_uses, key)
+
+    def product(self, eligible=lambda p: True):
+        key = lambda p: p.sku  # noqa: E731
+        return self._repair(_least_used(self.rng, self.products, self.uses, key), self.products, eligible, key)
 
     def ambiguity(self) -> dict:
         return _least_used(self.rng, self.sets, self.uses, lambda s: "set:" + "|".join(s["candidates"]))
 
     def item(self) -> str:
-        return _least_used(self.rng, OUT_OF_CATALOG_ITEMS, self.uses, lambda i: "item:" + i)
+        key = lambda i: "item:" + i  # noqa: E731
+        choice = _least_used(self.rng, OUT_OF_CATALOG_ITEMS, self.uses, key)
+        return self._repair(choice, OUT_OF_CATALOG_ITEMS, has_no_candidates, key)
 
 
 def _detection_line(rng, picker: _Picker, kind: str, channel: str) -> dict:
@@ -144,6 +174,8 @@ def _detection_line(rng, picker: _Picker, kind: str, channel: str) -> dict:
         line.update(candidates=chosen["candidates"], hint=chosen["hint"])
     elif kind == "unknown":
         line["requested_item"] = picker.item()
+    elif kind == "unsupported":
+        line["expected_sku"] = picker.product(lambda p: named_without_figures(p.sku)).sku
     else:
         line["expected_sku"] = picker.product().sku
     product = PRODUCT_BY_SKU.get(line["expected_sku"])
@@ -173,7 +205,7 @@ def _split(rng, groups: list[list[dict]]) -> None:
 
 def build_detection_plan(seed: int = DETECTION_SEED) -> list[dict]:
     rng = random.Random(seed)
-    picker = _Picker(rng)
+    picker = _Picker(rng, seed)
     strata = []
     for channel in CHANNELS:
         kinds = [kind for kind, count in DOUBT_KINDS[channel] for _ in range(count)]
@@ -268,7 +300,7 @@ def _answer_doubts(rng, picker: _Picker, category: str, channel: str) -> tuple[l
 
 def build_answers_plan(seed: int = ANSWERS_SEED) -> list[dict]:
     rng = random.Random(seed)
-    picker = _Picker(rng)
+    picker = _Picker(rng, seed)
     strata = []
     for category in ANSWER_CATEGORIES:
         group = []

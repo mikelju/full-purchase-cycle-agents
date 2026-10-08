@@ -61,6 +61,31 @@ def test_detection_plan_is_the_same_for_the_same_seed():
     assert cd.build_detection_plan(1) != cd.build_detection_plan()
 
 
+def _unwritable(line: dict, channel: str) -> list[str]:
+    """Why no text can meet a planned line under the runtime rules; empty when one can."""
+    found = lambda text: [c["sku"] for c in candidate_search(text, cd.CATALOG, limit=len(cd.CATALOG))]  # noqa: E731
+    kind, sku = line["kind"], line["expected_sku"]
+    if kind == "unsupported":
+        line = dict(line, line_id=line.get("line_id", "line"))
+        return cd.validate_line_text(line, cd.figure_free_name(sku), channel)
+    if kind == "unknown":
+        return [f"{line['requested_item']} has candidates"] if found(line["requested_item"]) else []
+    if kind == "ambiguous":
+        return [] if found(line["hint"]) == line["candidates"] else [f"{line['hint']} misses its candidates"]
+    return [] if found(cd.PRODUCT_BY_SKU[sku].name) == [sku] else [f"{sku} cannot be named alone"]
+
+
+def test_every_planned_line_is_writable():
+    errors = []
+    for order in cd.build_detection_plan():
+        for line in order["lines"]:
+            errors += _unwritable(line, order["channel"])
+    for case in cd.build_answers_plan():
+        for doubt in case["doubts"]:
+            errors += _unwritable(doubt, case["channel"])
+    assert errors == []
+
+
 def test_answers_plan_meets_the_minimums_with_expected_resolutions():
     plan = cd.build_answers_plan()
     assert len(plan) >= 200
