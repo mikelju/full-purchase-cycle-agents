@@ -90,7 +90,16 @@ This file is the durable state: a new session resumes from here and from Git.
   `build` wrote `clarification_detection/dataset.jsonl` with 200 items (50 dev, 150 test; 100 web form, 100 email) and 100 `.eml` files, and `clarification_answers/dataset.jsonl` with 210 items (54 dev, 156 test; 35 per category); output in `.evidence/fase-04/dataset-build.txt` (local, `.evidence/` is ignored).
   `test_versioned_datasets_are_the_build_of_the_versioned_texts` in `tests/test_clarification_dataset.py` rebuilds both datasets from the versioned plan and texts in a temporary folder and compares `dataset.jsonl` and every `.eml` byte for byte.
   The five email lines rejected after the first writing pass were the planner defect fixed above; their texts were rewritten with the repaired quantities.
-- [ ] 10. Second-pass review by clean-context subagents that see only the catalog and the texts, never the labels, compared with the plans (C11) - check: both `second_pass_review.jsonl` versioned, every disagreement fixed or justified, counts recorded here, a test requires a decision per disagreement.
+- [x] 10. Second-pass review by clean-context subagents that see only the catalog and the texts, never the labels, compared with the plans (C11) - check: both `second_pass_review.jsonl` versioned, every disagreement fixed or justified, counts recorded here, a test requires a decision per disagreement.
+  Evidence: four clean-context reviewers saw only the catalog and the texts; their judgments are versioned in `second_pass_judgments/` of each dataset and compared with `plan.jsonl` in `second_pass_review.jsonl` (first record `counts`, then one `disagreement` record per line and field with `plan`, `review`, `decision` `fixed` or `justified` and `reason`).
+  Detection: 620 lines reviewed, 593 agree, 27 disagree (18 candidate sets, 9 product kinds, 0 SKU, 0 quantity, 0 quantity doubt), 0 fixed and 27 justified.
+  Answers: 264 doubtful lines of 210 cases reviewed, 241 agree, 23 disagree, all category only (14 `pick_description` read as `pick_variant`, 9 the reverse) with the same resolution, SKU and quantity, 0 fixed and 23 justified.
+  Web form quantities are not reviewable blind: the quantity is a form field, not text, so the 35 web form `over_ceiling` lines were judged on the product only.
+  The email reviewer converted item counts to sale units when they divide evenly (800 needles to 8 boxes); the planner stores `items_to_packs` quantities in sale units the same way, and no email quantity disagrees.
+  The reviewers reported about 280 and 340 products; the seed catalog and `data/purchase_cycle.db` both hold the same 303 SKUs, and every SKU the reviewers named is in it.
+  Why no text was rewritten: `check` requires a clear line to use only words of its product name and an ambiguous line to give exactly its planned candidates, so a word that would exclude a value pack, night or XL variant, or narrow a generic hint, is rejected; the 6 attempted rewrites were rejected and reverted.
+  New `tests/test_second_pass_review.py` recomputes the disagreements from the judgments and the plans, requires one record with a decision per disagreement, a reason when justified, and counts that cover every reviewed line.
+  Limitation for C12 and the evaluation report: 4 product disagreements come from generic hints ("single", "free", "cm size", "litre") that the runtime rule calls ambiguous and a human reads as unknown or as the default size.
 - [ ] 11. Audit sample of 40 random items across both datasets and audit report with Wilson interval (C12) - check: `clarification-audit create` writes `evals/audit/clarification-audit-v1.0.csv`; tests for create and report on temporary files.
   Owner action: the owner reviews the 40 items (about 20 minutes, Lavish page as in phases 02 and 03); the executor stops this increment after creating the file and continues with batch E; then `clarification-audit report` goes to `.evidence/fase-04/audit-report.txt`.
   Pass: at most 1 wrong label; more than 1 stops the phase for an owner decision.
@@ -121,6 +130,8 @@ The phase can be ready locally with C12 or C15 pending, but it does not close un
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
+
+Pending, out of scope for phase 04: the `check:puerta` stop hook times out at 120 s under concurrent subagent load and takes about 117 s alone (all checks green); the hook is unchanged.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
