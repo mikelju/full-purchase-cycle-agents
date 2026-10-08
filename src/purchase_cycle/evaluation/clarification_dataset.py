@@ -11,13 +11,35 @@ from datetime import timedelta
 from email.utils import format_datetime
 from functools import cache
 from itertools import combinations
+from pathlib import Path
 
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
-from purchase_cycle.clarification import AMBIGUOUS, FILLER_WORDS, QUANTITY, UNKNOWN, _words, candidate_search
+from purchase_cycle.clarification import (
+    AMBIGUOUS,
+    FILLER_WORDS,
+    QUANTITY,
+    UNKNOWN,
+    InvalidQuestion,
+    _words,
+    candidate_search,
+    check_question,
+    line_doubts,
+)
 from purchase_cycle.config import EVALS_DIR
-from purchase_cycle.evaluation.email_dataset import BASE_DATE, LAYOUTS, _unit
-from purchase_cycle.evaluation.planning import OUT_OF_CATALOG_ITEMS, write_jsonl
-from purchase_cycle.quantities import NUMBER_WORDS
+from purchase_cycle.evaluation.email_dataset import (
+    BASE_DATE,
+    LAYOUTS,
+    _unit,
+    check_rendered,
+    email_key,
+    load_texts,
+    render_email,
+    validate_email,
+)
+from purchase_cycle.evaluation.planning import OUT_OF_CATALOG_ITEMS, read_jsonl, write_jsonl
+from purchase_cycle.evaluation.web_form_dataset import MAX_CHARS as MAX_FORM_CHARS
+from purchase_cycle.quantities import NUMBER_WORDS, stated_numbers, supports_quantity
+from purchase_cycle.web_form import match_key
 
 DATASET_VERSION = "1.0"
 DETECTION_SEED = 20261009
@@ -56,6 +78,8 @@ ANSWER_CATEGORIES = (
 )
 CASES_PER_CATEGORY = 35
 UNCLEAR_STYLES = ("unclear", "off_topic")
+MAX_ANSWER_CHARS = 600
+MAX_QUESTION_CHARS = 1500
 
 DETECTION_DIR = EVALS_DIR / "datasets" / "clarification_detection"
 ANSWERS_DIR = EVALS_DIR / "datasets" / "clarification_answers"
@@ -282,6 +306,233 @@ def cmd_plan(args) -> int:
     return 0
 
 
+# ---------- validation ----------
+
+
+def _skus(found: list[dict]) -> list[str]:
+    return [c["sku"] for c in found]
+
+
+def validate_line_text(line: dict, text: str, channel: str) -> list[str]:
+    """Reasons one written doubtful or clear line breaks its plan, judged by the runtime doubt rules."""
+    lid, kind, sku = line["line_id"], line["kind"], line["expected_sku"]
+    text = (text or "").strip()
+    if not text:
+        return [f"{lid}: planned line text is missing"]
+    if "\n" in text or "\t" in text:
+        return [f"{lid}: line text must be one line"]
+    if channel == WEB_FORM and len(text) > MAX_FORM_CHARS:
+        return [f"{lid}: line text longer than {MAX_FORM_CHARS} characters"]
+    errors = []
+    if sku is not None and _skus(candidate_search(text, CATALOG, limit=len(CATALOG))) != [sku]:
+        errors.append(f"{lid}: text does not name exactly {sku}")
+    if kind == "unsupported" and stated_numbers(text):
+        errors.append(f"{lid}: text states a number, so the quantity is supported")
+    # The line as an ideal matcher or extractor returns it: the planned SKU, or none for a product doubt.
+    ideal = {"product" if channel == WEB_FORM else "source_text": text, "sku": sku, "quantity": line["quantity"] or 1}
+    types, candidates = line_doubts(ideal, CATALOG, channel)
+    if types != EXPECTED_DOUBTS[kind]:
+        errors.append(f"{lid}: the rules raise {types or 'no doubt'}, planned {EXPECTED_DOUBTS[kind] or 'no doubt'}")
+    elif _skus(candidates) != line["candidates"]:
+        errors.append(f"{lid}: candidates {_skus(candidates)} are not the planned {line['candidates']}")
+    return errors
+
+
+def _phase03_view(order: dict) -> dict:
+    """The order as a phase 03 email plan, so its renderer and email checks apply unchanged."""
+    lines = []
+    for line in order["lines"]:
+        trap = {"style": "plain" if line["expected_sku"] else "out_of_catalog"}
+        if "items_requested" in line:
+            trap["items_requested"] = line["items_requested"]
+        lines.append(
+            {
+                "line_id": line["line_id"],
+                "expected_sku": line["expected_sku"],
+                "expected_quantity": line["quantity"] or 1,
+                "unit_style": line["unit_style"],
+                "trap": trap,
+                "location": line["location"],
+            }
+        )
+    return dict(order, lines=lines)
+
+
+def validate_order(order: dict, text: dict) -> list[str]:
+    """Reasons a written detection order is rejected before rendering; empty when it passes."""
+    written = text.get("lines") or {}
+    errors = []
+    for line in order["lines"]:
+        errors += validate_line_text(line, written.get(line["line_id"], ""), order["channel"])
+    extra = sorted(set(written) - {line["line_id"] for line in order["lines"]})
+    if extra:
+        errors.append(f"written lines not in the plan: {', '.join(extra)}")
+    if order["channel"] == EMAIL and not errors:
+        errors += validate_email(_phase03_view(order), text)
+    return errors
+
+
+def order_key(order: dict, text: dict) -> str:
+    if order["channel"] == EMAIL:
+        return email_key(_phase03_view(order), text)
+    return match_key(" ".join(text["lines"][line["line_id"]] for line in order["lines"]))
+
+
+def build_detection(plan: list[dict], texts: dict[str, dict]) -> tuple[list[dict], dict[str, bytes], dict[str, list]]:
+    """Validate every planned order and render the emails; return rows, `.eml` files and rejected ids."""
+    rows, files, rejected, seen = [], {}, {}, {}
+    for order in plan:
+        text = texts.get(order["id"]) or {}
+        errors = validate_order(order, text)
+        if not errors:
+            key = order_key(order, text)
+            if key in seen:
+                errors.append(f"duplicates {seen[key]} after normalisation")
+            seen.setdefault(key, order["id"])
+        if not errors and order["channel"] == EMAIL:
+            data = render_email(_phase03_view(order), text)
+            errors = check_rendered(_phase03_view(order), text, data)
+            files[order["id"]] = data
+        if errors:
+            rejected[order["id"]] = errors
+            continue
+        lines = [dict(line, text=text["lines"][line["line_id"]].strip()) for line in order["lines"]]
+        row = dict(order, lines=lines)
+        if order["channel"] == EMAIL:
+            row.update(subject=text["subject"], body=text["body"], file=f"emails/{order['id']}.eml")
+        else:
+            row["submission"] = {
+                "submission_id": order["id"],
+                "customer_code": order["customer_code"],
+                "lines": [{"product": line["text"], "quantity": line["quantity"]} for line in lines],
+            }
+        rows.append(row)
+    return rows, files, rejected
+
+
+def mentioned_skus(text: str) -> set[str]:
+    """Catalog products a text names by SKU code or full catalog name."""
+    key = f" {match_key(text)} "
+    return {p.sku for p in PRODUCTS if f" {match_key(p.sku)} " in key or f" {match_key(p.name)} " in key}
+
+
+def runtime_doubts(case: dict, written: dict) -> list[dict]:
+    """The doubt records `detect` would hand to the question and answer prompts."""
+    return [
+        {
+            "line_id": doubt["line_id"],
+            "text": written[str(doubt["line_id"])].strip(),
+            "quantity": doubt["quantity"],
+            "sku": doubt["expected_sku"],
+            "types": doubt["types"],
+            "candidates": [{"sku": sku, "name": PRODUCT_BY_SKU[sku].name} for sku in doubt["candidates"]],
+        }
+        for doubt in case["doubts"]
+    ]
+
+
+def validate_case(case: dict, text: dict) -> list[str]:
+    """Reasons a written answer case is rejected; empty when it passes."""
+    written = text.get("lines") or {}
+    errors = []
+    for doubt in case["doubts"]:
+        line = dict(doubt, line_id=f"line {doubt['line_id']}")
+        errors += validate_line_text(line, written.get(str(doubt["line_id"]), ""), case["channel"])
+    question, answer = (text.get("question") or "").strip(), (text.get("answer") or "").strip()
+    if not question or len(question) > MAX_QUESTION_CHARS:
+        errors.append(f"question must have 1 to {MAX_QUESTION_CHARS} characters")
+    if not answer or len(answer) > MAX_ANSWER_CHARS:
+        errors.append(f"answer must have 1 to {MAX_ANSWER_CHARS} characters")
+    if errors:
+        return errors
+    try:
+        check_question(question, runtime_doubts(case, written))
+    except InvalidQuestion as error:
+        errors.append(str(error))
+    named = mentioned_skus(answer)
+    # One answer covers every doubtful line, so it may name any line's candidates or planned product.
+    allowed = {sku for d in case["doubts"] for sku in [*d["candidates"], d["expected_sku"]] if sku}
+    for doubt in case["doubts"]:
+        expected, lid = doubt["expected"], doubt["line_id"]
+        if doubt["kind"] == "ambiguous" and expected["action"] == "set":
+            outside = sorted(named - allowed)
+            if outside:
+                errors.append(f"line {lid}: answer names {', '.join(outside)} outside the candidates")
+            if case["category"] == "pick_description" and expected["sku"] in named:
+                errors.append(f"line {lid}: pick_description answer names the chosen product")
+        elif expected["action"] == "set":
+            sale_unit = PRODUCT_BY_SKU[expected["sku"]].sale_unit
+            if not supports_quantity(answer, expected["quantity"], sale_unit):
+                errors.append(f"line {lid}: answer does not state the quantity {expected['quantity']}")
+        elif expected["action"] == "unclear" and named & set(doubt["candidates"]):
+            errors.append(f"line {lid}: still_unclear answer names a candidate")
+    return errors
+
+
+def build_answers(plan: list[dict], texts: dict[str, dict]) -> tuple[list[dict], dict, dict[str, list]]:
+    """Validate every planned case; return rows, no files and rejected ids with reasons."""
+    rows, rejected, seen = [], {}, {}
+    for case in plan:
+        text = texts.get(case["id"]) or {}
+        errors = validate_case(case, text)
+        if not errors:
+            key = match_key(text["answer"])
+            if key in seen:
+                errors.append(f"answer duplicates {seen[key]} after normalisation")
+            seen.setdefault(key, case["id"])
+        if errors:
+            rejected[case["id"]] = errors
+            continue
+        written = text["lines"]
+        doubts = [dict(d, text=written[str(d["line_id"])].strip()) for d in case["doubts"]]
+        rows.append(dict(case, doubts=doubts, question=text["question"].strip(), answer=text["answer"].strip()))
+    return rows, {}, rejected
+
+
+def build_files(name: str, directory: Path) -> dict[str, list]:
+    """Build one dataset from `plan.jsonl` and `texts/` in its folder; write it only when nothing is rejected."""
+    plan = read_jsonl(directory / "plan.jsonl")
+    rows, files, rejected = BUILDERS[name](plan, load_texts(directory / "texts"))
+    if rejected:
+        return rejected
+    write_jsonl(directory / "dataset.jsonl", rows)
+    if files:
+        (directory / "emails").mkdir(parents=True, exist_ok=True)
+        for item_id, data in files.items():
+            (directory / "emails" / f"{item_id}.eml").write_bytes(data)
+    return {}
+
+
+BUILDERS = {"detection": build_detection, "answers": build_answers}
+
+
+def cmd_check(args) -> int:
+    _, _, directory = PLANNERS[args.dataset]
+    plan = read_jsonl(directory / "plan.jsonl")
+    batch = read_jsonl(Path(args.batch))
+    ids = {row["id"] for row in batch}
+    _, _, rejected = BUILDERS[args.dataset]([item for item in plan if item["id"] in ids], {r["id"]: r for r in batch})
+    unknown = sorted(ids - {item["id"] for item in plan})
+    for item_id in unknown:
+        print(f"{item_id}: not in the plan")
+    for item_id, errors in rejected.items():
+        print(f"{item_id}: {'; '.join(errors)}")
+    print(f"{len(batch)} items checked, {len(rejected) + len(unknown)} rejected")
+    return 1 if rejected or unknown else 0
+
+
+def cmd_build(args) -> int:
+    _, _, directory = PLANNERS[args.dataset]
+    rejected = build_files(args.dataset, directory)
+    for item_id, errors in rejected.items():
+        print(f"{item_id}: {'; '.join(errors)}")
+    if rejected:
+        print(f"{len(rejected)} items rejected; rewrite their texts and build again")
+        return 1
+    print(f"Built {len(read_jsonl(directory / 'dataset.jsonl'))} items -> {directory / 'dataset.jsonl'}")
+    return 0
+
+
 def add_commands(sub) -> None:
     dataset = sub.add_parser("clarification-dataset", help="plan, check and build the phase 04 datasets")
     dsub = dataset.add_subparsers(dest="clarification_dataset_command", required=True)
@@ -289,3 +540,10 @@ def add_commands(sub) -> None:
     plan.add_argument("--dataset", choices=sorted(PLANNERS), required=True)
     plan.add_argument("--seed", type=int, default=None)
     plan.set_defaults(handler=cmd_plan)
+    check = dsub.add_parser("check", help="validate a batch of written texts against the plan")
+    check.add_argument("--dataset", choices=sorted(PLANNERS), required=True)
+    check.add_argument("batch")
+    check.set_defaults(handler=cmd_check)
+    build = dsub.add_parser("build", help="validate every text and write the dataset")
+    build.add_argument("--dataset", choices=sorted(PLANNERS), required=True)
+    build.set_defaults(handler=cmd_build)

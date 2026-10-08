@@ -1,7 +1,12 @@
+import copy
+from argparse import Namespace
 from collections import Counter
 
+from purchase_cycle.catalog import PRODUCTS
 from purchase_cycle.clarification import candidate_search
 from purchase_cycle.evaluation import clarification_dataset as cd
+from purchase_cycle.evaluation.planning import write_jsonl
+from purchase_cycle.quantities import NUMBER_WORDS
 
 
 def test_ambiguity_sets_are_what_their_hint_reaches():
@@ -92,3 +97,175 @@ def test_answers_split_is_stratified_by_category_and_same_for_the_same_seed():
     assert dev == {category: round(0.25 * cd.CASES_PER_CATEGORY) for category in cd.ANSWER_CATEGORIES}
     assert plan == cd.build_answers_plan()
     assert cd.build_answers_plan(1) != plan
+
+
+# ---------- validation and build, with placeholder texts ----------
+
+WORD_FOR = {value: word for word, value in NUMBER_WORDS.items()}
+
+
+def _line_text(line: dict, channel: str) -> str:
+    """Placeholder text: the hint, the requested item or the catalog name, with the planned unit for email."""
+    if line["kind"] == "ambiguous":
+        what = line["hint"]
+    elif line["kind"] == "unknown":
+        what = line["requested_item"]
+    else:
+        what = cd.PRODUCT_BY_SKU[line["expected_sku"]].name
+    if channel == "web_form":
+        return what
+    unit, quantity = line.get("unit_style"), line["quantity"]
+    if unit == "unstated":
+        return f"some {what}"
+    if unit == "items_to_packs":
+        return f"{line['items_requested']} pieces of {what}"
+    if unit == "quantity_words":
+        return f"{WORD_FOR.get(quantity, quantity)} {what}"
+    if unit == "dozen":
+        return f"{quantity // 12} dozen {what}"
+    if unit == "half_dozen":
+        return f"half a dozen {what}"
+    if unit == "couple":
+        return f"a couple of {what}"
+    return f"{quantity} {what}"
+
+
+def _order_text(order: dict) -> dict:
+    lines = {line["line_id"]: _line_text(line, order["channel"]) for line in order["lines"]}
+    text = {"id": order["id"], "lines": lines}
+    if order["channel"] == "email":
+        text["subject"] = f"Order {order['id']}"
+        text["body"] = "Hello,\n\nPlease send:\n" + "\n".join(f"- {t}" for t in lines.values()) + "\n\nThanks"
+    return text
+
+
+def _case_text(case: dict) -> dict:
+    lines = {str(d["line_id"]): _line_text(d, case["channel"]) for d in case["doubts"]}
+    question, answer = [], []
+    for d in case["doubts"]:
+        names = ", ".join(cd.PRODUCT_BY_SKU[sku].name for sku in d["candidates"])
+        question.append(f"Line {d['line_id']} {lines[str(d['line_id'])]}: which one? {names}")
+        expected = d["expected"]
+        if expected["action"] == "remove":
+            answer.append(f"drop line {d['line_id']}")
+        elif expected["action"] == "unclear":
+            answer.append(f"not sure about line {d['line_id']}")
+        elif d["kind"] == "ambiguous" and case["category"] == "pick_description":
+            answer.append(f"line {d['line_id']} option number {d['candidates'].index(expected['sku']) + 1}")
+        elif d["kind"] == "ambiguous":
+            answer.append(f"line {d['line_id']} {cd.PRODUCT_BY_SKU[expected['sku']].name}")
+        else:
+            answer.append(f"line {d['line_id']} make it {expected['quantity']}")
+    joined = "; ".join(answer)
+    return {"id": case["id"], "lines": lines, "question": "\n".join(question), "answer": f"{case['id']}: {joined}"}
+
+
+def _first(items, test):
+    return next(item for item in items if test(item))
+
+
+def _detection_sample() -> list[dict]:
+    """A web form order with doubts, an email with an unstated quantity and a clear email, all passing."""
+    good = [o for o in cd.build_detection_plan() if not cd.validate_order(o, _order_text(o))]
+    return [
+        _first(good, lambda o: o["channel"] == "web_form" and o["has_doubt"]),
+        _first(good, lambda o: o["channel"] == "email" and any(ln["kind"] == "unsupported" for ln in o["lines"])),
+        _first(good, lambda o: o["channel"] == "email" and not o["has_doubt"]),
+    ]
+
+
+def _answers_sample() -> list[dict]:
+    """One passing case per answer category."""
+    good = [c for c in cd.build_answers_plan() if not cd.validate_case(c, _case_text(c))]
+    return [_first(good, lambda c, k=k: c["category"] == k) for k in cd.ANSWER_CATEGORIES]
+
+
+def test_detection_rejects_a_missing_line_a_broken_quantity_rule_and_a_duplicate():
+    web, email, clear = _detection_sample()
+    texts = {o["id"]: _order_text(o) for o in (web, email, clear)}
+    assert cd.build_detection([web, email, clear], texts)[2] == {}
+
+    missing = copy.deepcopy(texts)
+    del missing[web["id"]]["lines"][web["lines"][0]["line_id"]]
+    assert "planned line text is missing" in cd.build_detection([web], missing)[2][web["id"]][0]
+
+    broken = copy.deepcopy(texts)
+    line = _first(email["lines"], lambda ln: ln["kind"] == "unsupported")
+    broken[email["id"]]["lines"][line["line_id"]] = f"7 {cd.PRODUCT_BY_SKU[line['expected_sku']].name}"
+    assert any("states a number" in reason for reason in cd.build_detection([email], broken)[2][email["id"]])
+
+    twin = dict(web, id="CLD-TWIN")
+    copied = dict(texts, **{"CLD-TWIN": dict(texts[web["id"]], id="CLD-TWIN")})
+    rows, _, rejected = cd.build_detection([web, twin], copied)
+    assert [row["id"] for row in rows] == [web["id"]]
+    assert rejected == {"CLD-TWIN": [f"duplicates {web['id']} after normalisation"]}
+
+
+def test_answers_reject_a_missing_line_a_broken_quantity_rule_a_duplicate_and_an_outside_sku():
+    sample = _answers_sample()
+    texts = {c["id"]: _case_text(c) for c in sample}
+    assert cd.build_answers(sample, texts)[2] == {}
+    by_category = {c["category"]: c for c in sample}
+
+    case = by_category["pick_variant"]
+    missing = copy.deepcopy(texts)
+    missing[case["id"]]["lines"] = {}
+    assert any("planned line text is missing" in r for r in cd.build_answers([case], missing)[2][case["id"]])
+
+    doubt = _first(case["doubts"], lambda d: d["kind"] == "ambiguous" and d["expected"]["action"] == "set")
+    outside = _first(PRODUCTS, lambda p: p.sku not in doubt["candidates"])
+    named = copy.deepcopy(texts)
+    named[case["id"]]["answer"] = f"line {doubt['line_id']} {outside.name}"
+    reasons = cd.build_answers([case], named)[2][case["id"]]
+    assert any(f"names {outside.sku} outside the candidates" in r for r in reasons)
+
+    twin = dict(case, id="CLA-TWIN")
+    copied = dict(texts, **{"CLA-TWIN": dict(texts[case["id"]], id="CLA-TWIN")})
+    rejected = cd.build_answers([case, twin], copied)[2]
+    assert rejected == {"CLA-TWIN": [f"answer duplicates {case['id']} after normalisation"]}
+
+    case = by_category["give_quantity"]
+    broken = copy.deepcopy(texts)
+    broken[case["id"]]["answer"] = "just send whatever you think"
+    assert any("does not state the quantity" in r for r in cd.build_answers([case], broken)[2][case["id"]])
+
+
+def _dataset_folder(root, plan: list[dict], texts: list[dict]):
+    write_jsonl(root / "plan.jsonl", plan)
+    write_jsonl(root / "texts" / "batch-01.jsonl", texts)
+    return root
+
+
+def _snapshot(root) -> dict[str, bytes]:
+    return {str(p.relative_to(root)): p.read_bytes() for p in sorted(root.rglob("*")) if p.is_file()}
+
+
+def test_two_builds_write_identical_bytes(tmp_path):
+    for name, sample, text_of in (
+        ("detection", _detection_sample(), _order_text),
+        ("answers", _answers_sample(), _case_text),
+    ):
+        texts = [text_of(item) for item in sample]
+        first = _dataset_folder(tmp_path / name / "first", sample, texts)
+        second = _dataset_folder(tmp_path / name / "second", sample, texts)
+        assert cd.build_files(name, first) == {} and cd.build_files(name, second) == {}
+        assert _snapshot(first) == _snapshot(second)
+        assert len((first / "dataset.jsonl").read_text(encoding="utf-8").splitlines()) == len(sample)
+    assert len(list((tmp_path / "detection" / "first" / "emails").glob("*.eml"))) == 2
+
+
+def test_check_and_build_commands_report_rejections(tmp_path, monkeypatch, capsys):
+    sample = _detection_sample()
+    folder = _dataset_folder(tmp_path / "detection", sample, [_order_text(o) for o in sample])
+    monkeypatch.setitem(cd.PLANNERS, "detection", (cd.build_detection_plan, cd.DETECTION_SEED, folder))
+    bad = dict(_order_text(sample[0]), lines={})
+    write_jsonl(tmp_path / "bad.jsonl", [bad, {"id": "CLD-NONE", "lines": {}}])
+    assert cd.cmd_check(Namespace(dataset="detection", batch=str(tmp_path / "bad.jsonl"))) == 1
+    out = capsys.readouterr().out
+    assert "CLD-NONE: not in the plan" in out and "2 items checked, 2 rejected" in out
+    assert cd.cmd_build(Namespace(dataset="detection")) == 0
+    assert "Built 3 items" in capsys.readouterr().out
+    write_jsonl(folder / "texts" / "batch-01.jsonl", [bad])
+    (folder / "dataset.jsonl").unlink()
+    assert cd.cmd_build(Namespace(dataset="detection")) == 1
+    assert not (folder / "dataset.jsonl").exists()
