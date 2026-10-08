@@ -221,7 +221,7 @@ def test_a_stopped_run_keeps_the_intake_decision_and_counts_no_lines():
     assert not email_eval.grade(_case([], is_order=False), None, [], "unknown sender")["intake_accuracy"]
 
 
-def test_eval_command_runs_three_suites_and_keeps_the_worst_exit(monkeypatch):
+def test_eval_command_runs_every_suite_and_keeps_the_worst_exit(monkeypatch):
     monkeypatch.setattr(harness, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(web_form_eval, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(email_eval, "evaluate", lambda *args, **kwargs: 1)

@@ -19,7 +19,7 @@ Proposed by the coordinator and confirmed by the owner decisions below.
 ## Scope
 In:
 - Doubt detection by deterministic rules over the lines the channel already produced (owner decision 1), with three doubt types:
-  - Ambiguous product: the line has no SKU and its text matches two or more catalog products by a deterministic candidate search over catalog names (for example "nitrile gloves" matches the five sizes of `GLV-NIT`); the candidates, at most 6, travel with the doubt.
+  - Ambiguous product: the line text matches two or more catalog products by a deterministic candidate search over catalog names (for example "nitrile gloves" matches the five sizes of `GLV-NIT`), also when the line already has a SKU (amended 2026-10-08 with C3, owner decision on deviation 04.1); the candidates, at most 6, travel with the doubt.
   - Unknown product: the line has no SKU and the candidate search finds nothing.
   - Doubtful quantity: the quantity is above a fixed ceiling per line, or, for email lines, no number in the source text (digits, number words or dozens) supports the quantity, either as written or converted by the pack size.
 - A question drafted by Claude Haiku 4.5 (owner decision 7) from the doubtful lines and their candidates, addressed to the customer, naming every doubtful line with the text the customer wrote; a deterministic check rejects a question that misses a doubtful line.
@@ -40,7 +40,7 @@ Out:
 - Automatic timeouts and reminders; the simulated clock arrives in phase 06 (owner decision 5).
 - Unknown senders and unknown customer codes: they stay rejected as in phases 02 and 03.
 - New products the customer adds in the answer; they are ignored and the reply says so.
-- Detecting a wrong variant the matcher or extractor picked with confidence (a SKU was returned); only lines with no SKU or a doubtful quantity raise doubts (owner decision 1).
+- Detecting a wrong variant the matcher or extractor picked with confidence (a SKU was returned) when the line text fits a single catalog product or none; such a line raises a doubt only for its quantity (owner decision 1, as amended with C3 by the owner decision on deviation 04.1).
 - Changes to the phase 01 to 03 prompts, recordings, datasets and gates.
 - Stock checks, duplicate protection and retries: phases 05 and 06.
 
@@ -123,7 +123,7 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 ## Known limitations
 - Questions and answers do not travel through a real channel; the answer is delivered by a CLI command.
 - There is no automatic timeout or reminder; an unanswered thread stays paused until an operator closes it.
-- A wrong variant picked with confidence by the matcher or extractor raises no doubt.
+- A wrong variant picked with confidence by the matcher or extractor raises no product doubt when the line text fits a single catalog product or none; a text that fits two or more raises an ambiguous doubt (C3, amended).
 - The candidate search and the extractor send or use the whole catalog, with the same context-window limitation stated in phase 03.
 
 ## Owner decisions (2026-10-08)

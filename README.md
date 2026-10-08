@@ -286,7 +286,7 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - The email extractor sends the whole catalog in the prompt, so it only works while the catalog fits the model's context window; retrieval over the catalog is not implemented.
 - Phase 04 questions and answers do not travel through a real channel: the question is printed and the answer is delivered by the `clarify answer` command.
 - There is no automatic timeout or reminder; an unanswered thread stays paused until an operator runs `clarify close`.
-- A wrong variant picked with confidence by the matcher or the extractor raises no doubt.
+- A wrong variant picked with confidence by the matcher or the extractor raises no product doubt when the line text fits a single catalog product or none.
 - The candidate search and the extractor send or use the whole catalog, with the same context-window limitation as phase 03.
 - Detection inherits the phase 03 extractor limitations: dropped email lines, non-integer quantities rejected by the schema and purpose clauses copied into the line text lose doubts on email orders, so the detection recall thresholds sit at the measured level until change 001 is done.
 - Four detection lines with generic hints ("single", "free", "cm size", "litre") are labelled ambiguous by the runtime rule while a person may read them as unknown or as the default size; the owner accepted them as a recorded limitation of the second pass.

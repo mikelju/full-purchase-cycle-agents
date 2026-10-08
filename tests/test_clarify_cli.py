@@ -8,7 +8,7 @@ import textwrap
 
 import pytest
 
-from purchase_cycle import cli
+from purchase_cycle import cli, db
 from purchase_cycle.clarification import detect
 from test_clarification_graph import (
     ANSWER_1,
@@ -71,6 +71,17 @@ def test_list_shows_pending_threads_with_channel_customer_round_and_age(paused, 
     assert "email-1  channel=email  customer=CLI-002  round=1  age=0h00m" in out
 
 
+def test_list_shows_the_age_of_an_older_thread_in_hours_and_minutes(paused, tmp_path, capsys):
+    conn = db.connect(paused)
+    with conn:
+        conn.execute("UPDATE clarifications SET created_at = datetime('now', '-150 minutes') WHERE thread_id = 'web-1'")
+    conn.close()
+    assert _run(tmp_path, "list") == 0
+    out = capsys.readouterr().out
+    assert "web-1  channel=web_form  customer=CLI-002  round=1  age=2h30m" in out
+    assert out.index("web-1") < out.index("email-1")
+
+
 def test_list_without_pending_threads(seeded_db, tmp_path, capsys):
     assert _run(tmp_path, "list") == 0
     assert "no pending clarifications" in capsys.readouterr().out
@@ -105,6 +116,24 @@ def test_answer_or_close_of_a_thread_not_pending_changes_nothing(paused, tmp_pat
     assert "no clarification found for thread nobody" in capsys.readouterr().err
     assert _run(tmp_path, "close", "nobody") == 1
     assert _rows(paused) == before
+
+
+def test_thread_finished_by_another_process_after_the_check_stores_nothing(paused, tmp_path, capsys, monkeypatch):
+    checked = cli._pending_row
+
+    def finished_after_check(args):
+        row = checked(args)
+        conn = db.connect(paused)
+        with conn:
+            conn.execute("UPDATE clarifications SET status = 'answered' WHERE thread_id = ?", (args.thread_id,))
+        conn.close()
+        return row
+
+    monkeypatch.setattr(cli, "_pending_row", finished_after_check)
+    assert _run(tmp_path, "close", "web-1") == 1
+    assert "thread web-1 is not pending; nothing changed" in capsys.readouterr().err
+    orders, lines, pending = _rows(paused)
+    assert (orders, lines, pending[0]["status"]) == ([], [], "answered")
 
 
 def test_answer_from_a_file_prints_interpretation_order_and_reply(paused, tmp_path, capsys, no_network):

@@ -151,11 +151,21 @@ def save_clarification(
         )
 
 
+class NotPending(RuntimeError):
+    """The clarification is no longer pending, for example another process finished it first."""
+
+
 def finish_clarification(conn: sqlite3.Connection, thread_id: str, status: str) -> None:
-    """Change the status of a clarification row; the caller owns the transaction."""
-    conn.execute(
-        "UPDATE clarifications SET status = ?, updated_at = datetime('now') WHERE thread_id = ?", (status, thread_id)
+    """Change the status of a pending clarification row; the caller owns the transaction.
+
+    Raises NotPending when the row is not pending, so the caller's transaction rolls back and stores nothing.
+    """
+    cursor = conn.execute(
+        "UPDATE clarifications SET status = ?, updated_at = datetime('now') WHERE thread_id = ? AND status = 'pending'",
+        (status, thread_id),
     )
+    if cursor.rowcount == 0:
+        raise NotPending(f"thread {thread_id} is not pending; nothing changed")
 
 
 def get_clarification(conn: sqlite3.Connection, thread_id: str) -> dict | None:

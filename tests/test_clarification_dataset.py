@@ -324,6 +324,11 @@ def test_versioned_datasets_are_the_build_of_the_versioned_texts(tmp_path):
         assert "dataset.jsonl" in built
 
 
+def test_versioned_plans_are_the_seeded_plans():
+    assert read_jsonl(cd.DETECTION_DIR / "plan.jsonl") == cd.build_detection_plan()
+    assert read_jsonl(cd.ANSWERS_DIR / "plan.jsonl") == cd.build_answers_plan()
+
+
 # ---------- owner audit (increment 11) ----------
 
 

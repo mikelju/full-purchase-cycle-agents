@@ -229,6 +229,46 @@ def test_invalid_answer_stops_with_no_rows(seeded_db, write_recording, tmp_path)
     assert (orders, lines, pending[0]["status"], pending[0]["round"]) == ([], [], "pending", 1)
 
 
+def test_unreadable_answer_leaves_the_thread_answerable(seeded_db, write_recording, tmp_path, no_network):
+    db_path, catalog = seeded_db
+    _record_form(catalog, write_recording)
+    doubts = detect(_form_lines(catalog), catalog, "web_form")
+    bad_answer = "Size L, 2.5 boxes."
+    not_whole = [{**RESOLUTIONS_1[0], "quantity": 2.5}, *RESOLUTIONS_1[1:]]
+    _record_round(catalog, write_recording, doubts, QUESTION_1, bad_answer, not_whole)
+    _record_round(catalog, write_recording, doubts, QUESTION_1, ANSWER_1, RESOLUTIONS_1)
+    recordings = _record_round(catalog, write_recording, doubts[2:], QUESTION_2)
+    graph = _form_graph(seeded_db, recordings, tmp_path, _clients(catalog, recordings))
+    graph.invoke({"submission": DOUBT_FORM}, RUN)
+    for answer in (bad_answer, "No recording exists for this text."):
+        waiting = graph.invoke(Command(resume={"answer": answer}), RUN)["__interrupt__"][0].value
+        assert waiting["rejected"].startswith("Clarification answer not read:")
+        assert (waiting["question"], waiting["round"]) == (QUESTION_1, 1)
+        assert _rows(db_path)[2][0]["round"] == 1
+    # The new text is read, not the stale one.
+    second = graph.invoke(Command(resume={"answer": ANSWER_1}), RUN)
+    assert second["__interrupt__"][0].value["question"] == QUESTION_2
+
+
+def test_next_question_failure_undoes_the_answer_and_keeps_the_thread_closable(seeded_db, write_recording, tmp_path):
+    db_path, catalog = seeded_db
+    _record_form(catalog, write_recording)
+    doubts = detect(_form_lines(catalog), catalog, "web_form")
+    _record_round(catalog, write_recording, doubts, QUESTION_1, ANSWER_1, RESOLUTIONS_1)
+    recordings = _record_round(catalog, write_recording, doubts[2:], "Please confirm the small gloves.")
+    graph = _form_graph(seeded_db, recordings, tmp_path, _clients(catalog, recordings))
+    graph.invoke({"submission": DOUBT_FORM}, RUN)
+    waiting = graph.invoke(Command(resume={"answer": ANSWER_1}), RUN)["__interrupt__"][0].value
+    assert "the next question could not be drafted" in waiting["rejected"]
+    assert (waiting["question"], waiting["round"], waiting["doubts"]) == (QUESTION_1, 1, doubts)
+    assert _rows(db_path)[2][0]["round"] == 1
+    state = graph.invoke(Command(resume={"close": True}), RUN)
+    assert "__interrupt__" not in state
+    orders, lines, pending = _rows(db_path)
+    assert lines == [{"order_id": 1, "sku": "GLV-NIT-M", "quantity": 40}]
+    assert pending[0]["status"] == "closed"
+
+
 def test_two_rounds_store_resolved_lines_and_list_the_rest(seeded_db, write_recording, tmp_path, no_network):
     db_path, catalog = seeded_db
     _record_form(catalog, write_recording)
@@ -274,6 +314,22 @@ def test_store_and_status_change_share_one_transaction(seeded_db, write_recordin
         graph.invoke(Command(resume={"answer": ANSWER_2}), RUN)
     orders, lines, pending = _rows(db_path)
     assert (orders, lines, pending[0]["status"]) == ([], [], "pending")
+
+
+def test_finishing_a_thread_that_is_not_pending_rolls_back(seeded_db):
+    db_path, _ = seeded_db
+    conn = db.connect(db_path)
+    try:
+        db.save_clarification(conn, "thread-1", "web_form", "CLI-002", "Which size?", 1)
+        db.insert_order(conn, "CLI-002", "web_form", "received", [("GLV-NIT-M", 1)], ("thread-1", "answered"))
+        with pytest.raises(db.NotPending, match="thread thread-1 is not pending"):
+            db.insert_order(conn, "CLI-002", "web_form", "received", [("GLV-NIT-M", 2)], ("thread-1", "answered"))
+        with pytest.raises(db.NotPending), conn:
+            db.finish_clarification(conn, "thread-1", "closed")
+    finally:
+        conn.close()
+    orders, lines, pending = _rows(db_path)
+    assert (len(orders), lines[0]["quantity"], len(lines), pending[0]["status"]) == (1, 1, 1, "answered")
 
 
 def test_email_with_a_doubt_pauses_then_stores_without_the_removed_line(

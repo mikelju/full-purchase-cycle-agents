@@ -1,6 +1,6 @@
 # Phase 04 - Exceptions: plan and results
 
-Status: in progress; batches A and B done
+Status: in progress; batches A to G done except increments 11 (owner audit) and 19 (LangSmith, blocked by quota); closing under way
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-08)
 Base: branch `fase-04-excepciones` from `main` at commit `037f66d`; the spec was frozen in `ff4f2ec`.
 
@@ -137,10 +137,10 @@ This file is the durable state: a new session resumes from here and from Git.
 - [x] 14. Haiku 4.5 baselines on the test splits with per-item results and thresholds by the spec rule (C14) - needs the owner's key: `--mode record --split test --set-baseline` for both suites; baselines in `evals/baselines/clarification_detection.json` and `evals/baselines/clarification_answers.json`; output in `.evidence/fase-04/eval-test-baseline.txt`; then `npm run eval` is the plain command again and replays the five suites.
   If detection recall of any doubt type, the false question rate or resolution accuracy misses its gate, the executor stops, writes deviation `04.1` with the measured figures and leaves the threshold to the owner.
   Estimated cost about 1 to 2 USD; the total live spend of the phase is recorded here.
-  Status: stopped by deviation 04.1, owner decision pending; output in `.evidence/fase-04/eval-test-baseline.txt`.
+  Status (first run): stopped by deviation 04.1, since closed by the owner decision below; output in `.evidence/fase-04/eval-test-baseline.txt`.
   Answers: baseline stored in `evals/baselines/clarification_answers.json`; resolution accuracy 99.5% [97.2, 99.9] n=195, threshold 95% PASS; case exact match 99.4%; one failure, CLA-0173 answered as unclear.
   Detection: the run exited 3 and stored no baseline; recall ambiguous 58.2% [45.0, 70.3] n=55, unknown 94.3% [84.6, 98.1] n=53, quantity 91.3% [79.7, 96.6] n=46, false question rate 0.0% [0.0, 7.4] n=48; the test recordings are stored, so a replay baseline needs no new live call.
-  `npm run eval` keeps naming the three existing suites until the detection baseline exists.
+  `npm run eval` named the three existing suites until the detection baseline was stored; it now replays the five suites.
   Total live spend of the phase, measured from the token lines at Haiku 4.5 prices: increment 13 0.79 USD and increment 14 1.06 USD (detection 0.69, answers 0.37), about 1.85 USD.
   Owner decision on deviation 04.1 (2026-10-08): Q1=A, candidate search runs on every line and a line with a SKU raises an ambiguous doubt when its text fits two or more products; Q2=A, unknown and quantity recall gated at the measured level, extractor fix in `docs/changes/001-email-extractor-dropped-lines.md`; spec C3 and the gates amended.
   Rule change in `line_doubts`, with tests in `tests/test_clarification.py` for a generic text with a SKU, a text that singles out one product with a SKU, and SKU-less lines as before.

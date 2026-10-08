@@ -242,6 +242,7 @@ class ClarificationState(TypedDict, total=False):
     unresolved: list[dict]
     clarification: str | None
     rejected: str | None
+    before_answer: dict
 
 
 def settle(lines: list[dict], resolutions: list[dict], open_doubts: list[dict]) -> tuple[list, list, list]:
@@ -297,8 +298,20 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
     def ask(state: ClarificationState, config: RunnableConfig) -> ClarificationState:
         thread_id = config["configurable"]["thread_id"]
         rounds = state.get("round", 0) + 1
-        drafted = clients.question.extract(doubts_message(state["doubts"]), case_id=f"{thread_id}-question-{rounds}")
-        check_question(drafted.question, state["doubts"])
+        try:
+            drafted = clients.question.extract(
+                doubts_message(state["doubts"]), case_id=f"{thread_id}-question-{rounds}"
+            )
+            check_question(drafted.question, state["doubts"])
+        except Exception as error:
+            if rounds == 1:
+                raise  # nothing is paused yet, so the run stops with nothing written
+            # The answer that led here is undone and the previous question waits again, so the thread
+            # stays answerable and closable instead of resting on a question never sent.
+            return {
+                **state["before_answer"],
+                "rejected": f"Clarification answer not applied, the next question could not be drafted: {error}",
+            }
         conn = db.connect(db_path)
         try:
             db.save_clarification(
@@ -330,13 +343,19 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
             return {}
         thread_id = config["configurable"]["thread_id"]
         message = answer_message(state["doubts"], state["question"], state["answer"])
-        read = clients.answer.extract(message, case_id=f"{thread_id}-answer-{state['round']}")
         try:
+            read = clients.answer.extract(message, case_id=f"{thread_id}-answer-{state['round']}")
             check_resolutions(read.resolutions, state["doubts"], catalog)
-        except InvalidAnswer as error:
-            # Nothing is written; the run stops paused on the same question, so the thread stays answerable.
-            return {"rejected": str(error)}
-        return {"resolutions": state.get("resolutions", []) + [r.model_dump() for r in read.resolutions]}
+        except Exception as error:
+            # A rejected answer, an invalid model output, a missing recording or a model error writes nothing;
+            # the run stops paused on the same question, so the thread stays answerable and closable.
+            reason = str(error) if isinstance(error, InvalidAnswer) else f"Clarification answer not read: {error}"
+            return {"rejected": reason}
+        resolutions = state.get("resolutions", [])
+        return {
+            "resolutions": resolutions + [r.model_dump() for r in read.resolutions],
+            "before_answer": {"doubts": state["doubts"], "resolutions": resolutions},
+        }
 
     builder = StateGraph(ClarificationState)
     builder.add_node("detect", detect_step)

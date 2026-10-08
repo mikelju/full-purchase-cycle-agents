@@ -322,7 +322,7 @@ def _resume(args, received: dict) -> int:
         return 1
     try:
         state = graph.invoke(Command(resume=received), run_config)
-    except (MissingRecording, InvalidModelOutput, InvalidAnswer, InvalidQuestion) as error:
+    except (MissingRecording, InvalidModelOutput, InvalidAnswer, InvalidQuestion, db.NotPending) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
     finally:
