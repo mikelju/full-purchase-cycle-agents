@@ -38,6 +38,9 @@ o dos intentos sin progreso: conserva trabajo y evidencia, explica el bloqueo y 
 - Escritura: un solo ayudante, salvo worktrees con propiedad de archivos disjunta; integra y verifica tú.
 - Brief de ayudante como a un recién llegado: objetivo, archivos permitidos, criterios y cómo se comprueba.
 - Nada de delegar trabajo secuencial ni tareas de segundos; sin delegación recursiva ni equipos de agentes.
+- El contexto principal coordina; el trabajo pesado va a ayudantes con un techo de contexto en el brief y un commit antes de agotarlo.
+- Pide al ayudante que busque antes de leer, que lea por trozos y que pase las pruebas en modo silencioso; su informe es breve y con campos fijos: hecho o no hecho, archivos, pruebas, commit, pendientes y decisiones que no están en la spec.
+- Verifica el resultado con Git (log, status, diff --stat) y no con la transcripción del ayudante: los ayudantes suelen pasarse del techo.
 
 ## Sesiones y contexto
 - Una fase o un cambio por sesión; reanuda desde el plan y Git, no desde la memoria de la conversación.
