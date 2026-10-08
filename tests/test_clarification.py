@@ -121,6 +121,24 @@ def test_ambiguous_line_carries_its_candidates(seeded_db):
         assert sorted(c["sku"] for c in doubt["candidates"]) == [f"GLV-NIT-{s}" for s in ("L", "M", "S", "XL", "XS")]
 
 
+def test_generic_text_with_a_sku_is_still_ambiguous(seeded_db):
+    _, catalog = seeded_db
+    for lines, channel in (
+        ([_web("nitrile gloves", 10, "GLV-NIT-M")], WEB),
+        ([_email("10 boxes of nitrile gloves", 10, "GLV-NIT-M")], EMAIL),
+    ):
+        [doubt] = detect(lines, catalog, channel)
+        assert (doubt["types"], doubt["sku"]) == ([AMBIGUOUS], "GLV-NIT-M")
+        assert sorted(c["sku"] for c in doubt["candidates"]) == [f"GLV-NIT-{s}" for s in ("L", "M", "S", "XL", "XS")]
+
+
+def test_text_singling_out_one_product_with_a_sku_raises_nothing(seeded_db):
+    _, catalog = seeded_db
+    assert detect([_web("nitrile gloves size M", 10, "GLV-NIT-M")], catalog, WEB) == []
+    assert detect([_email("10 boxes of nitrile gloves size M", 10, "GLV-NIT-M")], catalog, EMAIL) == []
+    assert detect([_web("flux capacitor", 2, "GLV-NIT-M")], catalog, WEB) == []
+
+
 def test_unknown_line_has_no_candidates(seeded_db):
     _, catalog = seeded_db
     for lines, channel in (([_web("flux capacitor", 2, None)], WEB), ([_email("2 flux capacitors", 2, None)], EMAIL)):

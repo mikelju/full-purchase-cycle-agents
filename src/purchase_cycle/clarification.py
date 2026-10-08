@@ -1,7 +1,8 @@
 """Shared clarification step: doubt rules, candidate search and checks.
 
-An order line raises a doubt when it has no SKU (ambiguous or unknown product)
-or when its quantity is doubtful. The rules are deterministic and read only
+An order line raises a doubt when its text fits two or more catalog products
+(ambiguous, even with a SKU), when it has no SKU and fits none (unknown), or
+when its quantity is doubtful. The rules are deterministic and read only
 the lines the channel already produced and the catalog.
 """
 
@@ -96,13 +97,13 @@ def line_doubts(line: dict, catalog: list, channel: str) -> tuple[list[str], lis
     """Doubt types of one channel line, in rule order, and the candidates of an ambiguous product."""
     text = line_text(line)
     types, candidates = [], []
-    if line["sku"] is None:
-        found = candidate_search(text, catalog)
-        if len(found) >= 2:
-            types.append(AMBIGUOUS)
-            candidates = found
-        elif not found:
-            types.append(UNKNOWN)
+    # Every line is searched, so a SKU given to a generic text still raises an ambiguous doubt.
+    found = candidate_search(text, catalog)
+    if len(found) >= 2:
+        types.append(AMBIGUOUS)
+        candidates = found
+    elif not found and line["sku"] is None:
+        types.append(UNKNOWN)
     quantity = line["quantity"]
     sale_unit = next((row["sale_unit"] for row in catalog if row["sku"] == line["sku"]), None)
     if quantity > MAX_LINE_QUANTITY or (channel == EMAIL and not supports_quantity(text, quantity, sale_unit)):

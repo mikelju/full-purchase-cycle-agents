@@ -66,6 +66,7 @@ Built with the phase 01 method: a seeded planning script fixes the labels before
 
 ### Gates
 - Absolute gates in the test split: detection recall per doubt type at least 95%, false question rate at most 5%, and answer resolution accuracy at least 95%, if the baseline measured in this phase reaches them; otherwise execution stops and the owner decides, recorded as a deviation.
+- Detection recall of unknown and doubtful quantity doubts is gated at the level measured after the rule change of deviation 04.1, because the misses come from the phase 03 extractor (dropped email lines, non-integer quantities); amended 2026-10-08, owner decision on deviation 04.1, fix in `docs/changes/001-email-extractor-dropped-lines.md`.
 - Regression gate: exact McNemar test per line for detection recall and per doubtful line for resolution accuracy against the stored baseline, failing on a significant drop (p < 0.05).
 - The three existing evaluations keep running unchanged with their own gates.
 
@@ -76,7 +77,7 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 |---|---|---|
 | C1 | On a fresh clone, `uv sync` and `npm run check` pass with no API keys and no `.env` file, and `check` runs the five evaluations in replay mode | Run both commands in a clean clone with the Anthropic and LangSmith variables unset; output saved as evidence |
 | C2 | A web form submission and an email with no doubt go through `clarify` with no extra model call and no pause, and store the same rows and reply as in phases 02 and 03 | Pytest tests counting model calls and comparing rows and reply with the phase 02 and 03 expected values |
-| C3 | The detection rules raise an ambiguous doubt with its candidates, an unknown doubt, and a doubtful quantity doubt for the over-ceiling and unsupported-number cases, and nothing for a clear line | Pytest tests per rule over fixture lines of both channels |
+| C3 | The detection rules raise an ambiguous doubt with its candidates for any line whose text fits two or more catalog products and none singled out, also when the line already has a SKU (amended 2026-10-08, owner decision on deviation 04.1), an unknown doubt, and a doubtful quantity doubt for the over-ceiling and unsupported-number cases, and nothing for a clear line | Pytest tests per rule over fixture lines of both channels |
 | C4 | An order with at least one doubt ends its run paused: the state holds the drafted question, the `clarifications` table holds one pending row for the thread, and no row is written to `orders` or `order_lines` | Pytest test on a temporary database with recorded answers, counting rows |
 | C5 | The drafted question names every doubtful line with the text the customer wrote and, for an ambiguous line, its candidate names; a recorded question that misses a doubtful line stops the run before pausing | Pytest tests with recorded valid and invalid questions |
 | C6 | A paused thread resumes with the customer answer from a new operating system process, after the process that paused it has exited, and ends with the order stored and the reply built | Pytest test that pauses in one subprocess, checks it has exited, resumes in a second subprocess and compares the stored rows and reply with expected values |
