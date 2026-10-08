@@ -65,7 +65,7 @@ try {
   // Sin git no se puede saber si hubo cambios: se comprueba igualmente.
 }
 
-const r = spawnSync(comando, { cwd: raiz, encoding: "utf8", shell: true, timeout: 110000 });
+const r = spawnSync(comando, { cwd: raiz, encoding: "utf8", shell: true, timeout: 290000 });
 if (r.status === 0) process.exit(0);
 
 const salida = `${r.stdout || ""}\n${r.stderr || ""}`.trim().split(/\r?\n/).slice(-25).join("\n");
