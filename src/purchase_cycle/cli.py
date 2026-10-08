@@ -11,6 +11,7 @@ from langgraph.types import Command
 
 from purchase_cycle import config, db
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
+from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import InvalidExtraction, build_email_order_graph
 from purchase_cycle.graph import build_graph, sqlite_checkpointer
 from purchase_cycle.llm import (
@@ -29,6 +30,17 @@ from purchase_cycle.web_form import build_web_form_graph
 DEMO_SENTENCE = "Hi Laura, could you send us 40 boxes of powder-free nitrile gloves, size M? Thanks, Begona"
 DEMO_SUBMISSION = config.ROOT / "examples" / "web_form_submission.json"
 DEMO_EMAILS = config.ROOT / "examples" / "email_orders"
+DEMO_EXCEPTIONS = config.ROOT / "examples" / "exceptions"
+# The exception samples are detection test items, so their channel steps replay the detection recordings.
+EXCEPTIONS_RECORDINGS = {
+    MATCHING.name: config.CLARIFICATION_DETECTION_MATCHING_RECORDINGS_PATH,
+    EMAIL_INTAKE.name: config.CLARIFICATION_DETECTION_INTAKE_RECORDINGS_PATH,
+    EMAIL_EXTRACTION.name: config.CLARIFICATION_DETECTION_EXTRACTION_RECORDINGS_PATH,
+}
+EXCEPTION_SAMPLES = (
+    (WEB_FORM, "web_form_submission.json", "web_form_answer.txt"),
+    (EMAIL, "email_order.eml", "email_answer.txt"),
+)
 
 
 def cmd_seed(args) -> int:
@@ -192,8 +204,14 @@ def cmd_email_demo(args) -> int:
     return code
 
 
-def _clarify_graph(args, channel: str):
-    """The channel graph with the clarify step, on the same checkpoint file; returns it and its clarification clients."""
+def _clarify_graph(args, channel: str, recordings: dict | None = None, channel_mode: str | None = None):
+    """The channel graph with the clarify step, on the same checkpoint file; returns it and its clarification clients.
+
+    `recordings` maps a channel task name to its recordings file and `channel_mode` sets the mode of the channel
+    steps (matching, intake, extraction); both default to the task files and the command mode.
+    """
+    recordings = recordings or {}
+    channel_mode = channel_mode or args.mode
     conn = db.connect(args.db)
     try:
         catalog = db.catalog_rows(conn)
@@ -205,11 +223,73 @@ def _clarify_graph(args, channel: str):
     )
     checkpointer = sqlite_checkpointer(args.checkpoints)
     if channel == WEB_FORM:
-        matcher = ModelClient(args.mode, catalog, task=MATCHING)
+        matcher = ModelClient(channel_mode, catalog, recordings.get(MATCHING.name), task=MATCHING)
         return build_web_form_graph(matcher, args.db, checkpointer, clarification=clients), clients
-    intake = ModelClient(args.mode, catalog, task=EMAIL_INTAKE)
-    extraction = ModelClient(args.mode, catalog, task=EMAIL_EXTRACTION)
+    intake = ModelClient(channel_mode, catalog, recordings.get(EMAIL_INTAKE.name), task=EMAIL_INTAKE)
+    extraction = ModelClient(channel_mode, catalog, recordings.get(EMAIL_EXTRACTION.name), task=EMAIL_EXTRACTION)
     return build_email_order_graph(intake, extraction, args.db, checkpointer, clarification=clients), clients
+
+
+def cmd_exceptions_demo(args) -> int:
+    conn = db.connect(args.db)
+    db.seed(conn)
+    conn.close()
+    # Record mode records the question only; the channel steps replay the answers already recorded for the samples.
+    channel_mode = "replay" if args.mode == "record" else args.mode
+    run_id = uuid.uuid4().hex[:12]
+    print(f"mode={args.mode}  samples={DEMO_EXCEPTIONS}")
+    code = saved = 0
+    for channel, sample, answer in EXCEPTION_SAMPLES:
+        path = DEMO_EXCEPTIONS / sample
+        graph, clients = _clarify_graph(args, channel, EXCEPTIONS_RECORDINGS, channel_mode)
+        thread_id = f"{run_id}-{path.stem}"
+        run_config = {"configurable": {"thread_id": thread_id}, "run_name": f"{channel}_order"}
+        print()
+        print(f"== {path.name}  channel={channel}  thread_id={thread_id}")
+        try:
+            if channel == WEB_FORM:
+                with open(path, encoding="utf-8-sig") as fh:
+                    graph_input = {"submission": json.load(fh)}
+            else:
+                graph_input = {"email_path": str(path)}
+            state = graph.invoke(graph_input, run_config)
+        except (MissingRecording, InvalidModelOutput, InvalidExtraction, InvalidQuestion) as error:
+            print(f"Error: {error}", file=sys.stderr)
+            code = 1
+            continue
+        finally:
+            saved += clients.question.save_recordings()
+        if state.get("errors"):
+            print("rejected, nothing stored:")
+            for error in state["errors"]:
+                print(f"  {error}")
+            code = 1
+            continue
+        print("lines:")
+        for n, line in enumerate(state["lines"], start=1):
+            text = line.get("source_text") or line["product"]
+            print(f'  {n}. "{text}" x {line["quantity"]} -> {line["sku"] or "no match"}')
+        paused = state.get("__interrupt__")
+        if not paused:
+            print("no doubts found")
+            print(f"stored order: {state['order_id']}")
+            continue
+        question = paused[0].value
+        print("doubts:")
+        for doubt in question["doubts"]:
+            candidates = ", ".join(c["sku"] for c in doubt["candidates"])
+            detail = f"  candidates: {candidates}" if candidates else ""
+            print(
+                f'  line {doubt["line_id"]}: {", ".join(doubt["types"])} - "{doubt["text"]}" x {doubt["quantity"]}{detail}'
+            )
+        print(f"question (round {question['round']}):")
+        print(question["question"])
+        print(f"paused, nothing stored; thread_id={thread_id}")
+        print(f"answer with: purchase-cycle clarify answer {thread_id} --file examples/exceptions/{answer}")
+        _print_usage(clients.question)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return code
 
 
 def _pending_row(args) -> dict | None:
@@ -352,6 +432,13 @@ def main(argv=None) -> int:
     )
     email.add_argument("--mode", choices=config.MODES, default="replay")
     email.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+
+    exceptions = sub.add_parser(
+        "exceptions-demo", help="run the exception samples, print their doubts and question, and stop"
+    )
+    exceptions.add_argument("--mode", choices=config.MODES, default="replay")
+    exceptions.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    exceptions.set_defaults(handler=cmd_exceptions_demo)
 
     clarify = sub.add_parser("clarify", help="answer, list or close the pending clarification questions")
     clarify_sub = clarify.add_subparsers(dest="clarify_command", required=True)
