@@ -15,6 +15,7 @@ from purchase_cycle.clarification import (
     check_resolutions,
     detect,
     doubts_message,
+    plain_question,
 )
 from purchase_cycle.llm import ClarificationResolutions
 
@@ -225,6 +226,14 @@ def test_question_missing_a_line_or_a_candidate_is_rejected(seeded_db):
     name = doubts[0]["candidates"][0]["name"]
     with pytest.raises(InvalidQuestion, match="line 1 candidate"):
         check_question(_question(doubts, skip_candidate=name), doubts)
+
+
+def test_plain_question_replaces_typographic_symbols_with_ascii():
+    drafted = "For \u201cgel\u201d \u2013 one or two? It\u2019s urgent \u2014 thanks\u2026\u00a0Ok"
+    plain = plain_question(drafted)
+    assert plain == 'For "gel" - one or two? It\'s urgent - thanks... Ok'
+    assert plain.isascii()
+    assert plain_question("Plain text - 70% alcohol") == "Plain text - 70% alcohol"
 
 
 def _resolutions(*rows):

@@ -160,6 +160,30 @@ def answer_message(doubts: list[dict], question: str, answer: str) -> str:
     return f"{doubts_message(doubts)}\n\nQuestion sent to the customer:\n{question}\n\nCustomer answer:\n{answer}"
 
 
+# Typographic symbols the model writes, replaced by plain ASCII in the question the customer sees.
+PLAIN_SYMBOLS = str.maketrans(
+    {
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2015": "-",
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u2026": "...",
+        "\u00a0": " ",
+    }
+)
+
+
+def plain_question(question: str) -> str:
+    """The question as printed, stored and sent: dashes, curly quotes and ellipses as plain ASCII."""
+    return question.translate(PLAIN_SYMBOLS)
+
+
 def check_question(question: str, doubts: list[dict]) -> None:
     """Every doubtful line's text and every candidate name must appear in the question."""
     key = f" {match_key(question)} "
@@ -277,17 +301,21 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
         check_question(drafted.question, state["doubts"])
         conn = db.connect(db_path)
         try:
-            db.save_clarification(conn, thread_id, channel, state["customer"]["code"], drafted.question, rounds)
+            db.save_clarification(
+                conn, thread_id, channel, state["customer"]["code"], plain_question(drafted.question), rounds
+            )
         finally:
             conn.close()
         return {"question": drafted.question, "round": rounds}
 
     def wait(state: ClarificationState) -> ClarificationState:
         # Resumed with {"answer": text} or {"close": True}; the question was drafted before the pause.
+        # The state keeps the drafted question as the model wrote it, so the interpretation message and its
+        # recordings stay the same; the customer sees the plain version.
         # `rejected` holds why the previous answer failed its checks; the same question waits again.
         received = interrupt(
             {
-                "question": state["question"],
+                "question": plain_question(state["question"]),
                 "round": state["round"],
                 "doubts": state["doubts"],
                 "rejected": state.get("rejected"),

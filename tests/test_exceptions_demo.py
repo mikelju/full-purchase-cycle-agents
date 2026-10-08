@@ -2,6 +2,7 @@
 
 import os
 import re
+import sqlite3
 import subprocess
 import sys
 import textwrap
@@ -49,6 +50,12 @@ def test_demo_pauses_both_samples_and_the_answers_store_them_in_new_processes(tm
     assert demo.count("question (round 1):") == 2
     assert "Hydroalcoholic hand sanitiser gel 5 litre jerrycan" in demo
     assert "our catalog does not carry hospital beds" in demo
+    # The recorded questions hold en dashes; the printed and stored questions are plain ASCII.
+    printed = re.findall(r"question \(round 1\):\n(.*?)\npaused", demo, re.DOTALL)
+    assert len(printed) == 2 and all(q.isascii() for q in printed)
+    with sqlite3.connect(tmp_path / "business.db") as conn:
+        stored = [row[0] for row in conn.execute("SELECT question FROM clarifications")]
+    assert sorted(stored) == sorted(printed)
     threads = re.findall(r"paused, nothing stored; thread_id=(\S+)", demo)
     assert [t.split("-", 1)[1] for t in threads] == ["web_form_submission", "email_order"]
 

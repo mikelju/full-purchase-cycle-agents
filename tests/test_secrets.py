@@ -1,4 +1,4 @@
-"""C14 (phases 01 to 03): no secret is versioned and every variable is documented."""
+"""C14 (phases 01 to 03) and C16 (phase 04): no secret is versioned and every variable is documented."""
 
 import re
 import subprocess
@@ -91,3 +91,43 @@ def test_phase_03_files_are_tracked_and_their_decoded_text_holds_no_keys():
         decoded = "\n".join([email["sender"], model_text(email)])
         assert not SECRET_PATTERNS.search(decoded), f"possible secret in the decoded text of {name}"
     assert attachments >= 104, "the PDF and Excel attachments were not decoded"
+
+
+def test_phase_04_files_are_tracked_and_their_decoded_text_holds_no_keys():
+    from purchase_cycle.email_order import model_text, parse_email
+
+    tracked = set(_tracked())
+    datasets = ("evals/datasets/clarification_detection", "evals/datasets/clarification_answers")
+    fixed = [
+        "evals/recordings/clarification_detection_matching.jsonl",
+        "evals/recordings/clarification_detection_email_intake.jsonl",
+        "evals/recordings/clarification_detection_email_extraction.jsonl",
+        "evals/recordings/clarification_question.jsonl",
+        "evals/recordings/clarification_answers.jsonl",
+        "evals/baselines/clarification_detection.json",
+        "evals/baselines/clarification_answers.json",
+        "evals/audit/clarification-audit-v1.0.csv",
+        "examples/exceptions/web_form_submission.json",
+        "examples/exceptions/web_form_answer.txt",
+        "examples/exceptions/email_answer.txt",
+    ]
+    fixed += [f"{d}/{name}" for d in datasets for name in ("plan.jsonl", "dataset.jsonl", "second_pass_review.jsonl")]
+    written = sorted(
+        str(p.relative_to(ROOT).as_posix())
+        for d in datasets
+        for folder in ("texts", "second_pass_judgments")
+        for p in (ROOT / d / folder).iterdir()
+    )
+    emails = sorted(
+        str(p.relative_to(ROOT).as_posix())
+        for folder in (ROOT / datasets[0] / "emails", ROOT / "examples" / "exceptions")
+        for p in folder.glob("*.eml")
+    )
+    assert len(written) >= 8 and len(emails) >= 100 + 1  # the detection emails plus the demo sample
+    for name in fixed + written + emails:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
+    for name in emails:
+        email = parse_email((ROOT / name).read_bytes())
+        decoded = "\n".join([email["sender"], model_text(email)])
+        assert not SECRET_PATTERNS.search(decoded), f"possible secret in the decoded text of {name}"
