@@ -341,7 +341,9 @@ def upload_datasets(dataset_path: Path = ds.DATASET_PATH) -> int:
 
 def add_run_commands(sub, modes) -> None:
     run = sub.add_parser("eval", help="run the evaluations on their golden datasets")
-    run.add_argument("--suite", choices=(*SUITES, "all"), default="all", help="evaluation to run (default: all)")
+    run.add_argument(
+        "--suite", nargs="+", choices=(*SUITES, "all"), default="all", help="evaluations to run (default: all)"
+    )
     run.add_argument("--mode", choices=modes, default="replay")
     run.add_argument("--split", choices=("dev", "test", "all"), default="test")
     run.add_argument("--workers", type=int, default=8)
@@ -350,11 +352,25 @@ def add_run_commands(sub, modes) -> None:
     )
     run.set_defaults(handler=cmd_eval)
     upload = sub.add_parser("eval-upload", help="upload the dataset splits to LangSmith")
-    upload.add_argument("--suite", choices=(*SUITES, "all"), default="all", help="splits to upload (default: all)")
+    upload.add_argument(
+        "--suite", nargs="+", choices=(*SUITES, "all"), default="all", help="splits to upload (default: all)"
+    )
     upload.set_defaults(handler=cmd_upload)
 
 
-SUITES = ("order_line_extraction", "web_form_matching", "email_order_extraction")
+SUITES = (
+    "order_line_extraction",
+    "web_form_matching",
+    "email_order_extraction",
+    "clarification_detection",
+    "clarification_answers",
+)
+
+
+def suite_names(suite) -> tuple[str, ...]:
+    """`--suite` holds one name, several names or `all`."""
+    names = (suite,) if isinstance(suite, str) else tuple(suite)
+    return SUITES if "all" in names else tuple(dict.fromkeys(names))
 
 
 def _suite(name: str):
@@ -366,22 +382,26 @@ def _suite(name: str):
         from purchase_cycle.evaluation import web_form_eval
 
         return web_form_eval
+    if name in ("clarification_detection", "clarification_answers"):
+        from purchase_cycle.evaluation import clarification_eval
+
+        return clarification_eval.detection if name == "clarification_detection" else clarification_eval.answers
     return sys.modules[__name__]
 
 
 def cmd_upload(args) -> int:
-    names = SUITES if args.suite == "all" else (args.suite,)
+    names = suite_names(args.suite)
     return max(_suite(name).upload_datasets() for name in names)
 
 
 def cmd_eval(args) -> int:
-    if args.set_baseline and (args.mode != "record" or args.split != "test" or args.suite == "all"):
+    names = suite_names(args.suite)
+    if args.set_baseline and (args.mode != "record" or args.split != "test" or len(names) != 1):
         print(
             "Error: a baseline is measured for one --suite on the test split with the real model (--mode record)",
             file=sys.stderr,
         )
         return 2
-    names = SUITES if args.suite == "all" else (args.suite,)
     codes = []
     for n, name in enumerate(names):
         if n:

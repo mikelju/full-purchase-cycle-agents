@@ -7,7 +7,7 @@ import pytest
 
 from purchase_cycle import db, web_form
 from purchase_cycle.config import MATCHING_RECORDINGS_PATH
-from purchase_cycle.evaluation import email_eval, harness, web_form_eval
+from purchase_cycle.evaluation import clarification_eval, email_eval, harness, web_form_eval
 from purchase_cycle.evaluation import web_form_dataset as wf
 from purchase_cycle.llm import MATCHING, build_system_prompt, recording_key
 
@@ -95,6 +95,8 @@ def test_eval_command_runs_both_suites_and_keeps_the_worst_exit(monkeypatch, cap
     monkeypatch.setattr(harness, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(web_form_eval, "evaluate", lambda *args, **kwargs: 1)
     monkeypatch.setattr(email_eval, "evaluate", lambda *args, **kwargs: 0)
+    monkeypatch.setattr(clarification_eval.detection, "evaluate", lambda *args, **kwargs: 0)
+    monkeypatch.setattr(clarification_eval.answers, "evaluate", lambda *args, **kwargs: 0)
     args = argparse.Namespace(suite="all", mode="replay", split="test", set_baseline=False, workers=1)
     assert harness.cmd_eval(args) == 1
     args.suite = "order_line_extraction"
@@ -153,5 +155,8 @@ def test_upload_command_uploads_every_suite_and_keeps_the_worst_exit(monkeypatch
     monkeypatch.setattr(harness, "upload_datasets", lambda: uploaded.append("order_line_extraction") or 0)
     monkeypatch.setattr(web_form_eval, "upload_datasets", lambda: uploaded.append("web_form_matching") or 1)
     monkeypatch.setattr(email_eval, "upload_datasets", lambda: uploaded.append("email_order_extraction") or 0)
+    for name in ("detection", "answers"):
+        upload = lambda name=name: uploaded.append(f"clarification_{name}") or 0  # noqa: E731
+        monkeypatch.setattr(getattr(clarification_eval, name), "upload_datasets", upload)
     assert main(["eval-upload"]) == 1
-    assert uploaded == ["order_line_extraction", "web_form_matching", "email_order_extraction"]
+    assert uploaded == list(harness.SUITES)

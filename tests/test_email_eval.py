@@ -7,8 +7,8 @@ import pytest
 
 from purchase_cycle import db
 from purchase_cycle.email_order import model_text, parse_email
+from purchase_cycle.evaluation import clarification_eval, email_eval, harness, web_form_eval
 from purchase_cycle.evaluation import email_dataset as ed
-from purchase_cycle.evaluation import email_eval, harness, web_form_eval
 from purchase_cycle.llm import EMAIL_EXTRACTION, EMAIL_INTAKE, build_system_prompt, recording_key
 
 ORDER_CATEGORIES_PER_TEST = 2
@@ -225,6 +225,8 @@ def test_eval_command_runs_three_suites_and_keeps_the_worst_exit(monkeypatch):
     monkeypatch.setattr(harness, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(web_form_eval, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(email_eval, "evaluate", lambda *args, **kwargs: 1)
+    monkeypatch.setattr(clarification_eval.detection, "evaluate", lambda *args, **kwargs: 0)
+    monkeypatch.setattr(clarification_eval.answers, "evaluate", lambda *args, **kwargs: 0)
     args = argparse.Namespace(suite="all", mode="replay", split="test", set_baseline=False, workers=1)
     assert harness.cmd_eval(args) == 1
     args.suite = "web_form_matching"
