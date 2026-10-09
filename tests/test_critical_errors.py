@@ -112,3 +112,31 @@ def test_each_injected_critical_error_fails_failure_recovery_with_exit_one(
     assert f"  {item['id']}  critical errors {{'{kind}': 1}}" in out
     assert "GATE FAILED: critical_errors 1 above threshold 0" in out
     assert no_network == []
+
+
+@pytest.mark.parametrize(("question", "dropped"), [("Which size of syringes 5 ml?", 1), (None, 0)])
+def test_a_dropped_line_counts_as_asked_about_only_when_a_question_names_it(
+    question, dropped, tmp_path, monkeypatch, no_network
+):
+    # Task 1 limit tightened in task 3: any clarification row used to excuse every dropped line.
+    item, path = _one_scenario(tmp_path)
+    requested_text = recovery_eval.REQUESTED[item["channel"]][0][0]["text"]
+    seen = {}
+    real = recovery_eval._evidence
+
+    def injected(*args, **kwargs):
+        evidence = real(*args, **kwargs)
+        _line_dropped(evidence)
+        _sql(
+            evidence,
+            "INSERT INTO clarifications (thread_id, channel, customer_code, question, round, status) "
+            f"SELECT 'other', channel, customer_code, '{question or 'How many ' + requested_text + '?'}', 1, "
+            "'answered' FROM orders",
+        )
+        seen.update(critical.count(**evidence))
+        return evidence
+
+    monkeypatch.setattr(recovery_eval, "_evidence", injected)
+    recovery_eval.evaluate("replay", "test", dataset_path=path)
+    assert seen["line_dropped"] == dropped
+    assert no_network == []
