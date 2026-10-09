@@ -361,7 +361,7 @@ def add_run_commands(sub, modes) -> None:
     run.set_defaults(handler=cmd_eval)
     upload = sub.add_parser("eval-upload", help="upload the dataset splits to LangSmith")
     upload.add_argument(
-        "--suite", nargs="+", choices=(*SUITES, "all"), default="all", help="splits to upload (default: all)"
+        "--suite", nargs="+", choices=(*UPLOAD_SUITES, "all"), default="all", help="splits to upload (default: all)"
     )
     upload.set_defaults(handler=cmd_upload)
 
@@ -373,7 +373,10 @@ SUITES = (
     "clarification_detection",
     "clarification_answers",
     "whatsapp_order_extraction",
+    "channel_routing",
 )
+# The deterministic phase 05 suites run locally only, so `eval-upload` leaves them out.
+UPLOAD_SUITES = tuple(name for name in SUITES if name != "channel_routing")
 # `all` leaves out the WhatsApp suite until its baseline is recorded (phase 05, increment 16).
 ALL_SUITES = tuple(name for name in SUITES if name != "whatsapp_order_extraction")
 
@@ -397,6 +400,10 @@ def _suite(name: str):
         from purchase_cycle.evaluation import whatsapp_eval
 
         return whatsapp_eval
+    if name == "channel_routing":
+        from purchase_cycle.evaluation import routing_eval
+
+        return routing_eval
     if name in ("clarification_detection", "clarification_answers"):
         from purchase_cycle.evaluation import clarification_eval
 
@@ -405,7 +412,7 @@ def _suite(name: str):
 
 
 def cmd_upload(args) -> int:
-    names = suite_names(args.suite, SUITES)
+    names = suite_names(args.suite, UPLOAD_SUITES)
     return max(_suite(name).upload_datasets() for name in names)
 
 
