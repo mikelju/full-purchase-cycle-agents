@@ -132,7 +132,7 @@ def insert_order(
     `source` is the (message id, thread id) of the delivered message; a message id already stored for the
     channel for the same customer returns its order id and writes no order, line or source (a re-delivery or a
     resumed `store`), but a still pending clarification of the thread is finished; stored for another customer it
-    raises SourceConflict and writes nothing.
+    raises SourceConflict, writes no order and closes a still pending clarification of the thread.
     """
     with conn:
         if source:
@@ -142,9 +142,12 @@ def insert_order(
                     _finish_if_pending(conn, *clarification)
                 return row["order_id"]
             if row:
-                raise SourceConflict(
-                    f"the {channel} message id '{source[0]}' is already stored for another customer; nothing stored"
-                )
+                message = f"the {channel} message id '{source[0]}' is already stored for another customer"
+                if clarification:  # closed, not left pending, so the customer's next message is not its answer
+                    _finish_if_pending(conn, clarification[0], "closed")
+                    conn.commit()
+                    message += f"; thread {clarification[0]} closed"
+                raise SourceConflict(f"{message}; nothing stored")
         if clarification:
             finish_clarification(conn, *clarification)
         cursor = conn.execute(

@@ -614,3 +614,63 @@ def test_answered_second_thread_of_a_stored_message_is_finished_not_left_pending
     assert clarifications == [("whatsapp-t1", "answered"), ("whatsapp-t2", "answered")]
     assert orders == 1
     assert no_network == []
+
+
+def _paused_then_taken(seeded_db, write_recording, folder, tmp_path):
+    """Customer B's WhatsApp order pauses, then customer A's order is stored with the same message id."""
+    db_path = seeded_db[0]
+    graph, _, _ = _whatsapp_graph(seeded_db, write_recording, tmp_path)
+    other = CUSTOMERS[2]
+    _write(folder, "WA-1.json", message("wamid.SHARED", sender=other.phone))
+    [first] = run_inbox(folder, {"whatsapp": graph}, db_path, "run1")
+    assert first["state"]["__interrupt__"]
+    (folder / "WA-1.json").unlink()
+    conn = db.connect(db_path)
+    db.insert_order(conn, CUSTOMER.code, "whatsapp", "new", [("GLV-NIT-M", 1)], source=("wamid.SHARED", "wa-a"))
+    conn.close()
+    return graph, other
+
+
+def _status(db_path, thread):
+    conn = db.connect(db_path)
+    try:
+        return conn.execute("SELECT status FROM clarifications WHERE thread_id = ?", (thread,)).fetchone()[0]
+    finally:
+        conn.close()
+
+
+def test_answer_whose_order_id_another_customer_took_closes_the_thread(
+    seeded_db, write_recording, folder, tmp_path, no_network
+):
+    """Review 2, I1: the answer fails with SourceConflict once and the customer's next message is a new order."""
+    from purchase_cycle.db import SourceConflict
+
+    db_path = seeded_db[0]
+    graph, other = _paused_then_taken(seeded_db, write_recording, folder, tmp_path)
+    _write(folder, "WA-2.json", message("wamid.ANSWER", sender=other.phone, body=ANSWER))
+    [answer] = run_inbox(folder, {"whatsapp": graph}, db_path, "run1")
+    assert (answer["route"].kind, answer["thread_id"]) == (WHATSAPP_ANSWER, "whatsapp-run1-WA-1")
+    assert isinstance(answer["error"], SourceConflict)
+    assert _status(db_path, "whatsapp-run1-WA-1") == "closed"
+    (folder / "WA-2.json").unlink()
+    _write(folder, "WA-3.json", message("wamid.NEXT", sender=other.phone))
+    assert _route(seeded_db, folder / "WA-3.json").kind == WHATSAPP_NEW
+
+
+def test_clarify_answer_reports_a_source_conflict_cleanly(
+    seeded_db, write_recording, folder, tmp_path, no_network, capsys, monkeypatch
+):
+    """Review 2, I1: `clarify answer` prints an Error line, exits 1 and closes the thread, with no traceback."""
+    from purchase_cycle import cli
+
+    db_path, catalog = seeded_db
+    _paused_then_taken(seeded_db, write_recording, folder, tmp_path)
+    recordings = tmp_path / "recordings.jsonl"
+    for name in ("WHATSAPP_INTAKE", "WHATSAPP_EXTRACTION", "CLARIFICATION_QUESTION", "CLARIFICATION_ANSWER"):
+        monkeypatch.setattr(cli, name, dataclasses.replace(getattr(cli, name), recordings_path=recordings))
+    argv = ["--db", str(db_path), "clarify", "answer", "whatsapp-run1-WA-1", "--text", ANSWER]
+    code = cli.main([*argv, "--checkpoints", str(tmp_path / "c.db"), "--outbox", str(tmp_path / "outbox")])
+    out, err = capsys.readouterr()
+    assert code == 1, out
+    assert err.startswith("Error: ") and "already stored for another customer" in err
+    assert _status(db_path, "whatsapp-run1-WA-1") == "closed"
