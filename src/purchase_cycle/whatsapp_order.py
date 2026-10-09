@@ -16,7 +16,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from purchase_cycle import db, llm
+from purchase_cycle import db, faults, llm
 from purchase_cycle.llm import InvalidExtraction, ModelClient
 from purchase_cycle.recovery import correction_kwargs, parking, reask
 from purchase_cycle.web_form import build_reply, clarification_outcome, thread_id, validation_errors
@@ -222,6 +222,7 @@ def build_whatsapp_order_graph(
         return {"lines": reask(ask) if recovery else ask(None)}
 
     def store(state: WhatsAppOrderState, config: RunnableConfig) -> WhatsAppOrderState:
+        faults.crash_at(faults.AFTER_CHANNEL_STEPS)
         matched = [(line["sku"], line["quantity"]) for line in state["lines"] if line["sku"] is not None]
         outcome = clarification_outcome(state, config)
         conn = db.connect(db_path)
@@ -233,6 +234,7 @@ def build_whatsapp_order_graph(
                 return {"order_id": None}
             source = (state["message"]["message_id"], thread_id(config))
             order_id = db.insert_order(conn, state["customer"]["code"], CHANNEL, STATUS, matched, outcome, source)
+            faults.crash_at(faults.AFTER_STORE_COMMIT)
             return {"order_id": order_id}
         finally:
             conn.close()
@@ -260,6 +262,7 @@ def build_whatsapp_order_graph(
             }
             text = build_reply(customer, "WhatsApp order", state["order_id"], stored, unmatched, **left_out)
         path = write_outbox(outbox, message["from"], message["message_id"], text)
+        faults.crash_at(faults.IN_REPLY)
         return {"reply": text, "outbox_file": str(path)}
 
     def source(state: dict) -> str:

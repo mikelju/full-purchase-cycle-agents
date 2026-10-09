@@ -14,7 +14,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from purchase_cycle import db, llm
+from purchase_cycle import db, faults, llm
 from purchase_cycle.llm import InvalidModelOutput, ModelClient
 from purchase_cycle.recovery import correction_kwargs, parking, reask
 
@@ -193,6 +193,7 @@ def build_web_form_graph(
         return {"lines": lines}
 
     def store(state: WebFormState, config: RunnableConfig) -> WebFormState:
+        faults.crash_at(faults.AFTER_CHANNEL_STEPS)
         matched = [line for line in state["lines"] if line["sku"] is not None]
         outcome = clarification_outcome(state, config)
         conn = db.connect(db_path)
@@ -211,6 +212,7 @@ def build_web_form_graph(
                 clarification=outcome,
                 source=(state["submission"]["submission_id"], thread_id(config)),
             )
+            faults.crash_at(faults.AFTER_STORE_COMMIT)
         finally:
             conn.close()
         return {"order_id": order_id}
@@ -231,7 +233,9 @@ def build_web_form_graph(
             "closed": state.get("clarification") == "closed",
             "answered": state.get("clarification") == "answered",
         }
-        return {"reply": build_reply(state["customer"], reference, state["order_id"], stored, unmatched, **left_out)}
+        text = build_reply(state["customer"], reference, state["order_id"], stored, unmatched, **left_out)
+        faults.crash_at(faults.IN_REPLY)
+        return {"reply": text}
 
     def source(state: dict) -> str:
         return state["source"]

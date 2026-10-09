@@ -595,6 +595,13 @@ def cmd_failures_resume(args) -> int:
         db.resolve_failure(conn, args.thread_id)
     finally:
         conn.close()
+    _print_outcome(args, state)
+    print("failure resolved")
+    return 0
+
+
+def _print_outcome(args, state: dict) -> None:
+    """Print where a resumed thread ended: a question waiting for its answer, no order, or the stored order."""
     paused = state.get("__interrupt__")
     if paused:
         print(f"question (round {paused[0].value['round']}):")
@@ -608,7 +615,45 @@ def cmd_failures_resume(args) -> int:
         if state.get("reply"):
             print("reply:")
             print(state["reply"])
-    print("failure resolved")
+
+
+def cmd_resume(args) -> int:
+    """Continue an interrupted thread (a crash or a stopped process) from its last checkpoint."""
+    channel = next((c for c in (WEB_FORM, EMAIL, WHATSAPP) if args.thread_id.startswith(f"{c}-")), None)
+    if channel is None:
+        print(f"Error: thread {args.thread_id} has no channel prefix (web_form-, email- or whatsapp-)", file=sys.stderr)
+        return 1
+    conn = db.connect(args.db)
+    try:
+        failure = db.get_failure(conn, args.thread_id)
+    finally:
+        conn.close()
+    if failure is not None and failure["status"] == "needs_review":
+        print(f"Error: thread {args.thread_id} is parked; use purchase-cycle failures resume", file=sys.stderr)
+        return 1
+    graph, clients = _clarify_graph(args, channel, recovery=True)
+    run_config = {"configurable": {"thread_id": args.thread_id}, "run_name": f"{channel}_order"}
+    snapshot = graph.get_state(run_config)
+    if not snapshot.next:
+        print(f"Error: no checkpoint to resume found for thread {args.thread_id}; nothing changed", file=sys.stderr)
+        return 1
+    if snapshot.interrupts:
+        print(
+            f"Error: thread {args.thread_id} waits for an answer; use purchase-cycle clarify answer or close",
+            file=sys.stderr,
+        )
+        return 1
+    print(f"mode={args.mode}  thread_id={args.thread_id}  channel={channel}  next={','.join(snapshot.next)}")
+    try:
+        state = graph.invoke(None, run_config)
+    except Exception as error:  # a parked thread is reported by `failures list`
+        message = str(error).splitlines()[0] if str(error) else ""
+        print(f"Error: thread {args.thread_id} failed: {type(error).__name__}: {message}", file=sys.stderr)
+        return 1
+    finally:
+        for client in clients:
+            client.save_recordings()
+    _print_outcome(args, state)
     return 0
 
 
@@ -690,6 +735,13 @@ def main(argv=None) -> int:
     resume.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     resume.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
     resume.set_defaults(handler=cmd_failures_resume)
+
+    crashed = sub.add_parser("resume", help="continue an interrupted thread from its last checkpoint")
+    crashed.add_argument("thread_id")
+    crashed.add_argument("--mode", choices=config.MODES, default="replay")
+    crashed.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    crashed.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
+    crashed.set_defaults(handler=cmd_resume)
 
     from purchase_cycle.evaluation.cli import add_eval_commands
 
