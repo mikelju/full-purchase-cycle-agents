@@ -189,8 +189,7 @@ def test_non_order_stores_nothing_and_gets_a_polite_reply(seeded_db, run, tmp_pa
 
 @pytest.mark.parametrize("source", ["body", "attachment.txt", "chat", ""])
 def test_only_message_is_a_valid_whatsapp_line_source(seeded_db, run, tmp_path, source):
-    from purchase_cycle.email_order import InvalidExtraction
-    from purchase_cycle.llm import InvalidModelOutput
+    from purchase_cycle.llm import InvalidExtraction, InvalidModelOutput
 
     expected = InvalidModelOutput if source == "" else InvalidExtraction
     with pytest.raises(expected):
