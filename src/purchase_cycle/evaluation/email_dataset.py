@@ -306,7 +306,9 @@ def _fixed_zip(data: bytes) -> bytes:
                     rb"\g<1>" + BASE_DATE.strftime("%Y-%m-%dT%H:%M:%SZ").encode() + rb"\g<2>",
                     content,
                 )
-            target.writestr(zipfile.ZipInfo(info.filename, date_time=FILE_DATE), content)
+            member = zipfile.ZipInfo(info.filename, date_time=FILE_DATE)
+            member.create_system = 0  # the default is 3 outside Windows, which changes the bytes
+            target.writestr(member, content)
     return out.getvalue()
 
 
