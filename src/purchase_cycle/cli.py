@@ -540,6 +540,78 @@ def cmd_clarify_list(args) -> int:
     return 0
 
 
+def cmd_failures_list(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        rows = db.list_failures(conn)
+    finally:
+        conn.close()
+    if not rows:
+        print("no parked threads")
+        return 0
+    print(f"parked threads: {len(rows)}")
+    for row in rows:
+        hours, minutes = divmod(row["age_minutes"], 60)
+        print(
+            f"  {row['thread_id']}  channel={row['channel']}  source={row['source']}  step={row['step']}  "
+            f"age={hours}h{minutes:02d}m"
+        )
+        print(f"    error: {row['error'].splitlines()[0] if row['error'] else ''}")
+    return 0
+
+
+def cmd_failures_resume(args) -> int:
+    """Run a parked thread again from its last checkpoint with recovery on and mark its row resolved."""
+    conn = db.connect(args.db)
+    try:
+        row = db.get_failure(conn, args.thread_id)
+    finally:
+        conn.close()
+    if row is None:
+        print(f"Error: thread {args.thread_id} is not parked; nothing changed", file=sys.stderr)
+        return 1
+    if row["status"] != "needs_review":
+        print(
+            f"Error: thread {args.thread_id} is not parked (status {row['status']}); nothing changed", file=sys.stderr
+        )
+        return 1
+    graph, clients = _clarify_graph(args, row["channel"], recovery=True)
+    run_config = {"configurable": {"thread_id": args.thread_id}, "run_name": f"{row['channel']}_order"}
+    if not graph.get_state(run_config).next:
+        print(f"Error: no checkpoint to resume found for thread {args.thread_id}; nothing changed", file=sys.stderr)
+        return 1
+    print(f"mode={args.mode}  thread_id={args.thread_id}  channel={row['channel']}  step={row['step']}")
+    try:
+        state = graph.invoke(None, run_config)
+    except Exception as error:  # the thread is parked again, or stays parked, for review
+        message = str(error).splitlines()[0] if str(error) else ""
+        print(f"Error: thread {args.thread_id} failed again: {type(error).__name__}: {message}", file=sys.stderr)
+        return 1
+    finally:
+        for client in clients:
+            client.save_recordings()
+    conn = db.connect(args.db)
+    try:
+        db.resolve_failure(conn, args.thread_id)
+    finally:
+        conn.close()
+    paused = state.get("__interrupt__")
+    if paused:
+        print(f"question (round {paused[0].value['round']}):")
+        print(paused[0].value["question"])
+        print(f"waiting for the answer: purchase-cycle clarify answer {args.thread_id} --text ...")
+    elif state.get("is_order") is False:
+        print("not an order, nothing stored")
+    else:
+        order = state["order_id"]
+        print(f"stored order: {order if order is not None else 'none (no line to store)'}")
+        if state.get("reply"):
+            print("reply:")
+            print(state["reply"])
+    print("failure resolved")
+    return 0
+
+
 def main(argv=None) -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(prog="purchase-cycle")
@@ -608,6 +680,16 @@ def main(argv=None) -> int:
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
         command.set_defaults(handler=handler)
     clarify_sub.choices["list"].set_defaults(handler=cmd_clarify_list)
+
+    failures = sub.add_parser("failures", help="list or resume the threads parked for review")
+    failures_sub = failures.add_subparsers(dest="failures_command", required=True)
+    failures_sub.add_parser("list", help="list the parked threads").set_defaults(handler=cmd_failures_list)
+    resume = failures_sub.add_parser("resume", help="run a parked thread again from its last checkpoint")
+    resume.add_argument("thread_id")
+    resume.add_argument("--mode", choices=config.MODES, default="replay")
+    resume.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    resume.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
+    resume.set_defaults(handler=cmd_failures_resume)
 
     from purchase_cycle.evaluation.cli import add_eval_commands
 
