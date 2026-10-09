@@ -234,6 +234,14 @@ def test_grader_matches_repeated_lines_one_to_one():
     assert not duplicate["email_exact_match"]
 
 
+def test_sku_only_credit_goes_to_produced_lines_left_after_exact_matches():
+    case = _case([_expected(1, "A", 5), _expected(2, "A", 3)])
+    result = email_eval.grade(case, True, [_got("A", 3)])
+    assert [r["line_recall"] for r in result["line_rows"]] == [False, True]
+    assert [r["field_sku"] for r in result["line_rows"]] == [False, True]
+    assert [r["field_quantity"] for r in result["line_rows"]] == [False, True]
+
+
 def test_grader_counts_an_invented_line_against_precision_and_exact_match():
     case = _case([_expected(1, "A", 2)])
     result = email_eval.grade(case, True, [_got("A", 2), _got("Z", 1)])

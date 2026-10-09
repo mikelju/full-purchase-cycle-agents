@@ -69,20 +69,22 @@ def grade(case: dict, is_order: bool | None, lines: list[dict], error: str | Non
     full = Counter((line["sku"], line["quantity"], line["source"]) for line in catalog)
     by_sku = Counter(line["sku"] for line in catalog)
     by_sku_quantity = Counter((line["sku"], line["quantity"]) for line in catalog)
-    line_rows = []
-    for line in case["lines"]:
-        if line["expected_sku"] is None:
-            continue
-        sku, quantity = line["expected_sku"], line["expected_quantity"]
-        found = _take(by_sku, sku)
-        line_rows.append(
-            {
-                "id": line["line_id"],
-                "line_recall": _take(full, (sku, quantity, line["location"])),
-                "field_sku": found,
-                "field_quantity": found and _take(by_sku_quantity, (sku, quantity)),
-            }
-        )
+    expected = [line for line in case["lines"] if line["expected_sku"] is not None]
+    recall = [_take(full, (line["expected_sku"], line["expected_quantity"], line["location"])) for line in expected]
+    # Exact (SKU, quantity) matches first, recalled lines before the others; SKU-only credit on the leftovers.
+    quantity = [False] * len(expected)
+    for i in sorted(range(len(expected)), key=lambda i: not recall[i]):
+        quantity[i] = _take(by_sku_quantity, (expected[i]["expected_sku"], expected[i]["expected_quantity"]))
+    skus_left = by_sku - Counter(line["expected_sku"] for line, q in zip(expected, quantity, strict=True) if q)
+    line_rows = [
+        {
+            "id": line["line_id"],
+            "line_recall": r,
+            "field_sku": q or _take(skus_left, line["expected_sku"]),
+            "field_quantity": q,
+        }
+        for line, r, q in zip(expected, recall, quantity, strict=True)
+    ]
     precision_hits = sum(row["line_recall"] for row in line_rows)
     expected_unknown = Counter(
         (line["expected_quantity"], line["location"]) for line in case["lines"] if line["expected_sku"] is None
