@@ -130,13 +130,16 @@ def insert_order(
 
     `clarification` is a (thread id, final status) pair whose row changes status in the same transaction.
     `source` is the (message id, thread id) of the delivered message; a message id already stored for the
-    channel for the same customer returns its order id and writes no order, line, source or clarification change
-    (a re-delivery or a resumed `store`); stored for another customer it raises SourceConflict and writes nothing.
+    channel for the same customer returns its order id and writes no order, line or source (a re-delivery or a
+    resumed `store`), but a still pending clarification of the thread is finished; stored for another customer it
+    raises SourceConflict and writes nothing.
     """
     with conn:
         if source:
             row = stored_source(conn, channel, source[0])
             if row and row["customer_code"] == customer_code:
+                if clarification:  # the current thread's question is finished too; an answered one stays as it is
+                    _finish_if_pending(conn, *clarification)
                 return row["order_id"]
             if row:
                 raise SourceConflict(
@@ -220,6 +223,14 @@ def finish_clarification(conn: sqlite3.Connection, thread_id: str, status: str) 
     )
     if cursor.rowcount == 0:
         raise NotPending(f"thread {thread_id} is not pending; nothing changed")
+
+
+def _finish_if_pending(conn: sqlite3.Connection, thread_id: str, status: str) -> None:
+    """Like finish_clarification, but a row that is not pending stays as it is and nothing is raised."""
+    conn.execute(
+        "UPDATE clarifications SET status = ?, updated_at = datetime('now') WHERE thread_id = ? AND status = 'pending'",
+        (status, thread_id),
+    )
 
 
 def get_clarification(conn: sqlite3.Connection, thread_id: str) -> dict | None:

@@ -590,3 +590,27 @@ def test_route_command_reports_a_stored_duplicate_without_running_it(seeded_db, 
     assert "== WA-3.json  route=duplicate  thread_id=whatsapp-r-1" in out
     assert "re-delivery of a message already stored as order 1, nothing run or stored" in out
     assert not (tmp_path / "outbox").exists()
+
+
+def test_answered_second_thread_of_a_stored_message_is_finished_not_left_pending(
+    seeded_db, write_recording, folder, tmp_path, no_network
+):
+    """Review 2, B1 defence: a thread whose `store` returns an order stored before still finishes its question."""
+    from langgraph.types import Command
+
+    db_path = seeded_db[0]
+    graph, _, _ = _whatsapp_graph(seeded_db, write_recording, tmp_path)
+    path = _write(folder, "WA-1.json", message("wamid.ORDER"))
+    states = []
+    for thread in ("whatsapp-t1", "whatsapp-t2"):  # the channel graph alone does not check the stored sources
+        config = {"configurable": {"thread_id": thread}}
+        assert graph.invoke({"message_path": str(path)}, config)["__interrupt__"]
+        states.append(graph.invoke(Command(resume={"answer": ANSWER}), config))
+    assert [s["order_id"] for s in states] == [1, 1]
+    conn = db.connect(db_path)
+    clarifications = [tuple(r) for r in conn.execute("SELECT thread_id, status FROM clarifications ORDER BY rowid")]
+    orders = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+    conn.close()
+    assert clarifications == [("whatsapp-t1", "answered"), ("whatsapp-t2", "answered")]
+    assert orders == 1
+    assert no_network == []
