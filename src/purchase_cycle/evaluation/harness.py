@@ -374,9 +374,10 @@ SUITES = (
     "clarification_answers",
     "whatsapp_order_extraction",
     "channel_routing",
+    "failure_recovery",
 )
 # The deterministic phase 05 suites run locally only, so `eval-upload` leaves them out.
-UPLOAD_SUITES = tuple(name for name in SUITES if name != "channel_routing")
+UPLOAD_SUITES = tuple(name for name in SUITES if name not in ("channel_routing", "failure_recovery"))
 # `all` leaves out the WhatsApp suite until its baseline is recorded (phase 05, increment 16).
 ALL_SUITES = tuple(name for name in SUITES if name != "whatsapp_order_extraction")
 
@@ -404,6 +405,10 @@ def _suite(name: str):
         from purchase_cycle.evaluation import routing_eval
 
         return routing_eval
+    if name == "failure_recovery":
+        from purchase_cycle.evaluation import recovery_eval
+
+        return recovery_eval
     if name in ("clarification_detection", "clarification_answers"):
         from purchase_cycle.evaluation import clarification_eval
 
