@@ -120,11 +120,14 @@ def read_whatsapp(path: Path | str, conn: sqlite3.Connection) -> dict:
     }
 
 
-def write_outbox(outbox: Path | str, to: str, message_id: str, text: str, name: str | None = None) -> Path:
-    """Write the reply to one message; the file name is keyed by the answered message, so a re-run overwrites it."""
+def write_outbox(
+    outbox: Path | str, to: str, message_id: str, text: str, kind: str = "reply", suffix: str = ""
+) -> Path:
+    """Write the reply to one message; the file name is keyed by the sender's digits and the answered message,
+    so a re-run overwrites it and two customers never share a file."""
     outbox = Path(outbox)
     outbox.mkdir(parents=True, exist_ok=True)
-    path = outbox / (name or f"reply-{message_id}.json")
+    path = outbox / f"{kind}-{phone_digits(to)}-{message_id}{suffix}.json"
     content = json.dumps({"to": to, "in_reply_to": message_id, "text": text}, indent=2, sort_keys=True)
     path.write_text(content + "\n", encoding="utf-8", newline="\n")
     return path
@@ -277,9 +280,7 @@ def build_whatsapp_order_graph(
                 message = read_whatsapp(state["message_path"], conn)
             finally:
                 conn.close()
-        write_outbox(
-            outbox, message["from"], message["message_id"], PARKED_REPLY, f"parked-{message['message_id']}.json"
-        )
+        write_outbox(outbox, message["from"], message["message_id"], PARKED_REPLY, "parked")
 
     def park(node, step):
         return parking(node, step, CHANNEL, db_path, source, notice) if recovery else node
@@ -299,8 +300,7 @@ def build_whatsapp_order_graph(
         def send_question(state: dict, question: str, rounds: int) -> None:
             # The question is a reply too: one keyed file per message and round.
             message = state["message"]
-            name = f"question-{message['message_id']}-{rounds}.json"
-            write_outbox(outbox, message["from"], message["message_id"], question, name)
+            write_outbox(outbox, message["from"], message["message_id"], question, "question", f"-{rounds}")
 
         park_ask = park if recovery else None
         builder.add_node("clarify", build_clarification_graph(clarification, db_path, CHANNEL, send_question, park_ask))

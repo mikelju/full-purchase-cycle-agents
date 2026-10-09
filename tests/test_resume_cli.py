@@ -107,7 +107,7 @@ def test_a_crash_at_each_point_is_resumed_in_a_new_process_with_exactly_one_orde
     assert crashed.returncode == faults.EXIT_CODE, crashed.stderr
     if channel == "whatsapp":  # the reply reaches the outbox before the in_reply crash point, never after it
         assert [p.name for p in outbox.glob("*.json")] == (
-            ["reply-wamid.CRASH.json"] if point == faults.IN_REPLY else []
+            ["reply-34600101201-wamid.CRASH.json"] if point == faults.IN_REPLY else []
         )
     stored_before = _rows(db_path, "SELECT COUNT(*) FROM orders")[0][0]
     assert stored_before == (0 if point == faults.AFTER_CHANNEL_STEPS else 1)
@@ -124,7 +124,7 @@ def test_a_crash_at_each_point_is_resumed_in_a_new_process_with_exactly_one_orde
     assert _rows(db_path, "SELECT channel, thread_id, order_id FROM order_sources") == [(channel, thread_id, 1)]
     if channel == "whatsapp":
         [reply] = outbox.iterdir()
-        assert reply.name == "reply-wamid.CRASH.json"
+        assert reply.name == "reply-34600101201-wamid.CRASH.json"
         assert "registered as order 1" in json.loads(reply.read_text(encoding="utf-8"))["text"]
     else:
         assert "registered as order 1" in resumed.stdout

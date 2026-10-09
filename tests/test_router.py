@@ -183,8 +183,11 @@ def test_paused_whatsapp_thread_is_resumed_by_a_later_whatsapp_text(
     assert lines == [("GLV-NIT-M", 40)]
     assert status == "answered"
     assert second["state"]["order_id"] == 1
-    assert sorted(p.name for p in outbox.iterdir()) == ["question-wamid.ORDER-1.json", "reply-wamid.ORDER.json"]
-    sent = json.loads((outbox / "reply-wamid.ORDER.json").read_text(encoding="utf-8"))
+    assert sorted(p.name for p in outbox.iterdir()) == [
+        "question-34600101201-wamid.ORDER-1.json",
+        "reply-34600101201-wamid.ORDER.json",
+    ]
+    sent = json.loads((outbox / "reply-34600101201-wamid.ORDER.json").read_text(encoding="utf-8"))
     assert (sent["to"], sent["in_reply_to"]) == (PHONE, "wamid.ORDER")
     assert "Your WhatsApp order is registered as order 1" in sent["text"]
     assert (intake.calls, extraction.calls, clients.question.calls, clients.answer.calls) == (1, 1, 1, 1)
@@ -223,7 +226,10 @@ def test_route_command_runs_a_mixed_inbox(
     assert "route=rejected  reason: the file type '.txt' fits no channel" in out
     assert [line for line in out.splitlines() if line.startswith("stored order:")] == ["stored order: 1"]
     assert "Your WhatsApp order is registered as order 1" in out
-    assert sorted(p.name for p in outbox.iterdir()) == ["question-wamid.ORDER-1.json", "reply-wamid.ORDER.json"]
+    assert sorted(p.name for p in outbox.iterdir()) == [
+        "question-34600101201-wamid.ORDER-1.json",
+        "reply-34600101201-wamid.ORDER.json",
+    ]
     assert err == ""
     assert no_network == []
 
@@ -245,8 +251,8 @@ def test_paused_whatsapp_thread_sends_its_question_to_the_outbox(seeded_db, writ
     for thread in ("whatsapp-1", "whatsapp-2"):  # a second delivery overwrites the same keyed file
         state = graph.invoke({"message_path": str(path)}, {"configurable": {"thread_id": thread}})
         assert state["__interrupt__"][0].value["question"] == question
-        assert sorted(p.name for p in outbox.iterdir()) == ["question-wamid.ORDER-1.json"]
-    sent = json.loads((outbox / "question-wamid.ORDER-1.json").read_text(encoding="utf-8"))
+        assert sorted(p.name for p in outbox.iterdir()) == ["question-34600101201-wamid.ORDER-1.json"]
+    sent = json.loads((outbox / "question-34600101201-wamid.ORDER-1.json").read_text(encoding="utf-8"))
     assert sent == {"to": PHONE, "in_reply_to": "wamid.ORDER", "text": question}
 
 
@@ -354,7 +360,7 @@ def test_redelivered_whatsapp_order_of_a_paused_thread_is_a_duplicate_not_its_an
     conn.close()
     assert clarifications == [("whatsapp-run1-WA-1", 1, "pending")]
     assert orders == 0
-    assert sorted(p.name for p in outbox.iterdir()) == ["question-wamid.ORDER-1.json"]
+    assert sorted(p.name for p in outbox.iterdir()) == ["question-34600101201-wamid.ORDER-1.json"]
     assert (intake.calls, extraction.calls, clients.question.calls, clients.answer.calls) == (1, 1, 1, 0)
     assert no_network == []
 
@@ -674,3 +680,20 @@ def test_clarify_answer_reports_a_source_conflict_cleanly(
     assert code == 1, out
     assert err.startswith("Error: ") and "already stored for another customer" in err
     assert _status(db_path, "whatsapp-run1-WA-1") == "closed"
+
+
+def test_two_customers_with_the_same_message_id_never_share_an_outbox_file(
+    seeded_db, write_recording, folder, tmp_path, no_network
+):
+    """Review 2, I1 and SEC-008: outbox file names carry the sender, so one question never overwrites the other."""
+    graph, _, question = _whatsapp_graph(seeded_db, write_recording, tmp_path)
+    other = CUSTOMERS[2]
+    for name, sender in (("WA-1.json", PHONE), ("WA-2.json", other.phone)):
+        path = _write(folder, name, message("wamid.ORDER", sender=sender))
+        assert graph.invoke({"message_path": str(path)}, {"configurable": {"thread_id": name}})["__interrupt__"]
+    outbox = tmp_path / "outbox"
+    digits = "".join(c for c in other.phone if c.isdigit())
+    names = sorted(p.name for p in outbox.iterdir())
+    assert names == sorted([f"question-{PHONE}-wamid.ORDER-1.json", f"question-{digits}-wamid.ORDER-1.json"])
+    for name in names:
+        assert json.loads((outbox / name).read_text(encoding="utf-8"))["text"] == question

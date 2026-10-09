@@ -124,7 +124,7 @@ def _outbox(tmp_path):
 
 def _parked_notice(name):
     """Only WhatsApp can receive a reply: a parked thread writes one keyed notice (coordinator decision 2026-10-09)."""
-    return [f"parked-{message()['message_id']}.json"] if name == "whatsapp" else []
+    return [f"parked-34600101201-{message()['message_id']}.json"] if name == "whatsapp" else []
 
 
 CHANNELS = ["email", "whatsapp"]

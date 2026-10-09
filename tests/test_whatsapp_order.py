@@ -122,8 +122,8 @@ def test_outbox_file_is_keyed_by_the_answered_message(tmp_path):
     outbox = tmp_path / "outbox"
     first = write_outbox(outbox, PHONE, "wamid.TEST1", "Hello")
     again = write_outbox(outbox, PHONE, "wamid.TEST1", "Hello")
-    assert first == again == outbox / "reply-wamid.TEST1.json"
-    assert [p.name for p in outbox.iterdir()] == ["reply-wamid.TEST1.json"]
+    assert first == again == outbox / "reply-34600101201-wamid.TEST1.json"
+    assert [p.name for p in outbox.iterdir()] == ["reply-34600101201-wamid.TEST1.json"]
 
 
 # C3: the WhatsApp graph in replay with hand-written recordings.
@@ -251,7 +251,10 @@ def test_whatsapp_demo_command_runs_an_inbox_folder(
     assert "message rejected, nothing stored:" in out
     assert "the message type 'image' is not text" in out
     assert "the number '34999999999' is not a known customer" in out
-    assert sorted(p.name for p in outbox.iterdir()) == ["reply-wamid.TEST1.json", "reply-wamid.TEST2.json"]
+    assert sorted(p.name for p in outbox.iterdir()) == [
+        "reply-34600101201-wamid.TEST1.json",
+        "reply-34600101201-wamid.TEST2.json",
+    ]
     assert "outbox: " in out
     assert err == ""
     assert no_network == []

@@ -224,7 +224,7 @@ def test_three_transient_errors_park_the_thread_with_nothing_stored(
     assert flaky.attempts == 3
     assert _rows(seeded_db[0]) == ([], [], [])
     # Only WhatsApp can receive a reply: its parked thread writes one notice (coordinator decision 2026-10-09).
-    notices = [f"parked-{message()['message_id']}.json"] if "message_path" in graph_input else []
+    notices = [f"parked-34600101201-{message()['message_id']}.json"] if "message_path" in graph_input else []
     assert [p.name for p in (tmp_path / "outbox").glob("*.json")] == notices
     assert graph.get_state(RUN).next == (node,)
     # The checkpoint stays resumable: once the errors stop, the same thread finishes.
