@@ -14,6 +14,8 @@ MATCHING_RECORDINGS_PATH = EVALS_DIR / "recordings" / "web_form_matching.jsonl"
 EMAIL_INTAKE_RECORDINGS_PATH = EVALS_DIR / "recordings" / "email_intake.jsonl"
 EMAIL_EXTRACTION_RECORDINGS_PATH = EVALS_DIR / "recordings" / "email_order_extraction.jsonl"
 EMAIL_EXTRACTION_MAX_TOKENS = 4096  # one answer lists every line of an email
+WHATSAPP_INTAKE_RECORDINGS_PATH = EVALS_DIR / "recordings" / "whatsapp_intake.jsonl"
+WHATSAPP_EXTRACTION_RECORDINGS_PATH = EVALS_DIR / "recordings" / "whatsapp_order_extraction.jsonl"
 CLARIFICATION_QUESTION_RECORDINGS_PATH = EVALS_DIR / "recordings" / "clarification_question.jsonl"
 CLARIFICATION_ANSWER_RECORDINGS_PATH = EVALS_DIR / "recordings" / "clarification_answers.jsonl"
 # The detection evaluation runs the channel steps on its own orders; their answers never go into the phase 02 and 03 files.
@@ -25,6 +27,7 @@ CLARIFICATION_DETECTION_EXTRACTION_RECORDINGS_PATH = (
 CLARIFICATION_MAX_TOKENS = 1024  # a question or a resolution list covers every doubtful line of an order
 
 MODES = ("live", "record", "replay")
+OUTBOX_DIR = DATA_DIR / "outbox"  # simulated WhatsApp replies
 
 
 def default_db_path() -> Path:

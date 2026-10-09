@@ -124,3 +124,94 @@ def test_outbox_file_is_keyed_by_the_answered_message(tmp_path):
     again = write_outbox(outbox, PHONE, "wamid.TEST1", "Hello")
     assert first == again == outbox / "reply-wamid.TEST1.json"
     assert [p.name for p in outbox.iterdir()] == ["reply-wamid.TEST1.json"]
+
+
+# C3: the WhatsApp graph in replay with hand-written recordings.
+ORDER = {"is_order": True, "reason": "The customer orders gloves and a bed."}
+LINES = [
+    {"source": "message", "source_text": "40 boxes of nitrile gloves M", "sku": "GLV-NIT-M", "quantity": 40},
+    {"source": "message", "source_text": "a hospital bed", "sku": None, "quantity": 1},
+]
+
+
+@pytest.fixture
+def run(seeded_db, write_recording, inbox, tmp_path):
+    from purchase_cycle.llm import WHATSAPP_EXTRACTION, WHATSAPP_INTAKE, ModelClient
+    from purchase_cycle.whatsapp_order import build_whatsapp_order_graph, model_text
+
+    db_path, catalog = seeded_db
+
+    def _run(intake_answer=ORDER, lines=LINES, content=None):
+        path = inbox(content or message())
+        text = model_text({"body": BODY})
+        recordings = write_recording(catalog, text, intake_answer, task=WHATSAPP_INTAKE)
+        write_recording(catalog, text, {"lines": lines}, task=WHATSAPP_EXTRACTION)
+        intake = ModelClient("replay", catalog, recordings, task=WHATSAPP_INTAKE)
+        extraction = ModelClient("replay", catalog, recordings, task=WHATSAPP_EXTRACTION)
+        graph = build_whatsapp_order_graph(intake, extraction, db_path, tmp_path / "outbox")
+        state = graph.invoke({"message_path": path}, {"configurable": {"thread_id": "whatsapp-1"}})
+        return state, intake, extraction
+
+    return _run
+
+
+def _outbox(tmp_path) -> list[dict]:
+    return [json.loads(p.read_text(encoding="utf-8")) for p in sorted((tmp_path / "outbox").glob("*.json"))]
+
+
+def test_clear_order_stores_one_whatsapp_order_and_writes_the_reply(seeded_db, run, tmp_path):
+    state, intake, extraction = run()
+    conn = db.connect(seeded_db[0])
+    orders = [dict(r) for r in conn.execute("SELECT id, customer_code, channel FROM orders")]
+    lines = [tuple(r) for r in conn.execute("SELECT sku, quantity FROM order_lines")]
+    conn.close()
+    assert orders == [{"id": 1, "customer_code": CUSTOMER.code, "channel": "whatsapp"}]
+    assert lines == [("GLV-NIT-M", 40)]
+    assert (intake.calls, extraction.calls) == (1, 1)
+    [sent] = _outbox(tmp_path)
+    assert (sent["to"], sent["in_reply_to"]) == (PHONE, "wamid.TEST1")
+    assert sent["text"] == state["reply"]
+    assert "Your WhatsApp order is registered as order 1" in sent["text"]
+    assert '"a hospital bed" (1)' in sent["text"]
+
+
+def test_non_order_stores_nothing_and_gets_a_polite_reply(seeded_db, run, tmp_path):
+    state, _, extraction = run(intake_answer={"is_order": False, "reason": "The customer says thanks."})
+    conn = db.connect(seeded_db[0])
+    assert _orders(conn) == 0
+    conn.close()
+    assert extraction.calls == 0
+    [sent] = _outbox(tmp_path)
+    assert sent["text"].startswith(f"Dear {CUSTOMER.contact_name},")
+    assert "does not look like an order" in sent["text"]
+
+
+@pytest.mark.parametrize("source", ["body", "attachment.txt", "chat", ""])
+def test_only_message_is_a_valid_whatsapp_line_source(seeded_db, run, tmp_path, source):
+    from purchase_cycle.email_order import InvalidExtraction
+    from purchase_cycle.llm import InvalidModelOutput
+
+    expected = InvalidModelOutput if source == "" else InvalidExtraction
+    with pytest.raises(expected):
+        run(lines=[{**LINES[0], "source": source}])
+    conn = db.connect(seeded_db[0])
+    assert _orders(conn) == 0
+    conn.close()
+    assert not (tmp_path / "outbox").exists()
+
+
+def test_non_text_message_through_the_graph_writes_only_the_text_only_reply(seeded_db, run, tmp_path):
+    state, intake, _ = run(content=message(kind="image", image={"id": "m"}))
+    assert intake.calls == 0
+    assert [s["text"] for s in _outbox(tmp_path)] == [TEXT_ONLY_REPLY]
+
+
+def test_whatsapp_tasks_are_distinct_from_the_email_tasks():
+    from purchase_cycle import llm
+
+    whatsapp, email = (llm.WHATSAPP_INTAKE, llm.WHATSAPP_EXTRACTION), (llm.EMAIL_INTAKE, llm.EMAIL_EXTRACTION)
+    for new, old in zip(whatsapp, email, strict=True):
+        assert new.name != old.name and new.tool_name != old.tool_name
+        assert new.instructions != old.instructions
+        assert new.recordings_path != old.recordings_path
+    assert [t.recordings_path.name for t in whatsapp] == ["whatsapp_intake.jsonl", "whatsapp_order_extraction.jsonl"]
