@@ -312,3 +312,23 @@ def test_check_command_reports_the_rejected_messages_of_a_batch(plan, tmp_path, 
     out = capsys.readouterr().out
     assert f"{plan[1]['id']}: " in out and f"{plan[0]['id']}: " not in out
     assert "2 messages checked, 1 rejected" in out
+
+
+def test_versioned_dataset_is_the_build_of_the_versioned_texts(tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import main
+
+    versioned = wd.DATASET_DIR
+    _use_folder(monkeypatch, tmp_path)
+    shutil.copy(versioned / "plan.jsonl", tmp_path / "plan.jsonl")
+    shutil.copytree(versioned / "texts", tmp_path / "texts")
+    assert main(["whatsapp-dataset", "build"]) == 0
+    built = sorted(p.name for p in (tmp_path / "messages").glob("*.json"))
+    assert sorted(p.name for p in (versioned / "messages").glob("*.json")) == built
+    for name in built:
+        assert (versioned / "messages" / name).read_bytes() == (tmp_path / "messages" / name).read_bytes(), name
+    assert (versioned / "dataset.jsonl").read_bytes() == (tmp_path / "dataset.jsonl").read_bytes()
+    rows = wd.load_dataset(versioned / "dataset.jsonl")
+    counts = Counter((row["category"], row["split"]) for row in rows)
+    assert len(rows) == len(read_jsonl(versioned / "plan.jsonl"))
+    assert all(counts[(c, "dev")] == wd.DEV_PER_CATEGORY for c in wd.CATEGORIES)
+    assert all(counts[(c, "test")] == wd.MESSAGES_PER_CATEGORY - wd.DEV_PER_CATEGORY for c in wd.CATEGORIES)
