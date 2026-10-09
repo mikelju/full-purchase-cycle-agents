@@ -27,6 +27,7 @@ from purchase_cycle.clarification import ClarificationClients
 from purchase_cycle.config import EVALS_DIR
 from purchase_cycle.email_order import build_email_order_graph, parse_email
 from purchase_cycle.email_order import model_text as email_text
+from purchase_cycle.evaluation import critical
 from purchase_cycle.evaluation.email_eval import _ci, _pct
 from purchase_cycle.evaluation.planning import read_jsonl, write_jsonl
 from purchase_cycle.evaluation.stats import target_cells, wilson_interval, zero_event_note
@@ -61,6 +62,12 @@ EMAIL_BODY = "Hello,\nPlease send 40 boxes of nitrile gloves M.\nThanks"
 EMAIL_LINES = [{"source": "body", "source_text": "40 boxes of nitrile gloves M", "sku": "GLV-NIT-M", "quantity": 40}]
 FORM_PRODUCT = "alcohol 70 250ml"
 INTAKE = {"is_order": True, "reason": "An order."}
+# What the customer asked for and the order message text, per channel, for the critical-error counter (C22).
+REQUESTED = {
+    "whatsapp": ([{"text": "40 boxes of nitrile gloves M", "sku": "GLV-NIT-M"}], WA_BODY),
+    "email": ([{"text": "40 boxes of nitrile gloves M", "sku": "GLV-NIT-M"}], EMAIL_BODY),
+    "web_form": ([{"text": FORM_PRODUCT, "sku": "ALC70-250"}], FORM_PRODUCT),
+}
 INVALID_ANSWER = "not a tool call"  # fails every task schema
 STEPS = {
     "web_form": {"match": llm.MATCHING},
@@ -339,12 +346,21 @@ def _outcome(db_path: Path, thread_id: str | None, state: dict | None, error: Ba
     return STORED if (state or {}).get("order_id") is not None else NO_ORDER
 
 
-def _run_phase(phase: str, item: dict, folder: Path, catalog: list, scripts: dict, thread: str | None, run: int):
-    """Run one phase and return its outcome and the thread it ran."""
+def _keep_reply(replies: list, channel: str, state: dict | None) -> None:
+    # WhatsApp replies are read from the outbox files; email and web form replies only live in the final state.
+    if channel != "whatsapp" and (state or {}).get("reply"):
+        replies.append({"in_reply_to": None, "text": state["reply"]})
+
+
+def _run_phase(
+    phase: str, item: dict, folder: Path, catalog: list, scripts: dict, thread: str | None, run: int, replies: list
+):
+    """Run one phase and return its outcome and the thread it ran; the reply it sent goes to `replies`."""
     graphs = _graphs(folder, catalog, scripts)
     db_path = folder / "business.db"
     if phase == "deliver":
         result = router.run_inbox(folder / "inbox", graphs, db_path, f"run{run}", folder / "outbox")[0]
+        _keep_reply(replies, item["channel"], result["state"])
         if result["route"].kind == router.DUPLICATE:
             return DUPLICATE, thread
         return _outcome(db_path, result["thread_id"], result["state"], result["error"]), result["thread_id"]
@@ -354,6 +370,7 @@ def _run_phase(phase: str, item: dict, folder: Path, catalog: list, scripts: dic
         state = graphs[item["channel"]].invoke(None, config, durability="sync")
     except Exception as caught:  # a resumed thread that fails again stays parked
         error = caught
+    _keep_reply(replies, item["channel"], state)
     if phase == "failures_resume" and error is None:
         conn = db.connect(db_path)
         try:
@@ -381,6 +398,31 @@ def _measure(folder: Path) -> dict:
     return measured
 
 
+def outbox_replies(outbox: Path) -> list[dict]:
+    """The WhatsApp replies and notices written to the outbox folder."""
+    if not outbox.is_dir():
+        return []
+    return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(outbox.glob("*.json"))]
+
+
+def thread_values(graph, threads) -> dict[str, dict]:
+    """The final checkpoint values of each thread."""
+    return {t: dict(graph.get_state({"configurable": {"thread_id": t}}).values) for t in dict.fromkeys(threads) if t}
+
+
+def _evidence(folder: Path, item: dict, catalog: list, threads: list, replies: list) -> dict:
+    """The final state the critical-error counter reads: database, replies and thread checkpoints."""
+    requested, text = REQUESTED[item["channel"]]
+    graph = _graphs(folder, catalog, {})[item["channel"]]
+    return {
+        "db_path": folder / "business.db",
+        "threads": thread_values(graph, threads),
+        "replies": replies + outbox_replies(folder / "outbox"),
+        "requested": requested,
+        "message_text": text,
+    }
+
+
 def grade(item: dict, measured: dict) -> dict:
     """Right when every phase outcome and every database and outbox count is the expected one."""
     return {**measured, "correct": measured == item["expected"]}
@@ -404,19 +446,22 @@ def run_item(item: dict, tmp: Path) -> dict:
         if point == crash_point:
             raise SimulatedCrash(point)
 
-    outcomes, thread = [], None
+    outcomes, thread, threads, replies = [], None, [], []
     for n, phase in enumerate(item["phases"]):
         faults.crash_at = crash_at if n == 0 and crash_point else real_crash_at
         try:
-            outcome, ran = _run_phase(phase, item, folder, catalog, scripts, thread, n + 1)
+            outcome, ran = _run_phase(phase, item, folder, catalog, scripts, thread, n + 1, replies)
         except SimulatedCrash:
             outcome, ran = CRASH, f"{item['channel']}-run{n + 1}-{item['id']}"
         finally:
             faults.crash_at = real_crash_at
         outcomes.append(outcome)
         thread = thread or ran
+        threads.append(ran)
     measured = {"phases": outcomes, **_measure(folder)}
-    return {"id": item["id"], "category": item["category"], "expected": item["expected"], **grade(item, measured)}
+    errors = critical.count(**_evidence(folder, item, catalog, threads, replies))
+    graded = {"id": item["id"], "category": item["category"], "expected": item["expected"], **grade(item, measured)}
+    return {**graded, "critical": errors}
 
 
 def _rate(rows: list[dict]) -> dict:
@@ -440,6 +485,7 @@ def evaluate(
     s = _rate(results)
     target, met = target_cells(s["value"], TARGET)
     gate = "PASS" if s["value"] >= TARGET else "FAIL"
+    errors = critical_totals(results)
     print(f"{SUITE}  mode={mode}  scenarios={len(results)}  (deterministic: scripted faults, no model call, no split, no baseline)")  # fmt: skip
     print(
         f"{'metric':<26}{'value':<8}{'95% CI':<16}{'n':<6}{'unit':<16}{'target':<9}{'target met':<12}{'threshold':<11}gate"
@@ -448,6 +494,7 @@ def evaluate(
         f"{'scenario_success':<26}{_pct(s['value']):<8}{_ci(s):<16}{s['n']:<6}{UNIT:<16}{target:<9}{met:<12}"
         f"{_pct(TARGET):<11}{gate}" + zero_event_note(s)
     )
+    print_critical(errors, len(results))
     print("per category:")
     for category in CATEGORIES:
         rows = [r for r in results if r["category"] == category]
@@ -461,10 +508,38 @@ def evaluate(
         expected = {k: r["expected"][k] for k in keys}
         got = {k: r[k] for k in keys}
         print(f"  {r['id']}  expected {expected}  got {got}")
+    code = 0
     if failures:
         print(f"GATE FAILED: scenario_success {_pct(s['value'])} below threshold {_pct(TARGET)}")
-        return 1
-    return 0
+        code = 1
+    return max(code, critical_gate(errors, results))
+
+
+def critical_totals(results: list[dict]) -> dict[str, int]:
+    return {kind: sum(r["critical"][kind] for r in results) for kind in critical.KINDS}
+
+
+def print_critical(errors: dict[str, int], n: int) -> None:
+    """The critical-error row: a count gated at 0 with no averaging, then the count per kind."""
+    total = sum(errors.values())
+    target, met = target_cells(total, 0, "<=")
+    print(
+        f"{'critical_errors':<26}{total:<8}{'-':<16}{n:<6}{'scenario':<16}{'=0':<9}{met:<12}{'0':<11}"
+        f"{'PASS' if total == 0 else 'FAIL'}"
+    )
+    print("  by kind: " + "  ".join(f"{kind}={errors[kind]}" for kind in critical.KINDS))
+
+
+def critical_gate(errors: dict[str, int], results: list[dict]) -> int:
+    """Exit 1 when any scenario holds a critical error, naming each one."""
+    if not sum(errors.values()):
+        return 0
+    for r in results:
+        found = {kind: c for kind, c in r["critical"].items() if c}
+        if found:
+            print(f"  {r['id']}  critical errors {found}")
+    print(f"GATE FAILED: critical_errors {sum(errors.values())} above threshold 0")
+    return 1
 
 
 def main() -> None:
