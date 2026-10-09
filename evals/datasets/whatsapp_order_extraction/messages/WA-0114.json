@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 101 201",
+  "message_id": "wamid.dataset.WA-0114",
+  "text": {
+    "body": "Good morning, this is the clinic on Calle Mayor.\nthree aneroid sphygmomanomters with stethoscope\nsixteen boxes of sterile eye pads\neighty boxes of nitrile examination gloves, extended cuff 30 cm, size XL\nPlease confirm, thanks"
+  },
+  "timestamp": "1791124920",
+  "type": "text"
+}

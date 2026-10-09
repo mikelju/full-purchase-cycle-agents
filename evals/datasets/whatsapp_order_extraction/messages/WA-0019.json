@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 122 222",
+  "message_id": "wamid.dataset.WA-0019",
+  "text": {
+    "body": "Good morning team, hope you all had a nice weekend :)"
+  },
+  "timestamp": "1788728820",
+  "type": "text"
+}

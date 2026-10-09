@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 121 221",
+  "message_id": "wamid.dataset.WA-0135",
+  "text": {
+    "body": "Hi again, what's the email for sending purchase orders, is it the same as before?"
+  },
+  "timestamp": "1791652500",
+  "type": "text"
+}

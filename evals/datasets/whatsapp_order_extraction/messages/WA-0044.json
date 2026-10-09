@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 140 240",
+  "message_id": "wamid.dataset.WA-0044",
+  "text": {
+    "body": "Hello, the invoice you sent us has the wrong VAT number again. Third time this happens!!"
+  },
+  "timestamp": "1789360320",
+  "type": "text"
+}

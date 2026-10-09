@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 145 245",
+  "message_id": "wamid.dataset.WA-0110",
+  "text": {
+    "body": "Hi, good morning. Many of the new customers at the pharmacy need the smaller fit, so the order this time is a bit different: 200 adult incontinence briefs size S. Please deliver before the weekend if you can. Thank you"
+  },
+  "timestamp": "1791024600",
+  "type": "text"
+}

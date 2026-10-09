@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 143 243",
+  "message_id": "wamid.dataset.WA-0100",
+  "text": {
+    "body": "Morning! Order below pls\na dozen packs of cohesive bandages, the 7.5 cm wide ones\nthree dozen packs of elastic crepe bandage 10 cm x 4.5 m\nhalf a dozen boxes of disposable syringe 5 ml, luer slip\nhalf a dozen pairs of compression knee-high stockings class I, size S\nRegards"
+  },
+  "timestamp": "1790772000",
+  "type": "text"
+}

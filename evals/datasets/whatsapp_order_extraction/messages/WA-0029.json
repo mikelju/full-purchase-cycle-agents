@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 136 236",
+  "message_id": "wamid.dataset.WA-0029",
+  "text": {
+    "body": "Hi, it's Pablo from the pharmacy. A couple of local clinics have been asking us for this and I promised I would check with you first. Could you get us 8 bottles of ultrasound gel 5 litre? Let me know price and timing, thanks"
+  },
+  "timestamp": "1788981420",
+  "type": "text"
+}

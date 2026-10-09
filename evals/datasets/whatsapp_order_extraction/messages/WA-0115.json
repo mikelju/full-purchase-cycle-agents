@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 131 231",
+  "message_id": "wamid.dataset.WA-0115",
+  "text": {
+    "body": "Hello, order from the residence:\nhalf a dozen boxes of alcohol prep pads, single-use\nhalf a dozen boxes of sterile latex-free surgical gloves neoprane size 8.5\nseventy-five adjustable aluminum walking sticks\ntwenty-five jerrycans of hydroalcoholic hand sanitiser gel 5 litre\nKind regards"
+  },
+  "timestamp": "1791150900",
+  "type": "text"
+}

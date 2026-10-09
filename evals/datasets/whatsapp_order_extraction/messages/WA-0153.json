@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 143 243",
+  "message_id": "wamid.dataset.WA-0153",
+  "text": {
+    "body": "Hi, can we change the delivery address on our account? We are moving next month. Who should I talk to?"
+  },
+  "timestamp": "1792105740",
+  "type": "text"
+}

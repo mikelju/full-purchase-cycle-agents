@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 147 247",
+  "message_id": "wamid.dataset.WA-0080",
+  "text": {
+    "body": "Hello, we were charged twice for the same order this month. Please check and refund"
+  },
+  "timestamp": "1790266800",
+  "type": "text"
+}

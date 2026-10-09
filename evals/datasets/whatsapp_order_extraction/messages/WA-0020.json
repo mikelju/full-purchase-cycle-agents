@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 110 210",
+  "message_id": "wamid.dataset.WA-0020",
+  "text": {
+    "body": "Hey, could we get 17 bottles of alcohol-free mouthwash 500 ml and 18 anti-pressure wheelchair cushions delivered by Friday?"
+  },
+  "timestamp": "1788754800",
+  "type": "text"
+}

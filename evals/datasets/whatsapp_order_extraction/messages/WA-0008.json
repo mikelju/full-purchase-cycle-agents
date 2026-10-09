@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 114 214",
+  "message_id": "wamid.dataset.WA-0008",
+  "text": {
+    "body": "Hi! This is Laura from the clinic, just saved this number. Is this the right WhatsApp for orders from now on?"
+  },
+  "timestamp": "1788453840",
+  "type": "text"
+}

@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 125 225",
+  "message_id": "wamid.dataset.WA-0072",
+  "text": {
+    "body": "Can you send me the updated price list for this quarter please?"
+  },
+  "timestamp": "1790066160",
+  "type": "text"
+}

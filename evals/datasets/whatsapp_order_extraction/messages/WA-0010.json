@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 137 237",
+  "message_id": "wamid.dataset.WA-0010",
+  "text": {
+    "body": "Hi, order for the pharmacy pls:\n- 7 bottles saline 0.9% irrigation 250ml\n- 9 pairs knee-high compression stockings class I size L\n- 2 boxes nitrile exam gloves powder free XL\n- 4 packs pre-moistened wash gloves\n- 5 boxes childrens adhesive plasturs with drawngs\nThanks!"
+  },
+  "timestamp": "1788502200",
+  "type": "text"
+}

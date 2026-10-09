@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 146 246",
+  "message_id": "wamid.dataset.WA-0151",
+  "text": {
+    "body": "Hello, how long does delivery to the islands take usually?"
+  },
+  "timestamp": "1792057380",
+  "type": "text"
+}

@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 107 207",
+  "message_id": "wamid.dataset.WA-0142",
+  "text": {
+    "body": "Hi, this is Jorge from the clinic reception. Our director asked me to say thanks for the quick service last month."
+  },
+  "timestamp": "1791830760",
+  "type": "text"
+}
