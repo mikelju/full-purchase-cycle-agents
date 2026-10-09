@@ -28,6 +28,8 @@ AMBIGUOUS = "ambiguous"
 UNKNOWN = "unknown"
 QUANTITY = "quantity"
 EMAIL = "email"
+WHATSAPP = "whatsapp"
+FREE_TEXT_CHANNELS = (EMAIL, WHATSAPP)  # channels whose quantity is checked against the line text
 
 # Words that carry no product meaning in a line text; quantities and pack words included.
 FILLER_WORDS = frozenset(
@@ -107,7 +109,9 @@ def line_doubts(line: dict, catalog: list, channel: str) -> tuple[list[str], lis
         types.append(UNKNOWN)
     quantity = line["quantity"]
     sale_unit = next((row["sale_unit"] for row in catalog if row["sku"] == line["sku"]), None)
-    if quantity > MAX_LINE_QUANTITY or (channel == EMAIL and not supports_quantity(text, quantity, sale_unit)):
+    if quantity > MAX_LINE_QUANTITY or (
+        channel in FREE_TEXT_CHANNELS and not supports_quantity(text, quantity, sale_unit)
+    ):
         types.append(QUANTITY)
     return types, candidates
 

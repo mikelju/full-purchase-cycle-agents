@@ -167,6 +167,18 @@ def test_unsupported_email_quantity_is_doubtful(seeded_db):
     assert [(d["line_id"], d["types"]) for d in doubts] == [(1, [QUANTITY]), (2, [QUANTITY]), (3, [QUANTITY])]
 
 
+def test_unsupported_whatsapp_quantity_is_doubtful(seeded_db):
+    # Coordinator decision 2026-10-09: WhatsApp lines are free text, so the text check applies as for email.
+    _, catalog = seeded_db
+    lines = [
+        _email("some boxes of nitrile gloves M", 5, "GLV-NIT-M"),
+        _email("40 boxes of nitrile gloves M", 4, "GLV-NIT-M"),
+        _email("nitrile gloves M, 40 boxes", 40, "GLV-NIT-M"),
+    ]
+    doubts = detect(lines, catalog, "whatsapp")
+    assert [(d["line_id"], d["types"]) for d in doubts] == [(1, [QUANTITY]), (2, [QUANTITY])]
+
+
 def test_web_quantity_is_not_checked_against_the_text(seeded_db):
     _, catalog = seeded_db
     assert detect([_web("GLV-NIT-M", 7, "GLV-NIT-M")], catalog, WEB) == []
