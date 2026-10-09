@@ -153,6 +153,7 @@ Per criterion: command or path run, observed result and evidence reference.
 Pending items, limitations and what could not be checked, stated plainly.
 - Open item (coordinator decision 2026-10-09): the `message_id` of a WhatsApp clarification answer is not recorded in `order_sources`, so a re-delivered answer could be applied again; to be stated in the increment 23 limitations.
 - Fixed 2026-10-09: in record mode `route`, `failures resume` and `resume` save the channel step recordings (matching, intake, extraction) as well as the clarification ones, which increments 17 and 24 need; `_clarify_graph` fills an optional `channel_clients` list (tests in `tests/test_router.py` and `tests/test_failures_cli.py`).
+- Fixed 2026-10-09 (review 1, F1, C10): `run_inbox` (so `route`), `resume`, `failures resume`, `clarify answer` and `close` and `whatsapp-demo` run the graph with `durability="sync"`, so a step checkpoint is on disk before the next step can crash; the `invoke_durability` spy in four tests failed before the fix (durability None); `uv run pytest -q tests/test_resume_cli.py` 6 runs in a row, 11 passed each (`.evidence/fase-05/resume-sync-f1.txt`).
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.

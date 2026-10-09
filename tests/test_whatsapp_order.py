@@ -219,7 +219,7 @@ def test_whatsapp_tasks_are_distinct_from_the_email_tasks():
 
 
 def test_whatsapp_demo_command_runs_an_inbox_folder(
-    seeded_db, write_recording, tmp_path, no_network, capsys, monkeypatch
+    seeded_db, write_recording, tmp_path, no_network, capsys, monkeypatch, invoke_durability
 ):
     import dataclasses
 
@@ -255,6 +255,7 @@ def test_whatsapp_demo_command_runs_an_inbox_folder(
     assert "outbox: " in out
     assert err == ""
     assert no_network == []
+    assert invoke_durability == ["sync"] * 3
 
 
 def test_whatsapp_demo_command_reports_an_empty_folder(tmp_path, capsys):

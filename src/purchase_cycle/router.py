@@ -95,7 +95,7 @@ def run_inbox(folder: Path | str, graphs: dict, db_path: Path | str, run_id: str
         result["thread_id"] = routed.thread_id or f"{channel}-{run_id}-{path.stem}"
         run_config = {"configurable": {"thread_id": result["thread_id"]}, "run_name": f"{channel}_order"}
         try:
-            result["state"] = graphs[channel].invoke(graph_input(path, routed.kind), run_config)
+            result["state"] = graphs[channel].invoke(graph_input(path, routed.kind), run_config, durability="sync")
         except Exception as error:  # a failure stops this item only
             result["error"] = error
     return results

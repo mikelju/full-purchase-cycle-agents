@@ -231,7 +231,7 @@ def cmd_whatsapp_demo(args) -> int:
         print()
         print(f"== {path.name}  thread_id={thread_id}")
         try:
-            state = graph.invoke({"message_path": str(path)}, run_config)
+            state = graph.invoke({"message_path": str(path)}, run_config, durability="sync")
         except (MissingRecording, InvalidModelOutput, InvalidExtraction) as error:
             print(f"Error: {error}", file=sys.stderr)
             code = 1
@@ -470,7 +470,7 @@ def _resume(args, received: dict) -> int:
         print(f"Error: no paused checkpoint found for thread {args.thread_id}", file=sys.stderr)
         return 1
     try:
-        state = graph.invoke(Command(resume=received), run_config)
+        state = graph.invoke(Command(resume=received), run_config, durability="sync")
     except (MissingRecording, InvalidModelOutput, InvalidAnswer, InvalidQuestion, db.NotPending) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
@@ -593,7 +593,7 @@ def cmd_failures_resume(args) -> int:
         return 1
     print(f"mode={args.mode}  thread_id={args.thread_id}  channel={row['channel']}  step={row['step']}")
     try:
-        state = graph.invoke(None, run_config)
+        state = graph.invoke(None, run_config, durability="sync")
     except Exception as error:  # the thread is parked again, or stays parked, for review
         message = str(error).splitlines()[0] if str(error) else ""
         print(f"Error: thread {args.thread_id} failed again: {type(error).__name__}: {message}", file=sys.stderr)
@@ -657,7 +657,7 @@ def cmd_resume(args) -> int:
         return 1
     print(f"mode={args.mode}  thread_id={args.thread_id}  channel={channel}  next={','.join(snapshot.next)}")
     try:
-        state = graph.invoke(None, run_config)
+        state = graph.invoke(None, run_config, durability="sync")
     except Exception as error:  # a parked thread is reported by `failures list`
         message = str(error).splitlines()[0] if str(error) else ""
         print(f"Error: thread {args.thread_id} failed: {type(error).__name__}: {message}", file=sys.stderr)

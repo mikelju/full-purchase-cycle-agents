@@ -157,7 +157,7 @@ def test_failures_resume_of_a_thread_that_is_not_parked_changes_nothing(parked, 
 
 
 @pytest.mark.parametrize("command", ["failures", "resume"])
-def test_resume_commands_save_the_channel_recordings(parked, monkeypatch, capsys, command):
+def test_resume_commands_save_the_channel_recordings(invoke_durability, parked, monkeypatch, capsys, command):
     """In record mode the intake and extraction recordings are saved, not only the clarification ones."""
     from purchase_cycle.llm import ModelClient
 
@@ -173,3 +173,4 @@ def test_resume_commands_save_the_channel_recordings(parked, monkeypatch, capsys
     args = ("failures", "resume") if command == "failures" else ("resume",)
     assert parked.run(*args, parked.thread_id) == 0, capsys.readouterr()
     assert {EMAIL_INTAKE.name, EMAIL_EXTRACTION.name} <= set(saved)
+    assert invoke_durability == ["sync", "sync"]  # `route` in the fixture, then the resume command (C10)

@@ -87,8 +87,11 @@ def test_list_without_pending_threads(seeded_db, tmp_path, capsys):
     assert "no pending clarifications" in capsys.readouterr().out
 
 
-def test_close_stores_clear_lines_and_lists_the_rest_as_unanswered(paused, tmp_path, capsys, no_network):
+def test_close_stores_clear_lines_and_lists_the_rest_as_unanswered(
+    paused, tmp_path, capsys, no_network, invoke_durability
+):
     assert _run(tmp_path, "close", "web-1") == 0
+    assert invoke_durability == ["sync"]
     out = capsys.readouterr().out
     assert "stored order: 1" in out
     assert "interpretation" not in out
@@ -157,10 +160,13 @@ def test_round_two_question_does_not_reopen_a_thread_closed_meanwhile(paused, tm
     assert (len(orders), pending[0]["status"], pending[0]["round"]) == (1, "closed", 1)
 
 
-def test_answer_from_a_file_prints_interpretation_order_and_reply(paused, tmp_path, capsys, no_network):
+def test_answer_from_a_file_prints_interpretation_order_and_reply(
+    paused, tmp_path, capsys, no_network, invoke_durability
+):
     answer = tmp_path / "answer.txt"
     answer.write_text(EMAIL_ANSWER + "\n", encoding="utf-8")
     assert _run(tmp_path, "answer", "email-1", "--file", str(answer)) == 0
+    assert invoke_durability == ["sync"]
     out = capsys.readouterr().out
     assert "channel=email  customer=CLI-002" in out
     assert "interpretation:\n  line 3: remove" in out
