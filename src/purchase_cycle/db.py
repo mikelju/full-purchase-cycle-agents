@@ -51,6 +51,13 @@ CREATE TABLE IF NOT EXISTS clarifications (
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS order_sources (
+    channel TEXT NOT NULL,
+    message_id TEXT NOT NULL,
+    thread_id TEXT,
+    order_id INTEGER NOT NULL REFERENCES orders (id),
+    PRIMARY KEY (channel, message_id)
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")
@@ -107,18 +114,32 @@ def insert_order(
     status: str,
     lines: list[tuple],
     clarification: tuple[str, str] | None = None,
+    source: tuple[str, str | None] | None = None,
 ) -> int:
     """Insert one order and its (sku, quantity) lines in one transaction: all of it, or nothing.
 
     `clarification` is a (thread id, final status) pair whose row changes status in the same transaction.
+    `source` is the (message id, thread id) of the delivered message; a message id already stored for the
+    channel returns its order id and writes no order, line or source row.
     """
     with conn:
         if clarification:
             finish_clarification(conn, *clarification)
+        if source:
+            row = conn.execute(
+                "SELECT order_id FROM order_sources WHERE channel = ? AND message_id = ?", (channel, source[0])
+            ).fetchone()
+            if row:
+                return row["order_id"]
         cursor = conn.execute(
             "INSERT INTO orders (customer_code, channel, status) VALUES (?, ?, ?)", (customer_code, channel, status)
         )
         order_id = cursor.lastrowid
+        if source:
+            conn.execute(
+                "INSERT INTO order_sources (channel, message_id, thread_id, order_id) VALUES (?, ?, ?, ?)",
+                (channel, *source, order_id),
+            )
         conn.executemany(
             "INSERT INTO order_lines (order_id, sku, quantity) VALUES (?, ?, ?)",
             [(order_id, sku, quantity) for sku, quantity in lines],

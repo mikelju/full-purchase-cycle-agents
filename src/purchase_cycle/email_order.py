@@ -20,7 +20,7 @@ from langgraph.graph import END, START, StateGraph
 
 from purchase_cycle import db
 from purchase_cycle.llm import ModelClient
-from purchase_cycle.web_form import build_reply, clarification_outcome
+from purchase_cycle.web_form import build_reply, clarification_outcome, thread_id
 
 CHANNEL = "email"
 STATUS = "received"
@@ -332,7 +332,8 @@ def read_email(path: Path | str, conn: sqlite3.Connection) -> dict:
     text = model_text(email)
     if len(text) > MAX_EMAIL_TEXT:
         raise EmailRejected(f"the email text has {len(text)} characters, above the limit of {MAX_EMAIL_TEXT}")
-    return {**email, "customer": customer, "text": text}
+    message_id = (message.get("Message-ID") or "").strip() or path.name  # the source reference of the order
+    return {**email, "message_id": message_id, "customer": customer, "text": text}
 
 
 def build_email_reply(
@@ -403,7 +404,8 @@ def build_email_order_graph(
                     with conn:
                         db.finish_clarification(conn, *outcome)
                 return {"order_id": None}
-            order_id = db.insert_order(conn, state["customer"]["code"], CHANNEL, STATUS, matched, outcome)
+            source = (state["email"]["message_id"], thread_id(config))
+            order_id = db.insert_order(conn, state["customer"]["code"], CHANNEL, STATUS, matched, outcome, source)
             return {"order_id": order_id}
         finally:
             conn.close()

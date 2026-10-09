@@ -124,6 +124,10 @@ def build_reply(
     return "\n".join(out)
 
 
+def thread_id(config: RunnableConfig) -> str | None:
+    return config.get("configurable", {}).get("thread_id")
+
+
 def clarification_outcome(state: dict, config: RunnableConfig) -> tuple[str, str] | None:
     """(thread id, final status) of the clarification row the store step closes, if a question was asked."""
     status = state.get("clarification")
@@ -187,6 +191,7 @@ def build_web_form_graph(
                 STATUS,
                 [(line["sku"], line["quantity"]) for line in matched],
                 clarification=outcome,
+                source=(state["submission"]["submission_id"], thread_id(config)),
             )
         finally:
             conn.close()

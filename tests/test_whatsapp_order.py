@@ -262,3 +262,17 @@ def test_whatsapp_demo_command_reports_an_empty_folder(tmp_path, capsys):
     argv = ["--db", str(tmp_path / "b.db"), "whatsapp-demo", str(tmp_path), "--checkpoints", str(tmp_path / "c.db")]
     assert main(argv) == 1
     assert "no .json files" in capsys.readouterr().err
+
+
+def test_whatsapp_message_delivered_twice_stores_one_order(seeded_db, run, tmp_path):
+    first, _, _ = run()
+    again, _, _ = run()
+    conn = db.connect(seeded_db[0])
+    sources = [tuple(r) for r in conn.execute("SELECT channel, message_id, thread_id, order_id FROM order_sources")]
+    lines = conn.execute("SELECT COUNT(*) FROM order_lines").fetchone()[0]
+    assert (_orders(conn), lines) == (1, 1)
+    conn.close()
+    assert sources == [("whatsapp", "wamid.TEST1", "whatsapp-1", first["order_id"])]
+    assert again["order_id"] == first["order_id"]
+    [sent] = _outbox(tmp_path)
+    assert f"Your WhatsApp order is registered as order {first['order_id']}" in sent["text"]

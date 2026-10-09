@@ -316,3 +316,17 @@ def test_demo_command_saves_recordings_when_the_run_fails(tmp_path, monkeypatch,
     assert code == 1
     assert "Error: no recording" in capsys.readouterr().err
     assert len(saved) == 1
+
+
+def test_submission_delivered_twice_stores_one_order(seeded_db, recordings):
+    _, graph = _graph(seeded_db, recordings)
+    first = graph.invoke({"submission": SUBMISSION})
+    again = graph.invoke({"submission": SUBMISSION})
+    conn = db.connect(seeded_db[0])
+    sources = [tuple(r) for r in conn.execute("SELECT channel, message_id, order_id FROM order_sources")]
+    conn.close()
+    orders, lines = _rows(seeded_db[0])
+    assert (len(orders), len(lines)) == (1, 2)
+    assert sources == [("web_form", "WF-TEST-1", first["order_id"])]
+    assert again["order_id"] == first["order_id"]
+    assert again["reply"] == first["reply"] == EXPECTED_REPLY

@@ -19,7 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 from purchase_cycle import db
 from purchase_cycle.email_order import InvalidExtraction
 from purchase_cycle.llm import ModelClient
-from purchase_cycle.web_form import build_reply, clarification_outcome, validation_errors
+from purchase_cycle.web_form import build_reply, clarification_outcome, thread_id, validation_errors
 
 CHANNEL = "whatsapp"
 STATUS = "received"
@@ -211,7 +211,8 @@ def build_whatsapp_order_graph(
                     with conn:
                         db.finish_clarification(conn, *outcome)
                 return {"order_id": None}
-            order_id = db.insert_order(conn, state["customer"]["code"], CHANNEL, STATUS, matched, outcome)
+            source = (state["message"]["message_id"], thread_id(config))
+            order_id = db.insert_order(conn, state["customer"]["code"], CHANNEL, STATUS, matched, outcome, source)
             return {"order_id": order_id}
         finally:
             conn.close()

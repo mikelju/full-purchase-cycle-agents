@@ -245,3 +245,27 @@ def test_email_demo_command_reports_an_empty_folder(tmp_path, capsys):
         == 1
     )
     assert "no .eml files" in capsys.readouterr().err
+
+
+def test_email_delivered_twice_stores_one_order(seeded_db, run, tmp_path):
+    _, first, _, _ = run()
+    _, again, _, _ = run()
+    conn = db.connect(seeded_db[0])
+    sources = [tuple(r) for r in conn.execute("SELECT channel, message_id, thread_id, order_id FROM order_sources")]
+    conn.close()
+    orders, lines = _rows(seeded_db[0])
+    assert (len(orders), len(lines)) == (1, 2)
+    assert sources == [("email", "EML-TEST-1.eml", "EML-TEST-1", first["order_id"])]
+    assert again["order_id"] == first["order_id"]
+    assert f"is registered as order {first['order_id']}:" in again["reply"]
+
+
+def test_email_source_is_the_message_id_header(seeded_db, run, tmp_path):
+    path = tmp_path / "EML-ID.eml"
+    data = make_email(tmp_path / "base.eml", SENDER, SUBJECT, BODY, attachments=[EXTRA]).read_bytes()
+    path.write_bytes(b"Message-ID: <abc.1@example.org>\r\n" + data)
+    run(path=path)
+    run(path=path)
+    conn = db.connect(seeded_db[0])
+    assert [r[0] for r in conn.execute("SELECT message_id FROM order_sources")] == ["<abc.1@example.org>"]
+    conn.close()
