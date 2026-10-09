@@ -1,7 +1,7 @@
 # Phase 05 - Orders module wrap-up: plan and results
 
 Status: executing (adversarial review round 1 fixes)
-Spec: `spec.md` (frozen, approved by the owner on 2026-10-09; amended by deviation 05.1 on 2026-10-09)
+Spec: `spec.md` (frozen, approved by the owner on 2026-10-09; amended by deviation 05.1 and deviation 05.2 on 2026-10-09)
 Base: branch `fase-05-cierre-pedidos` from `main` at commit `f1a1e4f`.
 
 ## Design notes
@@ -48,7 +48,7 @@ Written for the owner decisions of 2026-10-09 recorded in the spec (D3 option B,
 ## Increments
 Each increment leaves the product working and covers concrete criteria.
 This file is the durable state: a new session resumes from here and from Git.
-Execution order: batch A0 first, then batches A to E; increment 24 runs right after increment 16.
+Execution order: batch A0 first, then batches A to E; batch A1 (deviation 05.2) runs after review round 1; increment 24 runs right after increment 16.
 
 ### Batch A0 - Deviation 05.1 evaluation fixes (no live calls)
 - [x] 25. One-to-one line grader in `email_eval.grade` over (SKU, quantity, source) for catalog lines and (quantity, source) for unknown lines, each produced line consumed once; metric names stated precisely; grader tests for omission, duplicate, invention, wrong quantity and false source; the phase 03 baseline re-scored from its stored outputs (C20, C11) - check: new grader tests; re-score output in `.evidence/fase-05/grader-rescore.txt` shows every re-scored stored figure (exact emails 184 of 195, line recall, line precision, out-of-catalog detection) not lower than before; if any of them drops, execution stops here and the drop goes to the owner as a decision (owner decision 2026-10-09); the five evaluations replay with every gate PASS.
@@ -67,6 +67,10 @@ Execution order: batch A0 first, then batches A to E; increment 24 runs right af
 - [x] 28. Every evaluation report prints, per gated metric, the target fixed before measuring and whether it is met apart from the gate result, the counting unit of each interval and, for a zero-event rate, its Wilson upper bound; no threshold changes (C23, C11) - check: report tests; `npm run eval` replay output in `.evidence/fase-05/eval-report-format.txt` shows the 95% detection target as not met and the 0 of 48 false question bound.
   Evidence (2026-10-09): `tests/test_report_format.py` covers the five reports; every table now has `n`, `unit`, `target`, `target met`, `threshold` and `gate` columns and a zero-event row ends with its Wilson upper bound.
   `.evidence/fase-05/eval-report-format.txt` (exit 0, every gate PASS) shows the three detection recalls with target >=95.0% not met and gate PASS, and `false_question_rate` 0.0% met with "0 of 48, Wilson upper bound 7.4%"; no threshold changed; `npm run check` green, 333 passed.
+
+### Batch A1 - Deviation 05.2 grader matching from PR 8 (no live calls)
+- [ ] 29. Email grader: catalog `field_sku` and `field_quantity` given to exact (SKU, quantity) matches first and SKU-only credit to the leftovers (G1); out-of-catalog lines paired by a maximum one-to-one matching on source, quantity and the requested text as whole words, with the candidate rule of deviation 05.2 (G2); `_failure_text` names an out-of-catalog text mismatch (G3) (C20) - check: grader tests that fail first (repeated SKU credit, "FFP1 masks" and "FFP1 masks, box" in reverse order, a copied table, "gel" against "Angel wings", two "Syringes 60 ml" lines against one, the text failure reason); re-score of the versioned test split recordings before and after in `.evidence/fase-05/grader-rescore-05.2.txt`; stop rule: if any figure drops, the code is committed, no baseline or threshold changes and the drop goes to the owner (C20).
+  Evidence:
 
 ### Batch A - WhatsApp channel and idempotent store (no live calls)
 - [x] 1. WhatsApp message model, inbox reader, phone lookup by digits, rejections (unknown number, malformed file, non-text type) and outbox writer (C2) - check: new `tests/test_whatsapp_order.py` cases per rejection on a temporary database and outbox; a non-text message from a known customer writes the "send it as text" reply.
@@ -147,6 +151,7 @@ Execution order: batch A0 first, then batches A to E; increment 24 runs right af
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
 | 05.1 | External audit of 2026-10-08, checked against the code: email graders pass wrong unknown lines and count a produced line twice, README and code disagree on unknown sources, XLSX bytes differ on Linux, no end-to-end scenario or critical-error gate, reports do not separate target from gate. See `05.1-audit-evaluation-fixes.md` | C1, C8, C11, C15; new C20 to C23 | Approved by the owner 2026-10-09 via Lavish, option A in E1 to E5; spec amended; increments 24 to 28 added; review fixes approved by the owner 2026-10-09 in chat, with two owner decisions: a drop in any re-scored stored figure stops execution for an owner decision (C20), and the C1 Linux run uses the installed WSL Ubuntu, blocked to the owner if it needs new software (see the addendum) |
+| 05.2 | PR 8 (`c6b3d65`) overlaps increment 25: SKU-only credit goes to the wrong line with a repeated SKU and unknown lines pass with another product; its text check, reviewed, matches substrings, pairs greedily and credits copied tables. See `05.2-grader-matching-from-pr8.md` | C20 | Approved by the owner 2026-10-09 via Lavish: option C (PR 8 content into phase 05, the owner closes the PR) and option A (text check added to C20 with the review findings fixed first); spec amended; increment 29 added |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
