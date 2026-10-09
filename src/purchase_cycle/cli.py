@@ -343,6 +343,9 @@ def cmd_route(args) -> int:
             code = 1
             continue
         print(f"== {result['item']}  route={routed.kind}  thread_id={result['thread_id']}")
+        if routed.kind == router.DUPLICATE:
+            print("re-delivery of an order that waits for an answer, nothing run or stored")
+            continue
         if result["error"] is not None:
             print(
                 f"Error: {result['item']} failed: {type(result['error']).__name__}: {result['error']}", file=sys.stderr

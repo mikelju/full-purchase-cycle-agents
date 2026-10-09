@@ -20,7 +20,7 @@ from purchase_cycle.llm import (
     WHATSAPP_INTAKE,
     ModelClient,
 )
-from purchase_cycle.router import EMAIL, REJECTED, WEB_FORM, WHATSAPP_ANSWER, WHATSAPP_NEW, route, run_inbox
+from purchase_cycle.router import DUPLICATE, EMAIL, REJECTED, WEB_FORM, WHATSAPP_ANSWER, WHATSAPP_NEW, route, run_inbox
 from purchase_cycle.whatsapp_order import build_whatsapp_order_graph, model_text
 from test_whatsapp_order import BODY, CUSTOMER, LINES, ORDER, PHONE, message
 
@@ -324,3 +324,105 @@ def test_route_saves_the_recordings_of_every_channel_client(seeded_db, folder, t
     capsys.readouterr()
     channel_tasks = {MATCHING.name, EMAIL_INTAKE.name, EMAIL_EXTRACTION.name, WHATSAPP_INTAKE.name}
     assert channel_tasks | {WHATSAPP_EXTRACTION.name, CLARIFICATION_QUESTION.name} <= set(saved)
+
+
+def test_redelivered_whatsapp_order_of_a_paused_thread_is_a_duplicate_not_its_answer(
+    seeded_db, write_recording, folder, tmp_path, no_network
+):
+    """Review 1, F4: the paused order's own message delivered again is that order, not the answer to its question."""
+    db_path, catalog = seeded_db
+    recordings, _ = _record_whatsapp(catalog, write_recording)
+    clients = ClarificationClients(
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_QUESTION),
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_ANSWER),
+    )
+    intake = ModelClient("replay", catalog, recordings, task=WHATSAPP_INTAKE)
+    extraction = ModelClient("replay", catalog, recordings, task=WHATSAPP_EXTRACTION)
+    outbox = tmp_path / "outbox"
+    graph = build_whatsapp_order_graph(
+        intake, extraction, db_path, outbox, sqlite_checkpointer(tmp_path / "c.db"), clarification=clients
+    )
+    _write(folder, "WA-1.json", message("wamid.ORDER"))
+    _write(folder, "WA-2.json", message("wamid.ORDER"))
+    first, second = run_inbox(folder, {"whatsapp": graph}, db_path, "run1")
+    assert first["state"]["__interrupt__"]
+    assert (second["route"].kind, second["thread_id"]) == (DUPLICATE, "whatsapp-run1-WA-1")
+    assert second["state"] is None and second["error"] is None
+    conn = db.connect(db_path)
+    clarifications = [tuple(r) for r in conn.execute("SELECT thread_id, round, status FROM clarifications")]
+    orders = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+    conn.close()
+    assert clarifications == [("whatsapp-run1-WA-1", 1, "pending")]
+    assert orders == 0
+    assert sorted(p.name for p in outbox.iterdir()) == ["question-wamid.ORDER-1.json"]
+    assert (intake.calls, extraction.calls, clients.question.calls, clients.answer.calls) == (1, 1, 1, 0)
+    assert no_network == []
+
+
+def test_redelivered_email_of_a_paused_thread_opens_no_second_clarification(
+    seeded_db, write_recording, folder, tmp_path, no_network
+):
+    """Review 1, F4: the same email delivered again while its thread waits for an answer is that thread."""
+    from purchase_cycle.email_order import build_email_order_graph, parse_email
+    from purchase_cycle.email_order import model_text as email_text
+    from purchase_cycle.llm import EMAIL_EXTRACTION, EMAIL_INTAKE
+    from test_clarification_graph import EMAIL_BODY, EMAIL_LINES, EMAIL_QUESTION, SENDER
+
+    db_path, catalog = seeded_db
+    path = make_email(folder / "MSG-1.eml", SENDER, "Order", EMAIL_BODY)
+    (folder / "MSG-2.eml").write_bytes(path.read_bytes())
+    text = email_text(parse_email(path.read_bytes()))
+    write_recording(catalog, text, {"is_order": True, "reason": "An order."}, task=EMAIL_INTAKE)
+    write_recording(catalog, text, {"lines": EMAIL_LINES}, task=EMAIL_EXTRACTION)
+    doubts = detect(EMAIL_LINES, catalog, "email")
+    recordings = write_recording(catalog, doubts_message(doubts), {"question": EMAIL_QUESTION}, task=CLARIFICATION_QUESTION)
+    clients = ClarificationClients(
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_QUESTION),
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_ANSWER),
+    )
+    intake = ModelClient("replay", catalog, recordings, task=EMAIL_INTAKE)
+    extraction = ModelClient("replay", catalog, recordings, task=EMAIL_EXTRACTION)
+    graph = build_email_order_graph(
+        intake, extraction, db_path, sqlite_checkpointer(tmp_path / "c.db"), clarification=clients, recovery=True
+    )
+    first, second = run_inbox(folder, {"email": graph}, db_path, "run1")
+    assert first["state"]["__interrupt__"][0].value["question"] == EMAIL_QUESTION
+    assert (second["route"].kind, second["thread_id"]) == (DUPLICATE, "email-run1-MSG-1")
+    assert second["state"] is None and second["error"] is None
+    conn = db.connect(db_path)
+    clarifications = [tuple(r) for r in conn.execute("SELECT thread_id, status FROM clarifications")]
+    conn.close()
+    assert clarifications == [("email-run1-MSG-1", "pending")]
+    assert (intake.calls, extraction.calls, clients.question.calls) == (1, 1, 1)
+    assert no_network == []
+
+
+def test_same_whatsapp_message_id_from_another_customer_is_not_a_duplicate_of_a_paused_thread(seeded_db, folder):
+    """Review 1, F4 with the F3 decision: only the same customer's paused thread makes a duplicate."""
+    other = CUSTOMERS[2]
+    _pending(seeded_db[0], "whatsapp-run1-WA-1", "whatsapp", CUSTOMER.code, "2026-10-01 10:00:00")
+    _pending(seeded_db[0], "whatsapp-run1-WA-9", "whatsapp", other.code, "2026-10-01 09:00:00")
+    sources = {"whatsapp-run1-WA-1": "wamid.ORDER", "whatsapp-run1-WA-9": "wamid.OTHER"}
+    own = _write(folder, "WA-2.json", message("wamid.ORDER"))
+    foreign = _write(folder, "WA-3.json", message("wamid.ORDER", sender=other.phone))
+    conn = db.connect(seeded_db[0])
+    try:
+        routes = [route(path, conn, lambda channel, thread: sources[thread]) for path in (own, foreign)]
+    finally:
+        conn.close()
+    assert routes == [(DUPLICATE, "whatsapp-run1-WA-1", None), (WHATSAPP_ANSWER, "whatsapp-run1-WA-9", None)]
+
+
+def test_route_command_reports_a_duplicate_without_running_it(seeded_db, folder, tmp_path, monkeypatch, capsys):
+    from purchase_cycle import cli, router
+    from purchase_cycle.router import Route
+
+    _write(folder, "WA-2.json", message("wamid.ORDER"))
+    duplicate = {"item": "WA-2.json", "route": Route(DUPLICATE, "whatsapp-run1-WA-1"), "thread_id": "whatsapp-run1-WA-1"}
+    monkeypatch.setattr(router, "run_inbox", lambda *args: [{**duplicate, "state": None, "error": None}])
+    argv = ["--db", str(tmp_path / "b.db"), "route", str(folder), "--checkpoints", str(tmp_path / "c.db")]
+    code = cli.main([*argv, "--outbox", str(tmp_path / "outbox")])
+    out, err = capsys.readouterr()
+    assert (code, err) == (0, ""), out
+    assert "== WA-2.json  route=duplicate  thread_id=whatsapp-run1-WA-1" in out
+    assert "re-delivery of an order that waits for an answer, nothing run or stored" in out
