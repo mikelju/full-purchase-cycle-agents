@@ -20,13 +20,23 @@ from purchase_cycle.config import EMAIL_EXTRACTION_RECORDINGS_PATH, EMAIL_INTAKE
 from purchase_cycle.email_order import InvalidExtraction, build_email_order_graph
 from purchase_cycle.evaluation import email_dataset as ed
 from purchase_cycle.evaluation.harness import ALPHA, DEFAULT_THRESHOLD
-from purchase_cycle.evaluation.stats import mcnemar_exact, wilson_interval
+from purchase_cycle.evaluation.stats import mcnemar_exact, target_cells, wilson_interval, zero_event_note
 from purchase_cycle.llm import EMAIL_EXTRACTION, EMAIL_INTAKE, InvalidModelOutput, MissingRecording, ModelClient
 
 SUITE = "email_order_extraction"
 BASELINE_PATH = EVALS_DIR / "baselines" / "email_order_extraction.json"
 GATED = ("intake_accuracy", "line_recall", "line_precision")
 METRICS = (*GATED, "field_sku", "field_quantity", "out_of_catalog_detection", "email_exact_match")
+# Counting unit of each metric (see `summarise`); the target of the gated ones is DEFAULT_THRESHOLD.
+UNITS = {
+    "intake_accuracy": "email",
+    "line_recall": "expected_line",
+    "line_precision": "produced_line",
+    "field_sku": "expected_line",
+    "field_quantity": "sku_found_line",
+    "out_of_catalog_detection": "order_email",
+    "email_exact_match": "order_email",
+}
 SOURCES = ("body", "txt", "pdf", "xlsx")
 
 
@@ -287,15 +297,21 @@ def _failure_text(r: dict) -> str:
 def print_report(mode, split, summary, results, threshold, regression, baseline, experiment) -> None:
     n_lines = summary["line_recall"]["n"]
     print(f"{SUITE}  mode={mode}  split={split}  emails={len(results)}  expected_lines={n_lines}  model={MODEL_ID}")
-    print(f"{'metric':<26}{'value':<8}{'95% CI':<16}{'n':<6}{'threshold':<11}result")
+    print(
+        f"{'metric':<26}{'value':<8}{'95% CI':<16}{'n':<6}{'unit':<16}{'target':<9}{'target met':<12}{'threshold':<11}gate"
+    )
     for m in METRICS:
         s = summary[m]
         if m in GATED:
+            target, met = target_cells(s["value"], DEFAULT_THRESHOLD)
             thr = _pct(threshold) if threshold is not None else "none"
             result = "PASS" if threshold is not None and s["value"] >= threshold else "FAIL"
         else:
-            thr, result = "none", "reported"
-        print(f"{m:<26}{_pct(s['value']):<8}{_ci(s):<16}{s['n']:<6}{thr:<11}{result}")
+            target, met, thr, result = "none", "n/a", "none", "reported"
+        print(
+            f"{m:<26}{_pct(s['value']):<8}{_ci(s):<16}{s['n']:<6}{UNITS[m]:<16}{target:<9}{met:<12}{thr:<11}{result}"
+            + zero_event_note(s)
+        )
     if baseline is None:
         print("regression vs baseline: no baseline stored")
     elif regression is None:

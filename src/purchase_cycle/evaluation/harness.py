@@ -15,13 +15,15 @@ from purchase_cycle import db
 from purchase_cycle.config import EVALS_DIR, MODEL_ID, RECORDINGS_PATH
 from purchase_cycle.evaluation import dataset as ds
 from purchase_cycle.evaluation.planning import DATASET_VERSION, read_jsonl
-from purchase_cycle.evaluation.stats import mcnemar_exact, wilson_interval
+from purchase_cycle.evaluation.stats import mcnemar_exact, target_cells, wilson_interval, zero_event_note
 from purchase_cycle.graph import build_graph
 from purchase_cycle.llm import InvalidModelOutput, MissingRecording, ModelClient
 
 BASELINE_PATH = EVALS_DIR / "baselines" / "order_line_extraction.json"
 METRICS = ("product_accuracy", "quantity_accuracy")
 DEFAULT_THRESHOLD = 0.95
+# Each case is one order line; the target fixed before measuring is DEFAULT_THRESHOLD.
+UNIT = "line"
 ALPHA = 0.05
 
 
@@ -164,13 +166,19 @@ def _pct(x: float) -> str:
 
 def print_report(mode, split, summary, results, threshold, regression, baseline, contrast, experiment) -> None:
     print(f"order_line_extraction  mode={mode}  split={split}  cases={len(results)}  model={MODEL_ID}")
-    print(f"{'metric':<20}{'value':<8}{'95% CI':<16}{'threshold':<11}result")
+    print(
+        f"{'metric':<20}{'value':<8}{'95% CI':<16}{'n':<6}{'unit':<16}{'target':<9}{'target met':<12}{'threshold':<11}gate"
+    )
     for m in METRICS:
         s = summary[m]
         ci = f"[{s['low'] * 100:.1f}, {s['high'] * 100:.1f}]"
+        target, met = target_cells(s["value"], DEFAULT_THRESHOLD)
         thr = _pct(threshold) if threshold is not None else "none"
         result = "PASS" if threshold is not None and s["value"] >= threshold else "FAIL"
-        print(f"{m:<20}{_pct(s['value']):<8}{ci:<16}{thr:<11}{result}")
+        print(
+            f"{m:<20}{_pct(s['value']):<8}{ci:<16}{s['n']:<6}{UNIT:<16}{target:<9}{met:<12}{thr:<11}{result}"
+            + zero_event_note(s)
+        )
     if baseline is None:
         print("regression vs baseline: no baseline stored")
     elif regression is None:
