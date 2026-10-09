@@ -630,7 +630,7 @@ def cmd_review(args) -> int:
 # ---------- owner audit ----------
 
 
-def _expected_lines(email: dict) -> str:
+def expected_lines(email: dict) -> str:
     out = []
     for line in email["lines"]:
         product = PRODUCT_BY_SKU.get(line["expected_sku"])
@@ -640,36 +640,41 @@ def _expected_lines(email: dict) -> str:
     return "\n".join(out)
 
 
-def create_audit(path: Path = AUDIT_PATH, dataset_path: Path = DATASET_PATH) -> int:
+def write_audit(path: Path, columns: tuple, rows: list[dict], noun: str) -> int:
+    """Write a new owner review file; an existing one may hold the owner's verdicts, so it is never overwritten."""
     if path.exists():
         print(f"{path} already exists; it may hold the owner's verdicts, so it is not overwritten")
         return 1
-    dataset = load_dataset(dataset_path)
-    sample = sorted(random.Random(AUDIT_SEED).sample(dataset, AUDIT_SIZE), key=lambda e: e["id"])
     path.parent.mkdir(parents=True, exist_ok=True)
     # Semicolons and a BOM so a Spanish-locale Excel opens the columns directly, as in phases 01 and 02.
     with path.open("w", encoding="utf-8-sig", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=AUDIT_COLUMNS, delimiter=";")
+        writer = csv.DictWriter(fh, fieldnames=columns, delimiter=";")
         writer.writeheader()
-        for email in sample:
-            data = (dataset_path.parent / email["file"]).read_bytes()
-            writer.writerow(
-                {
-                    "id": email["id"],
-                    "category": email["category"],
-                    "file": email["file"],
-                    "email_text": model_text(parse_email(data)),
-                    "is_order": "yes" if email["is_order"] else "no",
-                    "expected_lines": _expected_lines(email),
-                    "verdict": "",
-                    "comment": "",
-                }
-            )
-    print(f"Wrote {len(sample)} emails -> {path}")
+        writer.writerows(rows)
+    print(f"Wrote {len(rows)} {noun} -> {path}")
     return 0
 
 
-def report_audit(path: Path = AUDIT_PATH) -> int:
+def create_audit(path: Path = AUDIT_PATH, dataset_path: Path = DATASET_PATH) -> int:
+    dataset = load_dataset(dataset_path)
+    sample = sorted(random.Random(AUDIT_SEED).sample(dataset, AUDIT_SIZE), key=lambda e: e["id"])
+    rows = [
+        {
+            "id": email["id"],
+            "category": email["category"],
+            "file": email["file"],
+            "email_text": model_text(parse_email((dataset_path.parent / email["file"]).read_bytes())),
+            "is_order": "yes" if email["is_order"] else "no",
+            "expected_lines": expected_lines(email),
+            "verdict": "",
+            "comment": "",
+        }
+        for email in sample
+    ]
+    return write_audit(path, AUDIT_COLUMNS, rows, "emails")
+
+
+def report_audit(path: Path = AUDIT_PATH, name: str = "email_order_extraction") -> int:
     with path.open(encoding="utf-8-sig", newline="") as fh:
         rows = list(csv.DictReader(fh, delimiter=";"))
     pending = [r["id"] for r in rows if r["verdict"].strip().lower() not in VERDICTS]
@@ -679,7 +684,7 @@ def report_audit(path: Path = AUDIT_PATH) -> int:
     wrong = [r for r in rows if r["verdict"].strip().lower() == "wrong"]
     low, high = wilson_interval(len(wrong), len(rows))
     print(
-        f"email_order_extraction audit n={len(rows)} wrong labels={len(wrong)} "
+        f"{name} audit n={len(rows)} wrong labels={len(wrong)} "
         f"error rate={len(wrong) / len(rows):.1%}  95% CI [{low:.1%}, {high:.1%}]"
     )
     for r in wrong:

@@ -19,7 +19,14 @@ from pydantic import ValidationError
 
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
 from purchase_cycle.config import EVALS_DIR, ROOT
-from purchase_cycle.evaluation.email_dataset import REVIEW_DECISIONS, build_review, review_disagreements
+from purchase_cycle.evaluation.email_dataset import (
+    REVIEW_DECISIONS,
+    build_review,
+    expected_lines,
+    report_audit,
+    review_disagreements,
+    write_audit,
+)
 from purchase_cycle.evaluation.planning import (
     GENERIC_QUANTITIES,
     OUT_OF_CATALOG_ITEMS,
@@ -75,6 +82,10 @@ DATASET_PATH = DATASET_DIR / "dataset.jsonl"
 REVIEW_PATH = DATASET_DIR / "second_pass_review.jsonl"
 BLIND_DIR = ROOT / ".runtime" / "whatsapp_second_pass"  # gitignored input of the blind annotators
 BLIND_BATCHES = 4
+AUDIT_PATH = EVALS_DIR / "audit" / f"whatsapp_order_extraction-audit-v{DATASET_VERSION}.csv"
+AUDIT_SEED = 30
+AUDIT_SIZE = 30  # C14: at most 1 wrong label, the phase 03 MAX_WRONG
+AUDIT_COLUMNS = ("id", "category", "file", "message_text", "is_order", "expected_lines", "verdict", "comment")
 
 # The second pass reuses the phase 03 comparison: same reading shape, same disagreements and decisions.
 __all__ = ["REVIEW_DECISIONS", "build_review", "review_disagreements"]
@@ -401,6 +412,32 @@ def cmd_review(args) -> int:
     return 1 if counts["pending"] else 0
 
 
+# ---------- owner audit ----------
+
+
+def cmd_audit_create(args) -> int:
+    dataset = load_dataset()
+    sample = sorted(random.Random(AUDIT_SEED).sample(dataset, AUDIT_SIZE), key=lambda m: m["id"])
+    rows = [
+        {
+            "id": message["id"],
+            "category": message["category"],
+            "file": message["file"],
+            "message_text": model_text({"body": message["body"]}),
+            "is_order": "yes" if message["is_order"] else "no",
+            "expected_lines": expected_lines(message),
+            "verdict": "",
+            "comment": "",
+        }
+        for message in sample
+    ]
+    return write_audit(AUDIT_PATH, AUDIT_COLUMNS, rows, "messages")
+
+
+def cmd_audit_report(args) -> int:
+    return report_audit(AUDIT_PATH, "whatsapp_order_extraction")
+
+
 # ---------- commands ----------
 
 
@@ -471,3 +508,7 @@ def add_commands(sub) -> None:
     review = dsub.add_parser("review", help="compare blind second-pass annotations with the labels")
     review.add_argument("annotations", nargs="+", help="JSONL files with one blind reading per message")
     review.set_defaults(handler=cmd_review)
+    audit = sub.add_parser("whatsapp-audit", help="owner audit of the WhatsApp order extraction labels")
+    asub = audit.add_subparsers(dest="whatsapp_audit_command", required=True)
+    asub.add_parser("create", help="write the review file").set_defaults(handler=cmd_audit_create)
+    asub.add_parser("report", help="compute the label error rate").set_defaults(handler=cmd_audit_report)

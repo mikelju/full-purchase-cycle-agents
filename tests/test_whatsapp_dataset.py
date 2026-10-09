@@ -1,4 +1,5 @@
 import copy
+import csv
 import json
 import shutil
 from collections import Counter
@@ -9,6 +10,7 @@ from purchase_cycle import db
 from purchase_cycle.catalog import PRODUCTS
 from purchase_cycle.evaluation import whatsapp_dataset as wd
 from purchase_cycle.evaluation.planning import read_jsonl, write_jsonl
+from purchase_cycle.evaluation.stats import wilson_interval
 from purchase_cycle.whatsapp_order import WhatsAppMessage, read_whatsapp
 
 PRODUCT_BY_SKU = {p.sku: p for p in PRODUCTS}
@@ -436,3 +438,77 @@ def test_versioned_second_pass_review_covers_every_message_and_decides_every_dis
         assert record["decision"] in wd.REVIEW_DECISIONS
         assert (record["decision"] == "agree") == (record["disagreements"] == [])
         assert record["decision"] == "agree" or record["justification"].strip()
+
+
+# ---------- owner audit (increment 13) ----------
+
+
+def _read_audit(path):
+    with path.open(encoding="utf-8-sig", newline="") as fh:
+        return list(csv.DictReader(fh, delimiter=";"))
+
+
+def _audit_file(path, wrong: int, pending: int = 0):
+    rows = []
+    for i in range(wd.AUDIT_SIZE):
+        verdict = "" if i < pending else "wrong" if i < pending + wrong else "ok"
+        rows.append(dict.fromkeys(wd.AUDIT_COLUMNS, "") | {"id": f"WA-{i:04d}", "verdict": verdict})
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=wd.AUDIT_COLUMNS, delimiter=";")
+        writer.writeheader()
+        writer.writerows(rows)
+    return path
+
+
+def test_audit_create_samples_thirty_seeded_messages_and_never_overwrites(tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import main
+
+    path = tmp_path / "audit.csv"
+    monkeypatch.setattr(wd, "AUDIT_PATH", path)
+    assert main(["whatsapp-audit", "create"]) == 0
+    rows = _read_audit(path)
+    dataset = {m["id"]: m for m in wd.load_dataset()}
+    assert len(rows) == wd.AUDIT_SIZE == 30
+    assert tuple(rows[0]) == wd.AUDIT_COLUMNS
+    assert [r["id"] for r in rows] == sorted({r["id"] for r in rows})
+    assert all(r["verdict"] == "" and r["comment"] == "" for r in rows)
+    for r in rows:
+        message = dataset[r["id"]]
+        assert r["category"] == message["category"] and r["file"] == message["file"]
+        assert r["message_text"] == f"WhatsApp message:\n{message['body']}"
+        assert r["is_order"] == ("yes" if message["is_order"] else "no")
+        assert r["expected_lines"].count("\n") == max(len(message["lines"]) - 1, 0)
+    first = path.read_bytes()
+    assert main(["whatsapp-audit", "create"]) == 1 and path.read_bytes() == first
+    assert "not overwritten" in capsys.readouterr().out
+    monkeypatch.setattr(wd, "AUDIT_PATH", tmp_path / "again.csv")
+    assert main(["whatsapp-audit", "create"]) == 0
+    assert (tmp_path / "again.csv").read_bytes() == first
+    # Git stores the versioned file with LF endings, so compare its parsed rows, not its bytes;
+    # the owner fills verdict and comment, so those two columns are left out.
+    versioned = _read_audit(wd.EVALS_DIR / "audit" / "whatsapp_order_extraction-audit-v1.0.csv")
+
+    def generated(r):
+        return {k: v for k, v in r.items() if k not in ("verdict", "comment")}
+
+    assert [generated(r) for r in versioned] == [generated(r) for r in rows]
+
+
+@pytest.mark.parametrize(("wrong", "code"), [(0, 0), (1, 0), (2, 1)])
+def test_audit_report_passes_with_at_most_one_wrong_label(tmp_path, monkeypatch, capsys, wrong, code):
+    from purchase_cycle.cli import main
+
+    monkeypatch.setattr(wd, "AUDIT_PATH", _audit_file(tmp_path / "audit.csv", wrong))
+    assert main(["whatsapp-audit", "report"]) == code
+    low, high = wilson_interval(wrong, wd.AUDIT_SIZE)
+    out = capsys.readouterr().out
+    assert f"whatsapp_order_extraction audit n=30 wrong labels={wrong} " in out
+    assert f"95% CI [{low:.1%}, {high:.1%}]" in out
+
+
+def test_audit_report_refuses_rows_without_a_verdict(tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import main
+
+    monkeypatch.setattr(wd, "AUDIT_PATH", _audit_file(tmp_path / "audit.csv", 0, pending=1))
+    assert main(["whatsapp-audit", "report"]) == 2
+    assert "without a verdict" in capsys.readouterr().out
