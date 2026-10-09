@@ -56,8 +56,6 @@ Execution order: batch A0 first, then batches A to E; increment 24 runs right af
 - [x] 28. Every evaluation report prints, per gated metric, the target fixed before measuring and whether it is met apart from the gate result, the counting unit of each interval and, for a zero-event rate, its Wilson upper bound; no threshold changes (C23, C11) - check: report tests; `npm run eval` replay output in `.evidence/fase-05/eval-report-format.txt` shows the 95% detection target as not met and the 0 of 48 false question bound.
   Evidence (2026-10-09): `tests/test_report_format.py` covers the five reports; every table now has `n`, `unit`, `target`, `target met`, `threshold` and `gate` columns and a zero-event row ends with its Wilson upper bound.
   `.evidence/fase-05/eval-report-format.txt` (exit 0, every gate PASS) shows the three detection recalls with target >=95.0% not met and gate PASS, and `false_question_rate` 0.0% met with "0 of 48, Wilson upper bound 7.4%"; no threshold changed; `npm run check` green, 333 passed.
-  Status: not started (batch A0 writer ran out of context after increment 27); `npm run check` green at the end of increment 27 (328 passed, `.evidence/fase-05/check-a0.txt`).
-  Evidence:
 
 ### Batch A - WhatsApp channel and idempotent store (no live calls)
 - [x] 1. WhatsApp message model, inbox reader, phone lookup by digits, rejections (unknown number, malformed file, non-text type) and outbox writer (C2) - check: new `tests/test_whatsapp_order.py` cases per rejection on a temporary database and outbox; a non-text message from a known customer writes the "send it as text" reply.
