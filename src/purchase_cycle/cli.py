@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import config, db
+from purchase_cycle import config, db, router
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import InvalidExtraction, build_email_order_graph
@@ -292,9 +292,77 @@ def _clarify_graph(args, channel: str, recordings: dict | None = None, channel_m
     if channel == WEB_FORM:
         matcher = ModelClient(channel_mode, catalog, recordings.get(MATCHING.name), task=MATCHING)
         return build_web_form_graph(matcher, args.db, checkpointer, clarification=clients), clients
+    if channel == WHATSAPP:
+        intake = ModelClient(channel_mode, catalog, recordings.get(WHATSAPP_INTAKE.name), task=WHATSAPP_INTAKE)
+        extraction = ModelClient(
+            channel_mode, catalog, recordings.get(WHATSAPP_EXTRACTION.name), task=WHATSAPP_EXTRACTION
+        )
+        outbox = getattr(args, "outbox", config.OUTBOX_DIR)
+        graph = build_whatsapp_order_graph(intake, extraction, args.db, outbox, checkpointer, clarification=clients)
+        return graph, clients
     intake = ModelClient(channel_mode, catalog, recordings.get(EMAIL_INTAKE.name), task=EMAIL_INTAKE)
     extraction = ModelClient(channel_mode, catalog, recordings.get(EMAIL_EXTRACTION.name), task=EMAIL_EXTRACTION)
     return build_email_order_graph(intake, extraction, args.db, checkpointer, clarification=clients), clients
+
+
+def cmd_route(args) -> int:
+    folder = Path(args.folder)
+    if not folder.is_dir() or not any(p.is_file() for p in folder.iterdir()):
+        print(f"Error: no files in {args.folder}", file=sys.stderr)
+        return 1
+    conn = db.connect(args.db)
+    db.seed(conn)
+    conn.close()
+    graphs, clients = {}, []
+    for channel in (WEB_FORM, EMAIL, WHATSAPP):
+        graphs[channel], channel_clients = _clarify_graph(args, channel)
+        clients += list(channel_clients)
+    results = router.run_inbox(folder, graphs, args.db, uuid.uuid4().hex[:12])
+    saved = sum(client.save_recordings() for client in clients)
+    print(f"mode={args.mode}  folder={args.folder}  items={len(results)}  outbox={args.outbox}")
+    code = 0
+    for result in results:
+        routed, state = result["route"], result["state"] or {}
+        print()
+        if routed.kind == router.REJECTED:
+            print(f"== {result['item']}  route=rejected  reason: {routed.reason}")
+            code = 1
+            continue
+        print(f"== {result['item']}  route={routed.kind}  thread_id={result['thread_id']}")
+        if result["error"] is not None:
+            print(
+                f"Error: {result['item']} failed: {type(result['error']).__name__}: {result['error']}", file=sys.stderr
+            )
+            code = 1
+            continue
+        paused = state.get("__interrupt__")
+        if state.get("errors"):
+            print("rejected, nothing stored:")
+            for error in state["errors"]:
+                print(f"  {error}")
+            code = 1
+        elif paused and paused[0].value.get("rejected"):
+            print(f"answer not applied: {paused[0].value['rejected']}; the thread still waits for an answer")
+        elif paused:
+            print(f"question (round {paused[0].value['round']}):")
+            print(paused[0].value["question"])
+            print("paused, nothing stored")
+        elif state.get("is_order") is False:
+            print("not an order, nothing stored")
+        else:
+            order = state["order_id"]
+            print(f"stored order: {order if order is not None else 'none (no line to store)'}")
+        if state.get("outbox_file"):
+            print(f"outbox: {state['outbox_file']}")
+        if state.get("reply"):
+            print("reply:")
+            print(state["reply"])
+    print()
+    for client in clients:
+        _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return code
 
 
 def cmd_exceptions_demo(args) -> int:
@@ -506,6 +574,13 @@ def main(argv=None) -> int:
     whatsapp.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     whatsapp.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the reply files")
     whatsapp.set_defaults(handler=cmd_whatsapp_demo)
+
+    routed = sub.add_parser("route", help="route a folder of web form, email and WhatsApp items to their graphs")
+    routed.add_argument("folder", help="inbox folder of .json submissions or messages and .eml files")
+    routed.add_argument("--mode", choices=config.MODES, default="replay")
+    routed.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    routed.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
+    routed.set_defaults(handler=cmd_route)
 
     exceptions = sub.add_parser(
         "exceptions-demo", help="run the exception samples, print their doubts and question, and stop"

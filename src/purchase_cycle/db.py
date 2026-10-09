@@ -210,3 +210,13 @@ def pending_clarifications(conn: sqlite3.Connection) -> list[dict]:
             "FROM clarifications WHERE status = 'pending' ORDER BY created_at, thread_id"
         )
     ]
+
+
+def latest_pending_clarification(conn: sqlite3.Connection, customer_code: str) -> dict | None:
+    """The pending thread of the customer whose question was asked last, or None."""
+    row = conn.execute(
+        "SELECT * FROM clarifications WHERE customer_code = ? AND status = 'pending' "
+        "ORDER BY updated_at DESC, rowid DESC LIMIT 1",
+        (customer_code,),
+    ).fetchone()
+    return dict(row) if row else None
