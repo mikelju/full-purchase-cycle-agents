@@ -753,3 +753,73 @@ def test_redelivered_answer_of_a_still_pending_thread_is_a_duplicate_not_a_secon
     assert failures == 0
     assert no_network == []
 
+
+class _QuestionOnce:
+    """A question client that drafts round 1 and then fails, so the next question can never be drafted."""
+
+    def __init__(self, inner):
+        self.inner = inner
+
+    def __getattr__(self, name):
+        return getattr(self.inner, name)
+
+    def extract(self, *args, **kwargs):
+        from purchase_cycle.llm import MissingRecording
+
+        if self.inner.calls:
+            raise MissingRecording("no recorded question for round 2")
+        return self.inner.extract(*args, **kwargs)
+
+
+@pytest.mark.parametrize("failure", ["next_question", "invalid_answer"])
+def test_an_answer_not_applied_is_not_kept_and_its_redelivery_is_an_answer(
+    seeded_db, write_recording, folder, tmp_path, no_network, failure
+):
+    """Review 3, M1: an answer undone by a failed next question, or rejected by its checks, is not in
+    `applied_answers`, so its re-delivery is routed as an answer again, not as a duplicate."""
+    db_path, catalog = seeded_db
+    text = model_text({"body": BODY})
+    write_recording(catalog, text, ORDER, task=WHATSAPP_INTAKE)
+    recordings = write_recording(catalog, text, {"lines": LINES}, task=WHATSAPP_EXTRACTION)
+    [doubt] = detect(LINES, catalog, "whatsapp")
+    question = f'We do not carry "{doubt["text"]}"; shall we remove it?'
+    write_recording(catalog, doubts_message([doubt]), {"question": question}, task=CLARIFICATION_QUESTION)
+    if failure == "next_question":  # the line stays unclear, so round 2 needs a question that fails
+        resolution = {"action": "unclear", "sku": None, "quantity": None}
+    else:
+        resolution = {"action": "set", "sku": "NOT-A-SKU", "quantity": 1}
+    answer = {"resolutions": [{"line_id": doubt["line_id"], **resolution}]}
+    write_recording(catalog, answer_message([doubt], question, ANSWER), answer, task=CLARIFICATION_ANSWER)
+    clients = ClarificationClients(
+        _QuestionOnce(ModelClient("replay", catalog, recordings, task=CLARIFICATION_QUESTION)),
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_ANSWER),
+    )
+    intake = ModelClient("replay", catalog, recordings, task=WHATSAPP_INTAKE)
+    extraction = ModelClient("replay", catalog, recordings, task=WHATSAPP_EXTRACTION)
+    graph = build_whatsapp_order_graph(
+        intake, extraction, db_path, tmp_path / "outbox", sqlite_checkpointer(tmp_path / "c.db"), clarification=clients
+    )
+    _write(folder, "WA-1.json", message("wamid.ORDER"))
+    _write(folder, "WA-2.json", message("wamid.ANSWER", body=ANSWER))
+    first, second = run_inbox(folder, {"whatsapp": graph}, db_path, "run1")
+    assert (second["route"].kind, second["error"]) == (WHATSAPP_ANSWER, None)
+    waiting = second["state"]["__interrupt__"][0].value
+    expected = "the next question could not be drafted" if failure == "next_question" else "SKU 'NOT-A-SKU'"
+    assert expected in waiting["rejected"]
+    assert (waiting["question"], waiting["round"]) == (question, 1)
+    config = {"configurable": {"thread_id": "whatsapp-run1-WA-1"}}
+
+    def applied(channel, thread):
+        snapshot = graph.get_state({"configurable": {"thread_id": thread}}, subgraphs=True)
+        return [m for task in snapshot.tasks if task.state for m in task.state.values.get("applied_answers", [])]
+
+    assert applied("whatsapp", "whatsapp-run1-WA-1") == []
+    assert graph.get_state(config).next  # still paused on the round 1 question
+    redelivered = _write(folder, "WA-3.json", message("wamid.ANSWER", body=ANSWER))
+    conn = db.connect(db_path)
+    try:
+        routed = route(redelivered, conn, lambda channel, thread: "wamid.ORDER", applied)
+    finally:
+        conn.close()
+    assert routed == (WHATSAPP_ANSWER, "whatsapp-run1-WA-1", None)
+    assert no_network == []
