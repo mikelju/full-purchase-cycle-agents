@@ -7,10 +7,15 @@ construction. The coding agent writes the message texts; this module validates
 them and renders deterministic WhatsApp message files.
 """
 
+import json
 import random
+import re
 from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from difflib import SequenceMatcher
+from pathlib import Path
+
+from pydantic import ValidationError
 
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
 from purchase_cycle.config import EVALS_DIR
@@ -18,9 +23,12 @@ from purchase_cycle.evaluation.planning import (
     GENERIC_QUANTITIES,
     OUT_OF_CATALOG_ITEMS,
     WORD_QUANTITIES,
+    read_jsonl,
     write_jsonl,
 )
-from purchase_cycle.quantities import pack_size
+from purchase_cycle.quantities import has_number, pack_size, supports_quantity
+from purchase_cycle.web_form import match_key
+from purchase_cycle.whatsapp_order import WhatsAppMessage, phone_digits
 
 DATASET_VERSION = "1.0"
 SEED = 20261009
@@ -54,6 +62,9 @@ UNIT_WEIGHTS = {
 NOT_ORDER_KINDS = ("question", "greeting", "complaint")
 SOURCE = "message"  # the only line source of a WhatsApp message
 BASE_DATE = datetime(2026, 9, 1, 8, 0, tzinfo=UTC)
+MAX_LINE_CHARS = 160
+MAX_BODY_CHARS = 1000  # well under the WhatsApp limit of 4096
+MIN_CONTEXT_CHARS = 40  # chatty text around the single line
 
 DATASET_DIR = EVALS_DIR / "datasets" / "whatsapp_order_extraction"
 PLAN_PATH = DATASET_DIR / "plan.jsonl"
@@ -164,6 +175,178 @@ def build_plan(seed: int = SEED) -> list[dict]:
     return messages
 
 
+# ---------- rendering ----------
+
+
+def render_message(planned: dict, text: dict) -> bytes:
+    """The WhatsApp message file of one planned message and its written text; same input, same bytes."""
+    message = {
+        "from": planned["sender"],
+        "message_id": planned["message_id"],
+        "text": {"body": text["body"]},
+        "timestamp": planned["timestamp"],
+        "type": "text",
+    }
+    return (json.dumps(message, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+
+# ---------- validation ----------
+
+
+def _flat(text: str) -> str:
+    """Whitespace-insensitive form used to find a line text inside the message."""
+    return " ".join(text.split())
+
+
+def _contains_name(text: str, sku: str) -> bool:
+    return f" {match_key(PRODUCT_BY_SKU[sku].name)} " in f" {match_key(text)} "
+
+
+def validate_line(line: dict, line_text: str) -> list[str]:
+    """Reasons one written line is rejected; empty when it passes."""
+    lid, sku, quantity = line["line_id"], line["expected_sku"], line["expected_quantity"]
+    errors = []
+    if sku is not None and sku not in PRODUCT_BY_SKU:
+        errors.append(f"{lid}: expected SKU {sku} does not exist")
+    if not isinstance(quantity, int) or isinstance(quantity, bool) or quantity < 1:
+        errors.append(f"{lid}: expected quantity {quantity!r} is not a positive whole number")
+    if (sku is None) != (line["trap"]["style"] == "out_of_catalog"):
+        errors.append(f"{lid}: only out_of_catalog lines expect a null SKU")
+    text = line_text.strip()
+    if not text:
+        return [*errors, f"{lid}: line text is empty"]
+    if "\n" in text or "\t" in text:
+        errors.append(f"{lid}: line text must be one line")
+    if len(text) > MAX_LINE_CHARS:
+        errors.append(f"{lid}: line text longer than {MAX_LINE_CHARS} characters")
+    if not text.isascii():
+        errors.append(f"{lid}: line text must be plain ASCII")
+    if errors:
+        return errors
+    style = line["trap"]["style"]
+    if style == "out_of_catalog" and match_key(text) in {match_key(p.name) for p in PRODUCTS}:
+        errors.append(f"{lid}: out_of_catalog text is a catalog name")
+    if style in ("typo", "near_miss") and _contains_name(text, sku):
+        errors.append(f"{lid}: {style} text contains the exact catalog name")
+    if style == "near_miss" and _contains_name(text, line["trap"]["confusable_with"]):
+        errors.append(f"{lid}: near_miss text names the confusable product")
+    unit, words = line["unit_style"], text.lower()
+    if unit == "sale_units" and not has_number(text, quantity):
+        errors.append(f"{lid}: quantity {quantity} not written as a figure")
+    elif unit == "items_to_packs" and not has_number(text, line["trap"]["items_requested"]):
+        errors.append(f"{lid}: item count {line['trap']['items_requested']} not written as a figure")
+    elif unit == "quantity_words" and (has_number(text, quantity) or not re.search(r"[a-z]", words)):
+        errors.append(f"{lid}: quantity {quantity} must be written in words")
+    elif unit == "dozen" and "dozen" not in words:
+        errors.append(f"{lid}: dozen expression missing")
+    elif unit == "half_dozen" and not ("half" in words and "dozen" in words):
+        errors.append(f"{lid}: half dozen expression missing")
+    elif unit == "couple" and "couple" not in words:
+        errors.append(f"{lid}: couple expression missing")
+    elif not supports_quantity(text, quantity, line.get("sale_unit")):
+        # the runtime check of clarification.line_doubts for the free-text channels
+        errors.append(f"{lid}: line text does not state the quantity {quantity}")
+    return errors
+
+
+def validate_message(planned: dict, text: dict) -> list[str]:
+    """Reasons a written message is rejected before rendering; empty when it passes."""
+    errors = []
+    body = text.get("body") or ""
+    written = text.get("lines") or {}
+    if not body.strip() or len(body) > MAX_BODY_CHARS:
+        errors.append(f"body must have 1 to {MAX_BODY_CHARS} characters")
+    if not body.isascii():
+        errors.append("body must be plain ASCII (no accents or emoji)")
+    planned_ids = [line["line_id"] for line in planned["lines"]]
+    if sorted(written) != sorted(planned_ids):
+        errors.append(f"written lines {sorted(written)} do not match the planned lines {planned_ids}")
+        return errors
+    if planned["is_order"] != bool(planned["lines"]):
+        errors.append("an order needs lines and a non-order has none")
+    for line in planned["lines"]:
+        errors += validate_line(line, written[line["line_id"]])
+    if errors:
+        return errors
+    category, flat_body = planned["category"], _flat(body).lower()
+    texts = [_flat(written[i]).lower() for i in planned_ids]
+    for i, t in zip(planned_ids, texts, strict=True):
+        if t not in flat_body:
+            errors.append(f"{i}: planned line missing from the message")
+    if errors:
+        return errors
+    if category == "short_list":
+        body_lines = [_flat(b).lower() for b in body.splitlines()]
+        shared = [
+            i
+            for i, t in zip(planned_ids, texts, strict=True)
+            if not any(t in b and sum(o in b for o in texts) == 1 for b in body_lines)
+        ]
+        if shared:
+            errors.append(f"short_list lines must each sit on their own message line: {', '.join(shared)}")
+    if category == "one_sentence_lines" and "\n" in body.strip():
+        errors.append("one_sentence_lines body must be one line")
+    if category == "chatty_single_line":
+        rest = flat_body.replace(texts[0], " ")
+        if len(_flat(rest)) < MIN_CONTEXT_CHARS:
+            errors.append(f"chatty_single_line needs at least {MIN_CONTEXT_CHARS} characters of context")
+    return errors
+
+
+def check_rendered(planned: dict, text: dict, data: bytes) -> list[str]:
+    """Read the rendered file with the WhatsApp intake model and confirm the sender and the planned lines."""
+    try:
+        message = WhatsAppMessage.model_validate(json.loads(data))
+    except (ValueError, ValidationError) as error:
+        return [f"rendered message cannot be read: {error}"]
+    errors = []
+    customer = CUSTOMER_BY_CODE[planned["customer_code"]]
+    if phone_digits(message.sender) != phone_digits(customer.phone):
+        errors.append(f"rendered sender {message.sender} is not the phone of {customer.code}")
+    if message.type != "text" or message.text is None:
+        return [*errors, "rendered message is not a text message"]
+    flat_body = _flat(message.text.body).lower()
+    for line in planned["lines"]:
+        if _flat(text["lines"][line["line_id"]]).lower() not in flat_body:
+            errors.append(f"{line['line_id']}: planned line missing from the rendered message")
+    return errors
+
+
+def load_texts(directory: Path | None = None) -> dict[str, dict]:
+    texts = {}
+    for path in sorted((directory or TEXTS_DIR).glob("*.jsonl")):
+        for row in read_jsonl(path):
+            texts[row["id"]] = row
+    return texts
+
+
+def build_dataset(plan: list[dict], texts: dict[str, dict]) -> tuple[list[dict], dict[str, bytes], dict[str, list]]:
+    """Validate and render every planned message; return dataset rows, rendered files and rejected ids with reasons."""
+    rows, files, rejected, seen = [], {}, {}, {}
+    for planned in plan:
+        text = texts.get(planned["id"]) or {}
+        errors = validate_message(planned, text)
+        if not errors:
+            key = match_key(text["body"])
+            if key in seen:
+                errors.append(f"duplicates {seen[key]} after normalisation")
+            seen.setdefault(key, planned["id"])
+        if not errors:
+            data = render_message(planned, text)
+            errors = check_rendered(planned, text, data)
+            files[planned["id"]] = data
+        if errors:
+            rejected[planned["id"]] = errors
+            continue
+        lines = [dict(line, text=text["lines"][line["line_id"]]) for line in planned["lines"]]
+        rows.append(dict(planned, body=text["body"], lines=lines, file=f"messages/{planned['id']}.json"))
+    return rows, files, rejected
+
+
+def load_dataset(path: Path | None = None) -> list[dict]:
+    return read_jsonl(path or DATASET_PATH)
+
+
 # ---------- commands ----------
 
 
@@ -177,9 +360,54 @@ def cmd_plan(args) -> int:
     return 0
 
 
+def cmd_check(args) -> int:
+    plan = {m["id"]: m for m in read_jsonl(PLAN_PATH)}
+    batch = read_jsonl(Path(args.batch))
+    unknown = [str(row.get("id")) for row in batch if row.get("id") not in plan]
+    if unknown:
+        print(f"ids not in the plan: {', '.join(unknown)}")
+        return 1
+    others = {k: v for k, v in load_texts().items() if k not in {row["id"] for row in batch}}
+    subset = [plan[row["id"]] for row in batch]
+    known = [m for m in plan.values() if m["id"] in others]
+    _, _, rejected = build_dataset(known + subset, {**others, **{row["id"]: row for row in batch}})
+    failed = 0
+    for planned in subset:
+        if planned["id"] in rejected:
+            failed += 1
+            print(f"{planned['id']}: {'; '.join(rejected[planned['id']])}")
+    print(f"{len(batch)} messages checked, {failed} rejected")
+    return 1 if failed else 0
+
+
+def cmd_build(args) -> int:
+    plan = read_jsonl(PLAN_PATH)
+    rows, files, rejected = build_dataset(plan, load_texts())
+    for message_id, errors in rejected.items():
+        print(f"{message_id}: {'; '.join(errors)}")
+    if rejected:
+        print(f"{len(rejected)} of {len(plan)} messages rejected; rewrite their texts and build again")
+        return 1
+    MESSAGES_DIR.mkdir(parents=True, exist_ok=True)
+    for message_id, data in files.items():
+        (MESSAGES_DIR / f"{message_id}.json").write_bytes(data)
+    write_jsonl(DATASET_PATH, rows)
+    counts = Counter(row["category"] for row in rows)
+    lines = sum(len(row["lines"]) for row in rows)
+    print(f"Built {len(rows)} messages with {lines} expected lines -> {DATASET_PATH}")
+    print("  " + ", ".join(f"{c} {counts[c]}" for c in CATEGORIES))
+    return 0
+
+
 def add_commands(sub) -> None:
     dataset = sub.add_parser("whatsapp-dataset", help="plan, check and build the WhatsApp order extraction dataset")
     dsub = dataset.add_subparsers(dest="whatsapp_dataset_command", required=True)
     plan = dsub.add_parser("plan", help="write the seeded message plan")
     plan.add_argument("--seed", type=int, default=SEED)
     plan.set_defaults(handler=cmd_plan)
+    check = dsub.add_parser("check", help="validate and render a batch of written messages against the plan")
+    check.add_argument("batch", help="JSONL file with one written message per row")
+    check.set_defaults(handler=cmd_check)
+    dsub.add_parser("build", help="validate, render the message files and write the dataset").set_defaults(
+        handler=cmd_build
+    )

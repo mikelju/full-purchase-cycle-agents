@@ -1,10 +1,15 @@
+import copy
+import json
+import shutil
 from collections import Counter
 
 import pytest
 
+from purchase_cycle import db
 from purchase_cycle.catalog import PRODUCTS
 from purchase_cycle.evaluation import whatsapp_dataset as wd
-from purchase_cycle.evaluation.planning import read_jsonl
+from purchase_cycle.evaluation.planning import read_jsonl, write_jsonl
+from purchase_cycle.whatsapp_order import WhatsAppMessage, read_whatsapp
 
 PRODUCT_BY_SKU = {p.sku: p for p in PRODUCTS}
 
@@ -86,3 +91,224 @@ def test_plan_command_writes_the_plan(tmp_path, monkeypatch, capsys):
     assert main(["whatsapp-dataset", "plan"]) == 0
     assert read_jsonl(tmp_path / "plan.jsonl") == wd.build_plan()
     assert "Planned" in capsys.readouterr().out
+
+
+# ---------- validation and build (increment 10) ----------
+
+UNITS = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen".split()
+UNITS += "seventeen eighteen nineteen".split()
+TENS = "twenty thirty forty fifty sixty seventy eighty ninety".split()
+
+
+def words(n):
+    if n >= 100:
+        rest = n % 100
+        return f"{UNITS[n // 100]} hundred" + (f" and {words(rest)}" if rest else "")
+    if n >= 20:
+        return TENS[n // 10 - 2] + (f"-{UNITS[n % 10]}" if n % 10 else "")
+    return UNITS[n]
+
+
+def _product_text(line):
+    style = line["trap"]["style"]
+    if style == "out_of_catalog":
+        return line["trap"]["requested_item"]
+    if style == "plain":
+        return PRODUCT_BY_SKU[line["expected_sku"]].name
+    return f"placeholder product {line['line_id'].lower()}"
+
+
+def _line_text(line):
+    product, quantity = _product_text(line), line["expected_quantity"]
+    return {
+        "sale_units": f"{quantity} x {product}",
+        "items_to_packs": f"{line['trap'].get('items_requested')} pieces of {product}",
+        "quantity_words": f"{words(quantity)} lots of {product}",
+        "dozen": f"{words(quantity // 12)} dozen lots of {product}",
+        "half_dozen": f"half a dozen of {product}",
+        "couple": f"a couple of {product}",
+    }[line["unit_style"]]
+
+
+def placeholder_text(planned):
+    """A text that passes validation for any planned message; stands in for the agents' writing."""
+    lines = {line["line_id"]: _line_text(line) for line in planned["lines"]}
+    category = planned["category"]
+    if category == "short_list":
+        body = "Hi, order please:\n" + "\n".join(lines.values()) + "\nThanks"
+    elif category == "not_an_order":
+        body = f"Hello, a {planned['kind']} about our account, reference {planned['id']}."
+    else:
+        body = f"Hi there from the clinic, reference {planned['id']}, we need " + " and ".join(lines.values()) + "."
+    return {"id": planned["id"], "body": body, "lines": lines}
+
+
+def _first(plan, category, **where):
+    return copy.deepcopy(
+        next(
+            m
+            for m in plan
+            if m["category"] == category and all(any(line.get(k) == v for line in m["lines"]) for k, v in where.items())
+        )
+    )
+
+
+def test_placeholder_texts_pass_validation_and_render_readable_messages(plan):
+    rows, files, rejected = wd.build_dataset(plan, {m["id"]: placeholder_text(m) for m in plan})
+    assert rejected == {}
+    assert [r["id"] for r in rows] == [m["id"] for m in plan]
+    for planned, row in zip(plan, rows, strict=True):
+        message = WhatsAppMessage.model_validate(json.loads(files[planned["id"]]))
+        assert (message.message_id, message.sender, message.type) == (planned["message_id"], planned["sender"], "text")
+        assert message.text.body == row["body"]
+        assert row["file"] == f"messages/{planned['id']}.json"
+        assert all(line["text"] for line in row["lines"])
+
+
+def test_a_rendered_message_is_read_by_the_whatsapp_intake(plan, tmp_path):
+    planned = plan[0]
+    path = tmp_path / "m.json"
+    path.write_bytes(wd.render_message(planned, placeholder_text(planned)))
+    conn = db.connect(tmp_path / "shop.db")
+    db.seed(conn)
+    received = read_whatsapp(path, conn)
+    conn.close()
+    assert received["customer"]["code"] == planned["customer_code"]
+    assert received["body"] == placeholder_text(planned)["body"]
+
+
+def test_validation_rejects_a_planned_line_missing_from_the_message(plan):
+    planned = _first(plan, "one_sentence_lines")
+    text = placeholder_text(planned)
+    lid = planned["lines"][0]["line_id"]
+    text["body"] = text["body"].replace(text["lines"][lid], "something else")
+    _, _, rejected = wd.build_dataset([planned], {planned["id"]: text})
+    assert f"{lid}: planned line missing from the message" in rejected[planned["id"]]
+
+
+@pytest.mark.parametrize(
+    "unit_style,bad_text",
+    [
+        ("sale_units", "some boxes of gauze"),
+        ("quantity_words", "{quantity} boxes of gauze"),
+        ("dozen", "{quantity} boxes of gauze"),
+        ("couple", "{quantity} boxes of gauze"),
+        ("items_to_packs", "{quantity} boxes of gauze"),
+    ],
+)
+def test_validation_rejects_a_line_whose_quantity_breaks_its_rule(plan, unit_style, bad_text):
+    line = next(line for m in plan for line in m["lines"] if line["unit_style"] == unit_style)
+    errors = wd.validate_line(line, bad_text.format(quantity=line["expected_quantity"]))
+    assert errors and line["line_id"] in errors[0]
+
+
+def test_validation_rejects_a_quantity_the_text_does_not_state(plan):
+    line = next(line for m in plan for line in m["lines"] if line["unit_style"] == "half_dozen")
+    assert wd.validate_line(line, "half a dozen of gauze") == []
+    assert any("does not state" in e for e in wd.validate_line(line, "half of the dozen boxes of gauze, and 3 more"))
+
+
+def test_validation_rejects_a_duplicate_text_after_normalisation(plan):
+    first, second = [copy.deepcopy(m) for m in plan if m["category"] == "not_an_order"][:2]
+    text_a = placeholder_text(first)
+    text_b = dict(placeholder_text(second), body=text_a["body"].upper().replace(".", " !"))
+    _, _, rejected = wd.build_dataset([first, second], {first["id"]: text_a, second["id"]: text_b})
+    assert first["id"] not in rejected
+    assert rejected[second["id"]] == [f"duplicates {first['id']} after normalisation"]
+
+
+@pytest.mark.parametrize("where", ["body", "line"])
+def test_validation_rejects_non_ascii_text(plan, where):
+    planned = _first(plan, "chatty_single_line")
+    text = placeholder_text(planned)
+    lid = planned["lines"][0]["line_id"]
+    if where == "body":
+        text["body"] += " \U0001f44d"
+    else:
+        accented = text["lines"][lid] + " mañana"
+        text["body"] = text["body"].replace(text["lines"][lid], accented)
+        text["lines"][lid] = accented
+    _, _, rejected = wd.build_dataset([planned], {planned["id"]: text})
+    assert any("plain ASCII" in r for r in rejected[planned["id"]]), rejected
+
+
+@pytest.mark.parametrize(
+    "category,change,reason",
+    [
+        ("short_list", lambda t: t.update(body=" ".join(t["body"].split())), "own message line"),
+        ("chatty_single_line", lambda t: t.update(body=next(iter(t["lines"].values()))), "characters of context"),
+        ("one_sentence_lines", lambda t: t.update(body=t["body"].replace(" and ", "\n", 1)), "one line"),
+        ("not_an_order", lambda t: t.update(lines={"EXTRA-L1": "10 boxes"}), "do not match the planned lines"),
+        ("words_or_dozens", lambda t: t.update(body=""), "body must have"),
+    ],
+)
+def test_validation_rejects_a_category_rule_failure(plan, category, change, reason):
+    planned = _first(plan, category)
+    text = placeholder_text(planned)
+    change(text)
+    _, _, rejected = wd.build_dataset([planned], {planned["id"]: text})
+    assert any(reason in r for r in rejected[planned["id"]]), rejected
+
+
+def test_validation_rejects_traps_that_name_the_catalog_product(plan):
+    line = next(line for m in plan for line in m["lines"] if line["trap"]["style"] == "typo")
+    name = PRODUCT_BY_SKU[line["expected_sku"]].name
+    text = _line_text(line).replace(_product_text(line), name)
+    assert any("exact catalog name" in e for e in wd.validate_line(line, text))
+
+
+def _use_folder(monkeypatch, folder):
+    monkeypatch.setattr(wd, "PLAN_PATH", folder / "plan.jsonl")
+    monkeypatch.setattr(wd, "TEXTS_DIR", folder / "texts")
+    monkeypatch.setattr(wd, "MESSAGES_DIR", folder / "messages")
+    monkeypatch.setattr(wd, "DATASET_PATH", folder / "dataset.jsonl")
+
+
+def _write_texts(folder, plan):
+    for category in wd.CATEGORIES:
+        rows = [placeholder_text(m) for m in plan if m["category"] == category]
+        write_jsonl(folder / "texts" / f"{category}.jsonl", rows)
+
+
+def test_build_gives_identical_bytes_over_two_builds(plan, tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import main
+
+    _use_folder(monkeypatch, tmp_path)
+    write_jsonl(tmp_path / "plan.jsonl", plan)
+    _write_texts(tmp_path, plan)
+    snapshots = []
+    for _ in range(2):
+        assert main(["whatsapp-dataset", "build"]) == 0
+        files = [*sorted(tmp_path.joinpath("messages").glob("*.json")), tmp_path / "dataset.jsonl"]
+        snapshots.append({p.relative_to(tmp_path).as_posix(): p.read_bytes() for p in files})
+        shutil.rmtree(tmp_path / "messages")
+        (tmp_path / "dataset.jsonl").unlink()
+    assert snapshots[0] == snapshots[1]
+    assert len(snapshots[0]) == len(plan) + 1
+    assert f"Built {len(plan)} messages" in capsys.readouterr().out
+
+
+def test_build_refuses_and_writes_nothing_when_a_text_is_rejected(plan, tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import main
+
+    _use_folder(monkeypatch, tmp_path)
+    write_jsonl(tmp_path / "plan.jsonl", plan)
+    _write_texts(tmp_path, plan[1:])
+    assert main(["whatsapp-dataset", "build"]) == 1
+    assert not (tmp_path / "dataset.jsonl").exists()
+    assert not (tmp_path / "messages").exists()
+    assert f"1 of {len(plan)} messages rejected" in capsys.readouterr().out
+
+
+def test_check_command_reports_the_rejected_messages_of_a_batch(plan, tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import main
+
+    _use_folder(monkeypatch, tmp_path)
+    write_jsonl(tmp_path / "plan.jsonl", plan)
+    good, bad = (placeholder_text(m) for m in plan[:2])
+    bad["body"] = bad["body"] + " café"
+    write_jsonl(tmp_path / "batch.jsonl", [good, bad])
+    assert main(["whatsapp-dataset", "check", str(tmp_path / "batch.jsonl")]) == 1
+    out = capsys.readouterr().out
+    assert f"{plan[1]['id']}: " in out and f"{plan[0]['id']}: " not in out
+    assert "2 messages checked, 1 rejected" in out
