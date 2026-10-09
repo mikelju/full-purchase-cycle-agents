@@ -135,11 +135,7 @@ def insert_order(
     """
     with conn:
         if source:
-            row = conn.execute(
-                "SELECT s.order_id, o.customer_code FROM order_sources s JOIN orders o ON o.id = s.order_id "
-                "WHERE s.channel = ? AND s.message_id = ?",
-                (channel, source[0]),
-            ).fetchone()
+            row = stored_source(conn, channel, source[0])
             if row and row["customer_code"] == customer_code:
                 return row["order_id"]
             if row:
@@ -162,6 +158,16 @@ def insert_order(
             [(order_id, sku, quantity) for sku, quantity in lines],
         )
     return order_id
+
+
+def stored_source(conn: sqlite3.Connection, channel: str, message_id: str) -> dict | None:
+    """The stored order of a channel message id: its order id, customer code and thread id, or None."""
+    row = conn.execute(
+        "SELECT s.order_id, s.thread_id, o.customer_code FROM order_sources s JOIN orders o ON o.id = s.order_id "
+        "WHERE s.channel = ? AND s.message_id = ?",
+        (channel, message_id),
+    ).fetchone()
+    return dict(row) if row else None
 
 
 def order_line_details(conn: sqlite3.Connection, order_id: int) -> list[dict]:

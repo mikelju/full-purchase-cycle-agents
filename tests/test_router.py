@@ -475,3 +475,118 @@ def test_route_command_reads_bom_prefixed_whatsapp_files_like_any_other(
     assert "route=whatsapp_new" in out and "route=whatsapp_answer" in out
     assert "Your WhatsApp order is registered as order 1" in out
     assert no_network == []
+
+
+def _whatsapp_graph(seeded_db, write_recording, tmp_path):
+    db_path, catalog = seeded_db
+    recordings, question = _record_whatsapp(catalog, write_recording)
+    clients = ClarificationClients(
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_QUESTION),
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_ANSWER),
+    )
+    intake = ModelClient("replay", catalog, recordings, task=WHATSAPP_INTAKE)
+    extraction = ModelClient("replay", catalog, recordings, task=WHATSAPP_EXTRACTION)
+    graph = build_whatsapp_order_graph(
+        intake, extraction, db_path, tmp_path / "outbox", sqlite_checkpointer(tmp_path / "c.db"), clarification=clients
+    )
+    return graph, (intake, extraction, clients.question, clients.answer), question
+
+
+class _NoRun:
+    """A graph that fails the test if the router runs it."""
+
+    def invoke(self, *args, **kwargs):
+        raise AssertionError("the item ran a graph")
+
+
+def test_redelivered_stored_whatsapp_order_is_a_duplicate_and_a_new_order_is_not_lost(
+    seeded_db, write_recording, folder, tmp_path, no_network
+):
+    """Review 2, B1: WA-1 pauses, WA-2 answers and stores order 1, WA-3 re-delivers WA-1, WA-4 is a new order."""
+    db_path = seeded_db[0]
+    graph, calls, question = _whatsapp_graph(seeded_db, write_recording, tmp_path)
+    _write(folder, "WA-1.json", message("wamid.ORDER"))
+    _write(folder, "WA-2.json", message("wamid.ANSWER", body=ANSWER))
+    _write(folder, "WA-3.json", message("wamid.ORDER"))
+    _write(folder, "WA-4.json", message("wamid.NEW"))
+    results = run_inbox(folder, {"whatsapp": graph}, db_path, "run1")
+    kinds = [(r["route"].kind, r["thread_id"], r["error"]) for r in results]
+    assert kinds == [
+        (WHATSAPP_NEW, "whatsapp-run1-WA-1", None),
+        (WHATSAPP_ANSWER, "whatsapp-run1-WA-1", None),
+        (DUPLICATE, "whatsapp-run1-WA-1", None),
+        (WHATSAPP_NEW, "whatsapp-run1-WA-4", None),
+    ]
+    assert results[2]["state"] is None
+    assert results[3]["state"]["__interrupt__"][0].value["question"] == question
+    conn = db.connect(db_path)
+    clarifications = [tuple(r) for r in conn.execute("SELECT thread_id, status FROM clarifications ORDER BY rowid")]
+    orders = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+    conn.close()
+    assert clarifications == [("whatsapp-run1-WA-1", "answered"), ("whatsapp-run1-WA-4", "pending")]
+    assert orders == 1
+    assert [c.calls for c in calls] == [2, 2, 2, 1]
+    assert no_network == []
+
+
+def test_redelivered_stored_email_is_a_duplicate_with_no_graph_run(seeded_db, folder):
+    """Review 2, B1 for email: an email already stored as an order is not extracted or asked again."""
+    from purchase_cycle.email_order import read_email
+    from test_clarification_graph import EMAIL_BODY, SENDER
+
+    db_path = seeded_db[0]
+    path = make_email(folder / "MSG-2.eml", SENDER, "Order", EMAIL_BODY)
+    conn = db.connect(db_path)
+    email = read_email(path, conn)
+    order = db.insert_order(
+        conn, email["customer"]["code"], "email", "new", [("GLV-NIT-M", 1)], source=(email["message_id"], "email-r-1")
+    )
+    conn.close()
+    [result] = run_inbox(folder, {"email": _NoRun()}, db_path, "run2")
+    assert (result["route"].kind, result["thread_id"], result["error"]) == (DUPLICATE, "email-r-1", None)
+    assert result["route"].reason == f"already stored as order {order}"
+
+
+@pytest.mark.parametrize("channel", ["email", "whatsapp"])
+def test_message_id_stored_for_another_customer_is_rejected_before_any_question(seeded_db, folder, channel):
+    """Review 2, I1: the same message id from another customer gets no question, no thread and no order."""
+    db_path = seeded_db[0]
+    owner, other = CUSTOMERS[1], CUSTOMERS[2]
+    if channel == "email":
+        item = make_email(folder / "MSG-1.eml", other.email, "Order", "40 boxes of nitrile gloves M")
+        conn = db.connect(db_path)
+        from purchase_cycle.email_order import read_email
+
+        message_id = read_email(item, conn)["message_id"]
+        conn.close()
+    else:
+        message_id = "wamid.SHARED"
+        _write(folder, "WA-1.json", message(message_id, sender=other.phone))
+    conn = db.connect(db_path)
+    db.insert_order(conn, owner.code, channel, "new", [("GLV-NIT-M", 1)], source=(message_id, f"{channel}-r-1"))
+    conn.close()
+    [result] = run_inbox(folder, {channel: _NoRun()}, db_path, "run2")
+    assert (result["route"].kind, result["state"], result["error"]) == (REJECTED, None, None)
+    assert "already stored for another customer" in result["route"].reason
+    conn = db.connect(db_path)
+    counts = [conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("orders", "clarifications")]
+    conn.close()
+    assert counts == [1, 0]
+
+
+def test_route_command_reports_a_stored_duplicate_without_running_it(seeded_db, folder, tmp_path, capsys):
+    """Review 2, B1: `route` prints the stored order a re-delivered message repeats and exits 0."""
+    from purchase_cycle import cli
+
+    db_path = seeded_db[0]
+    _write(folder, "WA-3.json", message("wamid.ORDER"))
+    conn = db.connect(db_path)
+    db.insert_order(conn, CUSTOMER.code, "whatsapp", "new", [("GLV-NIT-M", 1)], source=("wamid.ORDER", "whatsapp-r-1"))
+    conn.close()
+    argv = ["--db", str(db_path), "route", str(folder), "--checkpoints", str(tmp_path / "c.db")]
+    code = cli.main([*argv, "--outbox", str(tmp_path / "outbox")])
+    out, err = capsys.readouterr()
+    assert (code, err) == (0, ""), out
+    assert "== WA-3.json  route=duplicate  thread_id=whatsapp-r-1" in out
+    assert "re-delivery of a message already stored as order 1, nothing run or stored" in out
+    assert not (tmp_path / "outbox").exists()

@@ -6,6 +6,8 @@ A WhatsApp text from a known customer whose most recent pending clarification is
 thread's answer; any other WhatsApp message starts a new order, and the WhatsApp graph rejects what it cannot read.
 An email or WhatsApp message whose message id is the source of a pending thread of the same customer and channel
 is a re-delivery of that paused order: a duplicate, which runs no graph.
+An email or WhatsApp message whose message id is already stored is checked before any extraction or question:
+from the same customer it is a duplicate of the stored order, from another customer it is rejected.
 """
 
 import json
@@ -32,7 +34,7 @@ CHANNELS = {WEB_FORM: "web_form", EMAIL: "email", WHATSAPP_NEW: "whatsapp", WHAT
 class Route(NamedTuple):
     kind: str
     thread_id: str | None = None  # the paused thread a WhatsApp answer resumes or a duplicate repeats
-    reason: str | None = None  # why the item was rejected
+    reason: str | None = None  # why the item was rejected, or the stored order a duplicate repeats
 
 
 SourceLookup = Callable[[str, str], str | None]  # (channel, thread id) -> message id of the thread's order
@@ -50,11 +52,25 @@ def _paused_duplicate(conn: sqlite3.Connection, channel: str, message: dict, pau
     return None
 
 
+def _stored_route(conn: sqlite3.Connection, channel: str, message: dict) -> Route | None:
+    """A duplicate of the order stored from this message id, a rejection if another customer's, or None."""
+    stored = db.stored_source(conn, channel, message["message_id"])
+    if stored is None:
+        return None
+    if stored["customer_code"] == message["customer"]["code"]:
+        return Route(DUPLICATE, stored["thread_id"], f"already stored as order {stored['order_id']}")
+    reason = f"the {channel} message id '{message['message_id']}' is already stored for another customer"
+    return Route(REJECTED, reason=reason)
+
+
 def _email_route(path: Path, conn: sqlite3.Connection, paused_source: SourceLookup | None) -> Route:
     try:
         email = read_email(path, conn)
     except EmailRejected:
         return Route(EMAIL)
+    stored = _stored_route(conn, "email", email)
+    if stored:
+        return stored
     duplicate = _paused_duplicate(conn, "email", email, paused_source)
     return Route(DUPLICATE, duplicate) if duplicate else Route(EMAIL)
 
@@ -64,6 +80,9 @@ def _whatsapp_route(path: Path, conn: sqlite3.Connection, paused_source: SourceL
         message = read_whatsapp(path, conn)
     except WhatsAppRejected:
         return Route(WHATSAPP_NEW)
+    stored = _stored_route(conn, "whatsapp", message)
+    if stored:
+        return stored
     duplicate = _paused_duplicate(conn, "whatsapp", message, paused_source)
     if duplicate:
         return Route(DUPLICATE, duplicate)
