@@ -138,6 +138,30 @@ def model_text(message: dict) -> str:
     return f"WhatsApp message:\n{message['body']}"
 
 
+def order_reply(state: dict, db_path: Path | str) -> str:
+    """The reply text of a WhatsApp graph state; the order figures come from the stored rows."""
+    customer = state["customer"]
+    if state["errors"]:
+        return TEXT_ONLY_REPLY
+    if not state["is_order"]:
+        return NOT_ORDER_REPLY.format(name=customer["contact_name"])
+    stored = []
+    if state["order_id"] is not None:
+        conn = db.connect(db_path)
+        try:
+            stored = db.order_line_details(conn, state["order_id"])
+        finally:
+            conn.close()
+    unmatched = [(line["source_text"], line["quantity"]) for line in state["lines"] if line["sku"] is None]
+    left_out = {
+        "removed": state.get("removed", []),
+        "unresolved": state.get("unresolved", []),
+        "closed": state.get("clarification") == "closed",
+        "answered": state.get("clarification") == "answered",
+    }
+    return build_reply(customer, "WhatsApp order", state["order_id"], stored, unmatched, **left_out)
+
+
 class WhatsAppOrderState(TypedDict, total=False):
     message_path: str
     errors: list[str]
@@ -243,27 +267,8 @@ def build_whatsapp_order_graph(
             conn.close()
 
     def reply(state: WhatsAppOrderState) -> WhatsAppOrderState:
-        customer, message = state["customer"], state["message"]
-        if state["errors"]:
-            text = TEXT_ONLY_REPLY
-        elif not state["is_order"]:
-            text = NOT_ORDER_REPLY.format(name=customer["contact_name"])
-        else:
-            stored = []
-            if state["order_id"] is not None:
-                conn = db.connect(db_path)
-                try:
-                    stored = db.order_line_details(conn, state["order_id"])
-                finally:
-                    conn.close()
-            unmatched = [(line["source_text"], line["quantity"]) for line in state["lines"] if line["sku"] is None]
-            left_out = {
-                "removed": state.get("removed", []),
-                "unresolved": state.get("unresolved", []),
-                "closed": state.get("clarification") == "closed",
-                "answered": state.get("clarification") == "answered",
-            }
-            text = build_reply(customer, "WhatsApp order", state["order_id"], stored, unmatched, **left_out)
+        message = state["message"]
+        text = order_reply(state, db_path)
         path = write_outbox(outbox, message["from"], message["message_id"], text)
         faults.crash_at(faults.IN_REPLY)
         return {"reply": text, "outbox_file": str(path)}

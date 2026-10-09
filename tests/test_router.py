@@ -2,6 +2,7 @@
 
 import dataclasses
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -21,7 +22,7 @@ from purchase_cycle.llm import (
     ModelClient,
 )
 from purchase_cycle.router import DUPLICATE, EMAIL, REJECTED, WEB_FORM, WHATSAPP_ANSWER, WHATSAPP_NEW, route, run_inbox
-from purchase_cycle.whatsapp_order import build_whatsapp_order_graph, model_text
+from purchase_cycle.whatsapp_order import build_whatsapp_order_graph, model_text, phone_digits
 from test_whatsapp_order import BODY, CUSTOMER, LINES, ORDER, PHONE, message
 
 FORM = {"submission_id": "WF-1", "customer_code": CUSTOMER.code, "lines": [{"product": "gloves", "quantity": 1}]}
@@ -504,6 +505,9 @@ class _NoRun:
     def invoke(self, *args, **kwargs):
         raise AssertionError("the item ran a graph")
 
+    def get_state(self, config, **kwargs):
+        return SimpleNamespace(values={}, next=())  # no checkpoint: the stored thread is unknown here
+
 
 def test_redelivered_stored_whatsapp_order_is_a_duplicate_and_a_new_order_is_not_lost(
     seeded_db, write_recording, folder, tmp_path, no_network
@@ -523,7 +527,8 @@ def test_redelivered_stored_whatsapp_order_is_a_duplicate_and_a_new_order_is_not
         (DUPLICATE, "whatsapp-run1-WA-1", None),
         (WHATSAPP_NEW, "whatsapp-run1-WA-4", None),
     ]
-    assert results[2]["state"] is None
+    assert "registered as order 1" in results[2]["state"]["reply"]  # review 3, I1: the reply names the order
+    assert results[2]["unfinished"] is False
     assert results[3]["state"]["__interrupt__"][0].value["question"] == question
     conn = db.connect(db_path)
     clarifications = [tuple(r) for r in conn.execute("SELECT thread_id, status FROM clarifications ORDER BY rowid")]
@@ -551,6 +556,7 @@ def test_redelivered_stored_email_is_a_duplicate_with_no_graph_run(seeded_db, fo
     [result] = run_inbox(folder, {"email": _NoRun()}, db_path, "run2")
     assert (result["route"].kind, result["thread_id"], result["error"]) == (DUPLICATE, "email-r-1", None)
     assert result["route"].reason == f"already stored as order {order}"
+    assert f'Your email order "Order" is registered as order {order}' in result["state"]["reply"]
 
 
 @pytest.mark.parametrize("channel", ["email", "whatsapp"])
@@ -581,7 +587,7 @@ def test_message_id_stored_for_another_customer_is_rejected_before_any_question(
 
 
 def test_route_command_reports_a_stored_duplicate_without_running_it(seeded_db, folder, tmp_path, capsys):
-    """Review 2, B1: `route` prints the stored order a re-delivered message repeats and exits 0."""
+    """Review 2, B1 and review 3, I1: `route` replies with the stored order a re-delivered message repeats, exits 0."""
     from purchase_cycle import cli
 
     db_path = seeded_db[0]
@@ -595,7 +601,13 @@ def test_route_command_reports_a_stored_duplicate_without_running_it(seeded_db, 
     assert (code, err) == (0, ""), out
     assert "== WA-3.json  route=duplicate  thread_id=whatsapp-r-1" in out
     assert "re-delivery of a message already stored as order 1, nothing run or stored" in out
-    assert not (tmp_path / "outbox").exists()
+    [reply] = (tmp_path / "outbox").iterdir()
+    assert reply.name == f"reply-{phone_digits(CUSTOMER.phone)}-wamid.ORDER.json"
+    assert "registered as order 1" in json.loads(reply.read_text(encoding="utf-8"))["text"]
+    conn = db.connect(db_path)
+    counts = [conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("orders", "order_sources", "failures")]
+    conn.close()
+    assert counts == [1, 1, 0]
 
 
 def test_answered_second_thread_of_a_stored_message_is_finished_not_left_pending(
@@ -740,3 +752,4 @@ def test_redelivered_answer_of_a_still_pending_thread_is_a_duplicate_not_a_secon
     assert [tuple(r) for r in pending] == [("pending", 2)]
     assert failures == 0
     assert no_network == []
+

@@ -332,7 +332,7 @@ def cmd_route(args) -> int:
     for channel in (WEB_FORM, EMAIL, WHATSAPP):
         graphs[channel], clarification = _clarify_graph(args, channel, recovery=True, channel_clients=clients)
         clients += list(clarification)
-    results = router.run_inbox(folder, graphs, args.db, uuid.uuid4().hex[:12])
+    results = router.run_inbox(folder, graphs, args.db, uuid.uuid4().hex[:12], args.outbox)
     saved = sum(client.save_recordings() for client in clients)
     print(f"mode={args.mode}  folder={args.folder}  items={len(results)}  outbox={args.outbox}")
     code = 0
@@ -346,6 +346,13 @@ def cmd_route(args) -> int:
         print(f"== {result['item']}  route={routed.kind}  thread_id={result['thread_id']}")
         if routed.kind == router.DUPLICATE and routed.reason:
             print(f"re-delivery of a message {routed.reason}, nothing run or stored")
+            if result["unfinished"]:
+                print(f"thread {result['thread_id']} has not finished; use purchase-cycle resume {result['thread_id']}")
+            if state.get("outbox_file"):
+                print(f"outbox: {state['outbox_file']}")
+            if state.get("reply"):
+                print("reply:")
+                print(state["reply"])
             continue
         if routed.kind == router.DUPLICATE:
             print("re-delivery of an order that waits for an answer, nothing run or stored")

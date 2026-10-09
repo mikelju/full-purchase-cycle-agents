@@ -347,6 +347,24 @@ def build_email_reply(
     return f"To: {email['sender']}\nSubject: {subject}\n\n{body}"
 
 
+def order_reply(state: dict, db_path: Path | str) -> str:
+    """The reply text of an email graph state; the order figures come from the stored rows."""
+    stored = []
+    if state["order_id"] is not None:
+        conn = db.connect(db_path)
+        try:
+            stored = db.order_line_details(conn, state["order_id"])
+        finally:
+            conn.close()
+    left_out = {
+        "removed": state.get("removed", []),
+        "unresolved": state.get("unresolved", []),
+        "closed": state.get("clarification") == "closed",
+        "answered": state.get("clarification") == "answered",
+    }
+    return build_email_reply(state["email"], state["customer"], state["order_id"], stored, state["lines"], **left_out)
+
+
 def build_email_order_graph(
     intake_client: ModelClient,
     extraction_client: ModelClient,
@@ -431,22 +449,7 @@ def build_email_order_graph(
             conn.close()
 
     def reply(state: EmailOrderState) -> EmailOrderState:
-        stored = []
-        if state["order_id"] is not None:
-            conn = db.connect(db_path)
-            try:
-                stored = db.order_line_details(conn, state["order_id"])
-            finally:
-                conn.close()
-        left_out = {
-            "removed": state.get("removed", []),
-            "unresolved": state.get("unresolved", []),
-            "closed": state.get("clarification") == "closed",
-            "answered": state.get("clarification") == "answered",
-        }
-        text = build_email_reply(
-            state["email"], state["customer"], state["order_id"], stored, state["lines"], **left_out
-        )
+        text = order_reply(state, db_path)
         faults.crash_at(faults.IN_REPLY)
         return {"reply": text}
 

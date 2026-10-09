@@ -10,6 +10,7 @@ A WhatsApp message whose message id is an answer already applied to a pending th
 re-delivery of that answer: a duplicate too, so a thread that asked again never reads the same answer twice.
 An email or WhatsApp message whose message id is already stored is checked before any extraction or question:
 from the same customer it is a duplicate of the stored order, from another customer it is rejected.
+A duplicate of a stored order runs no graph and writes no row, but gets the channel's reply naming that order again.
 """
 
 import json
@@ -20,9 +21,9 @@ from typing import NamedTuple
 
 from langgraph.types import Command
 
-from purchase_cycle import db
+from purchase_cycle import db, email_order, whatsapp_order
 from purchase_cycle.email_order import EmailRejected, read_email
-from purchase_cycle.whatsapp_order import WhatsAppRejected, read_whatsapp
+from purchase_cycle.whatsapp_order import WhatsAppRejected, read_whatsapp, write_outbox
 
 WEB_FORM = "web_form"
 EMAIL = "email"
@@ -154,13 +155,48 @@ def graph_input(path: Path, kind: str):
     return {"message_path": str(path)}
 
 
-def run_inbox(folder: Path | str, graphs: dict, db_path: Path | str, run_id: str) -> list[dict]:
+def stored_reply(path: Path, routed: Route, graph, db_path: Path | str, outbox: Path | str | None) -> tuple:
+    """The reply to a duplicate of a stored order, built as its thread built it, or (None, False) for another duplicate.
+
+    The reply reads the stored order rows and the left-out lines kept in the stored thread's checkpoint; a WhatsApp
+    reply is written to the same outbox file as the first one. Returns the reply state and whether that thread
+    has not finished (a crash after its order was stored), so the caller can point to `resume`.
+    """
+    conn = db.connect(db_path)
+    try:
+        email = path.suffix.lower() == ".eml"
+        message = read_email(path, conn) if email else read_whatsapp(path, conn)
+        stored = db.stored_source(conn, "email" if email else "whatsapp", message["message_id"])
+    finally:
+        conn.close()
+    if stored is None or stored["customer_code"] != message["customer"]["code"]:
+        return None, False
+    snapshot = graph.get_state({"configurable": {"thread_id": routed.thread_id}}) if routed.thread_id else None
+    values = dict(snapshot.values) if snapshot else {}
+    order = stored["order_id"]
+    state = {**values, "customer": message.pop("customer"), "order_id": order, "errors": [], "is_order": True}
+    state["lines"] = values.get("lines", [])
+    if email:
+        reply = {"reply": email_order.order_reply({**state, "email": message}, db_path)}
+    else:
+        text = whatsapp_order.order_reply({**state, "message": message}, db_path)
+        reply = {"reply": text}
+        if outbox is not None:  # with no outbox folder given, the reply text is only returned
+            reply["outbox_file"] = str(write_outbox(outbox, message["from"], message["message_id"], text))
+    return reply, bool(snapshot and snapshot.next)
+
+
+def run_inbox(
+    folder: Path | str, graphs: dict, db_path: Path | str, run_id: str, outbox: Path | str | None = None
+) -> list[dict]:
     """Route each file of the folder, in name order, and run it through the graph of its channel.
 
     `graphs` maps a channel (`web_form`, `email`, `whatsapp`) to its compiled graph. Each result holds the
     item name, its route, the thread id, and the final graph state or the error that stopped the item.
     A new thread id is `<channel>-<run_id>-<file stem>`; a WhatsApp answer resumes the paused thread and a
-    duplicate of a paused order or of an applied answer runs no graph.
+    duplicate of a paused order or of an applied answer runs no graph. A duplicate of a stored order runs no graph
+    either: its state holds the reply naming that order (WhatsApp writes it to `outbox`) and `unfinished` says
+    whether the stored thread still has steps to resume.
     """
 
     def paused_source(channel: str, thread: str) -> str | None:
@@ -179,12 +215,21 @@ def run_inbox(folder: Path | str, graphs: dict, db_path: Path | str, run_id: str
             routed = route(path, conn, paused_source, applied_answers)
         finally:
             conn.close()
-        result = {"item": path.name, "route": routed, "thread_id": None, "state": None, "error": None}
+        result = {
+            "item": path.name,
+            "route": routed,
+            "thread_id": None,
+            "state": None,
+            "error": None,
+            "unfinished": False,
+        }
         results.append(result)
         if routed.kind == REJECTED:
             continue
         if routed.kind == DUPLICATE:
             result["thread_id"] = routed.thread_id
+            channel = "email" if path.suffix.lower() == ".eml" else "whatsapp"
+            result["state"], result["unfinished"] = stored_reply(path, routed, graphs[channel], db_path, outbox)
             continue
         channel = CHANNELS[routed.kind]
         result["thread_id"] = routed.thread_id or f"{channel}-{run_id}-{path.stem}"

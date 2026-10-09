@@ -131,6 +131,43 @@ def test_a_crash_at_each_point_is_resumed_in_a_new_process_with_exactly_one_orde
     assert "network blocked" not in resumed.stderr + crashed.stderr
 
 
+@pytest.mark.parametrize("point", [None, faults.AFTER_STORE_COMMIT, faults.IN_REPLY])
+@pytest.mark.parametrize("channel", ["email", "whatsapp"])
+def test_a_redelivery_through_route_replies_with_the_stored_order_and_stores_nothing(
+    seeded_db, write_recording, tmp_path, channel, point
+):
+    """Review 3, I1 (C6 with C10): a stored message delivered again, after a crash or not, gets the order's reply."""
+    db_path, catalog = seeded_db
+    inbox, outbox, checkpoints = tmp_path / "inbox", tmp_path / "outbox", str(tmp_path / "c.db")
+    inbox.mkdir()
+    recordings, expected = CHANNELS[channel](inbox, catalog, write_recording)
+    options = ["--checkpoints", checkpoints, "--outbox", str(outbox)]
+    first = _step(recordings, db_path, "route", str(inbox), *options, crash_at=point)
+    assert first.returncode == (faults.EXIT_CODE if point else 0), first.stderr
+    with sqlite3.connect(checkpoints) as conn:
+        [(thread_id,)] = conn.execute("SELECT DISTINCT thread_id FROM checkpoints").fetchall()
+    for reply in outbox.glob("*.json"):
+        reply.unlink()  # the reply of the first delivery is not the one under test
+
+    again = _step(recordings, db_path, "route", str(inbox), *options)
+    assert again.returncode == 0, again.stderr
+    assert f"route=duplicate  thread_id={thread_id}" in again.stdout
+    assert "re-delivery of a message already stored as order 1, nothing run or stored" in again.stdout
+    unfinished = f"thread {thread_id} has not finished; use purchase-cycle resume {thread_id}"
+    assert (unfinished in again.stdout) == (point is not None)
+    if channel == "whatsapp":
+        [reply] = outbox.iterdir()
+        assert reply.name == "reply-34600101201-wamid.CRASH.json"
+        assert "registered as order 1" in json.loads(reply.read_text(encoding="utf-8"))["text"]
+    else:
+        assert 'Your email order "Order" is registered as order 1' in again.stdout
+    assert _rows(db_path, "SELECT id, channel FROM orders") == [(1, channel)]
+    assert _rows(db_path, "SELECT sku, quantity FROM order_lines WHERE order_id = 1 ORDER BY id") == expected
+    assert _rows(db_path, "SELECT channel, thread_id, order_id FROM order_sources") == [(channel, thread_id, 1)]
+    assert _rows(db_path, "SELECT COUNT(*) FROM failures") == [(0,)]
+    assert "network blocked" not in first.stderr + again.stderr
+
+
 def test_resume_of_a_thread_with_no_checkpoint_fails_with_a_message(seeded_db, tmp_path, capsys):
     db_path, _ = seeded_db
     argv = ["--db", str(db_path), "resume", "email-run-MSG-9", "--checkpoints", str(tmp_path / "c.db")]
