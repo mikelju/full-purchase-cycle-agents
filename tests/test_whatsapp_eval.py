@@ -182,7 +182,7 @@ def test_graders_match_whatsapp_lines_one_to_one():
     assert [row["line_recall"] for row in whatsapp_eval.grade(case, True, false_source)["line_rows"]] == [True, False]
 
 
-def test_eval_all_leaves_out_the_whatsapp_suite_before_its_baseline(monkeypatch):
+def test_eval_all_runs_the_whatsapp_suite_after_its_baseline(monkeypatch):
     ran = []
     monkeypatch.setattr(
         harness, "_suite", lambda name: argparse.Namespace(evaluate=lambda *a, **k: ran.append(name) or 0)
@@ -195,6 +195,7 @@ def test_eval_all_leaves_out_the_whatsapp_suite_before_its_baseline(monkeypatch)
         "email_order_extraction",
         "clarification_detection",
         "clarification_answers",
+        "whatsapp_order_extraction",
         "channel_routing",
         "failure_recovery",
     ]

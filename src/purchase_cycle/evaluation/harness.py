@@ -378,8 +378,8 @@ SUITES = (
 )
 # The deterministic phase 05 suites run locally only, so `eval-upload` leaves them out.
 UPLOAD_SUITES = tuple(name for name in SUITES if name not in ("channel_routing", "failure_recovery"))
-# `all` leaves out the WhatsApp suite until its baseline is recorded (phase 05, increment 16).
-ALL_SUITES = tuple(name for name in SUITES if name != "whatsapp_order_extraction")
+# `all` runs every suite; the WhatsApp suite joined once its baseline was recorded (phase 05, increment 16).
+ALL_SUITES = SUITES
 
 
 def suite_names(suite, everything: tuple[str, ...] = ALL_SUITES) -> tuple[str, ...]:
