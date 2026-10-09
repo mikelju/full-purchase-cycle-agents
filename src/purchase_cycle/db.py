@@ -58,6 +58,16 @@ CREATE TABLE IF NOT EXISTS order_sources (
     order_id INTEGER NOT NULL REFERENCES orders (id),
     PRIMARY KEY (channel, message_id)
 );
+CREATE TABLE IF NOT EXISTS failures (
+    thread_id TEXT PRIMARY KEY,
+    channel TEXT NOT NULL,
+    source TEXT NOT NULL,
+    step TEXT NOT NULL,
+    error TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('needs_review', 'resolved')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")
@@ -220,3 +230,44 @@ def latest_pending_clarification(conn: sqlite3.Connection, customer_code: str) -
         (customer_code,),
     ).fetchone()
     return dict(row) if row else None
+
+
+def park_failure(conn: sqlite3.Connection, thread_id: str, channel: str, source: str, step: str, error: str) -> None:
+    """Park a thread as needs_review; parking it again updates its one row and keeps the creation time."""
+    with conn:
+        conn.execute(
+            "INSERT INTO failures (thread_id, channel, source, step, error, status) "
+            "VALUES (?, ?, ?, ?, ?, 'needs_review') ON CONFLICT (thread_id) DO UPDATE SET channel = excluded.channel, "
+            "source = excluded.source, step = excluded.step, error = excluded.error, status = 'needs_review', "
+            "updated_at = datetime('now')",
+            (thread_id, channel, source, step, error),
+        )
+
+
+def get_failure(conn: sqlite3.Connection, thread_id: str) -> dict | None:
+    row = conn.execute("SELECT * FROM failures WHERE thread_id = ?", (thread_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def list_failures(conn: sqlite3.Connection) -> list[dict]:
+    """Parked threads (needs_review), oldest first, with their age in whole minutes."""
+    return [
+        dict(r)
+        for r in conn.execute(
+            "SELECT thread_id, channel, source, step, error, status, created_at, "
+            "CAST((julianday('now') - julianday(created_at)) * 1440 AS INTEGER) AS age_minutes "
+            "FROM failures WHERE status = 'needs_review' ORDER BY created_at, thread_id"
+        )
+    ]
+
+
+def resolve_failure(conn: sqlite3.Connection, thread_id: str) -> None:
+    """Mark a parked thread resolved; raises NotPending when it is not needs_review."""
+    with conn:
+        cursor = conn.execute(
+            "UPDATE failures SET status = 'resolved', updated_at = datetime('now') "
+            "WHERE thread_id = ? AND status = 'needs_review'",
+            (thread_id,),
+        )
+    if cursor.rowcount == 0:
+        raise NotPending(f"thread {thread_id} is not parked as needs_review; nothing changed")

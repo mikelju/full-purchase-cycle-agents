@@ -19,7 +19,8 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 
 from purchase_cycle import db, llm
-from purchase_cycle.llm import ModelClient
+from purchase_cycle.llm import InvalidExtraction, ModelClient
+from purchase_cycle.recovery import correction_kwargs, parking, reask
 from purchase_cycle.web_form import build_reply, clarification_outcome, thread_id
 
 CHANNEL = "email"
@@ -37,13 +38,10 @@ class EmailRejected(ValueError):
     """The email cannot be processed; the message names the reason."""
 
 
-class InvalidExtraction(ValueError):
-    """The extractor answer fits the schema but not the catalog or the email; nothing is written."""
-
-
 class EmailOrderState(TypedDict, total=False):
     email_path: str
     errors: list[str]
+    source: str
     email: dict
     customer: dict
     is_order: bool
@@ -354,8 +352,13 @@ def build_email_order_graph(
     checkpointer=None,
     interrupt_after=None,
     clarification=None,
+    recovery=False,
 ):
-    """Phase 03 graph; with `clarification` (ClarificationClients) a `clarify` step runs before `store`."""
+    """Phase 03 graph; with `clarification` (ClarificationClients) a `clarify` step runs before `store`.
+
+    With `recovery` (phase 05) an invalid model answer is re-asked once and a thread that cannot go on is
+    parked in `failures`; it is off by default so the phase 03 and 04 behaviour stays unchanged.
+    """
     conn = db.connect(db_path)
     try:
         known_skus = {row["sku"] for row in db.catalog_rows(conn)}
@@ -371,8 +374,14 @@ def build_email_order_graph(
         finally:
             conn.close()
         customer = email.pop("customer")
-        decision = intake_client.extract(email["text"], case_id=Path(state["email_path"]).stem)
+        case_id = Path(state["email_path"]).stem
+
+        def ask(correction):
+            return intake_client.extract(email["text"], case_id=case_id, **correction_kwargs(correction))
+
+        decision = reask(ask) if recovery else ask(None)
         return {
+            **({"source": state["email_path"]} if recovery else {}),
             "errors": [],
             "email": email,
             "customer": customer,
@@ -382,17 +391,24 @@ def build_email_order_graph(
 
     def extract(state: EmailOrderState) -> EmailOrderState:
         email = state["email"]
-        answer = extraction_client.extract(email["text"], case_id=Path(state["email_path"]).stem)
         sources = {name.strip().lower(): name for name in ["body"] + [a["name"] for a in email["attachments"]]}
-        lines = []
-        for n, line in enumerate(answer.lines, start=1):
-            if line.sku is not None and line.sku not in known_skus:
-                raise InvalidExtraction(f"Extracted line {n}: SKU '{line.sku}' is not in the catalog")
-            source = sources.get(line.source.strip().lower())
-            if source is None:
-                raise InvalidExtraction(f"Extracted line {n}: source '{line.source}' is not the body or an attachment")
-            lines.append({**line.model_dump(), "source": source})
-        return {"lines": lines}
+
+        def ask(correction):
+            kwargs = correction_kwargs(correction)
+            answer = extraction_client.extract(email["text"], case_id=Path(state["email_path"]).stem, **kwargs)
+            lines = []
+            for n, line in enumerate(answer.lines, start=1):
+                if line.sku is not None and line.sku not in known_skus:
+                    raise InvalidExtraction(f"Extracted line {n}: SKU '{line.sku}' is not in the catalog")
+                source = sources.get(line.source.strip().lower())
+                if source is None:
+                    raise InvalidExtraction(
+                        f"Extracted line {n}: source '{line.source}' is not the body or an attachment"
+                    )
+                lines.append({**line.model_dump(), "source": source})
+            return lines
+
+        return {"lines": reask(ask) if recovery else ask(None)}
 
     def store(state: EmailOrderState, config: RunnableConfig) -> EmailOrderState:
         matched = [(line["sku"], line["quantity"]) for line in state["lines"] if line["sku"] is not None]
@@ -430,9 +446,15 @@ def build_email_order_graph(
             )
         }
 
+    def source(state: dict) -> str:
+        return state.get("source") or state["email_path"]  # the clarify step sees only `source`
+
+    def park(node, step):
+        return parking(node, step, CHANNEL, db_path, source) if recovery else node
+
     builder = StateGraph(EmailOrderState)
-    builder.add_node("intake", intake, retry_policy=llm.MODEL_RETRY)
-    builder.add_node("extract", extract, retry_policy=llm.MODEL_RETRY)
+    builder.add_node("intake", park(intake, "intake"), retry_policy=llm.MODEL_RETRY)
+    builder.add_node("extract", park(extract, "extract"), retry_policy=llm.MODEL_RETRY)
     builder.add_node("store", store)
     builder.add_node("reply", reply)
     builder.add_edge(START, "intake")
@@ -444,7 +466,9 @@ def build_email_order_graph(
     else:
         from purchase_cycle.clarification import build_clarification_graph  # it imports the web form module
 
-        builder.add_node("clarify", build_clarification_graph(clarification, db_path, CHANNEL))
+        builder.add_node(
+            "clarify", build_clarification_graph(clarification, db_path, CHANNEL, park=park if recovery else None)
+        )
         builder.add_edge("extract", "clarify")
         builder.add_edge("clarify", "store")
     builder.add_edge("store", "reply")

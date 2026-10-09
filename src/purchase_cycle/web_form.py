@@ -15,7 +15,8 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from purchase_cycle import db, llm
-from purchase_cycle.llm import ModelClient
+from purchase_cycle.llm import InvalidModelOutput, ModelClient
+from purchase_cycle.recovery import correction_kwargs, parking, reask
 
 CHANNEL = "web_form"
 STATUS = "received"
@@ -44,6 +45,7 @@ class Submission(BaseModel):
 class WebFormState(TypedDict, total=False):
     submission: dict
     errors: list[str]
+    source: str
     customer: dict
     lines: list[dict]
     order_id: int | None
@@ -135,9 +137,19 @@ def clarification_outcome(state: dict, config: RunnableConfig) -> tuple[str, str
 
 
 def build_web_form_graph(
-    client: ModelClient, db_path: Path | str, checkpointer=None, interrupt_after=None, clarification=None
+    client: ModelClient,
+    db_path: Path | str,
+    checkpointer=None,
+    interrupt_after=None,
+    clarification=None,
+    recovery=False,
 ):
-    """Phase 02 graph; with `clarification` (ClarificationClients) a `clarify` step runs before `store`."""
+    """Phase 02 graph; with `clarification` (ClarificationClients) a `clarify` step runs before `store`.
+
+    With `recovery` (phase 05) a schema-invalid match answer is re-asked once and a thread that cannot go on
+    is parked in `failures`; a SKU the catalog does not hold stays no match, as in phase 02.
+    """
+
     conn = db.connect(db_path)
     try:
         catalog = db.catalog_rows(conn)
@@ -158,7 +170,8 @@ def build_web_form_graph(
             conn.close()
         if row is None:
             return {"errors": [f"field 'customer_code': unknown customer code '{submission.customer_code}'"]}
-        return {"errors": [], "submission": submission.model_dump(), "customer": dict(row)}
+        source = {"source": submission.submission_id} if recovery else {}
+        return {**source, "errors": [], "submission": submission.model_dump(), "customer": dict(row)}
 
     def match(state: WebFormState) -> WebFormState:
         submission = state["submission"]
@@ -167,7 +180,12 @@ def build_web_form_graph(
             sku = index.get(match_key(line["product"]))
             source = "deterministic"
             if sku is None:
-                answer = client.extract(line["product"], case_id=f"{submission['submission_id']}-{n}")
+                case_id = f"{submission['submission_id']}-{n}"
+
+                def ask(correction, product=line["product"], case_id=case_id):
+                    return client.extract(product, case_id=case_id, **correction_kwargs(correction))
+
+                answer = reask(ask, (InvalidModelOutput,)) if recovery else ask(None)
                 # A SKU the catalog does not hold is treated as no match.
                 sku = answer.sku if answer.sku in known_skus else None
                 source = "model"
@@ -215,9 +233,15 @@ def build_web_form_graph(
         }
         return {"reply": build_reply(state["customer"], reference, state["order_id"], stored, unmatched, **left_out)}
 
+    def source(state: dict) -> str:
+        return state["source"]
+
+    def park(node, step):
+        return parking(node, step, CHANNEL, db_path, source) if recovery else node
+
     builder = StateGraph(WebFormState)
     builder.add_node("validate", validate)
-    builder.add_node("match", match, retry_policy=llm.MODEL_RETRY)
+    builder.add_node("match", park(match, "match"), retry_policy=llm.MODEL_RETRY)
     builder.add_node("store", store)
     builder.add_node("reply", reply)
     builder.add_edge(START, "validate")
@@ -227,7 +251,9 @@ def build_web_form_graph(
     else:
         from purchase_cycle.clarification import build_clarification_graph  # it imports this module
 
-        builder.add_node("clarify", build_clarification_graph(clarification, db_path, CHANNEL))
+        builder.add_node(
+            "clarify", build_clarification_graph(clarification, db_path, CHANNEL, park=park if recovery else None)
+        )
         builder.add_edge("match", "clarify")
         builder.add_edge("clarify", "store")
     builder.add_edge("store", "reply")

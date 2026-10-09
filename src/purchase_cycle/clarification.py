@@ -19,6 +19,7 @@ from langgraph.types import interrupt
 from purchase_cycle import db, llm
 from purchase_cycle.llm import InvalidModelOutput, MissingRecording, ModelClient
 from purchase_cycle.quantities import NUMBER_WORDS, supports_quantity
+from purchase_cycle.recovery import correction_kwargs, reask
 from purchase_cycle.web_form import match_key
 
 MAX_LINE_QUANTITY = 500  # sale units per line
@@ -263,6 +264,7 @@ class ClarificationState(TypedDict, total=False):
     rejected: str | None
     before_answer: dict
     message: dict  # the WhatsApp message under clarification; only that channel has it
+    source: str  # the source reference of a thread with recovery on, for its `failures` row
 
 
 def settle(lines: list[dict], resolutions: list[dict], open_doubts: list[dict]) -> tuple[list, list, list]:
@@ -284,13 +286,17 @@ def settle(lines: list[dict], resolutions: list[dict], open_doubts: list[dict]) 
     return kept, removed, unresolved
 
 
-def build_clarification_graph(clients: ClarificationClients, db_path: Path | str, channel: str, on_question=None):
+def build_clarification_graph(
+    clients: ClarificationClients, db_path: Path | str, channel: str, on_question=None, park=None
+):
     """Shared subgraph: detect -> ask -> wait (pause) -> interpret -> detect, at most MAX_ROUNDS questions.
 
     It leaves through `detect` when no doubt is open, the rounds are spent or the
     thread was closed; then `lines` holds only the lines to store, and `removed`
     and `unresolved` list the others with the text the customer wrote.
     `on_question(state, question, round)` runs after a question is saved, to send it to the customer.
+    `park(node, step)` (phase 05 recovery) wraps `ask`: the first question draft is re-asked once when invalid,
+    and a second invalid draft or an exhausted retry parks the thread; later rounds keep the phase 04 fallback.
     """
     conn = db.connect(db_path)
     try:
@@ -324,11 +330,18 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
     def ask(state: ClarificationState, config: RunnableConfig, runtime: Runtime) -> ClarificationState:
         thread_id = config["configurable"]["thread_id"]
         rounds = state.get("round", 0) + 1
-        try:
+
+        def draft(correction):
             drafted = clients.question.extract(
-                doubts_message(state["doubts"]), case_id=f"{thread_id}-question-{rounds}"
+                doubts_message(state["doubts"]),
+                case_id=f"{thread_id}-question-{rounds}",
+                **correction_kwargs(correction),
             )
             check_question(drafted.question, state["doubts"])
+            return drafted
+
+        try:
+            drafted = reask(draft, (InvalidModelOutput, InvalidQuestion)) if park and rounds == 1 else draft(None)
         except STEP_FAILURES as error:
             if rounds == 1 or retry_left(error, runtime):
                 raise  # a retry, or round 1 with nothing paused yet, so the run stops with nothing written
@@ -389,7 +402,7 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
 
     builder = StateGraph(ClarificationState)
     builder.add_node("detect", detect_step)
-    builder.add_node("ask", ask, retry_policy=retry)
+    builder.add_node("ask", park(ask, "ask") if park else ask, retry_policy=retry)
     builder.add_node("wait", wait)
     builder.add_node("interpret", interpret, retry_policy=retry)
     builder.add_edge(START, "detect")

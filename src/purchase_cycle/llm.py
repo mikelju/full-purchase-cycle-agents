@@ -332,6 +332,10 @@ class InvalidModelOutput(ValueError):
         super().__init__(f"Model output for {label} rejected by schema: {details}")
 
 
+class InvalidExtraction(ValueError):
+    """The extractor answer fits the schema but not the catalog or the message; nothing is written."""
+
+
 class MissingRecording(LookupError):
     """Replay mode found no stored answer for this exact prompt."""
 
@@ -363,6 +367,9 @@ def transient_model_error(error: BaseException) -> bool:
         return True
     return isinstance(error, anthropic.APIStatusError) and error.status_code >= 500
 
+
+# Appended to the text when an invalid answer is re-asked, so the second answer has its own recording key.
+CORRECTION = "\n\nYour previous answer was rejected: {error}\nAnswer again and fix that error."
 
 # Shared by every model-calling node. Builders read it when the graph is built, so tests can set the backoff to zero.
 MODEL_RETRY = RetryPolicy(max_attempts=3, retry_on=transient_model_error)
@@ -417,8 +424,13 @@ class ModelClient:
         }
         return args, usage
 
-    def extract(self, sentence: str, case_id: str | None = None) -> BaseModel:
-        """Ask the model about one text and return its answer validated by the task schema."""
+    def extract(self, sentence: str, case_id: str | None = None, correction: str | None = None) -> BaseModel:
+        """Ask the model about one text and return its answer validated by the task schema.
+
+        `correction` re-asks: the validation error of the previous answer is appended to the text.
+        """
+        if correction is not None:
+            sentence += CORRECTION.format(error=correction)
         label = f"case {case_id}" if case_id else f"sentence {sentence!r}"
         key = recording_key(self.system_prompt, sentence, self.task)
         with self._lock:

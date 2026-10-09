@@ -17,8 +17,8 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from purchase_cycle import db, llm
-from purchase_cycle.email_order import InvalidExtraction
-from purchase_cycle.llm import ModelClient
+from purchase_cycle.llm import InvalidExtraction, ModelClient
+from purchase_cycle.recovery import correction_kwargs, parking, reask
 from purchase_cycle.web_form import build_reply, clarification_outcome, thread_id, validation_errors
 
 CHANNEL = "whatsapp"
@@ -32,6 +32,10 @@ TEXT_ONLY_REPLY = (
 NOT_ORDER_REPLY = (
     "Dear {name},\n\nThank you for your message. It does not look like an order, so nothing was registered. "
     "To place an order, send the products and quantities you need in one message.\n\nKind regards,\nCustomer service"
+)
+PARKED_REPLY = (
+    "Hello,\n\nThank you for your message. Your order is under review by our team, "
+    "and we will contact you as soon as it is registered.\n\nKind regards,\nCustomer service"
 )
 
 
@@ -134,6 +138,7 @@ def model_text(message: dict) -> str:
 class WhatsAppOrderState(TypedDict, total=False):
     message_path: str
     errors: list[str]
+    source: str
     message: dict
     customer: dict
     is_order: bool
@@ -156,8 +161,13 @@ def build_whatsapp_order_graph(
     checkpointer=None,
     interrupt_after=None,
     clarification=None,
+    recovery=True,
 ):
-    """Mirror of the email graph for one inbox message; with `clarification` a `clarify` step runs before `store`."""
+    """Mirror of the email graph for one inbox message; with `clarification` a `clarify` step runs before `store`.
+
+    `recovery` (on for this phase 05 channel) re-asks an invalid model answer once and parks a thread that
+    cannot go on in `failures`, with a notice to the customer in the outbox.
+    """
     conn = db.connect(db_path)
     try:
         known_skus = {row["sku"] for row in db.catalog_rows(conn)}
@@ -176,8 +186,14 @@ def build_whatsapp_order_graph(
         finally:
             conn.close()
         customer = message.pop("customer")
-        decision = intake_client.extract(model_text(message), case_id=Path(state["message_path"]).stem)
+
+        def ask(correction):
+            kwargs = correction_kwargs(correction)
+            return intake_client.extract(model_text(message), case_id=Path(state["message_path"]).stem, **kwargs)
+
+        decision = reask(ask) if recovery else ask(None)
         return {
+            **({"source": state["message_path"]} if recovery else {}),
             "errors": [],
             "message": message,
             "customer": customer,
@@ -191,15 +207,19 @@ def build_whatsapp_order_graph(
         return "extract" if state["is_order"] else "reply"
 
     def extract(state: WhatsAppOrderState) -> WhatsAppOrderState:
-        answer = extraction_client.extract(model_text(state["message"]), case_id=Path(state["message_path"]).stem)
-        lines = []
-        for n, line in enumerate(answer.lines, start=1):
-            if line.sku is not None and line.sku not in known_skus:
-                raise InvalidExtraction(f"Extracted line {n}: SKU '{line.sku}' is not in the catalog")
-            if line.source.strip().lower() != SOURCE:
-                raise InvalidExtraction(f"Extracted line {n}: source '{line.source}' is not the message")
-            lines.append({**line.model_dump(), "source": SOURCE})
-        return {"lines": lines}
+        def ask(correction):
+            text, case_id = model_text(state["message"]), Path(state["message_path"]).stem
+            answer = extraction_client.extract(text, case_id=case_id, **correction_kwargs(correction))
+            lines = []
+            for n, line in enumerate(answer.lines, start=1):
+                if line.sku is not None and line.sku not in known_skus:
+                    raise InvalidExtraction(f"Extracted line {n}: SKU '{line.sku}' is not in the catalog")
+                if line.source.strip().lower() != SOURCE:
+                    raise InvalidExtraction(f"Extracted line {n}: source '{line.source}' is not the message")
+                lines.append({**line.model_dump(), "source": SOURCE})
+            return lines
+
+        return {"lines": reask(ask) if recovery else ask(None)}
 
     def store(state: WhatsAppOrderState, config: RunnableConfig) -> WhatsAppOrderState:
         matched = [(line["sku"], line["quantity"]) for line in state["lines"] if line["sku"] is not None]
@@ -242,9 +262,28 @@ def build_whatsapp_order_graph(
         path = write_outbox(outbox, message["from"], message["message_id"], text)
         return {"reply": text, "outbox_file": str(path)}
 
+    def source(state: dict) -> str:
+        return state.get("source") or state["message_path"]  # the clarify step sees only `source`
+
+    def notice(state: dict) -> None:
+        # The customer can receive a reply here: one keyed file per parked message, so parking again rewrites it.
+        message = state.get("message")
+        if message is None:  # parked in intake, after the message was read and accepted
+            conn = db.connect(db_path)
+            try:
+                message = read_whatsapp(state["message_path"], conn)
+            finally:
+                conn.close()
+        write_outbox(
+            outbox, message["from"], message["message_id"], PARKED_REPLY, f"parked-{message['message_id']}.json"
+        )
+
+    def park(node, step):
+        return parking(node, step, CHANNEL, db_path, source, notice) if recovery else node
+
     builder = StateGraph(WhatsAppOrderState)
-    builder.add_node("intake", intake, retry_policy=llm.MODEL_RETRY)
-    builder.add_node("extract", extract, retry_policy=llm.MODEL_RETRY)
+    builder.add_node("intake", park(intake, "intake"), retry_policy=llm.MODEL_RETRY)
+    builder.add_node("extract", park(extract, "extract"), retry_policy=llm.MODEL_RETRY)
     builder.add_node("store", store)
     builder.add_node("reply", reply)
     builder.add_edge(START, "intake")
@@ -260,7 +299,8 @@ def build_whatsapp_order_graph(
             name = f"question-{message['message_id']}-{rounds}.json"
             write_outbox(outbox, message["from"], message["message_id"], question, name)
 
-        builder.add_node("clarify", build_clarification_graph(clarification, db_path, CHANNEL, send_question))
+        park_ask = park if recovery else None
+        builder.add_node("clarify", build_clarification_graph(clarification, db_path, CHANNEL, send_question, park_ask))
         builder.add_edge("extract", "clarify")
         builder.add_edge("clarify", "store")
     builder.add_edge("store", "reply")

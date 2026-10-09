@@ -148,7 +148,8 @@ def run(seeded_db, write_recording, inbox, tmp_path):
         write_recording(catalog, text, {"lines": lines}, task=WHATSAPP_EXTRACTION)
         intake = ModelClient("replay", catalog, recordings, task=WHATSAPP_INTAKE)
         extraction = ModelClient("replay", catalog, recordings, task=WHATSAPP_EXTRACTION)
-        graph = build_whatsapp_order_graph(intake, extraction, db_path, tmp_path / "outbox")
+        # The base graph of increments 1 to 3; recovery (re-ask and parking) is tested in test_recovery.py.
+        graph = build_whatsapp_order_graph(intake, extraction, db_path, tmp_path / "outbox", recovery=False)
         state = graph.invoke({"message_path": path}, {"configurable": {"thread_id": "whatsapp-1"}})
         return state, intake, extraction
 
