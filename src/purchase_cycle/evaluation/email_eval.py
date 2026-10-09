@@ -6,6 +6,7 @@ so the evaluated path is the one a real email takes: parsing, intake, extraction
 
 import json
 import os
+import re
 import sys
 import tempfile
 from collections import Counter, defaultdict
@@ -59,11 +60,65 @@ def _take(pool: Counter, key) -> bool:
     return False
 
 
+def _normalise(text: str) -> str:
+    return " ".join(text.casefold().split())
+
+
+def _has_phrase(text: str, phrase: str) -> bool:
+    """Whole-word containment of normalised `phrase` in normalised `text`, so "gel" is not in "angel wings"."""
+    return re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", text) is not None
+
+
+def _cited_text(source_text: str, texts: set[str]) -> str | None:
+    """The one expected text a citation names: those it contains as whole words, less sub-phrases of another.
+
+    A citation naming more than one distinct expected text (a copied table) names none.
+    """
+    cited = _normalise(source_text)
+    found = {text for text in texts if _has_phrase(cited, text)}
+    kept = {text for text in found if not any(other != text and _has_phrase(other, text) for other in found)}
+    return kept.pop() if len(kept) == 1 else None
+
+
+def _max_matching(edges: list[list[int]], n_right: int) -> int:
+    """Size of a maximum one-to-one matching; `edges[i]` lists the right nodes left node `i` may take."""
+    owner = [-1] * n_right
+
+    def augment(i: int, seen: set[int]) -> bool:
+        for j in edges[i]:
+            if j not in seen:
+                seen.add(j)
+                if owner[j] == -1 or augment(owner[j], seen):
+                    owner[j] = i
+                    return True
+        return False
+
+    return sum(augment(i, set()) for i in range(len(edges)))
+
+
+def _unknown_hits(expected: list[dict], produced: list[dict]) -> int:
+    """Pair out-of-catalog lines one to one on source, quantity and the requested text named by the citation."""
+    texts = {_normalise(line["text"]) for line in expected}
+    cited = [_cited_text(line["source_text"], texts) for line in produced]
+    edges = [
+        [
+            j
+            for j, got in enumerate(produced)
+            if got["source"] == line["location"]
+            and got["quantity"] == line["expected_quantity"]
+            and cited[j] == _normalise(line["text"])
+        ]
+        for line in expected
+    ]
+    return _max_matching(edges, len(produced))
+
+
 def grade(case: dict, is_order: bool | None, lines: list[dict], error: str | None = None) -> dict:
     """Grade one email; `lines` are the extracted lines, empty when the run stopped or the intake said no order.
 
     Expected and produced lines are matched one to one: a catalog line hits only with the expected
-    SKU, quantity and source, and an unknown line only with the expected quantity and source.
+    SKU, quantity and source, and an unknown line only with the expected quantity, source and requested
+    text named by its citation (deviation 05.2).
     """
     catalog = [line for line in lines if line["sku"] is not None]
     full = Counter((line["sku"], line["quantity"], line["source"]) for line in catalog)
@@ -86,11 +141,10 @@ def grade(case: dict, is_order: bool | None, lines: list[dict], error: str | Non
         for line, r, q in zip(expected, recall, quantity, strict=True)
     ]
     precision_hits = sum(row["line_recall"] for row in line_rows)
-    expected_unknown = Counter(
-        (line["expected_quantity"], line["location"]) for line in case["lines"] if line["expected_sku"] is None
-    )
-    unknown = Counter((line["quantity"], line["source"]) for line in lines if line["sku"] is None)
-    detection = unknown == expected_unknown
+    expected_unknown = [line for line in case["lines"] if line["expected_sku"] is None]
+    unknown = [line for line in lines if line["sku"] is None]
+    unknown_hits = _unknown_hits(expected_unknown, unknown)
+    detection = unknown_hits == len(expected_unknown) == len(unknown)
     exact = (
         error is None
         and is_order == case["is_order"]
@@ -110,8 +164,9 @@ def grade(case: dict, is_order: bool | None, lines: list[dict], error: str | Non
         "line_rows": line_rows,
         "produced_catalog": len(catalog),
         "precision_hits": precision_hits,
-        "expected_unmatched": sum(expected_unknown.values()),
-        "unmatched": sum(unknown.values()),
+        "expected_unmatched": len(expected_unknown),
+        "unmatched": len(unknown),
+        "unmatched_hits": unknown_hits,
         "out_of_catalog_detection": detection,
         "email_exact_match": exact,
     }
@@ -209,7 +264,8 @@ def summarise(results: list[dict]) -> dict:
     line_precision: produced catalog lines matched that way by a distinct expected line.
     field_sku: expected catalog lines whose SKU a distinct produced line carries; field_quantity: of those,
     the ones whose quantity also matches.
-    out_of_catalog_detection: order emails whose unknown lines equal the expected ones in quantity and source.
+    out_of_catalog_detection: order emails whose unknown lines pair one to one with the expected ones on
+    quantity, source and the requested text named by the citation.
     email_exact_match: order emails with the right intake, every catalog line matched, none extra and
     out-of-catalog detection.
     """
