@@ -130,17 +130,17 @@ def insert_order(
 
     `clarification` is a (thread id, final status) pair whose row changes status in the same transaction.
     `source` is the (message id, thread id) of the delivered message; a message id already stored for the
-    channel returns its order id and writes no order, line or source row.
+    channel returns its order id and writes no order, line, source or clarification change (a resumed `store`).
     """
     with conn:
-        if clarification:
-            finish_clarification(conn, *clarification)
         if source:
             row = conn.execute(
                 "SELECT order_id FROM order_sources WHERE channel = ? AND message_id = ?", (channel, source[0])
             ).fetchone()
             if row:
                 return row["order_id"]
+        if clarification:
+            finish_clarification(conn, *clarification)
         cursor = conn.execute(
             "INSERT INTO orders (customer_code, channel, status) VALUES (?, ?, ?)", (customer_code, channel, status)
         )
