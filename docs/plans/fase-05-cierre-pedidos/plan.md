@@ -29,6 +29,9 @@ Written for the owner decisions of 2026-10-09 recorded in the spec (D3 option B,
 - Coordinator decision 2026-10-09: a parked WhatsApp thread writes one keyed, idempotent outbox notice `parked-<message_id>.json` with the reply shape saying the order is under review; web form and email write no notice.
 - Coordinator decision 2026-10-09: `clarify answer` and `clarify close` build the channel graphs with recovery on, so a thread started by `route` resumes with the same node wiring; phase 04 tests stay unchanged.
 - Coordinator decision 2026-10-09 (review 1, F3, C6): a stored source counts as a re-delivery only for the same customer; a matching message id from another customer raises `db.SourceConflict`, stores nothing and gets no reply (the schema keys sources on channel and message id, so a per-customer order is not possible without a schema change); an email without `Message-ID` uses `sha256:<hex>` of its raw bytes, not the file name, which supersedes the file-name assumption in the spec.
+- Writer decision 2026-10-09 (review 1, F4, C6): a re-delivered message of a paused order of the same customer and channel is detected by comparing its `message_id` with the checkpointed state of the pending threads; it gets route `duplicate`, runs no graph, exits 0 and gets no reply.
+- Writer decision 2026-10-09 (review 1, I3): `whatsapp-demo` thread ids are `<run>-<file stem>` with no channel prefix, so `resume` refuses them like the phase 02 to 04 demo threads.
+- Writer decision 2026-10-09 (review 1, I5): the re-ask correction text is "Model output rejected by schema: <details>" with no case label, for every channel, so a re-asked question keeps one recording key across runs.
 
 ## Rules for executors
 - Each batch is sized for one writer agent with about 90k tokens of context; it starts in a fresh session from this file and Git, implements its increments in order, marks each one `[x]` with its evidence and commits before the context runs out.
@@ -148,6 +151,7 @@ Execution order: batch A0 first, then batches A to E; increment 24 runs right af
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| Review round 1 | sdd-review | f1a1e4f..6318a79 | 4 | F1 to F4 and I3 to I6 fixed: F1 59dc148, F2 8b6cfb4, F3 525bd0b, F4 406d798, I3 a7a162f, I4 4067619, I5 4fa53ac, I6 ce08bcb; S5 fixed in a8f07a3; stale docs fixed in e43341a; Low items logged as SEC-008 to SEC-012 in `docs/security.md` (49cf548); code duplication logged as open in Results | fixed, open items logged |
 
 ## Results
 Per criterion: command or path run, observed result and evidence reference.
@@ -157,6 +161,12 @@ Pending items, limitations and what could not be checked, stated plainly.
 - Fixed 2026-10-09 (review 1, F1, C10): `run_inbox` (so `route`), `resume`, `failures resume`, `clarify answer` and `close` and `whatsapp-demo` run the graph with `durability="sync"`, so a step checkpoint is on disk before the next step can crash; the `invoke_durability` spy in four tests failed before the fix (durability None); `uv run pytest -q tests/test_resume_cli.py` 6 runs in a row, 11 passed each (`.evidence/fase-05/resume-sync-f1.txt`).
 - Fixed 2026-10-09 (review 1, F2, C10, C6): `db.insert_order` checks the stored source before it finishes the clarification row, so a resumed `store` of an answered thread returns its order instead of raising `NotPending`; `test_answered_thread_that_crashed_after_the_store_commit_resumes_to_one_order` (in-process crash at `after_store_commit`, then resume) failed before the fix with `NotPending` and passes after it; `uv run pytest -q tests/test_clarification_graph.py tests/test_web_form.py tests/test_email_order.py tests/test_whatsapp_order.py` 100 passed.
 - Fixed 2026-10-09 (review 1, F3, C6, CWE-639): `db.insert_order` returns a stored order only to the same customer and raises `SourceConflict` otherwise; `read_email` uses a content hash for an email without `Message-ID`; new tests `test_emails_without_message_id_and_the_same_file_name_from_two_customers_store_two_orders` and `test_the_same_message_id_from_another_customer_never_returns_the_first_order` (email and WhatsApp) failed before the fix (one order for two customers; no `SourceConflict`); `uv run pytest -q` 496 passed.
+- Open item (review 1, no refactor in this phase): the store and extract steps are duplicated across the email, web form and WhatsApp modules.
+- Open item (review 1, no refactor in this phase): `cmd_failures_resume` and `cmd_resume` in `cli.py` repeat the same build, invoke and report code.
+- Open item (review 1, no refactor in this phase): the `<channel>-<run>-<file stem>` thread id format is built in two places.
+- Open item (review 1, no refactor in this phase): the `recovery=False` branch of `build_whatsapp_order_graph` is not used by any entry point.
+- Open item (review 1, no refactor in this phase): `cmd_whatsapp_demo` keeps an `except` branch that cannot be reached.
+- Open item (review 1, method tooling): the stop-gate hook `check:puerta` fails or times out while a writer has uncommitted changes.
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
