@@ -196,6 +196,7 @@ def test_eval_all_leaves_out_the_whatsapp_suite_before_its_baseline(monkeypatch)
         "clarification_detection",
         "clarification_answers",
         "channel_routing",
+        "failure_recovery",
     ]
     ran.clear()
     args.suite = ["whatsapp_order_extraction"]
@@ -211,3 +212,4 @@ def test_eval_upload_includes_the_whatsapp_suite(monkeypatch):
     assert harness.cmd_upload(argparse.Namespace(suite="all")) == 0
     assert "whatsapp_order_extraction" in uploaded
     assert "channel_routing" not in uploaded  # deterministic, local only
+    assert "failure_recovery" not in uploaded
