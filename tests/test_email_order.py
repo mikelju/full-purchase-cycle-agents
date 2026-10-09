@@ -122,6 +122,7 @@ def _line(**changes):
         (_line(quantity=0), InvalidModelOutput, "lines.1.quantity"),
         (_line(quantity=-2), InvalidModelOutput, "lines.1.quantity"),
         ({"lines": [{"source": "body", "sku": "GLV-NIT-M", "quantity": 40}]}, InvalidModelOutput, "source_text"),
+        (_line(source="order.pdf"), InvalidExtraction, "source 'order.pdf' is not the body or an attachment"),
     ],
 )
 def test_invalid_extraction_stops_before_any_write(seeded_db, run, answer, error, message):
@@ -130,14 +131,9 @@ def test_invalid_extraction_stops_before_any_write(seeded_db, run, answer, error
     assert _rows(seeded_db[0]) == ([], [])
 
 
-@pytest.mark.parametrize(
-    ("source", "stored"),
-    [(" EXTRA.TXT ", "extra.txt"), ("order.pdf", "order.pdf")],
-    ids=["case-and-spaces", "unmatched-kept"],
-)
-def test_line_source_is_matched_loosely_and_never_stops_the_email(seeded_db, run, source, stored):
-    _, state, _, _ = run(lines_answer=_line(source=source))
-    assert state["lines"][1]["source"] == stored
+def test_line_source_is_matched_ignoring_case_and_spaces(seeded_db, run):
+    _, state, _, _ = run(lines_answer=_line(source=" EXTRA.TXT "))
+    assert state["lines"][1]["source"] == "extra.txt"
     assert state["order_id"] == 1
 
 

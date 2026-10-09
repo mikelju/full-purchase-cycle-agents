@@ -387,8 +387,9 @@ def build_email_order_graph(
         for n, line in enumerate(answer.lines, start=1):
             if line.sku is not None and line.sku not in known_skus:
                 raise InvalidExtraction(f"Extracted line {n}: SKU '{line.sku}' is not in the catalog")
-            # an unmatched source is kept as returned: only schema, SKU and quantity failures stop the email
-            source = sources.get(line.source.strip().lower(), line.source)
+            source = sources.get(line.source.strip().lower())
+            if source is None:
+                raise InvalidExtraction(f"Extracted line {n}: source '{line.source}' is not the body or an attachment")
             lines.append({**line.model_dump(), "source": source})
         return {"lines": lines}
 
