@@ -266,6 +266,19 @@ def test_whatsapp_demo_command_reports_an_empty_folder(tmp_path, capsys):
     assert "no .json files" in capsys.readouterr().err
 
 
+def test_the_same_message_id_from_another_customer_never_returns_the_first_order(seeded_db, run, tmp_path):
+    """F3 (CWE-639): a matching WhatsApp id from another customer is rejected, with no reply naming the order."""
+    run()
+    with pytest.raises(db.SourceConflict, match="already stored for another customer"):
+        run(content=message(sender="34600102202"))  # CLI-003
+    conn = db.connect(seeded_db[0])
+    customers = [r[0] for r in conn.execute("SELECT customer_code FROM orders")]
+    conn.close()
+    assert customers == ["CLI-002"]
+    [sent] = _outbox(tmp_path)
+    assert sent["to"] == PHONE
+
+
 def test_whatsapp_message_delivered_twice_stores_one_order(seeded_db, run, tmp_path):
     first, _, _ = run()
     again, _, _ = run()

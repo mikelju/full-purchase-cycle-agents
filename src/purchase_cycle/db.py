@@ -130,15 +130,22 @@ def insert_order(
 
     `clarification` is a (thread id, final status) pair whose row changes status in the same transaction.
     `source` is the (message id, thread id) of the delivered message; a message id already stored for the
-    channel returns its order id and writes no order, line, source or clarification change (a resumed `store`).
+    channel for the same customer returns its order id and writes no order, line, source or clarification change
+    (a re-delivery or a resumed `store`); stored for another customer it raises SourceConflict and writes nothing.
     """
     with conn:
         if source:
             row = conn.execute(
-                "SELECT order_id FROM order_sources WHERE channel = ? AND message_id = ?", (channel, source[0])
+                "SELECT s.order_id, o.customer_code FROM order_sources s JOIN orders o ON o.id = s.order_id "
+                "WHERE s.channel = ? AND s.message_id = ?",
+                (channel, source[0]),
             ).fetchone()
-            if row:
+            if row and row["customer_code"] == customer_code:
                 return row["order_id"]
+            if row:
+                raise SourceConflict(
+                    f"the {channel} message id '{source[0]}' is already stored for another customer; nothing stored"
+                )
         if clarification:
             finish_clarification(conn, *clarification)
         cursor = conn.execute(
@@ -186,6 +193,10 @@ def save_clarification(
         )
     if cursor.rowcount == 0:
         raise NotPending(f"thread {thread_id} is not pending; nothing changed")
+
+
+class SourceConflict(RuntimeError):
+    """A message id already stored for another customer: not a re-delivery, and never answered with that order."""
 
 
 class NotPending(RuntimeError):

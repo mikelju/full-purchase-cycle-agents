@@ -5,6 +5,7 @@ and each `.txt`, text-based `.pdf` and `.xlsx` attachment become text; other
 attachments are listed as ignored. The sender address identifies the customer.
 """
 
+import hashlib
 import io
 import re
 import sqlite3
@@ -330,7 +331,8 @@ def read_email(path: Path | str, conn: sqlite3.Connection) -> dict:
     text = model_text(email)
     if len(text) > MAX_EMAIL_TEXT:
         raise EmailRejected(f"the email text has {len(text)} characters, above the limit of {MAX_EMAIL_TEXT}")
-    message_id = (message.get("Message-ID") or "").strip() or path.name  # the source reference of the order
+    # The source reference of the order; without a Message-ID, a hash of the raw bytes (never the file name).
+    message_id = (message.get("Message-ID") or "").strip() or f"sha256:{hashlib.sha256(data).hexdigest()}"
     return {**email, "message_id": message_id, "customer": customer, "text": text}
 
 
