@@ -215,3 +215,50 @@ def test_whatsapp_tasks_are_distinct_from_the_email_tasks():
         assert new.instructions != old.instructions
         assert new.recordings_path != old.recordings_path
     assert [t.recordings_path.name for t in whatsapp] == ["whatsapp_intake.jsonl", "whatsapp_order_extraction.jsonl"]
+
+
+def test_whatsapp_demo_command_runs_an_inbox_folder(
+    seeded_db, write_recording, tmp_path, no_network, capsys, monkeypatch
+):
+    import dataclasses
+
+    from purchase_cycle import cli
+    from purchase_cycle.whatsapp_order import model_text
+
+    _, catalog = seeded_db
+    folder = tmp_path / "inbox"
+    folder.mkdir()
+    (folder / "WA-1.json").write_text(json.dumps(message()), encoding="utf-8")
+    (folder / "WA-2.json").write_text(json.dumps(message("wamid.TEST2", kind="image")), encoding="utf-8")
+    (folder / "WA-3.json").write_text(json.dumps(message("wamid.TEST3", sender="34999999999")), encoding="utf-8")
+    text = model_text({"body": BODY})
+    recordings = write_recording(catalog, text, ORDER, task=cli.WHATSAPP_INTAKE)
+    write_recording(catalog, text, {"lines": LINES}, task=cli.WHATSAPP_EXTRACTION)
+    for name in ("WHATSAPP_INTAKE", "WHATSAPP_EXTRACTION"):
+        monkeypatch.setattr(cli, name, dataclasses.replace(getattr(cli, name), recordings_path=recordings))
+    outbox = tmp_path / "outbox"
+    argv = ["--db", str(tmp_path / "b.db"), "whatsapp-demo", str(folder), "--checkpoints", str(tmp_path / "c.db")]
+    code = cli.main([*argv, "--outbox", str(outbox)])
+    out, err = capsys.readouterr()
+    assert code == 1, out
+    assert "messages=3" in out
+    assert "intake: order - The customer orders gloves and a bed." in out
+    assert '1. "40 boxes of nitrile gloves M" x 40 -> GLV-NIT-M  (message)' in out
+    assert '2. "a hospital bed" x 1 -> no match  (message)' in out
+    assert [line for line in out.splitlines() if line.startswith("stored order:")] == ["stored order: 1"]
+    assert "Your WhatsApp order is registered as order 1" in out
+    assert "message rejected, nothing stored:" in out
+    assert "the message type 'image' is not text" in out
+    assert "the number '34999999999' is not a known customer" in out
+    assert sorted(p.name for p in outbox.iterdir()) == ["reply-wamid.TEST1.json", "reply-wamid.TEST2.json"]
+    assert "outbox: " in out
+    assert err == ""
+    assert no_network == []
+
+
+def test_whatsapp_demo_command_reports_an_empty_folder(tmp_path, capsys):
+    from purchase_cycle.cli import main
+
+    argv = ["--db", str(tmp_path / "b.db"), "whatsapp-demo", str(tmp_path), "--checkpoints", str(tmp_path / "c.db")]
+    assert main(argv) == 1
+    assert "no .json files" in capsys.readouterr().err

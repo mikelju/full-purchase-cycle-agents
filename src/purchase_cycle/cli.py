@@ -20,12 +20,16 @@ from purchase_cycle.llm import (
     EMAIL_EXTRACTION,
     EMAIL_INTAKE,
     MATCHING,
+    WHATSAPP_EXTRACTION,
+    WHATSAPP_INTAKE,
     InvalidModelOutput,
     MissingRecording,
     ModelClient,
 )
 from purchase_cycle.web_form import CHANNEL as WEB_FORM
 from purchase_cycle.web_form import build_web_form_graph
+from purchase_cycle.whatsapp_order import CHANNEL as WHATSAPP
+from purchase_cycle.whatsapp_order import build_whatsapp_order_graph
 
 DEMO_SENTENCE = "Hi Laura, could you send us 40 boxes of powder-free nitrile gloves, size M? Thanks, Begona"
 DEMO_SUBMISSION = config.ROOT / "examples" / "web_form_submission.json"
@@ -195,6 +199,69 @@ def cmd_email_demo(args) -> int:
         print(f"stored order: {order if order is not None else 'none (no line matched)'}")
         print("reply:")
         print(state["reply"])
+    saved = intake.save_recordings() + extraction.save_recordings()
+    print()
+    for client in (intake, extraction):
+        _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return code
+
+
+def cmd_whatsapp_demo(args) -> int:
+    paths = sorted(Path(args.folder).glob("*.json"))
+    if not paths:
+        print(f"Error: no .json files in {args.folder}", file=sys.stderr)
+        return 1
+    conn = db.connect(args.db)
+    db.seed(conn)
+    catalog = db.catalog_rows(conn)
+    conn.close()
+    intake = ModelClient(args.mode, catalog, task=WHATSAPP_INTAKE)
+    extraction = ModelClient(args.mode, catalog, task=WHATSAPP_EXTRACTION)
+    graph = build_whatsapp_order_graph(
+        intake, extraction, args.db, args.outbox, checkpointer=sqlite_checkpointer(args.checkpoints)
+    )
+    run_id = uuid.uuid4().hex[:12]
+    print(f"mode={args.mode}  folder={args.folder}  messages={len(paths)}  outbox={args.outbox}")
+    code = 0
+    for path in paths:
+        thread_id = f"{WHATSAPP}-{run_id}-{path.stem}"
+        run_config = {"configurable": {"thread_id": thread_id}, "run_name": "whatsapp_order"}
+        print()
+        print(f"== {path.name}  thread_id={thread_id}")
+        try:
+            state = graph.invoke({"message_path": str(path)}, run_config)
+        except (MissingRecording, InvalidModelOutput, InvalidExtraction) as error:
+            print(f"Error: {error}", file=sys.stderr)
+            code = 1
+            continue
+        except Exception as error:  # any other failure stops this message only
+            print(f"Error: {path.name} failed: {type(error).__name__}: {error}", file=sys.stderr)
+            code = 1
+            continue
+        if state["errors"]:
+            print("message rejected, nothing stored:")
+            for error in state["errors"]:
+                print(f"  {error}")
+            code = 1
+        else:
+            print(f"from: {state['message']['from']}  customer: {state['customer']['code']}")
+            print(f"intake: {'order' if state['is_order'] else 'not an order'} - {state['reason']}")
+            if state["is_order"]:
+                print("lines:")
+                for n, line in enumerate(state["lines"], start=1):
+                    print(
+                        f'  {n}. "{line["source_text"]}" x {line["quantity"]} -> {line["sku"] or "no match"}  ({line["source"]})'
+                    )
+                order = state["order_id"]
+                print(f"stored order: {order if order is not None else 'none (no line matched)'}")
+            else:
+                print("nothing extracted or stored")
+        if state.get("reply"):
+            print(f"outbox: {state['outbox_file']}")
+            print("reply:")
+            print(state["reply"])
     saved = intake.save_recordings() + extraction.save_recordings()
     print()
     for client in (intake, extraction):
@@ -432,6 +499,13 @@ def main(argv=None) -> int:
     )
     email.add_argument("--mode", choices=config.MODES, default="replay")
     email.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+
+    whatsapp = sub.add_parser("whatsapp-demo", help="run the WhatsApp order subgraph on a folder of message files")
+    whatsapp.add_argument("folder", help="inbox folder of WhatsApp message .json files")
+    whatsapp.add_argument("--mode", choices=config.MODES, default="replay")
+    whatsapp.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    whatsapp.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the reply files")
+    whatsapp.set_defaults(handler=cmd_whatsapp_demo)
 
     exceptions = sub.add_parser(
         "exceptions-demo", help="run the exception samples, print their doubts and question, and stop"
