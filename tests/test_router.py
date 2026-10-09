@@ -13,6 +13,9 @@ from purchase_cycle.graph import sqlite_checkpointer
 from purchase_cycle.llm import (
     CLARIFICATION_ANSWER,
     CLARIFICATION_QUESTION,
+    EMAIL_EXTRACTION,
+    EMAIL_INTAKE,
+    MATCHING,
     WHATSAPP_EXTRACTION,
     WHATSAPP_INTAKE,
     ModelClient,
@@ -307,3 +310,17 @@ def test_clarify_commands_build_the_channel_graphs_with_recovery_on(seeded_db, t
     cli.main([*argv, "--checkpoints", str(tmp_path / "c.db")])
     capsys.readouterr()
     assert built == [("email", True)]
+
+
+def test_route_saves_the_recordings_of_every_channel_client(seeded_db, folder, tmp_path, monkeypatch, capsys):
+    """In record mode the channel recordings (matching, intake, extraction) are saved, not only the clarification ones."""
+    from purchase_cycle import cli
+
+    saved = []
+    monkeypatch.setattr(ModelClient, "save_recordings", lambda self: saved.append(self.task.name) or 0)
+    _write(folder, "notes.txt", "hello")
+    argv = ["--db", str(tmp_path / "b.db"), "route", str(folder), "--checkpoints", str(tmp_path / "c.db")]
+    cli.main([*argv, "--outbox", str(tmp_path / "outbox")])
+    capsys.readouterr()
+    channel_tasks = {MATCHING.name, EMAIL_INTAKE.name, EMAIL_EXTRACTION.name, WHATSAPP_INTAKE.name}
+    assert channel_tasks | {WHATSAPP_EXTRACTION.name, CLARIFICATION_QUESTION.name} <= set(saved)

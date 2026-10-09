@@ -154,3 +154,22 @@ def test_failures_resume_of_a_thread_that_is_not_parked_changes_nothing(parked, 
     )
     assert parked.failures() == resolved
     assert parked.order_lines() == [(line["sku"], line["quantity"]) for line in LINES]
+
+
+@pytest.mark.parametrize("command", ["failures", "resume"])
+def test_resume_commands_save_the_channel_recordings(parked, monkeypatch, capsys, command):
+    """In record mode the intake and extraction recordings are saved, not only the clarification ones."""
+    from purchase_cycle.llm import ModelClient
+
+    parked.fix()
+    if command == "resume":
+        conn = db.connect(parked.db_path)
+        try:
+            db.resolve_failure(conn, parked.thread_id)
+        finally:
+            conn.close()
+    saved = []
+    monkeypatch.setattr(ModelClient, "save_recordings", lambda self: saved.append(self.task.name) or 0)
+    args = ("failures", "resume") if command == "failures" else ("resume",)
+    assert parked.run(*args, parked.thread_id) == 0, capsys.readouterr()
+    assert {EMAIL_INTAKE.name, EMAIL_EXTRACTION.name} <= set(saved)

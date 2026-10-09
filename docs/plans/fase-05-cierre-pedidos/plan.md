@@ -147,6 +147,7 @@ Execution order: batch A0 first, then batches A to E; increment 24 runs right af
 Per criterion: command or path run, observed result and evidence reference.
 Pending items, limitations and what could not be checked, stated plainly.
 - Open item (coordinator decision 2026-10-09): the `message_id` of a WhatsApp clarification answer is not recorded in `order_sources`, so a re-delivered answer could be applied again; to be stated in the increment 23 limitations.
+- Fixed 2026-10-09: in record mode `route`, `failures resume` and `resume` save the channel step recordings (matching, intake, extraction) as well as the clarification ones, which increments 17 and 24 need; `_clarify_graph` fills an optional `channel_clients` list (tests in `tests/test_router.py` and `tests/test_failures_cli.py`).
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.

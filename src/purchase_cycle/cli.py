@@ -272,14 +272,21 @@ def cmd_whatsapp_demo(args) -> int:
 
 
 def _clarify_graph(
-    args, channel: str, recordings: dict | None = None, channel_mode: str | None = None, recovery: bool = False
+    args,
+    channel: str,
+    recordings: dict | None = None,
+    channel_mode: str | None = None,
+    recovery: bool = False,
+    channel_clients: list | None = None,
 ):
     """The channel graph with the clarify step, on the same checkpoint file; returns it and its clarification clients.
 
     `recordings` maps a channel task name to its recordings file and `channel_mode` sets the mode of the channel
     steps (matching, intake, extraction); both default to the task files and the command mode.
     `recovery` turns on the phase 05 re-ask and parking on the web form and email graphs (always on for WhatsApp).
+    `channel_clients`, when given, receives the channel step clients, so a record run can save their recordings.
     """
+    channel_clients = [] if channel_clients is None else channel_clients
     recordings = recordings or {}
     channel_mode = channel_mode or args.mode
     conn = db.connect(args.db)
@@ -294,17 +301,20 @@ def _clarify_graph(
     checkpointer = sqlite_checkpointer(args.checkpoints)
     if channel == WEB_FORM:
         matcher = ModelClient(channel_mode, catalog, recordings.get(MATCHING.name), task=MATCHING)
+        channel_clients.append(matcher)
         return build_web_form_graph(matcher, args.db, checkpointer, clarification=clients, recovery=recovery), clients
     if channel == WHATSAPP:
         intake = ModelClient(channel_mode, catalog, recordings.get(WHATSAPP_INTAKE.name), task=WHATSAPP_INTAKE)
         extraction = ModelClient(
             channel_mode, catalog, recordings.get(WHATSAPP_EXTRACTION.name), task=WHATSAPP_EXTRACTION
         )
+        channel_clients += [intake, extraction]
         outbox = getattr(args, "outbox", config.OUTBOX_DIR)
         graph = build_whatsapp_order_graph(intake, extraction, args.db, outbox, checkpointer, clarification=clients)
         return graph, clients
     intake = ModelClient(channel_mode, catalog, recordings.get(EMAIL_INTAKE.name), task=EMAIL_INTAKE)
     extraction = ModelClient(channel_mode, catalog, recordings.get(EMAIL_EXTRACTION.name), task=EMAIL_EXTRACTION)
+    channel_clients += [intake, extraction]
     graph = build_email_order_graph(intake, extraction, args.db, checkpointer, clarification=clients, recovery=recovery)
     return graph, clients
 
@@ -319,8 +329,8 @@ def cmd_route(args) -> int:
     conn.close()
     graphs, clients = {}, []
     for channel in (WEB_FORM, EMAIL, WHATSAPP):
-        graphs[channel], channel_clients = _clarify_graph(args, channel, recovery=True)
-        clients += list(channel_clients)
+        graphs[channel], clarification = _clarify_graph(args, channel, recovery=True, channel_clients=clients)
+        clients += list(clarification)
     results = router.run_inbox(folder, graphs, args.db, uuid.uuid4().hex[:12])
     saved = sum(client.save_recordings() for client in clients)
     print(f"mode={args.mode}  folder={args.folder}  items={len(results)}  outbox={args.outbox}")
@@ -575,7 +585,8 @@ def cmd_failures_resume(args) -> int:
             f"Error: thread {args.thread_id} is not parked (status {row['status']}); nothing changed", file=sys.stderr
         )
         return 1
-    graph, clients = _clarify_graph(args, row["channel"], recovery=True)
+    steps = []
+    graph, clients = _clarify_graph(args, row["channel"], recovery=True, channel_clients=steps)
     run_config = {"configurable": {"thread_id": args.thread_id}, "run_name": f"{row['channel']}_order"}
     if not graph.get_state(run_config).next:
         print(f"Error: no checkpoint to resume found for thread {args.thread_id}; nothing changed", file=sys.stderr)
@@ -588,7 +599,7 @@ def cmd_failures_resume(args) -> int:
         print(f"Error: thread {args.thread_id} failed again: {type(error).__name__}: {message}", file=sys.stderr)
         return 1
     finally:
-        for client in clients:
+        for client in [*clients, *steps]:
             client.save_recordings()
     conn = db.connect(args.db)
     try:
@@ -631,7 +642,8 @@ def cmd_resume(args) -> int:
     if failure is not None and failure["status"] == "needs_review":
         print(f"Error: thread {args.thread_id} is parked; use purchase-cycle failures resume", file=sys.stderr)
         return 1
-    graph, clients = _clarify_graph(args, channel, recovery=True)
+    steps = []
+    graph, clients = _clarify_graph(args, channel, recovery=True, channel_clients=steps)
     run_config = {"configurable": {"thread_id": args.thread_id}, "run_name": f"{channel}_order"}
     snapshot = graph.get_state(run_config)
     if not snapshot.next:
@@ -651,7 +663,7 @@ def cmd_resume(args) -> int:
         print(f"Error: thread {args.thread_id} failed: {type(error).__name__}: {message}", file=sys.stderr)
         return 1
     finally:
-        for client in clients:
+        for client in [*clients, *steps]:
             client.save_recordings()
     _print_outcome(args, state)
     return 0
