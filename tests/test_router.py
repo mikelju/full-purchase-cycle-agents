@@ -426,3 +426,25 @@ def test_route_command_reports_a_duplicate_without_running_it(seeded_db, folder,
     assert (code, err) == (0, ""), out
     assert "== WA-2.json  route=duplicate  thread_id=whatsapp-run1-WA-1" in out
     assert "re-delivery of an order that waits for an answer, nothing run or stored" in out
+
+
+@pytest.mark.parametrize("command", [["answer", "--text", ANSWER], ["close"]])
+def test_clarify_commands_take_the_outbox_folder(seeded_db, tmp_path, monkeypatch, capsys, command):
+    """Review 1, I4: `clarify answer` and `close` take `--outbox` like the other commands and pass it to the graph."""
+    from purchase_cycle import cli
+
+    db_path, _ = seeded_db
+    _pending(db_path, "whatsapp-run-1", "whatsapp", CUSTOMER.code, "2026-10-09 10:00:00")
+    outboxes = []
+    real = cli.build_whatsapp_order_graph
+
+    def spy(intake, extraction, db_path, outbox, *rest, **kwargs):
+        outboxes.append(outbox)
+        return real(intake, extraction, db_path, outbox, *rest, **kwargs)
+
+    monkeypatch.setattr(cli, "build_whatsapp_order_graph", spy)
+    action, options = command[0], command[1:]
+    argv = ["--db", str(db_path), "clarify", action, "whatsapp-run-1", *options]
+    cli.main([*argv, "--checkpoints", str(tmp_path / "c.db"), "--outbox", str(tmp_path / "out")])
+    capsys.readouterr()
+    assert outboxes == [str(tmp_path / "out")]

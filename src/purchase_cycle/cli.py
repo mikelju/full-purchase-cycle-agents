@@ -738,6 +738,7 @@ def main(argv=None) -> int:
     for command, handler in ((answer, cmd_clarify_answer), (close, cmd_clarify_close)):
         command.add_argument("--mode", choices=config.MODES, default="replay")
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+        command.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
         command.set_defaults(handler=handler)
     clarify_sub.choices["list"].set_defaults(handler=cmd_clarify_list)
 
