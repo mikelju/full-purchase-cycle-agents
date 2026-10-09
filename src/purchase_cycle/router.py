@@ -6,6 +6,8 @@ A WhatsApp text from a known customer whose most recent pending clarification is
 thread's answer; any other WhatsApp message starts a new order, and the WhatsApp graph rejects what it cannot read.
 An email or WhatsApp message whose message id is the source of a pending thread of the same customer and channel
 is a re-delivery of that paused order: a duplicate, which runs no graph.
+A WhatsApp message whose message id is an answer already applied to a pending thread of the same customer is a
+re-delivery of that answer: a duplicate too, so a thread that asked again never reads the same answer twice.
 An email or WhatsApp message whose message id is already stored is checked before any extraction or question:
 from the same customer it is a duplicate of the stored order, from another customer it is rejected.
 """
@@ -38,6 +40,7 @@ class Route(NamedTuple):
 
 
 SourceLookup = Callable[[str, str], str | None]  # (channel, thread id) -> message id of the thread's order
+AnswerLookup = Callable[[str, str], list[str]]  # (channel, thread id) -> message ids of the answers applied to it
 
 
 def _paused_duplicate(conn: sqlite3.Connection, channel: str, message: dict, paused_source: SourceLookup | None):
@@ -48,6 +51,18 @@ def _paused_duplicate(conn: sqlite3.Connection, channel: str, message: dict, pau
         if (pending["channel"], pending["customer_code"]) != (channel, message["customer"]["code"]):
             continue
         if paused_source(channel, pending["thread_id"]) == message["message_id"]:
+            return pending["thread_id"]
+    return None
+
+
+def _applied_answer(conn: sqlite3.Connection, message: dict, applied_answers: AnswerLookup | None):
+    """The pending WhatsApp thread of the same customer that already applied this message as an answer, or None."""
+    if applied_answers is None:
+        return None
+    for pending in db.pending_clarifications(conn):
+        if (pending["channel"], pending["customer_code"]) != ("whatsapp", message["customer"]["code"]):
+            continue
+        if message["message_id"] in applied_answers("whatsapp", pending["thread_id"]):
             return pending["thread_id"]
     return None
 
@@ -75,7 +90,9 @@ def _email_route(path: Path, conn: sqlite3.Connection, paused_source: SourceLook
     return Route(DUPLICATE, duplicate) if duplicate else Route(EMAIL)
 
 
-def _whatsapp_route(path: Path, conn: sqlite3.Connection, paused_source: SourceLookup | None) -> Route:
+def _whatsapp_route(
+    path: Path, conn: sqlite3.Connection, paused_source: SourceLookup | None, applied_answers: AnswerLookup | None
+) -> Route:
     try:
         message = read_whatsapp(path, conn)
     except WhatsAppRejected:
@@ -86,16 +103,25 @@ def _whatsapp_route(path: Path, conn: sqlite3.Connection, paused_source: SourceL
     duplicate = _paused_duplicate(conn, "whatsapp", message, paused_source)
     if duplicate:
         return Route(DUPLICATE, duplicate)
+    answered = _applied_answer(conn, message, applied_answers)
+    if answered:
+        return Route(DUPLICATE, answered, "already applied as an answer to this thread")
     pending = db.latest_pending_clarification(conn, message["customer"]["code"])
     if pending is not None and pending["channel"] == "whatsapp":
         return Route(WHATSAPP_ANSWER, pending["thread_id"])
     return Route(WHATSAPP_NEW)
 
 
-def route(item: Path | str, conn: sqlite3.Connection, paused_source: SourceLookup | None = None) -> Route:
+def route(
+    item: Path | str,
+    conn: sqlite3.Connection,
+    paused_source: SourceLookup | None = None,
+    applied_answers: AnswerLookup | None = None,
+) -> Route:
     """The route of one inbox item, read from the item and the `clarifications` table only.
 
-    `paused_source`, when given, returns the message id a pending thread started from, to spot a re-delivery.
+    `paused_source`, when given, returns the message id a pending thread started from, to spot a re-delivery;
+    `applied_answers`, when given, returns the message ids of the answers a pending thread already applied.
     """
     path = Path(item)
     suffix = path.suffix.lower()
@@ -112,7 +138,7 @@ def route(item: Path | str, conn: sqlite3.Connection, paused_source: SourceLooku
     if isinstance(data, dict) and "submission_id" in data:
         return Route(WEB_FORM)
     if isinstance(data, dict) and "message_id" in data and "from" in data:
-        return _whatsapp_route(path, conn, paused_source)
+        return _whatsapp_route(path, conn, paused_source, applied_answers)
     return Route(REJECTED, reason=f"the file '{path.name}' is neither a web form submission nor a WhatsApp message")
 
 
@@ -123,7 +149,8 @@ def graph_input(path: Path, kind: str):
     if kind == EMAIL:
         return {"email_path": str(path)}
     if kind == WHATSAPP_ANSWER:
-        return Command(resume={"answer": json.loads(path.read_text(encoding="utf-8-sig"))["text"]["body"].strip()})
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+        return Command(resume={"answer": data["text"]["body"].strip(), "message_id": data["message_id"]})
     return {"message_path": str(path)}
 
 
@@ -133,18 +160,23 @@ def run_inbox(folder: Path | str, graphs: dict, db_path: Path | str, run_id: str
     `graphs` maps a channel (`web_form`, `email`, `whatsapp`) to its compiled graph. Each result holds the
     item name, its route, the thread id, and the final graph state or the error that stopped the item.
     A new thread id is `<channel>-<run_id>-<file stem>`; a WhatsApp answer resumes the paused thread and a
-    duplicate of a paused order runs no graph.
+    duplicate of a paused order or of an applied answer runs no graph.
     """
 
     def paused_source(channel: str, thread: str) -> str | None:
         values = graphs[channel].get_state({"configurable": {"thread_id": thread}}).values
         return (values.get("message") or values.get("email") or {}).get("message_id")
 
+    def applied_answers(channel: str, thread: str) -> list[str]:
+        # The paused clarify subgraph keeps the applied answer ids in its own state, read through its task.
+        snapshot = graphs[channel].get_state({"configurable": {"thread_id": thread}}, subgraphs=True)
+        return [m for task in snapshot.tasks if task.state for m in task.state.values.get("applied_answers", [])]
+
     results = []
     for path in sorted(p for p in Path(folder).iterdir() if p.is_file()):
         conn = db.connect(db_path)
         try:
-            routed = route(path, conn, paused_source)
+            routed = route(path, conn, paused_source, applied_answers)
         finally:
             conn.close()
         result = {"item": path.name, "route": routed, "thread_id": None, "state": None, "error": None}

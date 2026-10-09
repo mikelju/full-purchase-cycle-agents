@@ -697,3 +697,46 @@ def test_two_customers_with_the_same_message_id_never_share_an_outbox_file(
     assert names == sorted([f"question-{PHONE}-wamid.ORDER-1.json", f"question-{digits}-wamid.ORDER-1.json"])
     for name in names:
         assert json.loads((outbox / name).read_text(encoding="utf-8"))["text"] == question
+
+
+def test_redelivered_answer_of_a_still_pending_thread_is_a_duplicate_not_a_second_answer(
+    seeded_db, write_recording, folder, tmp_path, no_network, capsys, monkeypatch
+):
+    """Review 2, M1: WA-2 answers but leaves the line unclear, so round 2 waits; WA-3 re-delivers WA-2."""
+    from purchase_cycle import cli
+
+    _, catalog = seeded_db
+    text = model_text({"body": BODY})
+    write_recording(catalog, text, ORDER, task=WHATSAPP_INTAKE)
+    recordings = write_recording(catalog, text, {"lines": LINES}, task=WHATSAPP_EXTRACTION)
+    [doubt] = detect(LINES, catalog, "whatsapp")
+    question = f'We do not carry "{doubt["text"]}"; shall we remove it?'
+    write_recording(catalog, doubts_message([doubt]), {"question": question}, task=CLARIFICATION_QUESTION)
+    unclear = [{"line_id": doubt["line_id"], "action": "unclear", "sku": None, "quantity": None}]
+    write_recording(
+        catalog, answer_message([doubt], question, ANSWER), {"resolutions": unclear}, task=CLARIFICATION_ANSWER
+    )
+    for name in ("WHATSAPP_INTAKE", "WHATSAPP_EXTRACTION", "CLARIFICATION_QUESTION", "CLARIFICATION_ANSWER"):
+        monkeypatch.setattr(cli, name, dataclasses.replace(getattr(cli, name), recordings_path=recordings))
+    _write(folder, "WA-1.json", message("wamid.ORDER"))
+    _write(folder, "WA-2.json", message("wamid.ANSWER", body=ANSWER))
+    _write(folder, "WA-3.json", message("wamid.ANSWER", body=ANSWER))
+    outbox = tmp_path / "outbox"
+    argv = ["--db", str(tmp_path / "b.db"), "route", str(folder), "--checkpoints", str(tmp_path / "c.db")]
+    code = cli.main([*argv, "--outbox", str(outbox)])
+    out, err = capsys.readouterr()
+    assert (code, err) == (0, ""), out
+    assert out.count("route=whatsapp_answer") == 1
+    assert "== WA-3.json  route=duplicate" in out
+    assert "re-delivery of a message already applied as an answer to this thread, nothing run or stored" in out
+    assert sorted(p.name for p in outbox.iterdir()) == [
+        f"question-{PHONE}-wamid.ORDER-1.json",
+        f"question-{PHONE}-wamid.ORDER-2.json",
+    ]
+    conn = db.connect(tmp_path / "b.db")
+    pending = conn.execute("SELECT status, round FROM clarifications").fetchall()
+    failures = conn.execute("SELECT COUNT(*) FROM failures").fetchone()[0]
+    conn.close()
+    assert [tuple(r) for r in pending] == [("pending", 2)]
+    assert failures == 0
+    assert no_network == []

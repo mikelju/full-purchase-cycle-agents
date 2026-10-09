@@ -256,6 +256,8 @@ class ClarificationState(TypedDict, total=False):
     question: str
     round: int
     answer: str
+    answer_message_id: str | None  # the channel message id of the answer being read, when the channel has one
+    applied_answers: list[str]  # message ids of the answers applied so far, so a re-delivery is not applied again
     closed: bool
     resolutions: list[dict]
     removed: list[dict]
@@ -364,6 +366,7 @@ def build_clarification_graph(
 
     def wait(state: ClarificationState) -> ClarificationState:
         # Resumed with {"answer": text} or {"close": True}; the question was drafted before the pause.
+        # A WhatsApp answer also carries its `message_id`, kept in `applied_answers` once the answer is applied.
         # The state keeps the drafted question as the model wrote it, so the interpretation message and its
         # recordings stay the same; the customer sees the plain version.
         # `rejected` holds why the previous answer failed its checks; the same question waits again.
@@ -377,7 +380,7 @@ def build_clarification_graph(
         )
         if received.get("close"):
             return {"closed": True, "rejected": None}
-        return {"answer": received["answer"], "rejected": None}
+        return {"answer": received["answer"], "answer_message_id": received.get("message_id"), "rejected": None}
 
     def interpret(state: ClarificationState, config: RunnableConfig, runtime: Runtime) -> ClarificationState:
         if state.get("closed"):
@@ -395,9 +398,12 @@ def build_clarification_graph(
             reason = str(error) if isinstance(error, InvalidAnswer) else f"Clarification answer not read: {error}"
             return {"rejected": reason}
         resolutions = state.get("resolutions", [])
+        applied = state.get("applied_answers", [])
+        message_id = state.get("answer_message_id")
         return {
             "resolutions": resolutions + [r.model_dump() for r in read.resolutions],
-            "before_answer": {"doubts": state["doubts"], "resolutions": resolutions},
+            "applied_answers": applied + [message_id] if message_id else applied,
+            "before_answer": {"doubts": state["doubts"], "resolutions": resolutions, "applied_answers": applied},
         }
 
     builder = StateGraph(ClarificationState)
