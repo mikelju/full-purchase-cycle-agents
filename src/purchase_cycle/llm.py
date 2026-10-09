@@ -329,6 +329,7 @@ class InvalidModelOutput(ValueError):
     def __init__(self, error: ValidationError, label: str):
         self.fields = [".".join(str(p) for p in e["loc"]) or "<root>" for e in error.errors()]
         details = "; ".join(f"field '{'.'.join(str(p) for p in e['loc'])}': {e['msg']}" for e in error.errors())
+        self.correction = f"Model output rejected by schema: {details}"  # no label: a case id can hold a thread id
         super().__init__(f"Model output for {label} rejected by schema: {details}")
 
 

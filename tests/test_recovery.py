@@ -47,11 +47,11 @@ CASE = "MSG-REASK-1"
 
 
 def schema_error(task, answer) -> str:
-    """The text of the InvalidModelOutput the client raises for this answer of case CASE."""
+    """The re-ask text of the InvalidModelOutput the client raises for this answer (no case label, review 1 I5)."""
     try:
         task.answer.model_validate(answer)
     except ValidationError as error:
-        return str(InvalidModelOutput(error, f"case {CASE}"))
+        return InvalidModelOutput(error, f"case {CASE}").correction
     raise AssertionError("the answer is valid")
 
 
@@ -215,7 +215,7 @@ def test_two_invalid_intake_answers_park_the_thread(seeded_db, write_recording, 
 def _web_form(seeded_db, write_recording, tmp_path, answers, flaky=None):
     db_path, catalog = seeded_db
     bad = {"sku": "ALC70-250", "note": "extra"}
-    error = schema_error(MATCHING, bad).replace(f"case {CASE}", "case WF-CLEAR-1-2")
+    error = schema_error(MATCHING, bad)
     recordings = None
     for sentence, answer in zip(["alcohol 70 250ml", reasked("alcohol 70 250ml", error)], answers, strict=False):
         recordings = write_recording(catalog, sentence, bad if answer == "bad" else answer, task=MATCHING)
@@ -320,7 +320,7 @@ def _first_question(seeded_db, write_recording, tmp_path, drafts):
     try:
         CLARIFICATION_QUESTION.answer.model_validate(drafts[0])
     except ValidationError as error:
-        failure = str(InvalidModelOutput(error, "case thread-1-question-1"))
+        failure = InvalidModelOutput(error, "case thread-1-question-1").correction
     for sentence, draft in zip([text, reasked(text, failure)], drafts, strict=True):
         recordings = write_recording(catalog, sentence, draft, task=CLARIFICATION_QUESTION)
     clients = ClarificationClients(
@@ -371,3 +371,26 @@ def test_failures_rows_park_idempotently_list_with_age_and_resolve_once(seeded_d
             db.resolve_failure(conn, "t-unknown")
     finally:
         conn.close()
+
+
+def test_reask_correction_gives_the_same_recording_key_on_every_run(seeded_db, write_recording):
+    """Review 1, I5: the re-ask text holds no thread id, so the recorded re-ask of a question replays on a new run."""
+    from purchase_cycle.llm import CLARIFICATION_QUESTION, CORRECTION, ModelClient, build_system_prompt, recording_key
+    from purchase_cycle.recovery import reask
+
+    _, catalog = seeded_db
+    recordings = write_recording(catalog, "draft", {"wrong": 1}, task=CLARIFICATION_QUESTION)
+    client = ModelClient("replay", catalog, recordings, task=CLARIFICATION_QUESTION)
+    system = build_system_prompt(catalog, CLARIFICATION_QUESTION)
+    keys = []
+    for thread in ("email-run1aaaaaaa-MSG-1", "email-run2bbbbbbb-MSG-1"):
+
+        def ask(correction, thread=thread):
+            if correction is None:
+                return client.extract("draft", case_id=f"{thread}-question-1")
+            assert thread not in correction
+            keys.append(recording_key(system, "draft" + CORRECTION.format(error=correction), CLARIFICATION_QUESTION))
+            return "redrafted"
+
+        assert reask(ask) == "redrafted"
+    assert keys[0] == keys[1]

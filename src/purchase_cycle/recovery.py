@@ -22,11 +22,14 @@ class NeedsReview(RuntimeError):
 
 
 def reask(ask, invalid=INVALID):
-    """Run `ask(correction)` with no correction; on an invalid answer run it once more with the error text."""
+    """Run `ask(correction)` with no correction; on an invalid answer run it once more with the error text.
+
+    The error text holds no case label, so the re-ask prompt (and its recording key) is the same on every run.
+    """
     try:
         return ask(None)
     except invalid as error:
-        first = str(error)
+        first = getattr(error, "correction", str(error))
     try:
         return ask(first)
     except invalid as error:
