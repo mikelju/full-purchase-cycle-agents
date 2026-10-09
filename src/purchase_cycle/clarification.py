@@ -13,9 +13,10 @@ from typing import NamedTuple, TypedDict
 from anthropic import APIError
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
+from langgraph.runtime import Runtime
 from langgraph.types import interrupt
 
-from purchase_cycle import db
+from purchase_cycle import db, llm
 from purchase_cycle.llm import InvalidModelOutput, MissingRecording, ModelClient
 from purchase_cycle.quantities import NUMBER_WORDS, supports_quantity
 from purchase_cycle.web_form import match_key
@@ -294,6 +295,11 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
         catalog = db.catalog_rows(conn)
     finally:
         conn.close()
+    retry = llm.MODEL_RETRY
+
+    def retry_left(error: Exception, runtime: Runtime) -> bool:
+        # A transient error before the last attempt goes to the retry policy; the last one takes the fallback.
+        return retry.retry_on(error) and runtime.execution_info.node_attempt < retry.max_attempts
 
     def detect_step(state: ClarificationState) -> ClarificationState:
         resolutions = state.get("resolutions", [])
@@ -313,7 +319,7 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
             "clarification": status,
         }
 
-    def ask(state: ClarificationState, config: RunnableConfig) -> ClarificationState:
+    def ask(state: ClarificationState, config: RunnableConfig, runtime: Runtime) -> ClarificationState:
         thread_id = config["configurable"]["thread_id"]
         rounds = state.get("round", 0) + 1
         try:
@@ -322,8 +328,8 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
             )
             check_question(drafted.question, state["doubts"])
         except STEP_FAILURES as error:
-            if rounds == 1:
-                raise  # nothing is paused yet, so the run stops with nothing written
+            if rounds == 1 or retry_left(error, runtime):
+                raise  # a retry, or round 1 with nothing paused yet, so the run stops with nothing written
             # The answer that led here is undone and the previous question waits again, so the thread
             # stays answerable and closable instead of resting on a question never sent.
             return {
@@ -356,7 +362,7 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
             return {"closed": True, "rejected": None}
         return {"answer": received["answer"], "rejected": None}
 
-    def interpret(state: ClarificationState, config: RunnableConfig) -> ClarificationState:
+    def interpret(state: ClarificationState, config: RunnableConfig, runtime: Runtime) -> ClarificationState:
         if state.get("closed"):
             return {}
         thread_id = config["configurable"]["thread_id"]
@@ -365,6 +371,8 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
             read = clients.answer.extract(message, case_id=f"{thread_id}-answer-{state['round']}")
             check_resolutions(read.resolutions, state["doubts"], catalog)
         except STEP_FAILURES as error:
+            if retry_left(error, runtime):
+                raise
             # A rejected answer, an invalid model output, a missing recording or a model error writes nothing;
             # the run stops paused on the same question, so the thread stays answerable and closable.
             reason = str(error) if isinstance(error, InvalidAnswer) else f"Clarification answer not read: {error}"
@@ -377,9 +385,9 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
 
     builder = StateGraph(ClarificationState)
     builder.add_node("detect", detect_step)
-    builder.add_node("ask", ask)
+    builder.add_node("ask", ask, retry_policy=retry)
     builder.add_node("wait", wait)
-    builder.add_node("interpret", interpret)
+    builder.add_node("interpret", interpret, retry_policy=retry)
     builder.add_edge(START, "detect")
     builder.add_conditional_edges("detect", lambda s: "ask" if "unresolved" not in s else END, ["ask", END])
     builder.add_edge("ask", "wait")

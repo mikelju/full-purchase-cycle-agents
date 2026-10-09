@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+import anthropic
+from langgraph.types import RetryPolicy
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from purchase_cycle.config import (
@@ -355,6 +357,17 @@ def recording_key(system_prompt: str, sentence: str, task: Task = EXTRACTION) ->
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def transient_model_error(error: BaseException) -> bool:
+    """Connection, timeout, rate limit and 5xx API errors; authentication, bad request and the rest are final."""
+    if isinstance(error, (anthropic.APIConnectionError, anthropic.RateLimitError)):  # a timeout is a connection error
+        return True
+    return isinstance(error, anthropic.APIStatusError) and error.status_code >= 500
+
+
+# Shared by every model-calling node. Builders read it when the graph is built, so tests can set the backoff to zero.
+MODEL_RETRY = RetryPolicy(max_attempts=3, retry_on=transient_model_error)
+
+
 class ModelClient:
     def __init__(self, mode: str, catalog: list, recordings_path: Path | None = None, task: Task = EXTRACTION):
         if mode not in MODES:
@@ -380,7 +393,7 @@ class ModelClient:
         if self._llm is None:
             from langchain_anthropic import ChatAnthropic
 
-            llm = ChatAnthropic(model=MODEL_ID, max_tokens=self.task.max_tokens, temperature=0, max_retries=6)
+            llm = ChatAnthropic(model=MODEL_ID, max_tokens=self.task.max_tokens, temperature=0, max_retries=0)
             self._llm = llm.bind_tools(
                 [tool_definition(self.task)], tool_choice={"type": "tool", "name": self.task.tool_name}
             )

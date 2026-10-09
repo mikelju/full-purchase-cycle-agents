@@ -6,7 +6,7 @@ from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-from purchase_cycle import db
+from purchase_cycle import db, llm
 from purchase_cycle.llm import ModelClient
 
 
@@ -35,7 +35,7 @@ def build_graph(client: ModelClient, db_path: Path | str, checkpointer=None, int
         return {"product": product, "matched": product is not None}
 
     builder = StateGraph(LineState)
-    builder.add_node("extract", extract)
+    builder.add_node("extract", extract, retry_policy=llm.MODEL_RETRY)
     builder.add_node("match", match)
     builder.add_edge(START, "extract")
     builder.add_edge("extract", "match")

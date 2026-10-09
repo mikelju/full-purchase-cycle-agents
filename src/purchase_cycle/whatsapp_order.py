@@ -16,7 +16,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from purchase_cycle import db
+from purchase_cycle import db, llm
 from purchase_cycle.email_order import InvalidExtraction
 from purchase_cycle.llm import ModelClient
 from purchase_cycle.web_form import build_reply, clarification_outcome, thread_id, validation_errors
@@ -243,8 +243,8 @@ def build_whatsapp_order_graph(
         return {"reply": text, "outbox_file": str(path)}
 
     builder = StateGraph(WhatsAppOrderState)
-    builder.add_node("intake", intake)
-    builder.add_node("extract", extract)
+    builder.add_node("intake", intake, retry_policy=llm.MODEL_RETRY)
+    builder.add_node("extract", extract, retry_policy=llm.MODEL_RETRY)
     builder.add_node("store", store)
     builder.add_node("reply", reply)
     builder.add_edge(START, "intake")

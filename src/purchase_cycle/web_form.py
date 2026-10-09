@@ -14,7 +14,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from purchase_cycle import db
+from purchase_cycle import db, llm
 from purchase_cycle.llm import ModelClient
 
 CHANNEL = "web_form"
@@ -217,7 +217,7 @@ def build_web_form_graph(
 
     builder = StateGraph(WebFormState)
     builder.add_node("validate", validate)
-    builder.add_node("match", match)
+    builder.add_node("match", match, retry_policy=llm.MODEL_RETRY)
     builder.add_node("store", store)
     builder.add_node("reply", reply)
     builder.add_edge(START, "validate")

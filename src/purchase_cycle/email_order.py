@@ -18,7 +18,7 @@ from typing import TypedDict
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 
-from purchase_cycle import db
+from purchase_cycle import db, llm
 from purchase_cycle.llm import ModelClient
 from purchase_cycle.web_form import build_reply, clarification_outcome, thread_id
 
@@ -431,8 +431,8 @@ def build_email_order_graph(
         }
 
     builder = StateGraph(EmailOrderState)
-    builder.add_node("intake", intake)
-    builder.add_node("extract", extract)
+    builder.add_node("intake", intake, retry_policy=llm.MODEL_RETRY)
+    builder.add_node("extract", extract, retry_policy=llm.MODEL_RETRY)
     builder.add_node("store", store)
     builder.add_node("reply", reply)
     builder.add_edge(START, "intake")
