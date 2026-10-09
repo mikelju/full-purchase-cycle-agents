@@ -278,7 +278,9 @@ def _failure_text(r: dict) -> str:
     if extra:
         parts.append(f"{extra} wrong catalog lines")
     if not r["out_of_catalog_detection"]:
-        parts.append(f"unknown lines differ in count, quantity or source ({r['unmatched']}, expected {r['expected_unmatched']})")
+        parts.append(
+            f"unknown lines differ in count, quantity or source ({r['unmatched']}, expected {r['expected_unmatched']})"
+        )
     return "; ".join(parts)
 
 

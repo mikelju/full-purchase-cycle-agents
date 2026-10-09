@@ -53,6 +53,7 @@ Execution order: batch A0 first, then batches A to E; increment 24 runs right af
   Linux (`.evidence/fase-05/linux-bytes.txt`): WSL Ubuntu has Python 3.12.3 (the project requires 3.13), no `uv` (`bash: line 1: uv: command not found`) and no pytest (`/usr/bin/python3: No module named pytest`), so the byte test cannot run there without installing new software.
   Supplementary stdlib-only check in the same file (not the criterion test): the committed `_fixed_zip` re-normalizes the 52 XLSX attachments of the versioned emails to identical bytes on WSL Ubuntu (52 of 52) and on Windows (52 of 52), and without the `create_system` line 0 of 52 on Linux.
 - [ ] 28. Every evaluation report prints, per gated metric, the target fixed before measuring and whether it is met apart from the gate result, the counting unit of each interval and, for a zero-event rate, its Wilson upper bound; no threshold changes (C23, C11) - check: report tests; `npm run eval` replay output in `.evidence/fase-05/eval-report-format.txt` shows the 95% detection target as not met and the 0 of 48 false question bound.
+  Status: not started (batch A0 writer ran out of context after increment 27); `npm run check` green at the end of increment 27 (328 passed, `.evidence/fase-05/check-a0.txt`).
   Evidence:
 
 ### Batch A - WhatsApp channel and idempotent store (no live calls)
