@@ -226,7 +226,7 @@ def cmd_whatsapp_demo(args) -> int:
     print(f"mode={args.mode}  folder={args.folder}  messages={len(paths)}  outbox={args.outbox}")
     code = 0
     for path in paths:
-        thread_id = f"{WHATSAPP}-{run_id}-{path.stem}"
+        thread_id = f"{run_id}-{path.stem}"  # no channel prefix: `resume` refuses a demo thread (no clarify step)
         run_config = {"configurable": {"thread_id": thread_id}, "run_name": "whatsapp_order"}
         print()
         print(f"== {path.name}  thread_id={thread_id}")

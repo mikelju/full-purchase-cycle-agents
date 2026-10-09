@@ -291,3 +291,19 @@ def test_whatsapp_message_delivered_twice_stores_one_order(seeded_db, run, tmp_p
     assert again["order_id"] == first["order_id"]
     [sent] = _outbox(tmp_path)
     assert f"Your WhatsApp order is registered as order {first['order_id']}" in sent["text"]
+
+
+def test_resume_refuses_a_whatsapp_demo_thread(tmp_path, capsys):
+    """Review 1, I3: a whatsapp-demo thread has no clarify step, so `resume` refuses it like the phase 02-04 demos."""
+    from purchase_cycle.cli import main
+
+    folder = tmp_path / "inbox"
+    folder.mkdir()
+    (folder / "WA-3.json").write_text(json.dumps(message("wamid.TEST3", sender="34999999999")), encoding="utf-8")
+    base = ["--db", str(tmp_path / "b.db")]
+    checkpoints = ["--checkpoints", str(tmp_path / "c.db")]
+    main([*base, "whatsapp-demo", str(folder), *checkpoints, "--outbox", str(tmp_path / "outbox")])
+    [thread_id] = [line.split("thread_id=")[1] for line in capsys.readouterr().out.splitlines() if "thread_id=" in line]
+    assert not thread_id.startswith("whatsapp-")
+    assert main([*base, "resume", thread_id, *checkpoints]) == 1
+    assert f"thread {thread_id} has no channel prefix" in capsys.readouterr().err
