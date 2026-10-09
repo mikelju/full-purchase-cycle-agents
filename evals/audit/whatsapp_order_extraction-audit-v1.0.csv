@@ -1,0 +1,156 @@
+﻿id;category;file;message_text;is_order;expected_lines;verdict;comment
+WA-0002;words_or_dozens;messages/WA-0002.json;"WhatsApp message:
+Hi! Can you send us half a dozen boxes of transparent film dressing 6 x 7 cm? Thx";yes;WA-0002-L1: half a dozen boxes of transparent film dressing 6 x 7 cm -> DRS-FILM-6x7 Transparent film dressing 6 x 7 cm x 6 (box of 50);;
+WA-0007;words_or_dozens;messages/WA-0007.json;"WhatsApp message:
+hey there, could u add thirty-five bottles of contact lens solution and a couple of tubes of barrier cream for skin protection 100 g to our next delivery? ta";yes;"WA-0007-L1: thirty-five bottles of contact lens solution -> NOT IN CATALOG x 35
+WA-0007-L2: a couple of tubes of barrier cream for skin protection 100 g -> CREAM-BARRIER Barrier cream for skin protection 100 g x 2 (tube)";;
+WA-0008;not_an_order;messages/WA-0008.json;"WhatsApp message:
+Hi! This is Laura from the clinic, just saved this number. Is this the right WhatsApp for orders from now on?";no;;;
+WA-0013;short_list;messages/WA-0013.json;"WhatsApp message:
+18 boxes sterile neoprene surgical gloves size 8
+120 packs smooth exam couch roll 60cm x 100m
+60 burn releif gel dresings 10 x 10
+ty";yes;"WA-0013-L1: 18 boxes sterile neoprene surgical gloves size 8 -> GLV-SURG-NEO-8 Sterile latex-free surgical gloves (neoprene), size 8 x 18 (box of 50 pairs)
+WA-0013-L2: 120 packs smooth exam couch roll 60cm x 100m -> COUCH-60-SMOOTH Smooth examination couch roll 60 cm x 100 m x 120 (pack of 6)
+WA-0013-L3: 60 burn releif gel dresings 10 x 10 -> BURN-GEL Burn relief gel dressing 10 x 10 cm x 6 (box of 10)";;
+WA-0018;words_or_dozens;messages/WA-0018.json;"WhatsApp message:
+Buenos dias! Quick one: a dozen canisters of alcohol surface wipes and one box of FFP2 respirator masks without valve. Thank you!!";yes;"WA-0018-L1: a dozen canisters of alcohol surface wipes -> WIPE-ALC-100 Alcohol surface wipes, canister x 12 (canister of 100)
+WA-0018-L2: one box of FFP2 respirator masks without valve -> MASK-FFP2 FFP2 respirator mask, no valve x 1 (box of 20)";;
+WA-0019;not_an_order;messages/WA-0019.json;"WhatsApp message:
+Good morning team, hope you all had a nice weekend :)";no;;;
+WA-0021;chatty_single_line;messages/WA-0021.json;"WhatsApp message:
+Good afternoon. We have the annual deep clean of the pharmacy storeroom next week and the contractors asked us to provide protection. We need 19 disposable protective coveralls size L. Delivery to the usual address please. Kind regards, Marta";yes;WA-0021-L1: 19 disposable protective coveralls size L -> COVERALL-L Disposable protective coverall, size L x 19 (unit);;
+WA-0025;words_or_dozens;messages/WA-0025.json;"WhatsApp message:
+Hello, I'd like to order eleven digital thermometers with rigid tip. Can they arrive by Friday?";yes;WA-0025-L1: eleven digital thermometers with rigid tip -> THERM-DIG Digital thermometer, rigid tip x 11 (unit);;
+WA-0035;short_list;messages/WA-0035.json;"WhatsApp message:
+Hi, please prepare:
+* 13 packs night incontinence briefs size L
+* 11 pairs compresion thigh high stockings size M
+* 16 packs incontinence pads normal
+* 24 reusable hot cold gel packs 10x15
+* 16 wall mounted first aid cabinets, stocked
+* 60 tweezers stainless
+* 120 boxes instant cold packs
+Thanks a lot";yes;"WA-0035-L1: 13 packs night incontinence briefs size L -> INC-BRF-NIGHT-L Adult incontinence briefs, night, size L x 13 (pack of 15)
+WA-0035-L2: 11 pairs compresion thigh high stockings size M -> STOCK-THIGH-M Compression thigh-high stockings class I, size M x 11 (pair)
+WA-0035-L3: 16 packs incontinence pads normal -> INC-PAD-NORMAL Incontinence pads, normal absorbency x 16 (pack of 28)
+WA-0035-L4: 24 reusable hot cold gel packs 10x15 -> GEL-PACK-S Reusable hot and cold gel pack 10 x 15 cm x 24 (unit)
+WA-0035-L5: 16 wall mounted first aid cabinets, stocked -> KIT-FA-WALL First aid cabinet, wall-mounted, stocked x 16 (unit)
+WA-0035-L6: 60 tweezers stainless -> NOT IN CATALOG x 60
+WA-0035-L7: 120 boxes instant cold packs -> ICE-INSTANT Instant cold pack, single-use x 120 (box of 24)";;
+WA-0041;not_an_order;messages/WA-0041.json;"WhatsApp message:
+Hi, yesterday's delivery arrived with two boxes crushed and wet. Very disappointed, can someone call me?";no;;;
+WA-0054;words_or_dozens;messages/WA-0054.json;"WhatsApp message:
+Hi! Order:
+a couple of hot water bottles 2 litres
+seventy electric wheelchairs
+four dozen refill packs for the first aid kits
+Thanks a lot";yes;"WA-0054-L1: a couple of hot water bottles 2 litres -> HOT-WATER-BOTTLE Hot water bottle 2 litres x 2 (unit)
+WA-0054-L2: seventy electric wheelchairs -> NOT IN CATALOG x 70
+WA-0054-L3: four dozen refill packs for the first aid kits -> KIT-FA-REFILL First aid kit refill pack x 48 (unit)";;
+WA-0063;one_sentence_lines;messages/WA-0063.json;"WhatsApp message:
+Hi, order from the care home: 12 boxes of saline solution 0.9%, single-dose 5 ml, 30 boxes of coton buds paper stem, 20 automated external defibrillators and nine first aid kts, small, for vehicles, cheers";yes;"WA-0063-L1: 12 boxes of saline solution 0.9%, single-dose 5 ml -> SAL-5 Saline solution 0.9%, single-dose 5 ml x 12 (box of 30)
+WA-0063-L2: 30 boxes of coton buds paper stem -> COT-BUDS Cotton buds, paper stem x 30 (box of 200)
+WA-0063-L3: 20 automated external defibrillators -> NOT IN CATALOG x 20
+WA-0063-L4: nine first aid kts, small, for vehicles -> KIT-FA-SMALL First aid kit, small, for vehicles x 9 (unit)";;
+WA-0064;one_sentence_lines;messages/WA-0064.json;"WhatsApp message:
+Hello! Could you ship 17 boxes of latex examination gloves, powder-free, size M, 60 boxes of non-adherent dressing pad 10 x 10 cm, 19 boxes of zinc oxide tape 5 cm x 5 m and 10 wall dispensers for hand sanitizer 1 liter this week";yes;"WA-0064-L1: 17 boxes of latex examination gloves, powder-free, size M -> GLV-LTX-M Latex examination gloves, powder-free, size M x 17 (box of 100)
+WA-0064-L2: 60 boxes of non-adherent dressing pad 10 x 10 cm -> DRS-NONADH-10 Non-adherent dressing pad 10 x 10 cm x 60 (box of 100)
+WA-0064-L3: 19 boxes of zinc oxide tape 5 cm x 5 m -> TAPE-ZNC-50 Zinc oxide tape 5 cm x 5 m x 19 (box of 10 rolls)
+WA-0064-L4: 10 wall dispensers for hand sanitizer 1 liter -> GEL-WALL Wall dispenser for hand sanitiser, 1 litre x 10 (unit)";;
+WA-0066;chatty_single_line;messages/WA-0066.json;"WhatsApp message:
+Hello, clinic here. The podiatrist asked me to reorder the tubular bandage she uses for ankles and feet, she says it is size C and not the bigger one. So 12 rolls of tubular bandage size C please. Thank you, have a nice day";yes;WA-0066-L1: 12 rolls of tubular bandage size C -> BND-TUB-C Tubular bandage size C, 10 m x 12 (roll);;
+WA-0072;not_an_order;messages/WA-0072.json;"WhatsApp message:
+Can you send me the updated price list for this quarter please?";no;;;
+WA-0075;not_an_order;messages/WA-0075.json;"WhatsApp message:
+Good morning. The masks we received are not the ones we usually get, the elastic breaks easily. Not happy with the quality";no;;;
+WA-0090;short_list;messages/WA-0090.json;"WhatsApp message:
+Hi, our order:
+- 19 packs night briefs M
+- 14 pill cutters
+- 75 bottles mild shampoo 500
+- 18 packs underpads 60x90
+- 8 boxes needles 19G 40mm
+- 13 boxes skin closure strips 3x75
+Thank you";yes;"WA-0090-L1: 19 packs night briefs M -> INC-BRF-NIGHT-M Adult incontinence briefs, night, size M x 19 (pack of 15)
+WA-0090-L2: 14 pill cutters -> NOT IN CATALOG x 14
+WA-0090-L3: 75 bottles mild shampoo 500 -> SHAMPOO-500 Mild shampoo 500 ml x 75 (bottle)
+WA-0090-L4: 18 packs underpads 60x90 -> PAD-60x90 Disposable underpad 60 x 90 cm x 18 (pack of 25)
+WA-0090-L5: 8 boxes needles 19G 40mm -> NDL-19G Hypodermic needle 19G x 40 mm x 8 (box of 100)
+WA-0090-L6: 13 boxes skin closure strips 3x75 -> STRIP-3x75 Skin closure strips 3 x 75 mm x 13 (box of 50 envelopes)";;
+WA-0097;short_list;messages/WA-0097.json;"WhatsApp message:
+Hi Ana, can we get
+- 1 tube foot cream for dry heels
+- 11 boxes scalpels no 11
+- 2 boxes saline single dose 10ml
+Cheers";yes;"WA-0097-L1: 1 tube foot cream for dry heels -> CREAM-FOOT Foot care cream for dry heels 100 ml x 1 (tube)
+WA-0097-L2: 11 boxes scalpels no 11 -> SCALPEL-11 Sterile disposable scalpel no. 11 x 11 (box of 10)
+WA-0097-L3: 2 boxes saline single dose 10ml -> SAL-10 Saline solution 0.9%, single-dose 10 ml x 2 (box of 30)";;
+WA-0102;short_list;messages/WA-0102.json;"WhatsApp message:
+Pharmacy order:
+- 30 packs pull-up pants size L
+- 17 boxes neoprene sterile gloves 6.5
+- 1 box sterle urine containers 60ml
+- 75 tubes sunscreen SPF30 50ml
+thx";yes;"WA-0102-L1: 30 packs pull-up pants size L -> INC-PANT-L Adult pull-up pants, size L x 30 (pack of 14)
+WA-0102-L2: 17 boxes neoprene sterile gloves 6.5 -> GLV-SURG-NEO-6.5 Sterile latex-free surgical gloves (neoprene), size 6.5 x 17 (box of 50 pairs)
+WA-0102-L3: 1 box sterle urine containers 60ml -> URN-CUP-60 Sterile urine container 60 ml x 1 (box of 100)
+WA-0102-L4: 75 tubes sunscreen SPF30 50ml -> SUN-30-50 Sunscreen SPF 30, 50 ml x 75 (tube)";;
+WA-0103;words_or_dozens;messages/WA-0103.json;"WhatsApp message:
+Hi, could you send half a dozen packs of no-rinse shampoo caps and a dozen bottles of ethyl alcohol 70% 250 ml? Thanks so much";yes;"WA-0103-L1: half a dozen packs of no-rinse shampoo caps -> WIPE-WASH-CAP Rinse-free shampoo cap x 6 (pack of 10)
+WA-0103-L2: a dozen bottles of ethyl alcohol 70% 250 ml -> ALC70-250 Ethyl alcohol 70% 250 ml x 12 (bottle)";;
+WA-0110;chatty_single_line;messages/WA-0110.json;"WhatsApp message:
+Hi, good morning. Many of the new customers at the pharmacy need the smaller fit, so the order this time is a bit different: 200 adult incontinence briefs size S. Please deliver before the weekend if you can. Thank you";yes;WA-0110-L1: 200 adult incontinence briefs size S -> INC-BRF-S Adult incontinence briefs, size S x 10 (pack of 20);;
+WA-0119;chatty_single_line;messages/WA-0119.json;"WhatsApp message:
+Hey! The residents loved the cream from last month but the big pump bottles keep disappearing from the rooms haha. So this time the small ones please, 13 tubes of moisturising cream 100ml. Thanks, Rosa";yes;WA-0119-L1: 13 tubes of moisturising cream 100ml -> CREAM-MOIST-100 Moisturising body cream 100 ml x 13 (tube);;
+WA-0134;short_list;messages/WA-0134.json;"WhatsApp message:
+Hi, clinic order:
+- 13 bottles alcohol 70% 500ml
+- 15 boxes 50ml luer lock syringes
+- 10 boxes syringes 3ml luer slip
+- 10 boxes needles 27G 13mm
+- 15 boxes safety lancets 200
+- 7 sterile suture kits
+thanks";yes;"WA-0134-L1: 13 bottles alcohol 70% 500ml -> ALC70-500 Ethyl alcohol 70% 500 ml x 13 (bottle)
+WA-0134-L2: 15 boxes 50ml luer lock syringes -> SYR-LL-50 Disposable syringe 50 ml, luer lock x 15 (box of 100)
+WA-0134-L3: 10 boxes syringes 3ml luer slip -> SYR-3 Disposable syringe 3 ml, luer slip x 10 (box of 100)
+WA-0134-L4: 10 boxes needles 27G 13mm -> NDL-27G Hypodermic needle 27G x 13 mm x 10 (box of 100)
+WA-0134-L5: 15 boxes safety lancets 200 -> LAN-200 Safety lancets 28G, box of 200 x 15 (box of 200)
+WA-0134-L6: 7 sterile suture kits -> NOT IN CATALOG x 7";;
+WA-0136;not_an_order;messages/WA-0136.json;"WhatsApp message:
+Morning! Back from holidays today, will be in touch soon";no;;;
+WA-0138;one_sentence_lines;messages/WA-0138.json;"WhatsApp message:
+hello, summer order: 11 bottles of children's sunscreen SPF 50+, 200 ml, 6 packs of sterile gauze swabs 10 x 10 cm, 8 ply and 18 packs of incontinence pads, light absorbency please";yes;"WA-0138-L1: 11 bottles of children's sunscreen SPF 50+, 200 ml -> SUN-KIDS-50-200 Children's sunscreen SPF 50+, 200 ml x 11 (bottle)
+WA-0138-L2: 6 packs of sterile gauze swabs 10 x 10 cm, 8 ply -> GAUZE-ST-10 Sterile gauze swabs 10 x 10 cm, 8 ply x 6 (pack of 25 envelopes)
+WA-0138-L3: 18 packs of incontinence pads, light absorbency -> INC-PAD-LIGHT Incontinence pads, light absorbency x 18 (pack of 28)";;
+WA-0139;chatty_single_line;messages/WA-0139.json;"WhatsApp message:
+Hello, hope you're well. The doctor did a few minor stitches this week and used up all the strips, so please send a couple of boxes of skin closure strips 6 x 75 mm. Thanks so much and talk soon";yes;WA-0139-L1: a couple of boxes of skin closure strips 6 x 75 mm -> STRIP-6x75 Skin closure strips 6 x 75 mm x 2 (box of 50 envelopes);;
+WA-0141;short_list;messages/WA-0141.json;"WhatsApp message:
+Hello, please add to our account
+- 9 thermal blankets
+- 8 packs isolation gowns XL
+- 1 box neoprene surgical gloves sterile 7.5
+- 17 bottles gentle liquid soap 500ml";yes;"WA-0141-L1: 9 thermal blankets -> NOT IN CATALOG x 9
+WA-0141-L2: 8 packs isolation gowns XL -> GOWN-ISO-XL Disposable isolation gown, non-woven, blue, XL x 8 (pack of 10)
+WA-0141-L3: 1 box neoprene surgical gloves sterile 7.5 -> GLV-SURG-NEO-7.5 Sterile latex-free surgical gloves (neoprene), size 7.5 x 1 (box of 50 pairs)
+WA-0141-L4: 17 bottles gentle liquid soap 500ml -> SOAP-LIQ-500 Gentle liquid soap 500 ml x 17 (bottle)";;
+WA-0145;one_sentence_lines;messages/WA-0145.json;"WhatsApp message:
+Hi, we'd need 24 boxes of hypodermic neddle 26G x 13 mm, six boxes of surgical gloves size 9 and 80 bags of round cotton pads thx";yes;"WA-0145-L1: 24 boxes of hypodermic neddle 26G x 13 mm -> NDL-26G Hypodermic needle 26G x 13 mm x 24 (box of 100)
+WA-0145-L2: six boxes of surgical gloves size 9 -> NOT IN CATALOG x 6
+WA-0145-L3: 80 bags of round cotton pads -> COT-PADS Round cotton pads x 80 (bag of 80)";;
+WA-0147;words_or_dozens;messages/WA-0147.json;"WhatsApp message:
+Hi, can you send:
+four dozen pairs of compression knee-high stockings class I, size M
+ten rolls of cotton wool roll 250 g
+four dozen boxes of disposable syringe 5 ml, luer lock
+Thanks, Jorge";yes;"WA-0147-L1: four dozen pairs of compression knee-high stockings class I, size M -> STOCK-KNEE-M Compression knee-high stockings class I, size M x 48 (pair)
+WA-0147-L2: ten rolls of cotton wool roll 250 g -> COT-ROLL-250 Cotton wool roll 250 g x 10 (roll)
+WA-0147-L3: four dozen boxes of disposable syringe 5 ml, luer lock -> SYR-LL-5 Disposable syringe 5 ml, luer lock x 48 (box of 100)";;
+WA-0157;short_list;messages/WA-0157.json;"WhatsApp message:
+Order please:
+- 11 boxes paper tape 1.25cm
+- 1 wrist support size M
+- 19 boxes hypodermic neddles 30G 13mm
+Thank you";yes;"WA-0157-L1: 11 boxes paper tape 1.25cm -> TAPE-PAP-12 Microporous paper tape 1.25 cm x 9.1 m x 11 (box of 12 rolls)
+WA-0157-L2: 1 wrist support size M -> SUP-WRIST-M Elastic wrist support, size M x 1 (unit)
+WA-0157-L3: 19 boxes hypodermic neddles 30G 13mm -> NDL-30G Hypodermic needle 30G x 13 mm x 19 (box of 100)";;
