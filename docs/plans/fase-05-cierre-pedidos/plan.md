@@ -218,6 +218,8 @@ Pending items, limitations and what could not be checked, stated plainly.
 - Open item (review 1, method tooling): the stop-gate hook `check:puerta` fails or times out while a writer has uncommitted changes.
 - Open item (increment 11, method tooling, not fixed here): the PostToolUse format hook `.claude/hooks/format.mjs` rewrote a `.jsonl` text file saved with Write or Edit into multi-line non-JSON, which broke `whatsapp-dataset check` until the writer re-serialised the file with a script.
 - Open item (increment 11, method tooling, not fixed here): `whatsapp-dataset check` reads every file in `texts/`, so one malformed file still being written makes the check of another file crash.
+- Incident 2026-10-09 (increment 14, owner decision: keep): commit 65fa0fe left `test_upload_command_uploads_every_suite_and_keeps_the_worst_exit` without a WhatsApp upload stub, so one pytest run uploaded `whatsapp-order-extraction-v1.0-dev` (40 items) and `-test` (120 items) to the owner's LangSmith; data only, no model calls, 0 USD; fixed in ea72c12; the owner keeps both datasets, so the later `eval-upload` finds them already there.
+- Owner decision 2026-10-09 (out of scope): LangGraph Studio as a way to watch the graphs run is a standalone change in `docs/changes/` after phase 05 closes, with its own contract naming the new `langgraph-cli` dev dependency and the model and LangSmith trace costs; not part of this phase.
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
