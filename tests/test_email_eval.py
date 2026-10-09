@@ -193,12 +193,12 @@ def _case(lines, is_order=True):
     return {"id": "E1", "category": "body_list", "source": "body", "is_order": is_order, "lines": lines}
 
 
-def _expected(n, sku, quantity):
-    return {"line_id": f"E1-L{n}", "expected_sku": sku, "expected_quantity": quantity}
+def _expected(n, sku, quantity, location="body"):
+    return {"line_id": f"E1-L{n}", "expected_sku": sku, "expected_quantity": quantity, "location": location}
 
 
-def _got(sku, quantity):
-    return {"source": "body", "source_text": "x", "sku": sku, "quantity": quantity}
+def _got(sku, quantity, source="body"):
+    return {"source": source, "source_text": "x", "sku": sku, "quantity": quantity}
 
 
 def test_graders_split_sku_and_quantity_and_count_unmatched_lines():
@@ -213,6 +213,57 @@ def test_graders_split_sku_and_quantity_and_count_unmatched_lines():
     assert summary["field_sku"]["value"] == 1.0 and summary["field_quantity"]["value"] == 0.5
     exact = email_eval.grade(case, True, [_got("A", 2), _got("B", 3), _got(None, 1)])
     assert exact["email_exact_match"] and exact["intake_accuracy"]
+
+
+def test_grader_counts_an_omitted_line_against_recall_and_exact_match():
+    case = _case([_expected(1, "A", 2), _expected(2, "B", 3)])
+    result = email_eval.grade(case, True, [_got("A", 2)])
+    assert [r["line_recall"] for r in result["line_rows"]] == [True, False]
+    assert (result["precision_hits"], result["produced_catalog"]) == (1, 1)
+    assert not result["email_exact_match"]
+
+
+def test_grader_matches_repeated_lines_one_to_one():
+    case = _case([_expected(1, "A", 2), _expected(2, "A", 2)])
+    result = email_eval.grade(case, True, [_got("A", 2)])
+    assert [r["line_recall"] for r in result["line_rows"]] == [True, False]
+    assert [r["field_sku"] for r in result["line_rows"]] == [True, False]
+    assert not result["email_exact_match"]
+    duplicate = email_eval.grade(_case([_expected(1, "A", 2)]), True, [_got("A", 2), _got("A", 2)])
+    assert (duplicate["precision_hits"], duplicate["produced_catalog"]) == (1, 2)
+    assert not duplicate["email_exact_match"]
+
+
+def test_grader_counts_an_invented_line_against_precision_and_exact_match():
+    case = _case([_expected(1, "A", 2)])
+    result = email_eval.grade(case, True, [_got("A", 2), _got("Z", 1)])
+    assert result["line_rows"][0]["line_recall"]
+    assert (result["precision_hits"], result["produced_catalog"]) == (1, 2)
+    assert not result["email_exact_match"]
+    unknown = email_eval.grade(case, True, [_got("A", 2), _got(None, 1)])
+    assert not unknown["out_of_catalog_detection"] and not unknown["email_exact_match"]
+
+
+def test_grader_fails_a_wrong_quantity_on_catalog_and_unknown_lines():
+    case = _case([_expected(1, "A", 2), _expected(2, None, 4)])
+    catalog = email_eval.grade(case, True, [_got("A", 3), _got(None, 4)])
+    assert not catalog["line_rows"][0]["line_recall"] and catalog["line_rows"][0]["field_sku"]
+    assert not catalog["email_exact_match"]
+    unknown = email_eval.grade(case, True, [_got("A", 2), _got(None, 5)])
+    assert unknown["line_rows"][0]["line_recall"]
+    assert not unknown["out_of_catalog_detection"] and not unknown["email_exact_match"]
+
+
+def test_grader_fails_a_false_source_on_catalog_and_unknown_lines():
+    case = _case([_expected(1, "A", 2, "order.pdf"), _expected(2, None, 4, "order.pdf")])
+    catalog = email_eval.grade(case, True, [_got("A", 2, "body"), _got(None, 4, "order.pdf")])
+    assert not catalog["line_rows"][0]["line_recall"] and catalog["line_rows"][0]["field_quantity"]
+    assert catalog["precision_hits"] == 0 and not catalog["email_exact_match"]
+    unknown = email_eval.grade(case, True, [_got("A", 2, "order.pdf"), _got(None, 4, "body")])
+    assert unknown["line_rows"][0]["line_recall"]
+    assert not unknown["out_of_catalog_detection"] and not unknown["email_exact_match"]
+    right = email_eval.grade(case, True, [_got("A", 2, "order.pdf"), _got(None, 4, "order.pdf")])
+    assert right["email_exact_match"]
 
 
 def test_a_stopped_run_keeps_the_intake_decision_and_counts_no_lines():
