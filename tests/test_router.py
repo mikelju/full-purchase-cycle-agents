@@ -454,3 +454,24 @@ def test_clarify_commands_take_the_outbox_folder(seeded_db, tmp_path, monkeypatc
     cli.main([*argv, "--checkpoints", str(tmp_path / "c.db"), "--outbox", str(tmp_path / "out")])
     capsys.readouterr()
     assert outboxes == [str(tmp_path / "out")]
+
+
+def test_route_command_reads_bom_prefixed_whatsapp_files_like_any_other(
+    seeded_db, write_recording, folder, tmp_path, no_network, capsys, monkeypatch
+):
+    """Review 1, S5: the router and the WhatsApp reader both accept a UTF-8 BOM, for an order and its answer."""
+    from purchase_cycle import cli
+
+    _, catalog = seeded_db
+    recordings, _ = _record_whatsapp(catalog, write_recording)
+    for name in ("WHATSAPP_INTAKE", "WHATSAPP_EXTRACTION", "CLARIFICATION_QUESTION", "CLARIFICATION_ANSWER"):
+        monkeypatch.setattr(cli, name, dataclasses.replace(getattr(cli, name), recordings_path=recordings))
+    for name, data in (("WA-1.json", message("wamid.ORDER")), ("WA-2.json", message("wamid.ANSWER", body=ANSWER))):
+        (folder / name).write_text(json.dumps(data), encoding="utf-8-sig")
+    argv = ["--db", str(tmp_path / "b.db"), "route", str(folder), "--checkpoints", str(tmp_path / "c.db")]
+    code = cli.main([*argv, "--outbox", str(tmp_path / "outbox")])
+    out, err = capsys.readouterr()
+    assert (code, err) == (0, ""), out
+    assert "route=whatsapp_new" in out and "route=whatsapp_answer" in out
+    assert "Your WhatsApp order is registered as order 1" in out
+    assert no_network == []

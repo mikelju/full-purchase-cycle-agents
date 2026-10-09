@@ -91,7 +91,7 @@ def read_whatsapp(path: Path | str, conn: sqlite3.Connection) -> dict:
     """Deterministic intake: parse and validate the file, find the customer, accept text only; no model call."""
     path = Path(path)
     try:
-        raw = path.read_text(encoding="utf-8")
+        raw = path.read_text(encoding="utf-8-sig")
     except (OSError, UnicodeDecodeError) as error:
         raise WhatsAppRejected(f"the message file '{path.name}' cannot be read: {error}") from error
     try:
