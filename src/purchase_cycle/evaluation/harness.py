@@ -372,13 +372,16 @@ SUITES = (
     "email_order_extraction",
     "clarification_detection",
     "clarification_answers",
+    "whatsapp_order_extraction",
 )
+# `all` leaves out the WhatsApp suite until its baseline is recorded (phase 05, increment 16).
+ALL_SUITES = tuple(name for name in SUITES if name != "whatsapp_order_extraction")
 
 
-def suite_names(suite) -> tuple[str, ...]:
+def suite_names(suite, everything: tuple[str, ...] = ALL_SUITES) -> tuple[str, ...]:
     """`--suite` holds one name, several names or `all`."""
     names = (suite,) if isinstance(suite, str) else tuple(suite)
-    return SUITES if "all" in names else tuple(dict.fromkeys(names))
+    return everything if "all" in names else tuple(dict.fromkeys(names))
 
 
 def _suite(name: str):
@@ -390,6 +393,10 @@ def _suite(name: str):
         from purchase_cycle.evaluation import web_form_eval
 
         return web_form_eval
+    if name == "whatsapp_order_extraction":
+        from purchase_cycle.evaluation import whatsapp_eval
+
+        return whatsapp_eval
     if name in ("clarification_detection", "clarification_answers"):
         from purchase_cycle.evaluation import clarification_eval
 
@@ -398,7 +405,7 @@ def _suite(name: str):
 
 
 def cmd_upload(args) -> int:
-    names = suite_names(args.suite)
+    names = suite_names(args.suite, SUITES)
     return max(_suite(name).upload_datasets() for name in names)
 
 
