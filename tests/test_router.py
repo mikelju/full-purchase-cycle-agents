@@ -375,7 +375,9 @@ def test_redelivered_email_of_a_paused_thread_opens_no_second_clarification(
     write_recording(catalog, text, {"is_order": True, "reason": "An order."}, task=EMAIL_INTAKE)
     write_recording(catalog, text, {"lines": EMAIL_LINES}, task=EMAIL_EXTRACTION)
     doubts = detect(EMAIL_LINES, catalog, "email")
-    recordings = write_recording(catalog, doubts_message(doubts), {"question": EMAIL_QUESTION}, task=CLARIFICATION_QUESTION)
+    recordings = write_recording(
+        catalog, doubts_message(doubts), {"question": EMAIL_QUESTION}, task=CLARIFICATION_QUESTION
+    )
     clients = ClarificationClients(
         ModelClient("replay", catalog, recordings, task=CLARIFICATION_QUESTION),
         ModelClient("replay", catalog, recordings, task=CLARIFICATION_ANSWER),
@@ -418,7 +420,11 @@ def test_route_command_reports_a_duplicate_without_running_it(seeded_db, folder,
     from purchase_cycle.router import Route
 
     _write(folder, "WA-2.json", message("wamid.ORDER"))
-    duplicate = {"item": "WA-2.json", "route": Route(DUPLICATE, "whatsapp-run1-WA-1"), "thread_id": "whatsapp-run1-WA-1"}
+    duplicate = {
+        "item": "WA-2.json",
+        "route": Route(DUPLICATE, "whatsapp-run1-WA-1"),
+        "thread_id": "whatsapp-run1-WA-1",
+    }
     monkeypatch.setattr(router, "run_inbox", lambda *args: [{**duplicate, "state": None, "error": None}])
     argv = ["--db", str(tmp_path / "b.db"), "route", str(folder), "--checkpoints", str(tmp_path / "c.db")]
     code = cli.main([*argv, "--outbox", str(tmp_path / "outbox")])

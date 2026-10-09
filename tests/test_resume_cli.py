@@ -11,11 +11,19 @@ import pytest
 
 from conftest import make_email
 from purchase_cycle import cli, db, faults
+from purchase_cycle.clarification import detect, doubts_message
 from purchase_cycle.email_order import model_text as email_text
 from purchase_cycle.email_order import parse_email
-from purchase_cycle.llm import EMAIL_EXTRACTION, EMAIL_INTAKE, MATCHING, WHATSAPP_EXTRACTION, WHATSAPP_INTAKE
+from purchase_cycle.llm import (
+    CLARIFICATION_QUESTION,
+    EMAIL_EXTRACTION,
+    EMAIL_INTAKE,
+    MATCHING,
+    WHATSAPP_EXTRACTION,
+    WHATSAPP_INTAKE,
+)
 from purchase_cycle.whatsapp_order import model_text as whatsapp_text
-from test_clarification_graph import EMAIL_BODY, EMAIL_LINES, SENDER
+from test_clarification_graph import EMAIL_BODY, EMAIL_LINES, EMAIL_QUESTION, SENDER
 from test_web_form import ALCOHOL
 from test_whatsapp_order import BODY, CUSTOMER, LINES, ORDER, message
 
@@ -97,6 +105,10 @@ def test_a_crash_at_each_point_is_resumed_in_a_new_process_with_exactly_one_orde
 
     crashed = _step(recordings, db_path, "route", str(inbox), *options, crash_at=point)
     assert crashed.returncode == faults.EXIT_CODE, crashed.stderr
+    if channel == "whatsapp":  # the reply reaches the outbox before the in_reply crash point, never after it
+        assert [p.name for p in outbox.glob("*.json")] == (
+            ["reply-wamid.CRASH.json"] if point == faults.IN_REPLY else []
+        )
     stored_before = _rows(db_path, "SELECT COUNT(*) FROM orders")[0][0]
     assert stored_before == (0 if point == faults.AFTER_CHANNEL_STEPS else 1)
     with sqlite3.connect(checkpoints) as conn:
@@ -130,3 +142,40 @@ def test_resume_of_a_thread_without_a_channel_prefix_fails_with_a_message(seeded
     db_path, _ = seeded_db
     assert cli.main(["--db", str(db_path), "resume", "run-1", "--checkpoints", str(tmp_path / "c.db")]) == 1
     assert "thread run-1 has no channel prefix" in capsys.readouterr().err
+
+
+def test_resume_of_a_thread_that_waits_for_an_answer_refuses_and_changes_nothing(seeded_db, write_recording, tmp_path):
+    """Review 1, I6: `resume` refuses a paused thread and points to `clarify answer` or `close`."""
+    db_path, catalog = seeded_db
+    inbox, checkpoints = tmp_path / "inbox", str(tmp_path / "c.db")
+    inbox.mkdir()
+    path = make_email(inbox / "MSG-1.eml", SENDER, "Order", EMAIL_BODY)
+    text = email_text(parse_email(path.read_bytes()))
+    write_recording(catalog, text, {"is_order": True, "reason": "An order."}, task=EMAIL_INTAKE)
+    write_recording(catalog, text, {"lines": EMAIL_LINES}, task=EMAIL_EXTRACTION)
+    question = doubts_message(detect(EMAIL_LINES, catalog, "email"))
+    recordings = write_recording(catalog, question, {"question": EMAIL_QUESTION}, task=CLARIFICATION_QUESTION)
+    options = ["--checkpoints", checkpoints, "--outbox", str(tmp_path / "outbox")]
+    paused = _step(recordings, db_path, "route", str(inbox), *options)
+    assert paused.returncode == 0, paused.stderr
+    [(thread_id, status)] = _rows(db_path, "SELECT thread_id, status FROM clarifications")
+    assert status == "pending"
+
+    resumed = _step(recordings, db_path, "resume", thread_id, *options)
+    assert resumed.returncode == 1, resumed.stdout
+    assert f"thread {thread_id} waits for an answer; use purchase-cycle clarify answer or close" in resumed.stderr
+    assert _rows(db_path, "SELECT thread_id, status FROM clarifications") == [(thread_id, "pending")]
+    assert _rows(db_path, "SELECT COUNT(*) FROM orders") == [(0,)]
+
+
+def test_resume_of_a_parked_thread_points_to_failures_resume(seeded_db, tmp_path, capsys):
+    """Review 1, I6: `resume` refuses a thread parked in `failures` before it builds any graph."""
+    db_path, _ = seeded_db
+    conn = db.connect(db_path)
+    try:
+        db.park_failure(conn, "email-run-MSG-1", "email", "MSG-1.eml", "extract", "InvalidExtraction: bad")
+    finally:
+        conn.close()
+    argv = ["--db", str(db_path), "resume", "email-run-MSG-1", "--checkpoints", str(tmp_path / "c.db")]
+    assert cli.main(argv) == 1
+    assert "thread email-run-MSG-1 is parked; use purchase-cycle failures resume" in capsys.readouterr().err
