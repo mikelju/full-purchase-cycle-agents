@@ -454,7 +454,7 @@ def _resume(args, received: dict) -> int:
     row = _pending_row(args)
     if row is None:
         return 1
-    graph, clients = _clarify_graph(args, row["channel"])
+    graph, clients = _clarify_graph(args, row["channel"], recovery=True)
     run_config = {"configurable": {"thread_id": args.thread_id}, "run_name": f"{row['channel']}_order"}
     if not graph.get_state(run_config).next:
         print(f"Error: no paused checkpoint found for thread {args.thread_id}", file=sys.stderr)

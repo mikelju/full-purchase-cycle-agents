@@ -285,3 +285,25 @@ def test_route_runs_an_email_through_the_re_ask_with_recovery_on(
     assert stored == [(line["sku"], line["quantity"]) for line in lines]
     assert failures == 0
     assert no_network == []
+
+
+@pytest.mark.parametrize("command", [["answer", "--text", ANSWER], ["close"]])
+def test_clarify_commands_build_the_channel_graphs_with_recovery_on(seeded_db, tmp_path, monkeypatch, capsys, command):
+    """Coordinator decision 2026-10-09: a thread started by `route` resumes with the same node wiring."""
+    from purchase_cycle import cli
+
+    db_path, _ = seeded_db
+    _pending(db_path, "email-run-1", "email", CUSTOMER.code, "2026-10-09 10:00:00")
+    built = []
+    real = cli._clarify_graph
+
+    def spy(args, channel, *rest, **kwargs):
+        built.append((channel, kwargs.get("recovery", False)))
+        return real(args, channel, *rest, **kwargs)
+
+    monkeypatch.setattr(cli, "_clarify_graph", spy)
+    action, options = command[0], command[1:]
+    argv = ["--db", str(db_path), "clarify", action, "email-run-1", *options]
+    cli.main([*argv, "--checkpoints", str(tmp_path / "c.db")])
+    capsys.readouterr()
+    assert built == [("email", True)]

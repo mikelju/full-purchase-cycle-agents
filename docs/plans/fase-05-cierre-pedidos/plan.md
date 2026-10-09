@@ -27,6 +27,7 @@ Written for the owner decisions of 2026-10-09 recorded in the spec (D3 option B,
 - Coordinator decision 2026-10-09: recovery is opt-in (`recovery=True`) on the email and web form builders so phase 02 to 04 tests, demos and evaluation replays stay unchanged (C11); it is on for every phase 05 entry point: the WhatsApp graph, `route` and `run_inbox`, `failures resume` and `orders-demo`.
 - Coordinator decision 2026-10-09: the round 1 `ask` (first question draft) gets the re-ask with recovery on and parks in `failures` after a second invalid draft or 3 transient errors; rounds 2 and later of `ask` and `interpret` keep the phase 04 fallback on the last attempt.
 - Coordinator decision 2026-10-09: a parked WhatsApp thread writes one keyed, idempotent outbox notice `parked-<message_id>.json` with the reply shape saying the order is under review; web form and email write no notice.
+- Coordinator decision 2026-10-09: `clarify answer` and `clarify close` build the channel graphs with recovery on, so a thread started by `route` resumes with the same node wiring; phase 04 tests stay unchanged.
 
 ## Rules for executors
 - Each batch is sized for one writer agent with about 90k tokens of context; it starts in a fresh session from this file and Git, implements its increments in order, marks each one `[x]` with its evidence and commits before the context runs out.
