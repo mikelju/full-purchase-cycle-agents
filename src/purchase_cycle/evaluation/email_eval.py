@@ -354,7 +354,8 @@ def _failure_text(r: dict) -> str:
         parts.append(f"{extra} wrong catalog lines")
     if not r["out_of_catalog_detection"]:
         parts.append(
-            f"unknown lines differ in count, quantity or source ({r['unmatched']}, expected {r['expected_unmatched']})"
+            f"unknown lines paired {r['unmatched_hits']} of {r['expected_unmatched']} on quantity, source and"
+            f" requested text ({r['unmatched']} produced)"
         )
     return "; ".join(parts)
 

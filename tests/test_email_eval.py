@@ -308,6 +308,13 @@ def test_out_of_catalog_produced_line_counts_for_one_expected_line():
     assert not result["out_of_catalog_detection"] and not result["email_exact_match"]
 
 
+def test_failure_reason_names_an_out_of_catalog_text_mismatch():
+    case = _case([_expected(1, None, 3, text="Syringes 60 ml")])
+    result = email_eval.grade(case, True, [_got(None, 3, text="Hospital beds")])
+    reason = email_eval._failure_text(result)
+    assert "requested text" in reason and "0 of 1" in reason
+
+
 def test_a_stopped_run_keeps_the_intake_decision_and_counts_no_lines():
     result = email_eval.grade(_case([_expected(1, "A", 2)]), True, [], "invalid answer")
     assert result["intake_accuracy"] and not result["line_rows"][0]["line_recall"]

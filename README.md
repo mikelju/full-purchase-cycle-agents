@@ -231,7 +231,7 @@ The Claude Haiku 4.5 baseline on the web form test split is 99.6% line product a
 It prints intake accuracy, line recall and line precision (the gated metrics), field accuracy for SKU and quantity, out-of-catalog detection and email exact match, with 95% Wilson intervals globally, per category and per source, and the failing emails by category.
 Lines are matched one to one, so an extracted line counts for at most one expected line.
 Line recall counts expected catalog lines matched by an extracted line with the same SKU, quantity and source; line precision counts extracted catalog lines matched that way.
-Out-of-catalog detection holds when an order email's unknown lines equal the expected ones in quantity and source; email exact match also needs the right intake, every catalog line matched and no extra line.
+Out-of-catalog detection holds when an order email's unknown lines pair one to one with the expected ones on quantity, source and the requested text, which the line's citation must name as whole words (a citation naming several expected texts matches none); email exact match also needs the right intake, every catalog line matched and no extra line.
 The Claude Haiku 4.5 baseline on the 234 test emails (`evals/baselines/email_order_extraction.json`):
 
 | Metric | Value | 95% interval |
