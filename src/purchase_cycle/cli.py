@@ -271,11 +271,14 @@ def cmd_whatsapp_demo(args) -> int:
     return code
 
 
-def _clarify_graph(args, channel: str, recordings: dict | None = None, channel_mode: str | None = None):
+def _clarify_graph(
+    args, channel: str, recordings: dict | None = None, channel_mode: str | None = None, recovery: bool = False
+):
     """The channel graph with the clarify step, on the same checkpoint file; returns it and its clarification clients.
 
     `recordings` maps a channel task name to its recordings file and `channel_mode` sets the mode of the channel
     steps (matching, intake, extraction); both default to the task files and the command mode.
+    `recovery` turns on the phase 05 re-ask and parking on the web form and email graphs (always on for WhatsApp).
     """
     recordings = recordings or {}
     channel_mode = channel_mode or args.mode
@@ -291,7 +294,7 @@ def _clarify_graph(args, channel: str, recordings: dict | None = None, channel_m
     checkpointer = sqlite_checkpointer(args.checkpoints)
     if channel == WEB_FORM:
         matcher = ModelClient(channel_mode, catalog, recordings.get(MATCHING.name), task=MATCHING)
-        return build_web_form_graph(matcher, args.db, checkpointer, clarification=clients), clients
+        return build_web_form_graph(matcher, args.db, checkpointer, clarification=clients, recovery=recovery), clients
     if channel == WHATSAPP:
         intake = ModelClient(channel_mode, catalog, recordings.get(WHATSAPP_INTAKE.name), task=WHATSAPP_INTAKE)
         extraction = ModelClient(
@@ -302,7 +305,8 @@ def _clarify_graph(args, channel: str, recordings: dict | None = None, channel_m
         return graph, clients
     intake = ModelClient(channel_mode, catalog, recordings.get(EMAIL_INTAKE.name), task=EMAIL_INTAKE)
     extraction = ModelClient(channel_mode, catalog, recordings.get(EMAIL_EXTRACTION.name), task=EMAIL_EXTRACTION)
-    return build_email_order_graph(intake, extraction, args.db, checkpointer, clarification=clients), clients
+    graph = build_email_order_graph(intake, extraction, args.db, checkpointer, clarification=clients, recovery=recovery)
+    return graph, clients
 
 
 def cmd_route(args) -> int:
@@ -315,7 +319,7 @@ def cmd_route(args) -> int:
     conn.close()
     graphs, clients = {}, []
     for channel in (WEB_FORM, EMAIL, WHATSAPP):
-        graphs[channel], channel_clients = _clarify_graph(args, channel)
+        graphs[channel], channel_clients = _clarify_graph(args, channel, recovery=True)
         clients += list(channel_clients)
     results = router.run_inbox(folder, graphs, args.db, uuid.uuid4().hex[:12])
     saved = sum(client.save_recordings() for client in clients)

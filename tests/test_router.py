@@ -245,3 +245,43 @@ def test_paused_whatsapp_thread_sends_its_question_to_the_outbox(seeded_db, writ
         assert sorted(p.name for p in outbox.iterdir()) == ["question-wamid.ORDER-1.json"]
     sent = json.loads((outbox / "question-wamid.ORDER-1.json").read_text(encoding="utf-8"))
     assert sent == {"to": PHONE, "in_reply_to": "wamid.ORDER", "text": question}
+
+
+def test_route_runs_an_email_through_the_re_ask_with_recovery_on(
+    seeded_db, write_recording, folder, tmp_path, no_network, capsys, monkeypatch
+):
+    """Coordinator decision 2026-10-09: recovery is on for `route`, so an invalid extraction is re-asked once."""
+    from purchase_cycle import cli
+    from purchase_cycle.email_order import model_text as email_text
+    from purchase_cycle.email_order import parse_email
+    from purchase_cycle.llm import CORRECTION, EMAIL_EXTRACTION, EMAIL_INTAKE
+    from test_clarification_graph import EMAIL_BODY, EMAIL_LINES, SENDER
+
+    _, catalog = seeded_db
+    path = make_email(folder / "MSG-1.eml", SENDER, "Order", EMAIL_BODY.replace(", plus 2 hospital beds", ""))
+    text = email_text(parse_email(path.read_bytes()))
+    lines = EMAIL_LINES[:2]
+    bad = {"lines": [{**lines[0], "sku": "GLV-NIT-XXL"}, lines[1]]}
+    error = "Extracted line 1: SKU 'GLV-NIT-XXL' is not in the catalog"
+    write_recording(catalog, text, {"is_order": True, "reason": "An order."}, task=EMAIL_INTAKE)
+    write_recording(catalog, text, bad, task=EMAIL_EXTRACTION)
+    recordings = write_recording(
+        catalog, text + CORRECTION.format(error=error), {"lines": lines}, task=EMAIL_EXTRACTION
+    )
+    for name in ("EMAIL_INTAKE", "EMAIL_EXTRACTION"):
+        monkeypatch.setattr(cli, name, dataclasses.replace(getattr(cli, name), recordings_path=recordings))
+    argv = ["--db", str(tmp_path / "b.db"), "route", str(folder), "--checkpoints", str(tmp_path / "c.db")]
+    code = cli.main([*argv, "--outbox", str(tmp_path / "outbox")])
+    out, err = capsys.readouterr()
+    assert (code, err) == (0, ""), out
+    assert "route=email" in out
+    assert "stored order: 1" in out
+    conn = db.connect(tmp_path / "b.db")
+    try:
+        stored = [tuple(r) for r in conn.execute("SELECT sku, quantity FROM order_lines ORDER BY id")]
+        failures = conn.execute("SELECT COUNT(*) FROM failures").fetchone()[0]
+    finally:
+        conn.close()
+    assert stored == [(line["sku"], line["quantity"]) for line in lines]
+    assert failures == 0
+    assert no_network == []
