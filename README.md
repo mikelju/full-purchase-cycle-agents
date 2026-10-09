@@ -114,9 +114,9 @@ uv run purchase-cycle clarify answer <thread_id> --text "The caps are the bouffa
 uv run purchase-cycle clarify close <thread_id>
 ```
 
-Both order channels now have a `clarify` step, the shared `clarification` subgraph, between understanding the order (`match` or `extract`) and `store`:
+Every order channel (web form, email and WhatsApp) now has a `clarify` step, the shared `clarification` subgraph, between understanding the order (`match` or `extract`) and `store`:
 
-- `detect` applies deterministic rules to every line: an ambiguous product when the line text fits two or more catalog products by a search over catalog names (up to 6 candidates), also when the matcher or extractor already gave it a SKU, an unknown product when the line has no SKU and the search finds nothing, and a doubtful quantity above 500 sale units or, for email, not supported by any number in the source text.
+- `detect` applies deterministic rules to every line: an ambiguous product when the line text fits two or more catalog products by a search over catalog names (up to 6 candidates), also when the matcher or extractor already gave it a SKU, an unknown product when the line has no SKU and the search finds nothing, and a doubtful quantity above 500 sale units or, for the free-text channels (email and WhatsApp), not supported by any number in the source text.
 - `ask` has Claude Haiku 4.5 draft one question for all the doubtful lines; a deterministic check rejects a question that does not name every doubtful line with the text the customer wrote and every candidate name.
 - `wait` pauses the run with LangGraph `interrupt`; the state stays in the SQLite checkpointer `data/checkpoints.db` and a `pending` row in the `clarifications` table, and nothing is written to `orders` or `order_lines`.
 - `interpret` has the model read the customer answer into, per doubtful line, a SKU and quantity, a removal or "still unclear"; a missing or repeated line, a SKU outside the catalog or a non-positive quantity is rejected and the same question keeps waiting.

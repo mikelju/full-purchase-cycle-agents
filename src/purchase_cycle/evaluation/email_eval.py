@@ -17,11 +17,18 @@ from langsmith.utils import ContextThreadPoolExecutor
 
 from purchase_cycle import db
 from purchase_cycle.config import EMAIL_EXTRACTION_RECORDINGS_PATH, EMAIL_INTAKE_RECORDINGS_PATH, EVALS_DIR, MODEL_ID
-from purchase_cycle.email_order import InvalidExtraction, build_email_order_graph
+from purchase_cycle.email_order import build_email_order_graph
 from purchase_cycle.evaluation import email_dataset as ed
 from purchase_cycle.evaluation.harness import ALPHA, DEFAULT_THRESHOLD
 from purchase_cycle.evaluation.stats import mcnemar_exact, target_cells, wilson_interval, zero_event_note
-from purchase_cycle.llm import EMAIL_EXTRACTION, EMAIL_INTAKE, InvalidModelOutput, MissingRecording, ModelClient
+from purchase_cycle.llm import (
+    EMAIL_EXTRACTION,
+    EMAIL_INTAKE,
+    InvalidExtraction,
+    InvalidModelOutput,
+    MissingRecording,
+    ModelClient,
+)
 
 SUITE = "email_order_extraction"
 BASELINE_PATH = EVALS_DIR / "baselines" / "email_order_extraction.json"

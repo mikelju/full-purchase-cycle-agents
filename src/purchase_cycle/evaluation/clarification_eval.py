@@ -36,7 +36,7 @@ from purchase_cycle.config import (
     EVALS_DIR,
     MODEL_ID,
 )
-from purchase_cycle.email_order import InvalidExtraction, build_email_order_graph
+from purchase_cycle.email_order import build_email_order_graph
 from purchase_cycle.evaluation import clarification_dataset as cd
 from purchase_cycle.evaluation.harness import ALPHA, DEFAULT_THRESHOLD
 from purchase_cycle.evaluation.planning import read_jsonl
@@ -46,6 +46,7 @@ from purchase_cycle.llm import (
     EMAIL_EXTRACTION,
     EMAIL_INTAKE,
     MATCHING,
+    InvalidExtraction,
     InvalidModelOutput,
     MissingRecording,
     ModelClient,

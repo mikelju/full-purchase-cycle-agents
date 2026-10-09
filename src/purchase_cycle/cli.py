@@ -12,7 +12,7 @@ from langgraph.types import Command
 from purchase_cycle import config, db, router
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
-from purchase_cycle.email_order import InvalidExtraction, build_email_order_graph
+from purchase_cycle.email_order import build_email_order_graph
 from purchase_cycle.graph import build_graph, sqlite_checkpointer
 from purchase_cycle.llm import (
     CLARIFICATION_ANSWER,
@@ -22,6 +22,7 @@ from purchase_cycle.llm import (
     MATCHING,
     WHATSAPP_EXTRACTION,
     WHATSAPP_INTAKE,
+    InvalidExtraction,
     InvalidModelOutput,
     MissingRecording,
     ModelClient,
