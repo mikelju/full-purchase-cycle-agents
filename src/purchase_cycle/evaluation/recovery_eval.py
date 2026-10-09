@@ -33,9 +33,8 @@ from purchase_cycle.evaluation.stats import target_cells, wilson_interval, zero_
 from purchase_cycle.graph import sqlite_checkpointer
 from purchase_cycle.llm import InvalidModelOutput, ModelClient
 from purchase_cycle.web_form import build_web_form_graph
-from purchase_cycle.whatsapp_order import build_whatsapp_order_graph
+from purchase_cycle.whatsapp_order import build_whatsapp_order_graph, phone_digits
 from purchase_cycle.whatsapp_order import model_text as whatsapp_text
-from purchase_cycle.whatsapp_order import phone_digits
 
 SUITE = "failure_recovery"
 DATASET_VERSION = "1.0"
