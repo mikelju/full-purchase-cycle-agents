@@ -262,6 +262,7 @@ class ClarificationState(TypedDict, total=False):
     clarification: str | None
     rejected: str | None
     before_answer: dict
+    message: dict  # the WhatsApp message under clarification; only that channel has it
 
 
 def settle(lines: list[dict], resolutions: list[dict], open_doubts: list[dict]) -> tuple[list, list, list]:
@@ -283,12 +284,13 @@ def settle(lines: list[dict], resolutions: list[dict], open_doubts: list[dict]) 
     return kept, removed, unresolved
 
 
-def build_clarification_graph(clients: ClarificationClients, db_path: Path | str, channel: str):
+def build_clarification_graph(clients: ClarificationClients, db_path: Path | str, channel: str, on_question=None):
     """Shared subgraph: detect -> ask -> wait (pause) -> interpret -> detect, at most MAX_ROUNDS questions.
 
     It leaves through `detect` when no doubt is open, the rounds are spent or the
     thread was closed; then `lines` holds only the lines to store, and `removed`
     and `unresolved` list the others with the text the customer wrote.
+    `on_question(state, question, round)` runs after a question is saved, to send it to the customer.
     """
     conn = db.connect(db_path)
     try:
@@ -343,6 +345,8 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
             )
         finally:
             conn.close()
+        if on_question is not None:
+            on_question(state, plain_question(drafted.question), rounds)
         return {"question": drafted.question, "round": rounds}
 
     def wait(state: ClarificationState) -> ClarificationState:

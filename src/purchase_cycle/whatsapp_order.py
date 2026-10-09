@@ -116,11 +116,11 @@ def read_whatsapp(path: Path | str, conn: sqlite3.Connection) -> dict:
     }
 
 
-def write_outbox(outbox: Path | str, to: str, message_id: str, text: str) -> Path:
+def write_outbox(outbox: Path | str, to: str, message_id: str, text: str, name: str | None = None) -> Path:
     """Write the reply to one message; the file name is keyed by the answered message, so a re-run overwrites it."""
     outbox = Path(outbox)
     outbox.mkdir(parents=True, exist_ok=True)
-    path = outbox / f"reply-{message_id}.json"
+    path = outbox / (name or f"reply-{message_id}.json")
     content = json.dumps({"to": to, "in_reply_to": message_id, "text": text}, indent=2, sort_keys=True)
     path.write_text(content + "\n", encoding="utf-8", newline="\n")
     return path
@@ -254,7 +254,13 @@ def build_whatsapp_order_graph(
     else:
         from purchase_cycle.clarification import build_clarification_graph  # it imports the web form module
 
-        builder.add_node("clarify", build_clarification_graph(clarification, db_path, CHANNEL))
+        def send_question(state: dict, question: str, rounds: int) -> None:
+            # The question is a reply too: one keyed file per message and round.
+            message = state["message"]
+            name = f"question-{message['message_id']}-{rounds}.json"
+            write_outbox(outbox, message["from"], message["message_id"], question, name)
+
+        builder.add_node("clarify", build_clarification_graph(clarification, db_path, CHANNEL, send_question))
         builder.add_edge("extract", "clarify")
         builder.add_edge("clarify", "store")
     builder.add_edge("store", "reply")

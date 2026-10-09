@@ -180,7 +180,8 @@ def test_paused_whatsapp_thread_is_resumed_by_a_later_whatsapp_text(
     assert lines == [("GLV-NIT-M", 40)]
     assert status == "answered"
     assert second["state"]["order_id"] == 1
-    [sent] = [json.loads(p.read_text(encoding="utf-8")) for p in outbox.glob("*.json")]
+    assert sorted(p.name for p in outbox.iterdir()) == ["question-wamid.ORDER-1.json", "reply-wamid.ORDER.json"]
+    sent = json.loads((outbox / "reply-wamid.ORDER.json").read_text(encoding="utf-8"))
     assert (sent["to"], sent["in_reply_to"]) == (PHONE, "wamid.ORDER")
     assert "Your WhatsApp order is registered as order 1" in sent["text"]
     assert (intake.calls, extraction.calls, clients.question.calls, clients.answer.calls) == (1, 1, 1, 1)
@@ -219,6 +220,28 @@ def test_route_command_runs_a_mixed_inbox(
     assert "route=rejected  reason: the file type '.txt' fits no channel" in out
     assert [line for line in out.splitlines() if line.startswith("stored order:")] == ["stored order: 1"]
     assert "Your WhatsApp order is registered as order 1" in out
-    assert sorted(p.name for p in outbox.iterdir()) == ["reply-wamid.ORDER.json"]
+    assert sorted(p.name for p in outbox.iterdir()) == ["question-wamid.ORDER-1.json", "reply-wamid.ORDER.json"]
     assert err == ""
     assert no_network == []
+
+
+def test_paused_whatsapp_thread_sends_its_question_to_the_outbox(seeded_db, write_recording, folder, tmp_path):
+    db_path, catalog = seeded_db
+    recordings, question = _record_whatsapp(catalog, write_recording)
+    clients = ClarificationClients(
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_QUESTION),
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_ANSWER),
+    )
+    intake = ModelClient("replay", catalog, recordings, task=WHATSAPP_INTAKE)
+    extraction = ModelClient("replay", catalog, recordings, task=WHATSAPP_EXTRACTION)
+    outbox = tmp_path / "outbox"
+    graph = build_whatsapp_order_graph(
+        intake, extraction, db_path, outbox, sqlite_checkpointer(tmp_path / "c.db"), clarification=clients
+    )
+    path = _write(folder, "WA-1.json", message("wamid.ORDER"))
+    for thread in ("whatsapp-1", "whatsapp-2"):  # a second delivery overwrites the same keyed file
+        state = graph.invoke({"message_path": str(path)}, {"configurable": {"thread_id": thread}})
+        assert state["__interrupt__"][0].value["question"] == question
+        assert sorted(p.name for p in outbox.iterdir()) == ["question-wamid.ORDER-1.json"]
+    sent = json.loads((outbox / "question-wamid.ORDER-1.json").read_text(encoding="utf-8"))
+    assert sent == {"to": PHONE, "in_reply_to": "wamid.ORDER", "text": question}
