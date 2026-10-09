@@ -34,35 +34,69 @@ def langsmith_dataset_name(split: str) -> str:
     return f"email-order-extraction-v{ed.DATASET_VERSION}-{split}"
 
 
+def _take(pool: Counter, key) -> bool:
+    """Consume one occurrence of `key`, so each produced line can satisfy a single expected line."""
+    if pool[key] <= 0:
+        return False
+    pool[key] -= 1
+    return True
+
+
+def _normalise(text: str) -> str:
+    return " ".join(text.casefold().split())
+
+
+def _unmatched_hits(expected: list[dict], produced: list[dict]) -> int:
+    """Pair out-of-catalog lines one to one on source, quantity and the requested text copied in `source_text`."""
+    left = list(produced)
+    hits = 0
+    for line in expected:
+        for got in left:
+            if (
+                got["source"] == line["location"]
+                and got["quantity"] == line["expected_quantity"]
+                and _normalise(line["text"]) in _normalise(got["source_text"])
+            ):
+                left.remove(got)
+                hits += 1
+                break
+    return hits
+
+
 def grade(case: dict, is_order: bool | None, lines: list[dict], error: str | None = None) -> dict:
     """Grade one email; `lines` are the extracted lines, empty when the run stopped or the intake said no order."""
-    expected = Counter(
-        (line["expected_sku"], line["expected_quantity"]) for line in case["lines"] if line["expected_sku"]
-    )
-    produced = Counter((line["sku"], line["quantity"]) for line in lines if line["sku"] is not None)
-    produced_skus = {line["sku"] for line in lines if line["sku"] is not None}
+    expected_catalog = [line for line in case["lines"] if line["expected_sku"]]
+    produced_catalog = [line for line in lines if line["sku"] is not None]
+    expected = Counter((line["expected_sku"], line["expected_quantity"]) for line in expected_catalog)
+    produced = Counter((line["sku"], line["quantity"]) for line in produced_catalog)
     hits = expected & produced
-    line_rows = []
-    for line in case["lines"]:
-        if line["expected_sku"] is None:
-            continue
-        key = (line["expected_sku"], line["expected_quantity"])
-        line_rows.append(
-            {
-                "id": line["line_id"],
-                "line_recall": hits[key] > 0,
-                "field_sku": line["expected_sku"] in produced_skus,
-                "field_quantity": key in produced,
-            }
-        )
-    expected_unmatched = sum(1 for line in case["lines"] if line["expected_sku"] is None)
-    unmatched = sum(1 for line in lines if line["sku"] is None)
+    # Exact matches first, then SKU-only matches on the produced lines still unused.
+    pool = Counter(hits)
+    recalled = [_take(pool, (line["expected_sku"], line["expected_quantity"])) for line in expected_catalog]
+    skus_left = Counter(line["sku"] for line in produced_catalog) - Counter(
+        line["expected_sku"] for line, hit in zip(expected_catalog, recalled, strict=True) if hit
+    )
+    line_rows = [
+        {
+            "id": line["line_id"],
+            "line_recall": hit,
+            "field_sku": hit or _take(skus_left, line["expected_sku"]),
+            "field_quantity": hit,
+        }
+        for line, hit in zip(expected_catalog, recalled, strict=True)
+    ]
+    expected_unknown = [line for line in case["lines"] if line["expected_sku"] is None]
+    produced_unknown = [line for line in lines if line["sku"] is None]
+    expected_unmatched = len(expected_unknown)
+    unmatched = len(produced_unknown)
+    unmatched_hits = _unmatched_hits(expected_unknown, produced_unknown)
+    out_of_catalog = unmatched_hits == expected_unmatched == unmatched
     precision_hits = sum(hits.values())
     exact = (
         error is None
         and is_order == case["is_order"]
         and precision_hits == sum(expected.values()) == sum(produced.values())
-        and unmatched == expected_unmatched
+        and out_of_catalog
     )
     return {
         "id": case["id"],
@@ -79,7 +113,8 @@ def grade(case: dict, is_order: bool | None, lines: list[dict], error: str | Non
         "precision_hits": precision_hits,
         "expected_unmatched": expected_unmatched,
         "unmatched": unmatched,
-        "out_of_catalog_detection": unmatched == expected_unmatched,
+        "unmatched_hits": unmatched_hits,
+        "out_of_catalog_detection": out_of_catalog,
         "email_exact_match": exact,
     }
 
