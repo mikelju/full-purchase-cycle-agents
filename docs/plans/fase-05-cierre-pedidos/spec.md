@@ -2,7 +2,7 @@
 
 Status: approved
 Approved by the owner: 2026-10-09 (via Lavish)
-Amended by deviation 05.1, approved by the owner on 2026-10-09 (via Lavish): `05.1-audit-evaluation-fixes.md`
+Amended by deviation 05.1, approved by the owner on 2026-10-09 (via Lavish): `05.1-audit-evaluation-fixes.md`; its review fixes, approved by the owner on 2026-10-09 in chat, are in the addendum of that file
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
@@ -74,7 +74,7 @@ Out:
 ## Evaluation design
 
 ### Tasks under evaluation
-- `whatsapp_order_extraction`: given one WhatsApp message from a known customer, the system must decide whether it is an order and extract the expected catalog lines (SKU and quantity), end to end through the WhatsApp graph without clarification, in replay mode; the model tasks under evaluation are the new WhatsApp intake and WhatsApp extraction tasks with their final tuned instructions (D3, D7).
+- `whatsapp_order_extraction`: given one WhatsApp message from a known customer, the system must decide whether it is an order and extract the expected catalog lines (SKU, quantity and source), end to end through the WhatsApp graph without clarification, in replay mode; the model tasks under evaluation are the new WhatsApp intake and WhatsApp extraction tasks with their final tuned instructions (D3, D7).
 - `channel_routing`: given a mixed inbox with pending clarifications already in the database, every item must reach the expected route (web form, email, WhatsApp new order, WhatsApp answer to a named thread, or rejected with the expected reason) (D7).
 - `failure_recovery`: given a scripted scenario (transient errors before success, transient errors beyond the budget, an invalid then valid answer, two invalid answers, a crash at each injection point followed by resumption, a re-delivered message), the module must end in the expected outcome with the expected number of orders and failures rows (D7).
 - `order_scenarios`: given an initial database state, inbox messages on any channel and scripted customer answers written from the customer's intent before seeing any question, the module must end in the expected final state (orders, lines with catalog SKU, quantity and price, sources, clarifications resolved or escalated, failures) with no critical error; the grader reads the database and the outbox, not the node sequence (deviation 05.1, E4).
@@ -106,14 +106,14 @@ Out:
 - Routing and recovery gates: 100%, since both are deterministic.
 - Scenario gates: critical errors 0 in `order_scenarios` and `failure_recovery`, with no averaging; a scenario success target of 90% fixed before measuring, reported as met or not; an exact McNemar regression gate per scenario against the stored baseline (deviation 05.1, E4).
 - Every report shows, per gated metric, the target fixed before measuring and whether it is met, apart from the gate result; no existing threshold changes (deviation 05.1, E5).
-- The five existing evaluations keep running unchanged with their own gates.
+- The five existing evaluations keep running with unchanged gates.
 
 ## Acceptance criteria
 Frozen on approval. Changing them requires a deviation approved by the owner.
 
 | ID | Observable criterion | How it is checked |
 |---|---|---|
-| C1 | On a fresh clone, `uv sync` and `npm run check` pass with no API keys and no `.env` file, and `check` runs the nine evaluations in replay mode; the dataset byte tests also pass on Linux (deviation 05.1) | Run both commands in a clean clone with the Anthropic and LangSmith variables unset; the dataset byte tests run once on Linux (WSL or a container); output saved as evidence |
+| C1 | On a fresh clone, `uv sync` and `npm run check` pass with no API keys and no `.env` file, and `check` runs the nine evaluations in replay mode; the dataset byte tests also pass on Linux (deviation 05.1) | Run both commands in a clean clone with the Anthropic and LangSmith variables unset; the dataset byte tests run once on Linux in the WSL Ubuntu distribution already installed on the owner's machine (owner decision 2026-10-09); output saved as evidence |
 | C2 | A WhatsApp inbox file is validated against the message format; a known phone number identifies the customer; an unknown number, a malformed file and a non-text message are rejected with a reason, write no order and, for the non-text message from a known customer, write a reply asking for text | Pytest tests per case on a temporary database and outbox |
 | C3 | A clear WhatsApp text order goes through the WhatsApp intake and WhatsApp extraction tasks (new tasks with their own instructions and recordings files, distinct from the phase 03 email tasks), `clarify`, `store` and `reply`, stores one order with channel `whatsapp`, and writes the reply to the outbox with the recipient number and the answered message id; a WhatsApp message that is not an order stores nothing and gets a polite reply | Pytest tests in replay with hand-written recordings in temporary files |
 | C4 | The router sends each web form JSON, `.eml` file and WhatsApp JSON to its graph with no model call, and rejects an item that fits no channel with a reason | Pytest tests counting model calls over a mixed temporary inbox |
@@ -131,11 +131,11 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 | C16 | The WhatsApp intake and extraction instructions are tuned on the development split only, with the dev metrics of every tuning round recorded; the `whatsapp_order_extraction` baseline on its test split is then measured with the final instructions, stored with per-item results, and its thresholds are set by the rule in "Gates" | Dev record run reports per tuning round, the stored baseline file and the test record run report, saved as evidence; `git log` shows no instruction change after the test baseline |
 | C17 | With the LangSmith variables set, a live `orders-demo` run appears in LangSmith with one trace per thread, showing the retried attempts, the re-ask and the resumed crash as separate runs of the same thread, and a live run of `whatsapp_order_extraction` is logged as an experiment against its uploaded dataset splits | Trace and experiment links, and the owner's screenshot, as evidence |
 | C18 | No secret is versioned: the new recordings, sample inbox files, outbox examples, dataset and scenario files contain no keys or auth headers | `tests/test_secrets.py` covers the new files |
-| C20 | The email and WhatsApp line graders match expected and produced lines one to one: a produced line counts for at most one expected line; an unknown line passes only with the expected quantity and source; a catalog line passes only with the expected SKU, quantity and source; the phase 03 baseline re-scored with them keeps its stored figures or the change is reported (deviation 05.1) | Grader tests for omission, duplicate, invention, wrong quantity and false source; re-score output saved as evidence |
+| C19 | The README explains in English how to run the WhatsApp channel, the router, the failures and resume commands and `orders-demo` in replay and live mode, how the new datasets were built, how to run the new evaluations, and states the known limitations below | Follow the new README sections in a clean clone |
+| C20 | The email and WhatsApp line graders match expected and produced lines one to one: a produced line counts for at most one expected line; an unknown line passes only with the expected quantity and source; a catalog line passes only with the expected SKU, quantity and source; the phase 03 baseline re-scored with them leaves no stored figure lower, and if any re-scored stored figure drops, execution stops and the drop goes to the owner as a decision (deviation 05.1, owner decision 2026-10-09) | Grader tests for omission, duplicate, invention, wrong quantity and false source; re-score output saved as evidence |
 | C21 | `order_scenarios` holds at least 30 scenarios with at least 8 per channel, 10 with a clarification, 5 with two answers, 3 with an unknown product, 3 with a crash and resume and 3 with a re-delivered message; each is graded by the final database and outbox state; the report shows scenario success with its Wilson interval, the 90% target met or not, and the McNemar regression gate (deviation 05.1) | Pytest tests over the scenario files; stored baseline and replay run report as evidence |
 | C22 | Critical errors are counted per scenario in `order_scenarios` and `failure_recovery` (duplicate order, line price not equal to the catalog price at store time, expected line neither stored nor asked about nor escalated, order stored with an open doubt, reply confirming an order that is not stored or naming another number, line with a source outside its message) and any count above 0 fails the evaluation (deviation 05.1) | Pytest tests that inject each critical error and prove a non-zero exit |
 | C23 | Every evaluation report shows, per gated metric, the target and whether it is met apart from the gate result, the counting unit of each interval and, for a zero-event rate, its Wilson upper bound (deviation 05.1) | Replay run of `npm run eval` saved as evidence; report tests |
-| C19 | The README explains in English how to run the WhatsApp channel, the router, the failures and resume commands and `orders-demo` in replay and live mode, how the new datasets were built, how to run the new evaluations, and states the known limitations below | Follow the new README sections in a clean clone |
 
 ## Constraints and risks
 - No new dependency is expected: `RetryPolicy`, the SQLite checkpointer and `Command` are already in `langgraph`; the WhatsApp simulation uses JSON files and the standard library (D1).
@@ -148,7 +148,9 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 - New WhatsApp intake and extraction instructions need prompt tuning on the development split, which adds live calls, code and the risk of overfitting a small split (about 38 messages); the held-out test split shows it, and a gate miss goes to the owner as a deviation (D3).
 - Live runs need the owner's Anthropic and LangSmith keys in `.env`; the agent never reads that file.
 - Deviation 05.1 adds about 150 live calls for `order_scenarios`, about 0.45 USD, raising the phase estimate to about 1.75 USD, inside the D9 ceiling with a smaller margin; the executor stops before a run that would pass it.
-- Expected API cost of the phase before deviation 05.1: about 1.3 USD, under the 2 USD ceiling of D9, with prompt caching: about 210 calls for up to three tuning rounds of intake and extraction on the development split (about 38 messages), about 200 calls for the test split record (about 112 messages) and about 50 calls for the demo, re-ask recordings and live runs, at the phase 03 measured rate of about 0.003 USD per call; a fourth tuning round or a full re-record would use most of the remaining margin.
+- About 0.45 USD of the ceiling is reserved for the increment 24 live record of `order_scenarios`; prompt tuning goes beyond three rounds only if that reserve stays intact.
+- Expected API cost of the phase before deviation 05.1: about 1.3 USD, under the 2 USD ceiling of D9, with prompt caching: about 210 calls for up to three tuning rounds of intake and extraction on the development split (about 38 messages), about 200 calls for the test split record (about 112 messages) and about 50 calls for the demo, re-ask recordings and live runs, at the phase 03 measured rate of about 0.003 USD per call.
+- Updated budget after deviation 05.1: about 1.75 USD planned, of which about 0.45 USD is reserved for increment 24, under the 2 USD ceiling of D9.
 - The LangSmith trace quota is expected to reset around 2026-11-05; until then C17 is blocked (D10).
 - Like earlier phases, the text writer and the evaluated model belong to the same family, so WhatsApp results may be optimistic.
 - The owner audit takes about 15 minutes and blocks C14.
@@ -163,6 +165,7 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 - The fault injection setting is ignored unless its environment variable is set, and the demo sets it only for its crash scene.
 - `npm run check` stays fast: replaying the nine evaluations takes seconds.
 - The WhatsApp instructions live next to the phase 03 instructions in `llm.py` as new constants and tasks, following the existing style; at most three tuning rounds are expected on the development split.
+- The Linux run of C1 uses the WSL Ubuntu distribution already installed on the owner's machine, with no new dependency (owner decision 2026-10-09); if the dataset byte tests cannot run there without installing new software, the Linux part of C1 is reported as blocked and goes to the owner, and nothing is installed without asking.
 
 ## Known limitations
 - WhatsApp is simulated by files; there is no webhook, no delivery receipt and no media handling.
@@ -171,6 +174,7 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 - The idempotency key is the message id the channel gives; the same order sent twice with two different message ids is stored twice.
 - The WhatsApp instructions are tuned on a development split of about 38 messages; the test split measures how well they generalise, but chat styles absent from the dataset may score lower.
 - The candidate search, the extractor and the security limitations of phases 03 and 04 (SEC-003, SEC-004, SEC-007 of `docs/security.md`) apply to the WhatsApp channel too; the sender is identified by the phone number in the file only.
+- In `order_scenarios` the customer answers are scripted before any question is seen, so they cannot react to an odd question; a poor question shows only when the scripted answer no longer resolves the doubt, and thirty scenarios give a wide interval at scenario level.
 
 ## Owner decisions (2026-10-09)
 The owner chose the recommended option in nine of the ten open decisions, chose option B in D3, and approved the spec via Lavish.
