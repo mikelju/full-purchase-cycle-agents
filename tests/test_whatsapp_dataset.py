@@ -332,3 +332,107 @@ def test_versioned_dataset_is_the_build_of_the_versioned_texts(tmp_path, monkeyp
     assert len(rows) == len(read_jsonl(versioned / "plan.jsonl"))
     assert all(counts[(c, "dev")] == wd.DEV_PER_CATEGORY for c in wd.CATEGORIES)
     assert all(counts[(c, "test")] == wd.MESSAGES_PER_CATEGORY - wd.DEV_PER_CATEGORY for c in wd.CATEGORIES)
+
+
+# ---------- second-pass review (increment 12) ----------
+
+
+def test_blind_export_gives_only_the_catalog_and_the_message_texts(tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import main
+    from purchase_cycle.whatsapp_order import model_text
+
+    monkeypatch.setattr(wd, "BLIND_DIR", tmp_path / "blind")
+    assert main(["whatsapp-dataset", "blind"]) == 0
+    dataset = wd.load_dataset()
+    batches = [read_jsonl(tmp_path / "blind" / f"batch-{n}.jsonl") for n in range(1, wd.BLIND_BATCHES + 1)]
+    assert sorted(p.name for p in (tmp_path / "blind").iterdir()) == sorted(
+        ["catalog.txt", *(f"batch-{n}.jsonl" for n in range(1, wd.BLIND_BATCHES + 1))]
+    )
+    assert wd.BLIND_BATCHES <= 4
+    assert max(len(b) for b in batches) - min(len(b) for b in batches) <= 1
+    assert [row["id"] for batch in batches for row in batch] == [m["id"] for m in dataset]
+    for message, row in zip(dataset, [row for batch in batches for row in batch], strict=True):
+        assert set(row) == {"id", "text"}
+        assert row["text"] == model_text({"body": message["body"]})
+    catalog = (tmp_path / "blind" / "catalog.txt").read_text(encoding="utf-8")
+    assert all(f"{p.sku} | {p.name} | {p.sale_unit}" in catalog for p in PRODUCTS)
+    assert "Wrote" in capsys.readouterr().out
+
+
+def _labelled_message():
+    lines = [
+        {"line_id": "W-L1", "text": "3 boxes of nitrile gloves M", "expected_sku": "GLV-NIT-M", "expected_quantity": 3},
+        {"line_id": "W-L2", "text": "a dozen patient lifts", "expected_sku": None, "expected_quantity": 12},
+    ]
+    return {"id": "W", "is_order": True, "lines": lines}
+
+
+def _reading(**changes):
+    lines = [
+        {"text": "nitrile gloves M 3 boxes", "sku": "GLV-NIT-M", "quantity": 3},
+        {"text": "a dozen patient lifts", "sku": None, "quantity": 12},
+    ]
+    return {"id": "W", "is_order": True, "lines": lines, "notes": ""} | changes
+
+
+def test_review_finds_no_disagreement_when_the_reading_matches_the_labels():
+    assert wd.review_disagreements(_labelled_message(), _reading()) == []
+
+
+def test_review_reports_each_kind_of_disagreement():
+    message = _labelled_message()
+    wrong = _reading(lines=[{"text": "nitrile gloves M", "sku": "GLV-NIT-L", "quantity": 4}, _reading()["lines"][1]])
+    assert [(d["field"], d["label"], d["read"]) for d in wd.review_disagreements(message, wrong)] == [
+        ("sku", "GLV-NIT-M", "GLV-NIT-L"),
+        ("quantity", 3, 4),
+    ]
+    missing_and_extra = _reading(
+        is_order=False, lines=[_reading()["lines"][0], {"text": "a box of plasters", "sku": None, "quantity": 1}]
+    )
+    found = [(d["field"], d.get("line_id")) for d in wd.review_disagreements(message, missing_and_extra)]
+    assert found == [("is_order", None), ("line", "W-L2"), ("line", None)]
+
+
+def test_review_keeps_earlier_decisions_and_leaves_new_disagreements_pending():
+    message = _labelled_message()
+    disagreeing = _reading(is_order=False)
+    previous = [{"id": "W", "decision": "annotator_wrong", "justification": "the message places an order"}]
+    assert wd.build_review([message], [disagreeing], previous)[0]["decision"] == "annotator_wrong"
+    assert wd.build_review([message], [disagreeing], [])[0]["decision"] == "pending"
+    assert wd.build_review([message], [_reading()], previous)[0]["decision"] == "agree"
+
+
+def test_review_command_writes_the_review_and_fails_while_a_disagreement_is_pending(tmp_path, monkeypatch, capsys):
+    from purchase_cycle.cli import main
+
+    monkeypatch.setattr(wd, "DATASET_PATH", tmp_path / "dataset.jsonl")
+    monkeypatch.setattr(wd, "REVIEW_PATH", tmp_path / "second_pass_review.jsonl")
+    other = {"id": "X", "is_order": False, "lines": []}
+    write_jsonl(tmp_path / "dataset.jsonl", [_labelled_message(), other])
+    write_jsonl(tmp_path / "a.jsonl", [_reading()])
+    assert main(["whatsapp-dataset", "review", str(tmp_path / "a.jsonl")]) == 1
+    assert "not annotated: X" in capsys.readouterr().out
+    assert not (tmp_path / "second_pass_review.jsonl").exists()
+
+    write_jsonl(tmp_path / "b.jsonl", [{"id": "X", "is_order": True, "lines": [], "notes": "unsure"}])
+    assert main(["whatsapp-dataset", "review", str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl")]) == 1
+    records = read_jsonl(tmp_path / "second_pass_review.jsonl")
+    assert [(r["id"], r["decision"]) for r in records] == [("W", "agree"), ("X", "pending")]
+    assert "pending 1" in capsys.readouterr().out
+
+    records[1] |= {"decision": "annotator_wrong", "justification": "the message only asks a question"}
+    write_jsonl(tmp_path / "second_pass_review.jsonl", records)
+    assert main(["whatsapp-dataset", "review", str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl")]) == 0
+    assert read_jsonl(tmp_path / "second_pass_review.jsonl")[1]["decision"] == "annotator_wrong"
+
+
+def test_versioned_second_pass_review_covers_every_message_and_decides_every_disagreement():
+    dataset = {m["id"]: m for m in wd.load_dataset()}
+    records = read_jsonl(wd.REVIEW_PATH)
+    assert [r["id"] for r in records] == list(dataset)
+    for record in records:
+        reading = {"is_order": record["read"]["is_order"], "lines": record["read"]["lines"]}
+        assert wd.review_disagreements(dataset[record["id"]], reading) == record["disagreements"]
+        assert record["decision"] in wd.REVIEW_DECISIONS
+        assert (record["decision"] == "agree") == (record["disagreements"] == [])
+        assert record["decision"] == "agree" or record["justification"].strip()

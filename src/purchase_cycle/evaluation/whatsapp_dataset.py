@@ -18,7 +18,8 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
-from purchase_cycle.config import EVALS_DIR
+from purchase_cycle.config import EVALS_DIR, ROOT
+from purchase_cycle.evaluation.email_dataset import REVIEW_DECISIONS, build_review, review_disagreements
 from purchase_cycle.evaluation.planning import (
     GENERIC_QUANTITIES,
     OUT_OF_CATALOG_ITEMS,
@@ -28,7 +29,7 @@ from purchase_cycle.evaluation.planning import (
 )
 from purchase_cycle.quantities import has_number, pack_size, supports_quantity
 from purchase_cycle.web_form import match_key
-from purchase_cycle.whatsapp_order import WhatsAppMessage, phone_digits
+from purchase_cycle.whatsapp_order import WhatsAppMessage, model_text, phone_digits
 
 DATASET_VERSION = "1.0"
 SEED = 20261009
@@ -71,6 +72,12 @@ PLAN_PATH = DATASET_DIR / "plan.jsonl"
 TEXTS_DIR = DATASET_DIR / "texts"
 MESSAGES_DIR = DATASET_DIR / "messages"
 DATASET_PATH = DATASET_DIR / "dataset.jsonl"
+REVIEW_PATH = DATASET_DIR / "second_pass_review.jsonl"
+BLIND_DIR = ROOT / ".runtime" / "whatsapp_second_pass"  # gitignored input of the blind annotators
+BLIND_BATCHES = 4
+
+# The second pass reuses the phase 03 comparison: same reading shape, same disagreements and decisions.
+__all__ = ["REVIEW_DECISIONS", "build_review", "review_disagreements"]
 
 PRODUCT_BY_SKU = {p.sku: p for p in PRODUCTS}
 CUSTOMER_BY_CODE = {c.code: c for c in CUSTOMERS}
@@ -347,6 +354,53 @@ def load_dataset(path: Path | None = None) -> list[dict]:
     return read_jsonl(path or DATASET_PATH)
 
 
+# ---------- second-pass review ----------
+
+
+def blind_batches(dataset: list[dict], messages_dir: Path | None = None) -> list[list[dict]]:
+    """The model text of every rendered message, with no label, plan, category or trap, in BLIND_BATCHES id ranges."""
+    rows = []
+    for message in dataset:
+        data = json.loads(((messages_dir or MESSAGES_DIR) / f"{message['id']}.json").read_text(encoding="utf-8"))
+        rows.append({"id": message["id"], "text": model_text({"body": WhatsAppMessage.model_validate(data).text.body})})
+    size, extra = divmod(len(rows), BLIND_BATCHES)
+    batches, start = [], 0
+    for n in range(BLIND_BATCHES):
+        end = start + size + (1 if n < extra else 0)
+        batches.append(rows[start:end])
+        start = end
+    return batches
+
+
+def cmd_blind(args) -> int:
+    batches = blind_batches(load_dataset())
+    BLIND_DIR.mkdir(parents=True, exist_ok=True)
+    catalog = "".join(f"{p.sku} | {p.name} | {p.sale_unit}\n" for p in PRODUCTS)
+    (BLIND_DIR / "catalog.txt").write_text("SKU | name | sale unit\n" + catalog, encoding="utf-8", newline="\n")
+    for n, batch in enumerate(batches, start=1):
+        write_jsonl(BLIND_DIR / f"batch-{n}.jsonl", batch)
+        print(f"batch-{n}.jsonl: {len(batch)} messages, {batch[0]['id']} to {batch[-1]['id']}")
+    print(f"Wrote the catalog and {len(batches)} blind batches -> {BLIND_DIR}")
+    return 0
+
+
+def cmd_review(args) -> int:
+    reviews = [row for path in args.annotations for row in read_jsonl(Path(path))]
+    dataset = load_dataset()
+    read_ids = {row["id"] for row in reviews}
+    missing = [m["id"] for m in dataset if m["id"] not in read_ids]
+    if missing:
+        print(f"{len(missing)} messages not annotated: {', '.join(missing)}")
+        return 1
+    previous = read_jsonl(REVIEW_PATH) if REVIEW_PATH.exists() else []
+    records = build_review(dataset, reviews, previous)
+    write_jsonl(REVIEW_PATH, records)
+    counts = Counter(r["decision"] for r in records)
+    print(f"Reviewed {len(records)} messages -> {REVIEW_PATH}")
+    print("  " + ", ".join(f"{d} {counts[d]}" for d in (*REVIEW_DECISIONS, "pending")))
+    return 1 if counts["pending"] else 0
+
+
 # ---------- commands ----------
 
 
@@ -411,3 +465,9 @@ def add_commands(sub) -> None:
     dsub.add_parser("build", help="validate, render the message files and write the dataset").set_defaults(
         handler=cmd_build
     )
+    dsub.add_parser("blind", help="write the catalog and the message texts for the blind annotators").set_defaults(
+        handler=cmd_blind
+    )
+    review = dsub.add_parser("review", help="compare blind second-pass annotations with the labels")
+    review.add_argument("annotations", nargs="+", help="JSONL files with one blind reading per message")
+    review.set_defaults(handler=cmd_review)
