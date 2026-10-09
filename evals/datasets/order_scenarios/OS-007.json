@@ -1,0 +1,51 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "ask_question"
+  ],
+  "answers": [
+    "Then leave the oxygen concentrator out, we will buy it elsewhere."
+  ],
+  "channel": "whatsapp",
+  "crash_at": null,
+  "customer_code": "CLI-008",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": "answered",
+    "lines": [
+      {
+        "price_eur": 6.9,
+        "quantity": 10,
+        "sku": "GLV-NIT-M"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-007",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "body": "hi, pls send 1 units of oxygen concentrator and 10 boxes of nitrile gloves M thx"
+  },
+  "requested": [
+    {
+      "sku": null,
+      "text": "oxygen concentrator"
+    },
+    {
+      "sku": "GLV-NIT-M",
+      "text": "nitrile gloves M"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "answer"
+  ],
+  "tags": [
+    "clarification",
+    "unknown_product"
+  ]
+}

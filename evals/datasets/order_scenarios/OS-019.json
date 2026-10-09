@@ -1,0 +1,54 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "skip_duplicate"
+  ],
+  "answers": [],
+  "channel": "email",
+  "crash_at": null,
+  "customer_code": "CLI-020",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": null,
+    "lines": [
+      {
+        "price_eur": 7.0,
+        "quantity": 6,
+        "sku": "BND-COH-7"
+      },
+      {
+        "price_eur": 2.4,
+        "quantity": 5,
+        "sku": "PLST-SPOT"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-019",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "body": "Hello,\nPlease send:\n- 6 packs of cohesive bandage 7.5 cm\n- 5 boxes of spot plasters\nThanks,\nIrene Saenz",
+    "subject": "Order"
+  },
+  "requested": [
+    {
+      "sku": "BND-COH-7",
+      "text": "cohesive bandage 7.5 cm"
+    },
+    {
+      "sku": "PLST-SPOT",
+      "text": "spot plasters"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "redeliver"
+  ],
+  "tags": [
+    "redelivery"
+  ]
+}

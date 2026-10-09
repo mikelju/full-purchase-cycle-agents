@@ -1,0 +1,62 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "skip_duplicate"
+  ],
+  "answers": [],
+  "channel": "web_form",
+  "crash_at": null,
+  "customer_code": "RES-009",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": null,
+    "lines": [
+      {
+        "price_eur": 7.0,
+        "quantity": 6,
+        "sku": "BND-COH-7"
+      },
+      {
+        "price_eur": 2.4,
+        "quantity": 5,
+        "sku": "PLST-SPOT"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-028",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "lines": [
+      {
+        "product": "cohesive bandage 7.5 cm",
+        "quantity": 6
+      },
+      {
+        "product": "spot plasters",
+        "quantity": 5
+      }
+    ]
+  },
+  "requested": [
+    {
+      "sku": "BND-COH-7",
+      "text": "cohesive bandage 7.5 cm"
+    },
+    {
+      "sku": "PLST-SPOT",
+      "text": "spot plasters"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "redeliver"
+  ],
+  "tags": [
+    "redelivery"
+  ]
+}

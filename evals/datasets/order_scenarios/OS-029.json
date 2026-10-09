@@ -1,0 +1,51 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "ask_question"
+  ],
+  "answers": [
+    "The ones with the flexible tip."
+  ],
+  "channel": "web_form",
+  "crash_at": null,
+  "customer_code": "RES-010",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": "answered",
+    "lines": [
+      {
+        "price_eur": 4.1,
+        "quantity": 5,
+        "sku": "THERM-DIG-FLEX"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-029",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "lines": [
+      {
+        "product": "digital thermometer",
+        "quantity": 5
+      }
+    ]
+  },
+  "requested": [
+    {
+      "sku": "THERM-DIG-FLEX",
+      "text": "digital thermometer"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "answer"
+  ],
+  "tags": [
+    "clarification"
+  ]
+}

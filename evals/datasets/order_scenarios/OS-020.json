@@ -1,0 +1,41 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply"
+  ],
+  "answers": [],
+  "channel": "email",
+  "crash_at": null,
+  "customer_code": "RES-001",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": null,
+    "lines": [
+      {
+        "price_eur": 3.2,
+        "quantity": 10,
+        "sku": "SHARPS-5"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-020",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "body": "Hello,\nPlease send:\n- 10 units of sharps container 5 litres\nThanks,\nBegona Larrea",
+    "subject": "Order"
+  },
+  "requested": [
+    {
+      "sku": "SHARPS-5",
+      "text": "sharps container 5 litres"
+    }
+  ],
+  "steps": [
+    "deliver"
+  ],
+  "tags": []
+}

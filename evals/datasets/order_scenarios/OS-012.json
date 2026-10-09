@@ -1,0 +1,59 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply"
+  ],
+  "answers": [],
+  "channel": "email",
+  "crash_at": null,
+  "customer_code": "CLI-013",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": null,
+    "lines": [
+      {
+        "price_eur": 6.1,
+        "quantity": 5,
+        "sku": "TAPE-PAP-25"
+      },
+      {
+        "price_eur": 7.0,
+        "quantity": 8,
+        "sku": "BND-COH-7"
+      },
+      {
+        "price_eur": 2.4,
+        "quantity": 10,
+        "sku": "PLST-SPOT"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-012",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "body": "Hello,\nPlease send:\n- 5 boxes of paper tape 2.5 cm\n- 8 packs of cohesive bandage 7.5 cm\n- 10 boxes of spot plasters\nThanks,\nSara Lopez",
+    "subject": "Order"
+  },
+  "requested": [
+    {
+      "sku": "TAPE-PAP-25",
+      "text": "paper tape 2.5 cm"
+    },
+    {
+      "sku": "BND-COH-7",
+      "text": "cohesive bandage 7.5 cm"
+    },
+    {
+      "sku": "PLST-SPOT",
+      "text": "spot plasters"
+    }
+  ],
+  "steps": [
+    "deliver"
+  ],
+  "tags": []
+}

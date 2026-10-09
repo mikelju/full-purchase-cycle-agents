@@ -1,0 +1,64 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "ask_question"
+  ],
+  "answers": [
+    "Size L please, all of them."
+  ],
+  "channel": "web_form",
+  "crash_at": null,
+  "customer_code": "RES-004",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": "answered",
+    "lines": [
+      {
+        "price_eur": 6.9,
+        "quantity": 20,
+        "sku": "GLV-NIT-L"
+      },
+      {
+        "price_eur": 3.2,
+        "quantity": 6,
+        "sku": "SHARPS-5"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-023",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "lines": [
+      {
+        "product": "nitrile gloves",
+        "quantity": 20
+      },
+      {
+        "product": "sharps container 5 litres",
+        "quantity": 6
+      }
+    ]
+  },
+  "requested": [
+    {
+      "sku": "GLV-NIT-L",
+      "text": "nitrile gloves"
+    },
+    {
+      "sku": "SHARPS-5",
+      "text": "sharps container 5 litres"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "answer"
+  ],
+  "tags": [
+    "clarification"
+  ]
+}

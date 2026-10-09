@@ -1,0 +1,58 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "ask_question"
+  ],
+  "answers": [
+    "Let me check with the nurse in charge and I will get back to you.",
+    "The 50 ml tubes."
+  ],
+  "channel": "whatsapp",
+  "crash_at": null,
+  "customer_code": "CLI-007",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": "answered",
+    "lines": [
+      {
+        "price_eur": 2.9,
+        "quantity": 6,
+        "sku": "CREAM-HAND-50"
+      },
+      {
+        "price_eur": 6.9,
+        "quantity": 10,
+        "sku": "GLV-NIT-M"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-006",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "body": "hi, pls send 6 tubes of hand cream and 10 boxes of nitrile gloves M thx"
+  },
+  "requested": [
+    {
+      "sku": "CREAM-HAND-50",
+      "text": "hand cream"
+    },
+    {
+      "sku": "GLV-NIT-M",
+      "text": "nitrile gloves M"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "answer",
+    "answer"
+  ],
+  "tags": [
+    "clarification",
+    "two_answers"
+  ]
+}

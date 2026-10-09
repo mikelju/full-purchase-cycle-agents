@@ -1,0 +1,49 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply"
+  ],
+  "answers": [],
+  "channel": "whatsapp",
+  "crash_at": null,
+  "customer_code": "CLI-002",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": null,
+    "lines": [
+      {
+        "price_eur": 6.9,
+        "quantity": 20,
+        "sku": "GLV-NIT-M"
+      },
+      {
+        "price_eur": 2.6,
+        "quantity": 12,
+        "sku": "SAL-500"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-001",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "body": "hi, pls send 20 boxes of nitrile gloves M and 12 bottles of saline 500 ml thx"
+  },
+  "requested": [
+    {
+      "sku": "GLV-NIT-M",
+      "text": "nitrile gloves M"
+    },
+    {
+      "sku": "SAL-500",
+      "text": "saline 500 ml"
+    }
+  ],
+  "steps": [
+    "deliver"
+  ],
+  "tags": []
+}

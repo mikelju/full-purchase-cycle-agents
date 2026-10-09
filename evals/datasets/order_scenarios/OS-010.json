@@ -1,0 +1,58 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "ask_question",
+    "skip_duplicate"
+  ],
+  "answers": [
+    "The ones with the flexible tip."
+  ],
+  "channel": "whatsapp",
+  "crash_at": null,
+  "customer_code": "CLI-011",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": "answered",
+    "lines": [
+      {
+        "price_eur": 4.1,
+        "quantity": 3,
+        "sku": "THERM-DIG-FLEX"
+      },
+      {
+        "price_eur": 3.2,
+        "quantity": 2,
+        "sku": "SHARPS-5"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-010",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "body": "hi, pls send 3 units of digital thermometer and 2 units of sharps container 5 litres thx"
+  },
+  "requested": [
+    {
+      "sku": "THERM-DIG-FLEX",
+      "text": "digital thermometer"
+    },
+    {
+      "sku": "SHARPS-5",
+      "text": "sharps container 5 litres"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "redeliver",
+    "answer"
+  ],
+  "tags": [
+    "clarification",
+    "redelivery"
+  ]
+}
