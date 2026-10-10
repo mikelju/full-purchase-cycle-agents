@@ -1,0 +1,15 @@
+From: Iker Zubiri <iker.cli-002@example.com>
+To: orders@purchase-cycle.example
+Subject: Order
+Date: Fri, 09 Oct 2026 09:00:00 +0000
+Message-ID: <orders-02@purchase-cycle.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello,
+Please send:
+- 8 packs of cohesive bandage 7.5 cm
+- 2 units of lumbar support belt
+Thanks,
+Iker Zubiri

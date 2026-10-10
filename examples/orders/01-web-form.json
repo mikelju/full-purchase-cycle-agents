@@ -1,0 +1,8 @@
+{
+  "submission_id": "WF-ORDERS-01",
+  "customer_code": "CLI-001",
+  "lines": [
+    {"product": "nitrile gloves M", "quantity": 20},
+    {"product": "saline 500 ml", "quantity": 12}
+  ]
+}

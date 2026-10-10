@@ -1,0 +1,8 @@
+{
+  "submission_id": "WF-ORDERS-08",
+  "customer_code": "CLI-006",
+  "lines": [
+    {"product": "GLV-NIT-M", "quantity": 10},
+    {"product": "SAL-500", "quantity": 6}
+  ]
+}

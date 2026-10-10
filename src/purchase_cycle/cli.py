@@ -36,6 +36,9 @@ DEMO_SENTENCE = "Hi Laura, could you send us 40 boxes of powder-free nitrile glo
 DEMO_SUBMISSION = config.ROOT / "examples" / "web_form_submission.json"
 DEMO_EMAILS = config.ROOT / "examples" / "email_orders"
 DEMO_EXCEPTIONS = config.ROOT / "examples" / "exceptions"
+DEMO_ORDERS = config.ROOT / "examples" / "orders"
+ORDERS_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "orders_demo.jsonl"  # one file for every task
+ORDERS_DEMO_WORKDIR = config.DATA_DIR / "orders-demo"
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
 EXCEPTIONS_RECORDINGS = {
     MATCHING.name: config.CLARIFICATION_DETECTION_MATCHING_RECORDINGS_PATH,
@@ -332,7 +335,7 @@ def cmd_route(args) -> int:
     for channel in (WEB_FORM, EMAIL, WHATSAPP):
         graphs[channel], clarification = _clarify_graph(args, channel, recovery=True, channel_clients=clients)
         clients += list(clarification)
-    results = router.run_inbox(folder, graphs, args.db, uuid.uuid4().hex[:12], args.outbox)
+    results = router.run_inbox(folder, graphs, args.db, args.run_id or uuid.uuid4().hex[:12], args.outbox)
     saved = sum(client.save_recordings() for client in clients)
     print(f"mode={args.mode}  folder={args.folder}  items={len(results)}  outbox={args.outbox}")
     code = 0
@@ -390,6 +393,181 @@ def cmd_route(args) -> int:
         _print_usage(client)
     if saved:
         print(f"recordings saved: {saved}")
+    return code
+
+
+def _demo_reply(state: dict) -> str | None:
+    """The reply the customer gets: the reply text, or the question of a paused order."""
+    paused = state.get("__interrupt__")
+    return paused[0].value["question"] if paused and not state.get("reply") else state.get("reply")
+
+
+def _demo_outcome(routed, state: dict, error) -> str:
+    if error is not None:
+        return f"failed: {type(error).__name__}: {str(error).splitlines()[0] if str(error) else ''}"
+    if routed.kind == router.REJECTED:
+        return f"rejected, nothing stored: {routed.reason}"
+    if routed.kind == router.DUPLICATE:
+        return (
+            f"re-delivery of a message {routed.reason or 'of an order that waits for an answer'}, nothing run or stored"
+        )
+    if state.get("errors"):
+        return "rejected, nothing stored: " + "; ".join(state["errors"])
+    paused = state.get("__interrupt__")
+    if paused and paused[0].value.get("rejected"):
+        return f"answer not applied: {paused[0].value['rejected']}"
+    if paused:
+        return "question asked, paused, nothing stored"
+    if state.get("is_order") is False:
+        return "not an order, nothing stored"
+    return f"stored order {state['order_id']}" if state.get("order_id") is not None else "no line to store"
+
+
+def _print_demo_item(name: str, channel: str, kind: str, scene: str | None, outcome: str, order, reply) -> None:
+    print()
+    print(f"== {name}  channel={channel}  route={kind}")
+    if scene:
+        print(f"scene: {scene}")
+    print(f"outcome: {outcome}")
+    print(f"order: {order if order is not None else 'none'}")
+    print("reply:")
+    print(reply or "(none)")
+
+
+def _crash_scene(args, path: Path, run_id: str, files: dict) -> int:
+    """Run the crash item in a process that crashes after storing its order, then `resume` it in a second one."""
+    import os
+    import subprocess
+
+    from purchase_cycle import faults
+
+    thread_id = f"{WEB_FORM}-{run_id}-{path.stem}"
+    common = ["--db", str(files["db"])]
+    paths = ["--mode", args.mode, "--checkpoints", str(files["checkpoints"]), "--outbox", str(files["outbox"])]
+    env = {**os.environ, faults.CRASH_AT: faults.AFTER_STORE_COMMIT}
+    first = subprocess.run(
+        [sys.executable, "-m", "purchase_cycle.cli", *common, "route", str(path.parent), *paths, "--run-id", run_id],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    env.pop(faults.CRASH_AT)
+    second = subprocess.run(
+        [sys.executable, "-m", "purchase_cycle.cli", *common, "resume", thread_id, *paths],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    lines = second.stdout.splitlines()
+    reply = "\n".join(lines[lines.index("reply:") + 1 :]) if "reply:" in lines else None
+    conn = db.connect(files["db"])
+    try:
+        row = conn.execute("SELECT order_id FROM order_sources WHERE thread_id = ?", (thread_id,)).fetchone()
+    finally:
+        conn.close()
+    order = row["order_id"] if row else None
+    ok = first.returncode == faults.EXIT_CODE and second.returncode == 0 and order is not None
+    scene = (
+        f"crash - a first process stops with PURCHASE_CYCLE_CRASH_AT={faults.AFTER_STORE_COMMIT} right after the "
+        "order is committed; a second process runs purchase-cycle resume on the thread"
+    )
+    outcome = f"stored order {order}" if ok else "failed: " + (second.stderr.strip() or first.stderr.strip())
+    _print_demo_item(path.name, WEB_FORM, router.WEB_FORM, scene, outcome, order, reply)
+    print(f"thread_id: {thread_id}")
+    print(f"first process exit code: {first.returncode}")
+    print(f"second process (purchase-cycle resume) exit code: {second.returncode}")
+    return 0 if ok else 1
+
+
+def cmd_orders_demo(args) -> int:
+    """The sample mixed inbox through the router, with the retry, re-ask and crash scenes, and a summary."""
+    from purchase_cycle.evaluation import recovery_eval, scenarios_eval
+
+    inbox, workdir = Path(args.folder), Path(args.workdir)
+    crash_folder = inbox / "crash"
+    if not inbox.is_dir() or not any(p.is_file() for p in inbox.iterdir()):
+        print(f"Error: no files in {args.folder}", file=sys.stderr)
+        return 1
+    # Each run starts from an empty database, checkpoint file and outbox in the work folder.
+    files = {"db": workdir / "business.db", "checkpoints": workdir / "checkpoints.sqlite", "outbox": workdir / "outbox"}
+    workdir.mkdir(parents=True, exist_ok=True)
+    for name in ("db", "checkpoints"):
+        files[name].unlink(missing_ok=True)
+    for reply_file in files["outbox"].glob("*.json") if files["outbox"].is_dir() else []:
+        reply_file.unlink()
+    conn = db.connect(files["db"])
+    try:
+        db.seed(conn)
+        catalog = db.catalog_rows(conn)
+    finally:
+        conn.close()
+    missing: list[str] = []
+    clients = scenarios_eval.new_clients(args.mode, catalog, ORDERS_DEMO_RECORDINGS, missing)
+    # The scenes: the first matching call fails with a connection error and the first email extraction answer
+    # breaks its schema; the graphs retry the one and re-ask the other.
+    graph_clients = {
+        **clients,
+        "match": recovery_eval.Scripted(clients["match"], ["connection"]),
+        "email_extract": recovery_eval.Scripted(clients["email_extract"], ["invalid"]),
+    }
+    scenes = {
+        WEB_FORM: "retry - the first matching call fails with a connection error; the retry policy runs the step again",
+        EMAIL: "re-ask - the first extraction answer breaks its schema; the step asks again with the validation error",
+    }
+    run_id = uuid.uuid4().hex[:12]
+    graphs = scenarios_eval._graphs(workdir, graph_clients)
+    print(f"mode={args.mode}  inbox={args.folder}  workdir={args.workdir}  run_id={run_id}")
+    results = router.run_inbox(inbox, graphs, files["db"], run_id, files["outbox"])
+    code = 0
+    for result in results:
+        routed, state, error = result["route"], result["state"] or {}, result["error"]
+        if routed.kind == router.DUPLICATE:
+            channel = EMAIL if result["item"].lower().endswith(".eml") else WHATSAPP
+        else:
+            channel = router.CHANNELS.get(routed.kind, "none")
+        scene = scenes.pop(channel, None) if routed.kind in (router.WEB_FORM, router.EMAIL) else None
+        outcome = _demo_outcome(routed, state, error)
+        code = 1 if error is not None else code
+        _print_demo_item(
+            result["item"], channel, routed.kind, scene, outcome, state.get("order_id"), _demo_reply(state)
+        )
+    for path in sorted(p for p in crash_folder.iterdir() if p.is_file()) if crash_folder.is_dir() else []:
+        code = _crash_scene(args, path, run_id, files) or code
+    saved = sum(client.save_recordings() for client in clients.values())
+    conn = db.connect(files["db"])
+    try:
+        orders = conn.execute(
+            "SELECT o.id, s.channel, o.customer_code, count(l.sku) AS lines FROM orders o "
+            "JOIN order_sources s ON s.order_id = o.id LEFT JOIN order_lines l ON l.order_id = o.id "
+            "GROUP BY o.id ORDER BY o.id"
+        ).fetchall()
+        parked = conn.execute("SELECT thread_id, step FROM failures WHERE status = 'needs_review'").fetchall()
+    finally:
+        conn.close()
+    print()
+    print("summary:")
+    print(f"stored orders: {len(orders)}")
+    for row in orders:
+        print(f"  order {row['id']}  channel={row['channel']}  customer={row['customer_code']}  lines={row['lines']}")
+    print(f"parked failures: {len(parked) if parked else 'none'}")
+    for row in parked:
+        print(f"  {row['thread_id']}  step={row['step']}")
+    left = [name for name in ("match", "email_extract") if graph_clients[name].script]
+    if left:
+        print(f"Error: the scene faults were not used: {', '.join(left)}", file=sys.stderr)
+        code = 1
+    print()
+    for client in clients.values():
+        _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    if missing:
+        print(
+            f"Error: {len(missing)} model answers are not recorded in {ORDERS_DEMO_RECORDINGS.name}; "
+            "run purchase-cycle orders-demo --mode record with ANTHROPIC_API_KEY set to store them",
+            file=sys.stderr,
+        )
+        return 2
     return code
 
 
@@ -734,7 +912,14 @@ def main(argv=None) -> int:
     routed.add_argument("--mode", choices=config.MODES, default="replay")
     routed.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     routed.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
+    routed.add_argument("--run-id", help="run id in the new thread ids (default: random)")
     routed.set_defaults(handler=cmd_route)
+
+    orders = sub.add_parser("orders-demo", help="run the sample mixed inbox through the router with the recovery scenes")
+    orders.add_argument("folder", nargs="?", default=str(DEMO_ORDERS), help="inbox folder (default: examples/orders)")
+    orders.add_argument("--mode", choices=config.MODES, default="replay")
+    orders.add_argument("--workdir", default=str(ORDERS_DEMO_WORKDIR), help="folder for the demo database, checkpoints and outbox")
+    orders.set_defaults(handler=cmd_orders_demo)
 
     exceptions = sub.add_parser(
         "exceptions-demo", help="run the exception samples, print their doubts and question, and stop"

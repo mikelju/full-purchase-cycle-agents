@@ -1,0 +1,7 @@
+{
+  "message_id": "wamid.ORDERS-05",
+  "from": "34600104204",
+  "timestamp": "1760000500",
+  "type": "image",
+  "image": {"id": "media-ORDERS-05", "mime_type": "image/jpeg"}
+}
