@@ -97,7 +97,16 @@ def test_replay_stores_the_clear_sample_order(studio_paths, no_network, channel,
     assert no_network == []
 
 
-def test_replay_whatsapp_doubt_pauses_and_resumes_with_the_recorded_answer(studio_paths, no_network):
+@pytest.mark.parametrize(
+    "resume",
+    [
+        {"answer": DOUBT_ANSWER},
+        json.dumps({"answer": DOUBT_ANSWER}),  # Studio's resume box sends the typed JSON as text
+        f"  {DOUBT_ANSWER}\n",  # or the plain answer
+    ],
+    ids=["dict", "json-text", "plain-text"],
+)
+def test_replay_whatsapp_doubt_pauses_and_resumes_with_the_recorded_answer(studio_paths, no_network, resume):
     graph = studio.build("whatsapp", MemorySaver())
     run = {"configurable": {"thread_id": "studio-doubt"}}
     paused = graph.invoke({"message_path": str(SAMPLES / "04-whatsapp-doubt.json")}, run)
@@ -105,7 +114,7 @@ def test_replay_whatsapp_doubt_pauses_and_resumes_with_the_recorded_answer(studi
     assert set(pending.value) == {"question", "round", "doubts", "rejected"}
     assert pending.value["question"]
     assert paused.get("order_id") is None
-    state = graph.invoke(Command(resume={"answer": DOUBT_ANSWER}), run)
+    state = graph.invoke(Command(resume=resume), run)
     assert "__interrupt__" not in state
     assert state["order_id"] is not None
     assert _stored_order(studio.DB_PATH, state["order_id"]) > 0
