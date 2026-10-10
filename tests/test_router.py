@@ -875,3 +875,19 @@ def test_redelivered_answer_of_a_finished_thread_is_a_duplicate_not_an_answer_to
     assert orders == 1
     assert [c.calls for c in calls] == [2, 2, 2, 1]
     assert no_network == []
+
+
+class _Crashed(_NoRun):
+    """A graph whose checkpoint for the thread stopped mid-run (a crash), with steps still to run."""
+
+    def get_state(self, config, **kwargs):
+        return SimpleNamespace(values={"customer_code": CUSTOMER.code}, next=("store",), interrupts=())
+
+
+def test_reused_thread_id_of_an_unfinished_thread_points_to_resume(seeded_db, folder):
+    """Review 5, R5-1: a new --run-id would leave the crashed thread behind; `resume` is the way to finish it."""
+    _write(folder, "WA-1.json", message("wamid.ORDER"))
+    [result] = run_inbox(folder, {"whatsapp": _Crashed()}, seeded_db[0], "run1")
+    assert (result["route"].kind, result["state"]) == (WHATSAPP_NEW, None)
+    error = str(result["error"])
+    assert "has not finished" in error and "purchase-cycle resume whatsapp-run1-WA-1" in error

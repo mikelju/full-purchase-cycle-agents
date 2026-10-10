@@ -235,9 +235,14 @@ def run_inbox(
         channel = CHANNELS[routed.kind]
         result["thread_id"] = routed.thread_id or f"{channel}-{run_id}-{path.stem}"
         run_config = {"configurable": {"thread_id": result["thread_id"]}, "run_name": f"{channel}_order"}
-        if routed.thread_id is None and graphs[channel].get_state(run_config).values:
+        snapshot = graphs[channel].get_state(run_config) if routed.thread_id is None else None
+        if snapshot is not None and snapshot.values:
             # A new item never runs on a checkpoint left by an earlier run with the same run id and file name.
-            result["error"] = ValueError(f"the thread id '{result['thread_id']}' is already used; pass a new --run-id")
+            if snapshot.next and not snapshot.interrupts:  # a crashed run: `resume` finishes it
+                hint = f"it has not finished; use purchase-cycle resume {result['thread_id']}"
+            else:
+                hint = "pass a new --run-id"
+            result["error"] = ValueError(f"the thread id '{result['thread_id']}' is already used; {hint}")
             continue
         try:
             result["state"] = graphs[channel].invoke(graph_input(path, routed.kind), run_config, durability="sync")
