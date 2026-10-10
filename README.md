@@ -241,7 +241,7 @@ Pick a graph, paste the input for a sample and submit it to watch each node and 
 - `web_form`: `{"submission": {"submission_id": "WF-ORDERS-01", "customer_code": "CLI-001", "lines": [{"product": "nitrile gloves M", "quantity": 20}, {"product": "saline 500 ml", "quantity": 12}]}}`
 - `email`: `{"email_path": "examples/orders/02-email-order.eml"}`
 - `whatsapp`, clear order: `{"message_path": "examples/orders/03-whatsapp-order.json"}`
-- `whatsapp`, doubtful order: `{"message_path": "examples/orders/04-whatsapp-doubt.json"}`; the run pauses on the clarification question, then resume it with `{"answer": "Size L please, all of them."}` to store the order.
+- `whatsapp`, doubtful order: `{"message_path": "examples/orders/04-whatsapp-doubt.json"}`; the run pauses on the clarification question, then resume it to store the order by typing the answer as plain text, `Size L please, all of them.`, in the resume box (delete the prefilled `""` first); `{"answer": "Size L please, all of them."}` works too.
 
 Studio runs in replay mode by default and needs no key: the answers come from `evals/recordings/orders_demo.jsonl` plus `evals/recordings/studio.jsonl`.
 `PURCHASE_CYCLE_STUDIO_MODE=live` calls Claude Haiku 4.5 instead, costs a few cents per run and needs `ANTHROPIC_API_KEY`.
@@ -251,8 +251,9 @@ The graphs use their own database and outbox under `data/studio/`, never `data/p
 Limits:
 
 - Studio threads live in the dev server and are separate from the CLI `clarify`, `resume` and `failures` commands.
-- Any other input or answer has no recording, so it needs live mode.
-- Running the same submission again returns the order already stored in the Studio database.
+- In replay only the recorded answer works; any other input or answer has no recording, so it needs live mode.
+- Each sample can be stored only once per Studio database: running it again returns the order already stored.
+  To replay a sample from scratch, stop the server and delete `data/studio/`; it is seeded again on next use.
 
 ## Run the tests
 
