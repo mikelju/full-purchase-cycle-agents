@@ -488,6 +488,13 @@ def cmd_orders_demo(args) -> int:
     if not inbox.is_dir() or not any(p.is_file() for p in inbox.iterdir()):
         print(f"Error: no files in {args.folder}", file=sys.stderr)
         return 1
+    # The demo clears its work folder's outbox, so it never runs in the data folder or on the real outbox.
+    if workdir.resolve() == config.DATA_DIR.resolve() or (workdir / "outbox").resolve() == config.OUTBOX_DIR.resolve():
+        print(
+            f"Error: --workdir {args.workdir} is the data folder or holds the real outbox; pick another folder",
+            file=sys.stderr,
+        )
+        return 1
     # Each run starts from an empty database, checkpoint file and outbox in the work folder.
     files = {"db": workdir / "business.db", "checkpoints": workdir / "checkpoints.sqlite", "outbox": workdir / "outbox"}
     workdir.mkdir(parents=True, exist_ok=True)

@@ -118,3 +118,20 @@ def test_orders_demo_runs_the_sample_inbox_in_replay_with_the_network_blocked(tm
         "reply-34600103203-wamid.ORDERS-04.json",
         "reply-34600104204-wamid.ORDERS-05.json",
     ]
+
+
+def test_orders_demo_refuses_a_workdir_whose_outbox_is_the_real_outbox(tmp_path, monkeypatch, capsys):
+    from purchase_cycle import cli, config
+
+    data = tmp_path / "data"
+    outbox = data / "outbox"
+    outbox.mkdir(parents=True)
+    reply = outbox / "reply-34600000000-WA-1.json"
+    reply.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(config, "DATA_DIR", data)
+    monkeypatch.setattr(config, "OUTBOX_DIR", outbox)
+    for workdir in (data, tmp_path / "data" / ".", tmp_path / "other" / ".." / "data"):
+        assert cli.main(["orders-demo", "--workdir", str(workdir)]) == 1
+        assert "Error:" in capsys.readouterr().err
+        assert reply.exists()
+    assert sorted(p.name for p in data.iterdir()) == ["outbox"]
