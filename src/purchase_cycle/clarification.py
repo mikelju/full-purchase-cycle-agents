@@ -6,6 +6,7 @@ when its quantity is doubtful. The rules are deterministic and read only
 the lines the channel already produced and the catalog.
 """
 
+import json
 import re
 from pathlib import Path
 from typing import NamedTuple, TypedDict
@@ -173,6 +174,15 @@ def doubts_message(doubts: list[dict]) -> str:
         )
         out += [f"  candidate: {c['sku']} | {c['name']}" for c in doubt["candidates"]]
     return "\n".join(out)
+
+
+def resume_value(text: str) -> dict:
+    """A text resume, as LangGraph Studio's resume box sends it: JSON text of a dict, or the plain answer."""
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError:
+        value = None
+    return value if isinstance(value, dict) else {"answer": text.strip()}
 
 
 def answer_message(doubts: list[dict], question: str, answer: str) -> str:
@@ -379,6 +389,7 @@ def build_clarification_graph(
 
     def wait(state: ClarificationState) -> ClarificationState:
         # Resumed with {"answer": text} or {"close": True}; the question was drafted before the pause.
+        # Studio's resume box sends text instead, read by `resume_value`.
         # A WhatsApp answer also carries its `message_id`, kept in `applied_answers` once the answer is applied.
         # The state keeps the drafted question as the model wrote it, so the interpretation message and its
         # recordings stay the same; the customer sees the plain version.
@@ -391,6 +402,8 @@ def build_clarification_graph(
                 "rejected": state.get("rejected"),
             }
         )
+        if isinstance(received, str):
+            received = resume_value(received)
         if received.get("close"):
             return {"closed": True, "rejected": None}
         return {"answer": received["answer"], "answer_message_id": received.get("message_id"), "rejected": None}
