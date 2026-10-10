@@ -7,7 +7,7 @@ Goal and reason:
 The owner wants to watch the orders graphs run in LangGraph Studio: the nodes of each channel graph, the state after each step, the clarification question (`interrupt()` in the `clarify` subgraph) and the resume with the customer's answer.
 The owner decided on 2026-10-09 that this is a standalone change after phase 05, with a contract naming the new `langgraph-cli` dev dependency and the model and LangSmith trace costs.
 Out of scope:
-The graphs themselves, their prompts, recordings, datasets, evaluations and baselines.
+The graphs themselves, their prompts, recordings, datasets, evaluations and baselines; one exception, approved by the owner on 2026-10-10: clarify accepts a text resume (see Decisions).
 Deploying to LangSmith or any hosted server; Studio threads do not reach the CLI `clarify`, `resume` or `failures` commands, because the dev server keeps its own persistence.
 The router (`route`), which is plain Python and not a LangGraph graph.
 Constraints / decisions that need the owner:
@@ -33,6 +33,8 @@ Owner request 2026-10-10 to plan this change, then show it after a context hando
   Evidence: `uv run pytest -q tests/test_studio.py tests/test_secrets.py` 15 passed; `npm run eval` nine replay evaluations PASS (`.evidence/change-004/eval-item1.txt`); C4: langgraph-cli 0.4.33, `langgraph dev --allow-blocking` lists the three graphs.
 - [x] 2. README section; C5.
   Evidence: README "Watch the graphs in LangGraph Studio"; the web form input matches `examples/orders/01-web-form.json`.
+- [x] 2b. Clarify accepts a text resume from Studio (owner decision during item 3).
+  Evidence: `uv run pytest -q tests/test_studio.py tests/test_clarification*.py tests/test_clarify_cli.py` 120 passed (dict, JSON-text and plain-text resumes reach a stored order in replay); `npm run eval` nine replay evaluations PASS, output identical to item 1 (`.evidence/change-004/eval-resume-text.txt`).
 - [ ] 3. Owner walkthrough in a fresh session after the context handoff: start `langgraph dev`, open Studio, run the web form sample, then the WhatsApp doubt and its answer; C6.
 - [ ] 4. Adversarial review, `npm run check`, push and PR to `main`; C7.
 
@@ -44,6 +46,8 @@ The owner chose option A on 2026-10-10: record that missing answer once, live wi
 Interrupt resume inside the `clarify` subgraph verified through the dev server API: the WhatsApp doubt resumed to a stored order and intake did not rerun.
 A separate Studio database and outbox, so Studio runs never touch `data/purchase_cycle.db` or the real outbox.
 Factories compile without a checkpointer because the dev server supplies persistence.
+On 2026-10-10, during the walkthrough, Studio's resume box sent the typed value as text, even when it looked like JSON, and `wait` in clarify crashed on `received.get`.
+The owner approved letting clarify accept a text resume: JSON text of a dict is used as the dict, any other text becomes `{"answer": <stripped text>}`, and an empty text goes through the existing answer checks; a dict resume behaves as before.
 Known risks: a community report says Studio may restart instead of resuming an interrupt inside a subgraph, and the dev server's blocking-call detector may need `--allow-blocking` for our sync SQLite nodes; both are checked first in item 1 and, if they bite, recorded rather than worked around by changing the graphs.
 
 ## Adversarial review
