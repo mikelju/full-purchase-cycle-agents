@@ -114,11 +114,15 @@ def test_each_injected_critical_error_fails_failure_recovery_with_exit_one(
     assert no_network == []
 
 
-@pytest.mark.parametrize(("question", "dropped"), [("Which size of syringes 5 ml?", 1), (None, 0)])
-def test_a_dropped_line_counts_as_asked_about_only_when_a_question_names_it(
-    question, dropped, tmp_path, monkeypatch, no_network
+@pytest.mark.parametrize(
+    ("question", "status", "dropped"),
+    [("Which size of syringes 5 ml?", "pending", 1), (None, "pending", 0), (None, "answered", 1)],
+)
+def test_a_dropped_line_counts_as_asked_about_only_when_an_open_question_names_it(
+    question, status, dropped, tmp_path, monkeypatch, no_network
 ):
     # Task 1 limit tightened in task 3: any clarification row used to excuse every dropped line.
+    # Review round 4: an answered question no longer excuses the line, since the answer settled it.
     item, path = _one_scenario(tmp_path)
     requested_text = recovery_eval.REQUESTED[item["channel"]][0][0]["text"]
     seen = {}
@@ -131,7 +135,7 @@ def test_a_dropped_line_counts_as_asked_about_only_when_a_question_names_it(
             evidence,
             "INSERT INTO clarifications (thread_id, channel, customer_code, question, round, status) "
             f"SELECT 'other', channel, customer_code, '{question or 'How many ' + requested_text + '?'}', 1, "
-            "'answered' FROM orders",
+            f"'{status}' FROM orders",
         )
         seen.update(critical.count(**evidence))
         return evidence
@@ -139,4 +143,51 @@ def test_a_dropped_line_counts_as_asked_about_only_when_a_question_names_it(
     monkeypatch.setattr(recovery_eval, "_evidence", injected)
     recovery_eval.evaluate("replay", "test", dataset_path=path)
     assert seen["line_dropped"] == dropped
+    assert no_network == []
+
+
+@pytest.mark.parametrize("channel", ["whatsapp", "email", "web_form"])
+def test_a_dropped_line_after_a_parked_and_resumed_thread_fails_failure_recovery(
+    channel, tmp_path, capsys, monkeypatch, no_network
+):
+    # Review round 4: a resolved `failures` row used to excuse every dropped line of every scenario.
+    item, path = _one_scenario(tmp_path, category="parked_then_resumed", channel=channel)
+    seen = {}
+    real = recovery_eval._evidence
+
+    def injected(*args, **kwargs):
+        evidence = real(*args, **kwargs)
+        _line_dropped(evidence)
+        seen.update(critical.count(**evidence))
+        return evidence
+
+    monkeypatch.setattr(recovery_eval, "_evidence", injected)
+    assert recovery_eval.evaluate("replay", "test", dataset_path=path) == 1
+    assert seen["line_dropped"] == 1
+    assert "GATE FAILED: critical_errors 1 above threshold 0" in capsys.readouterr().out
+    assert no_network == []
+
+
+def test_only_an_unresolved_failure_of_the_scenario_threads_counts_as_escalated(tmp_path, monkeypatch, no_network):
+    item, path = _one_scenario(tmp_path)
+    seen = []
+    real = recovery_eval._evidence
+
+    def injected(*args, **kwargs):
+        evidence = real(*args, **kwargs)
+        _line_dropped(evidence)
+        thread = _first_thread(evidence)
+        for owner, status in (("other", "needs_review"), (thread, "resolved"), (thread, "needs_review")):
+            _sql(
+                evidence,
+                "INSERT INTO failures (thread_id, channel, source, step, error, status) "
+                f"VALUES ('{owner}', 'whatsapp', 'x', 'store', 'e', '{status}') "
+                "ON CONFLICT (thread_id) DO UPDATE SET status = excluded.status",
+            )
+            seen.append(critical.count(**evidence)["line_dropped"])
+        return evidence
+
+    monkeypatch.setattr(recovery_eval, "_evidence", injected)
+    recovery_eval.evaluate("replay", "test", dataset_path=path)
+    assert seen == [1, 1, 0]
     assert no_network == []

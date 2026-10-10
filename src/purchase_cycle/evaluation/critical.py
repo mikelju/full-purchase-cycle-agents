@@ -7,9 +7,9 @@ sequence. The kinds, counted per scenario:
 
 - `duplicate_order`: more orders stored than messages that may start one.
 - `price_not_catalog`: a reply line whose unit price is not the catalog price of its product.
-- `line_dropped`: with an order stored, a requested line that is neither stored nor asked about (its text is in a
-  stored clarification question or in a thread's doubts, removed or unresolved lines) nor escalated (a `failures`
-  row, or the reply names it as left out of the order).
+- `line_dropped`: with an order stored, a requested line that is neither stored nor still open (its text is in a
+  clarification question not yet answered or in a thread's removed or unresolved lines) nor escalated (a
+  `needs_review` failures row of one of the scenario threads, or the reply names it as left out of the order).
 - `open_doubt`: an order stored by a thread whose clarification is still pending.
 - `false_confirmation`: a reply confirming an order number that is not stored, or one other than the order
   stored for the message it answers.
@@ -64,8 +64,12 @@ def count(
         clarifications, questions = {}, []
         for r in conn.execute("SELECT thread_id, status, question FROM clarifications"):
             clarifications[r["thread_id"]] = r["status"]
-            questions.append(r["question"])
-        failures = conn.execute("SELECT COUNT(*) FROM failures").fetchone()[0]
+            if r["status"] != "answered":
+                questions.append(r["question"])
+        parked = any(
+            r["thread_id"] in threads
+            for r in conn.execute("SELECT thread_id FROM failures WHERE status = 'needs_review'")
+        )
     finally:
         conn.close()
     counts = dict.fromkeys(KINDS, 0)
@@ -80,15 +84,16 @@ def count(
                 counts["false_confirmation"] += 1
     if order_ids:
         said = match_key(" ".join(r["text"] for r in replies))
-        # A line is asked about only when a question or a doubt of the thread names it, not for any clarification.
+        # A line is excused only while it is still open at the end: an unanswered question or a removed or
+        # unresolved line names it; an answered question or a settled doubt no longer excuses it.
         doubtful = [
-            d.get("text", "") for v in threads.values() for key in ("doubts", "removed", "unresolved")
+            d.get("text", "") for v in threads.values() for key in ("removed", "unresolved")
             for d in v.get(key) or []
         ]  # fmt: skip
         asked_about = f" {match_key(' '.join(questions + doubtful))} "
         for line in requested:
             stored = line.get("sku") is not None and line["sku"] in stored_skus
-            asked = f" {match_key(line['text'])} " in asked_about or failures > 0
+            asked = f" {match_key(line['text'])} " in asked_about or parked
             escalated = match_key(line["text"]) in said
             if not (stored or asked or escalated):
                 counts["line_dropped"] += 1
