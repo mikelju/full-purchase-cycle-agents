@@ -77,6 +77,20 @@ def test_tracing_is_forced_off_and_replay_is_the_default(studio_paths, monkeypat
         studio.web_form_graph()
 
 
+def test_live_mode_loads_the_key_from_dotenv_and_keeps_tracing_off(studio_paths, monkeypatch):
+    import os
+
+    def fake_load_dotenv():
+        os.environ["ANTHROPIC_API_KEY"] = "test-key"
+        os.environ["LANGSMITH_TRACING"] = "true"  # the owner's .env may ask for traces
+
+    monkeypatch.setattr(studio, "load_dotenv", fake_load_dotenv)
+    monkeypatch.setenv("PURCHASE_CYCLE_STUDIO_MODE", "live")
+    studio.web_form_graph()
+    assert os.environ["ANTHROPIC_API_KEY"] == "test-key"
+    assert os.environ["LANGSMITH_TRACING"] == "false"
+
+
 @pytest.mark.parametrize(
     "channel, inputs",
     [

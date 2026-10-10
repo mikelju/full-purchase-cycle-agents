@@ -10,6 +10,8 @@ LangSmith tracing is forced off in both modes.
 import json
 import os
 
+from dotenv import load_dotenv
+
 from purchase_cycle import config, db
 from purchase_cycle.clarification import ClarificationClients
 from purchase_cycle.email_order import build_email_order_graph
@@ -56,6 +58,8 @@ def studio_mode() -> str:
 def build(channel: str, checkpointer=None):
     """The channel graph (`web_form`, `email` or `whatsapp`) on the Studio database, seeded on first use."""
     mode = studio_mode()
+    if mode == "live":
+        load_dotenv()  # the key lives in .env, which the dev server does not load
     config.configure_tracing("replay")  # forces tracing off, also in live mode
     os.environ.setdefault("LANGGRAPH_CLI_NO_ANALYTICS", "1")
     first_use = not DB_PATH.exists()
