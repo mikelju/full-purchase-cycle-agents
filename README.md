@@ -5,6 +5,7 @@ Status: phase 01 (foundations) built: shared database, model client, persistent 
 Phase 02 (web form orders) built: the first order channel, from a form submission to a stored order and a reply.
 Phase 03 (email orders) built: the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
 Phase 04 (exceptions) built and delivered for review: both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
+Phase 05 (closing the orders module) built: a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
 
 ## What it does
 
@@ -48,7 +49,7 @@ To call the real model, copy `.env.example` to `.env` and fill it in:
 uv run purchase-cycle seed
 ```
 
-Creates `data/purchase_cycle.db` (SQLite) with the five shared tables and the permanent fictional catalog: 303 products in 32 families of a Spanish medical supplies distributor, and 50 customers (clinics, care homes and pharmacies).
+Creates `data/purchase_cycle.db` (SQLite) with the shared tables and the permanent fictional catalog: 303 products in 32 families of a Spanish medical supplies distributor, and 50 customers (clinics, care homes and pharmacies).
 Re-running it leaves the same rows.
 
 ## Run the demo
@@ -136,13 +137,101 @@ Answering or closing a thread that is not pending fails with a message and chang
 `--mode replay` (the default) needs no key: the channel steps replay the detection evaluation recordings and the question and interpretation of the samples and their sample answers are recorded in `evals/recordings/`; any other answer text needs `--mode live`.
 `--mode live` on `exceptions-demo` and on `clarify answer` calls Claude Haiku 4.5 and prints the cached tokens; with the LangSmith variables set the run is traced, and the pause and the resumption share the thread id (the phase 04 trace evidence is still pending, see Limits).
 
+## Run the WhatsApp demo
+
+```
+uv run purchase-cycle whatsapp-demo evals/datasets/whatsapp_order_extraction/messages
+uv run purchase-cycle whatsapp-demo <folder> --mode live
+```
+
+WhatsApp is simulated by files: each message is one `.json` file with `message_id`, `from` (the phone number), `timestamp`, `type` and `text.body`, and each reply is a `.json` file written to an outbox folder (`data/outbox/` by default, `--outbox <folder>` to change it).
+The `whatsapp_order` subgraph mirrors the email one:
+
+- `intake` reads the file, finds the customer by the digits of the phone number and rejects an unknown number, a malformed file or a message that is not text with no model call; a non-text message from a known customer gets a reply asking for the order as text; then Claude Haiku 4.5 decides whether the message is an order.
+- `extract` returns every ordered line with the customer's text, a catalog SKU or null and the quantity in sale units; the only valid source of a line is `message`.
+- `clarify`, `store` and `reply` are the shared phase 04 step, the idempotent store with channel `whatsapp` and the reply written to the outbox as `reply-<phone digits>-<message_id>.json`.
+
+The demo runs every `.json` file of a folder and prints, per message, the sender and customer, the intake decision, the lines, the stored order number, the outbox file and the reply.
+`--mode replay` (the default) needs no key for the 160 messages of the WhatsApp dataset, whose answers are recorded; any other message needs `--mode live`.
+The demo has no clarification pause; the router below runs the full graph with its questions.
+
+## Route a mixed inbox
+
+```
+uv run purchase-cycle route <folder> --mode live
+uv run purchase-cycle route <folder> --mode live --run-id <run_id> --outbox <folder>
+```
+
+`route` reads one inbox folder holding web form `.json` submissions, `.eml` emails and WhatsApp `.json` messages, and sends each item to its graph.
+The router is deterministic and calls no model: a `.eml` file goes to the email graph, a JSON file with `submission_id` to the web form graph and a JSON file with `message_id` and `from` to the WhatsApp graph; any other item is rejected with a reason.
+A WhatsApp text from a known customer whose most recent pending clarification is a WhatsApp thread is the answer to that thread (route `whatsapp_answer`); any other WhatsApp message starts a new order (route `whatsapp_new`).
+Storage is idempotent: the table `order_sources` keeps the channel's message id (the submission id, the email `Message-ID` or a hash of its content, the WhatsApp `message_id`) of every stored order.
+A re-delivered message already stored for the same customer is route `duplicate`: no graph runs, no row is written and the customer gets the channel reply naming the stored order again; the same id from another customer is rejected.
+A re-delivered message of a paused order, or a WhatsApp answer already applied to a pending thread, is a duplicate too.
+Each item runs in its own checkpoint thread `<channel>-<run_id>-<file stem>`; `--run-id` fixes the run id, which is random by default.
+In `--mode replay` an item runs only when every model answer it needs is recorded, and the question keys include the run id, so the sample inbox is replayed through `orders-demo` below; an item with no recording stops with exit 1 and names the missing recording.
+
+## Recovery from failures
+
+```
+uv run purchase-cycle failures list
+uv run purchase-cycle failures resume <thread_id>
+uv run purchase-cycle resume <thread_id>
+```
+
+Every model-calling step (matching, intake, extraction, question and interpretation) recovers in three ways:
+
+- Transient errors (connection, timeout, rate limit and 5xx errors of the Anthropic API) are retried by a LangGraph retry policy, 3 attempts with exponential backoff; an authentication or other client error is not retried.
+- An answer that breaks its schema or the validation rules (a SKU outside the catalog, a non-positive quantity, a line source outside its message) is asked again once with the validation error.
+- A second invalid answer, or a transient error on the last attempt, parks the thread in the `failures` table as `needs_review` with nothing stored; a WhatsApp customer gets a notice in the outbox (`parked-<phone digits>-<message_id>.json`).
+
+`failures list` shows every parked thread with its channel, source, step, age and first error line.
+`failures resume <thread_id>` runs a parked thread again from its last checkpoint, for example after the outage is over, and marks its row `resolved` when the order completes; a thread that is not parked fails with a message and changes nothing.
+A parked thread is resumed by an operator, never automatically.
+
+`resume <thread_id>` continues any thread that `route` started and a crash interrupted.
+Graph state is checkpointed after every step with synchronous durability, so a crash loses at most the step that was running, and the idempotent store makes a step that runs twice store one order.
+The variable `PURCHASE_CYCLE_CRASH_AT` simulates a crash for tests and demos: set to `after_channel_steps`, `after_store_commit` or `in_reply`, it stops the process at that point with exit code 70.
+For example, the web form in `examples/orders/crash/` uses exact SKUs and needs no model call, so this runs offline:
+
+```
+PURCHASE_CYCLE_CRASH_AT=after_store_commit uv run purchase-cycle route examples/orders/crash --run-id demo1
+uv run purchase-cycle resume web_form-demo1-08-web-form-crash
+```
+
+The first command exits with code 70 right after the order is committed; the second finds the stored order through its source, finishes the run and prints the order number and the reply.
+`resume` refuses a thread that waits for a customer answer, a parked thread (use `failures resume`) and the threads of the single-channel demos, which have no channel prefix.
+`failures resume` and `resume` take `--mode`, `--checkpoints` and `--outbox` like `route`.
+
+## Run the orders demo
+
+```
+uv run purchase-cycle orders-demo
+uv run purchase-cycle orders-demo examples/orders --mode record --workdir data/orders-demo-record
+```
+
+`orders-demo` runs the sample mixed inbox `examples/orders/` through the router with the recovery scenes, on a fresh database, checkpoints and outbox in `data/orders-demo/` (`--workdir <folder>` to change it) on every run:
+
+- `01-web-form.json`: a web form order; the first matching call fails with a connection error and the retry policy runs the step again.
+- `02-email-order.eml`: an email order; the first extraction answer breaks its schema and the step asks again with the validation error.
+- `03-whatsapp-order.json`: a WhatsApp order, stored with its reply in the outbox.
+- `04-whatsapp-doubt.json`: a WhatsApp order with a doubtful line; the question goes to the outbox and the thread pauses.
+- `05-whatsapp-photo.json`: an image message, rejected with the reply asking for text.
+- `06-whatsapp-order-again.json`: a re-delivery of message 03, route `duplicate`, with the reply naming the stored order and nothing stored.
+- `07-whatsapp-answer.json`: the customer's answer to message 04, route `whatsapp_answer`, which completes that order.
+- `crash/08-web-form-crash.json`: a first process stops with `PURCHASE_CYCLE_CRASH_AT=after_store_commit` right after the order is committed, and a second process runs `purchase-cycle resume` on the thread.
+
+The demo prints, per item, the channel, route, scene, outcome, order number and reply, then a summary of stored orders and parked failures.
+`--mode replay` (the default) needs no key: the model answers are recorded in `evals/recordings/orders_demo.jsonl`.
+`--mode live` calls Claude Haiku 4.5 and `--mode record` also stores the answers; the expected result is five stored orders and no parked failure.
+
 ## Run the tests
 
 ```
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and the five evaluations in replay mode.
+Runs the method's hook tests, ruff, pytest and the nine evaluations in replay mode.
 
 ## The golden dataset
 
@@ -209,6 +298,29 @@ They were built with the same method as the earlier datasets:
 5. The owner audit of 40 random items, 20 from each dataset: `uv run purchase-cycle clarification-audit create`, fill the `verdict` column of `evals/audit/clarification-audit-v1.0.csv`, then `uv run purchase-cycle clarification-audit report`.
    The audit passes with at most 1 wrong label; the owner review (2026-10-08) found 1 wrong label in 40, an error rate of 2.5% with a 95% Wilson interval of [0.4%, 12.9%], so it passes.
 
+### WhatsApp order extraction dataset
+
+`evals/datasets/whatsapp_order_extraction/` holds 160 WhatsApp messages in five categories of 32: short list, chatty single line, one sentence with several lines, quantities in words or dozens, and not an order (questions, greetings and complaints).
+They carry 347 expected lines, 312 of them in the catalog, with out-of-catalog, typo and near-miss traps; the split is by message, stratified by category: 40 development and 120 test messages.
+
+It was built with the same method:
+
+1. `uv run purchase-cycle whatsapp-dataset plan` writes `plan.jsonl` from a fixed seed: the category, sender, order or not, and every line with its expected SKU or out-of-catalog item, quantity in sale units, unit style and trap, before any text exists.
+2. The message texts in `texts/` were written by the coding agent following the plan and checked with `uv run purchase-cycle whatsapp-dataset check <file>`.
+3. `uv run purchase-cycle whatsapp-dataset build` validates the texts (a planned line missing from the body, a broken quantity rule, a duplicate text after normalisation, non-ASCII text, category rules), renders the message files in `messages/` deterministically and writes `dataset.jsonl`.
+4. A blind second pass by clean-context agents read only the catalog and the message texts (`uv run purchase-cycle whatsapp-dataset blind` writes them, `uv run purchase-cycle whatsapp-dataset review <annotation files>` compares the readings with the labels into `second_pass_review.jsonl`): 149 of 160 messages agreed, 7 texts were fixed and 4 annotator readings were justified as wrong.
+5. The owner audited 30 random messages: `uv run purchase-cycle whatsapp-audit create`, fill the `verdict` column of `evals/audit/whatsapp_order_extraction-audit-v1.0.csv`, then `uv run purchase-cycle whatsapp-audit report`.
+   The audit passes with at most 1 wrong label; version 1.0 had none, 30 of 30 correct (error rate 0.0%, 95% Wilson interval 0.0% to 11.4%).
+
+### Routing, recovery and scenario datasets
+
+Three more datasets are hand-built and versioned with the code:
+
+- `evals/datasets/channel_routing/` holds 47 inbox items (web form, email, WhatsApp orders and answers, duplicates and rejections) with their expected route, thread and reason.
+- `evals/datasets/failure_recovery/` holds 34 scripted fault scenarios in 8 categories: transient errors within and beyond the retry budget, an authentication error, an invalid then valid answer, two invalid answers, a parked thread resumed with `failures resume`, a crash at each of the three points on each channel resumed with `resume`, and a re-delivered message.
+- `evals/datasets/order_scenarios/` holds 30 end-to-end scenarios, 10 per channel, each with its initial state, messages, scripted customer answers, steps, crash point and expected final state: 17 with a clarification, 5 with two answers, 3 with an unknown product, 3 with a crash and resume and 4 with a re-delivered message.
+  The scripted answers were committed before the first live record.
+
 ## Run the evaluation
 
 ```
@@ -216,7 +328,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the test split of the five evaluations and exits non-zero when a gate of any of them fails.
+`npm run eval` replays the nine evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:
@@ -275,7 +387,29 @@ The Claude Haiku 4.5 baseline on the 156 test cases (`evals/baselines/clarificat
 
 Both new evaluations also have the McNemar regression gate against their stored per-item baseline.
 
-`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the five evaluations once; `--suite <name>` uploads one).
+`uv run purchase-cycle eval --suite whatsapp_order_extraction` runs the WhatsApp test split through the `whatsapp_order` subgraph with the email graders and one-to-one line matching.
+The Claude Haiku 4.5 baseline on the 120 test messages (`evals/baselines/whatsapp_order_extraction.json`):
+
+| Metric | Value | 95% interval | Threshold |
+|---|---|---|---|
+| Intake accuracy (120 messages) | 97.5% | 92.9% to 99.1% | at least 95% |
+| Line recall (239 expected lines) | 97.1% | 94.1% to 98.6% | at least 95% |
+| Line precision (237 extracted lines) | 97.9% | 95.2% to 99.1% | reported |
+| Field accuracy, SKU (239 expected lines) | 97.9% | 95.2% to 99.1% | reported |
+| Field accuracy, quantity (234 lines with the right SKU) | 99.1% | 96.9% to 99.8% | reported |
+| Out-of-catalog detection (96 order messages) | 93.8% | 87.0% to 97.1% | reported |
+| Message exact match (96 order messages) | 89.6% | 81.9% to 94.2% | reported |
+
+The instructions were tuned on the development split only and were not changed after the test run.
+
+`uv run purchase-cycle eval --suite channel_routing` runs the 47 routing items through the real router with no model call; route accuracy is 100.0% (95% interval 92.4% to 100.0%) and the gate is 100%.
+`uv run purchase-cycle eval --suite failure_recovery` runs the 34 fault scenarios in process with scripted faults and no model call; scenario success is 100.0% (89.8% to 100.0%) and the gate is 100%.
+`uv run purchase-cycle eval --suite order_scenarios` runs the 30 end-to-end scenarios with fresh graphs per step and grades the final database and outbox: orders, lines with SKU, quantity and catalog price, clarification status, parked rows and a reply confirming every stored order.
+The Claude Haiku 4.5 baseline (`evals/baselines/order_scenarios.json`) is 100.0% scenario success (88.6% to 100.0%, 30 of 30, 10 per channel), over the 90% target, with a McNemar gate per scenario.
+`failure_recovery` and `order_scenarios` also count critical errors (a duplicate order, a price not from the catalog, a dropped line, an open doubt stored, a false confirmation and a line source outside its message), gated at 0; both measure 0.
+The two deterministic suites have no split and no baseline.
+
+`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the six dataset evaluations once; `--suite <name>` uploads one; `channel_routing`, `failure_recovery` and `order_scenarios` are not uploaded).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
 Recordings in `evals/recordings/` are tied to the exact prompt and model: changing either needs a new recording and a new comparison against the baseline.
 
@@ -294,6 +428,17 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - Detection inherits the phase 03 extractor limitations: dropped email lines, non-integer quantities rejected by the schema and purpose clauses copied into the line text lose doubts on email orders, so the detection recall thresholds sit at the measured level until change 001 is done.
 - Four detection lines with generic hints ("single", "free", "cm size", "litre") are labelled ambiguous by the runtime rule while a person may read them as unknown or as the default size; the owner accepted them as a recorded limitation of the second pass.
 - The LangSmith trace of the phase 04 demo and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
+- WhatsApp is simulated by files: there is no webhook, no delivery receipt and no media handling; a message that is not text gets a reply asking for text.
+- Several WhatsApp messages that together form one order are processed as separate requests.
+- A parked or crashed thread is resumed by an operator, never automatically.
+- The idempotency key is the message id the channel gives; the same order sent twice with two different message ids is stored twice.
+- The message id of a WhatsApp clarification answer is not stored in `order_sources`: an answer re-delivered while its thread is still pending is a duplicate, but one re-delivered after the thread finished starts a new order or answers a later pending thread; email answers given with `clarify answer` carry no message id.
+- A WhatsApp answer whose message id collides with a stored source of another customer is rejected instead of answering the pending thread, because stored sources are checked first.
+- The WhatsApp instructions are tuned on a development split of 40 messages; chat styles absent from the dataset may score lower than the test split shows.
+- The candidate search, the extractor and the security limitations of phases 03 and 04 (SEC-003, SEC-004 and SEC-007 of `docs/security.md`) apply to the WhatsApp channel too; the sender is identified only by the phone number in the file.
+- A free-text line's ordered quantity is not counted as a size figure in the candidate search; when that figure is really the size (for example "surgical gloves size 8" read as quantity 8), the line becomes ambiguous and the customer is asked.
+- In `order_scenarios` the customer answers are scripted before any question is seen, so they cannot react to an odd question, and thirty scenarios give a wide interval.
+- The LangSmith trace of a live `orders-demo` run and the experiment of `whatsapp_order_extraction` are pending until the LangSmith trace quota resets, around 2026-11-05.
 
 ## License
 
