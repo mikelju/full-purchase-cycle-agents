@@ -159,7 +159,7 @@ def stored_reply(path: Path, routed: Route, graph, db_path: Path | str, outbox: 
     """The reply to a duplicate of a stored order, built as its thread built it, or (None, False) for another duplicate.
 
     The reply reads the stored order rows and the left-out lines kept in the stored thread's checkpoint; a WhatsApp
-    reply is written to the same outbox file as the first one. Returns the reply state and whether that thread
+    reply is written to the same outbox file as the first one. Returns the reply state (with the stored order id) and whether that thread
     has not finished (a crash after its order was stored), so the caller can point to `resume`.
     """
     conn = db.connect(db_path)
@@ -177,10 +177,10 @@ def stored_reply(path: Path, routed: Route, graph, db_path: Path | str, outbox: 
     state = {**values, "customer": message.pop("customer"), "order_id": order, "errors": [], "is_order": True}
     state["lines"] = values.get("lines", [])
     if email:
-        reply = {"reply": email_order.order_reply({**state, "email": message}, db_path)}
+        reply = {"reply": email_order.order_reply({**state, "email": message}, db_path), "order_id": order}
     else:
         text = whatsapp_order.order_reply({**state, "message": message}, db_path)
-        reply = {"reply": text}
+        reply = {"reply": text, "order_id": order}
         if outbox is not None:  # with no outbox folder given, the reply text is only returned
             reply["outbox_file"] = str(write_outbox(outbox, message["from"], message["message_id"], text))
     return reply, bool(snapshot and snapshot.next)
