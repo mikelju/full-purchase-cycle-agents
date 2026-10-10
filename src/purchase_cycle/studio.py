@@ -7,6 +7,7 @@ Replay is the default, on the recorded answers of the sample inbox; `PURCHASE_CY
 LangSmith tracing is forced off in both modes.
 """
 
+import json
 import os
 
 from purchase_cycle import config, db
@@ -29,7 +30,20 @@ STUDIO_DIR = config.DATA_DIR / "studio"
 DB_PATH = STUDIO_DIR / "purchase_cycle.db"
 OUTBOX_DIR = STUDIO_DIR / "outbox"
 RECORDINGS_PATH = config.EVALS_DIR / "recordings" / "orders_demo.jsonl"  # one file for every task
+# Answers only Studio needs, such as the plain first email extraction the demo deliberately breaks; recorded once.
+STUDIO_RECORDINGS_PATH = config.EVALS_DIR / "recordings" / "studio.jsonl"
 STUDIO_MODES = ("replay", "live")
+
+
+class StudioModelClient(ModelClient):
+    """Replays from the demo recordings plus the Studio-only recordings file."""
+
+    def _load(self) -> dict[str, dict]:
+        records = super()._load()
+        if STUDIO_RECORDINGS_PATH.exists():
+            with STUDIO_RECORDINGS_PATH.open(encoding="utf-8") as fh:
+                records.update({r["key"]: r for r in (json.loads(line) for line in fh if line.strip())})
+        return records
 
 
 def studio_mode() -> str:
@@ -54,7 +68,7 @@ def build(channel: str, checkpointer=None):
         conn.close()
 
     def client(task):
-        return ModelClient(mode, catalog, RECORDINGS_PATH, task=task)
+        return StudioModelClient(mode, catalog, RECORDINGS_PATH, task=task)
 
     clarification = ClarificationClients(client(CLARIFICATION_QUESTION), client(CLARIFICATION_ANSWER))
     if channel == "web_form":
