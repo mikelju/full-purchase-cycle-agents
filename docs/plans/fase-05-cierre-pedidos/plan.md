@@ -1,6 +1,6 @@
 # Phase 05 - Orders module wrap-up: plan and results
 
-Status: executing (adversarial review round 1 fixes)
+Status: built and delivered for review on 2026-10-10; every increment done except 21 (LangSmith trace and experiment, C17), pending under decision D10 option B until the trace quota resets about 2026-11-05, so the phase is ready locally but not closed
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-09; amended by deviation 05.1 and deviation 05.2 on 2026-10-09)
 Base: branch `fase-05-cierre-pedidos` from `main` at commit `f1a1e4f`.
 
@@ -230,7 +230,9 @@ Execution order: batch A0 first, then batches A to E; batch A1 (deviation 05.2) 
 - [ ] 22. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` and the nine replay evaluations after the fixes.
   Evidence:
 - [ ] 23. Results per criterion in the table below, master plan row 05 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
-  Evidence:
+  - [x] Results per criterion (C1 to C23 and deviations 05.1 to 05.3), status line, open items and limitations, and candidate learnings in this file; master plan row 05 set to built, delivered for review via PR, with C17 pending.
+  - [ ] Delivery: push of the branch and PR to `main` (delivery by coordinator).
+  Evidence: Results section of this file and `docs/plans/0_plan_maestro.md` row 05.
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
@@ -251,6 +253,48 @@ Execution order: batch A0 first, then batches A to E; batch A1 (deviation 05.2) 
 ## Results
 Per criterion: command or path run, observed result and evidence reference.
 Pending items, limitations and what could not be checked, stated plainly.
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| C1 | Met: fresh clone at 619739c with no `.env` and every Anthropic, LangSmith and LangChain variable unset: `uv sync`, `npm ci` and `npm run check` exit 0 with the nine evaluations in replay; dataset byte tests pass on WSL Ubuntu with Python 3.13.16; the fresh clone was not re-run after review rounds 4 and 5, whose final `npm run check` ran in the working tree | Increments 20 and 27; `.evidence/fase-05/fresh-clone.txt`, `.evidence/fase-05/linux-bytes.txt`, `.evidence/fase-05/check-r5.txt` |
+| C2 | Met: WhatsApp message model, phone lookup by digits and rejections (unknown number, malformed file, non-text message) with no order | Increment 1; `tests/test_whatsapp_order.py` |
+| C3 | Met: a clear WhatsApp order goes through the new `WHATSAPP_INTAKE` and `WHATSAPP_EXTRACTION` tasks, `clarify`, `store` and `reply`, with one `whatsapp` order and the outbox reply; email tasks and recordings unchanged | Increment 2; `tests/test_whatsapp_order.py`, `.evidence/fase-05/check-a.txt` |
+| C4 | Met: a mixed inbox is routed with zero model calls and items that fit no channel are rejected with a reason; `channel_routing` 100% on 47 items | Increments 4 and 14; `tests/test_router.py`, `tests/test_routing_eval.py`, `.evidence/fase-05/check-r5.txt` |
+| C5 | Met: a WhatsApp text answers the customer's most recent pending WhatsApp thread, otherwise it starts a new order; re-delivered answers are duplicates (review 2 M1, review 4 K1, review 5 R5-3) | Increment 4; `tests/test_router.py` |
+| C6 | Met: a message delivered twice stores one order on every channel, in one transaction, and the reply names the stored order; the same id from another customer is rejected (review 1 F3, review 2 B1); open item M2 (an id collision rejects an answer) logged | Increment 3; `tests/test_seed.py`, `tests/test_router.py`, review rounds 1 to 4 |
+| C7 | Met: `RetryPolicy` with 3 attempts on every model-calling node, parking after 3 failures, no retry on authentication or bad request errors | Increment 5; `tests/test_retry.py`, `.evidence/fase-05/check-b5.txt` |
+| C8 | Met: an invalid answer (schema, SKU outside the catalog, source outside the message) is re-asked once with the error, then parked as `needs_review` | Increment 6 and deviation 05.1 E2; `tests/test_recovery.py` |
+| C9 | Met: `failures list`, and `failures resume <thread_id>` in a new process completes the order and marks the row resolved; a thread that is not parked fails with a message | Increment 7; `tests/test_failures_cli.py`, `.evidence/fase-05/check-b7.txt` |
+| C10 | Met: a crash at each of the three points, then `resume <thread_id>` in a second process, ends with one order and one reply, with `durability="sync"` (review 1 F1 and F2) | Increment 8; `tests/test_resume_cli.py`, `.evidence/fase-05/check-b8.txt`, `.evidence/fase-05/resume-sync-f1.txt` |
+| C11 | Met: the phase 02 to 04 demos print the same output at f1a1e4f, a28f883 and HEAD once run ids are masked; their recordings and baselines are unchanged; the five earlier evaluations replay with every gate PASS | Increment 20; `.evidence/fase-05/fresh-clone.txt` |
+| C12 | Met: `orders-demo` runs the sample inbox `examples/orders/` with the WhatsApp doubt and answer, the retried transient error, the re-ask and the crash and resume scene, in replay with the network blocked | Increment 17; `tests/test_orders_demo.py`, `.evidence/fase-05/demo-replay.txt`, `.evidence/fase-05/demo-live.txt` |
+| C13 | Met: versioned `whatsapp_order_extraction` dataset of 160 messages with its minimums, stratified split, automatic validation and reproducible planning; second pass 149 of 160 agreed, every disagreement fixed or justified | Increments 9 to 12; `.evidence/fase-05/dataset-build.txt`, `.evidence/fase-05/check-c12.txt` |
+| C14 | Met: owner audit of 30 items, 0 wrong labels, error rate 0.0% with 95% Wilson interval [0.0%, 11.4%] | Increment 13; `.evidence/fase-05/whatsapp-audit-report.txt` |
+| C15 | Met: `npm run eval` replays the nine evaluations with Wilson intervals and exits non-zero on any failed gate | Increments 14, 24 and 28; `.evidence/fase-05/check-r5.txt`, `tests/test_eval.py` |
+| C16 | Met: tuning on the dev split only (round 0 met both targets, no instruction change), then the test baseline with the final instructions: intake accuracy 97.5% [92.9, 99.1] and line recall 97.1% [94.1, 98.6], threshold 95% by the spec rule | Increments 15 and 16; `.evidence/fase-05/eval-dev.txt`, `.evidence/fase-05/eval-test-baseline.txt` |
+| C17 | Not met in this phase: no LangSmith trace of a live `orders-demo` run and no `whatsapp_order_extraction` experiment; the trace quota is exhausted until about 2026-11-05 and, under decision D10 option B, the catch-up change with phases 02 to 04 delivers it | Increment 21 (skipped, pending) |
+| C18 | Met: `test_phase_05_files_are_tracked_and_hold_no_keys` scans every new recording, inbox, outbox, dataset, scenario, audit and baseline file | Increment 19; `tests/test_secrets.py` |
+| C19 | Met: README sections for the WhatsApp channel, the router, recovery, the failures and resume commands, `orders-demo`, the datasets, the evaluations and the limits, followed offline in the fresh clone; the live and record forms are written but were not run from the README | Increments 18 and 20; `.evidence/fase-05/fresh-clone.txt` |
+| C20 | Met: the email and WhatsApp graders match lines one to one, and an unknown line needs its quantity, source and requested text as whole words; the re-scores leave every stored figure the same | Increments 25 and 29; `.evidence/fase-05/grader-rescore.txt`, `.evidence/fase-05/grader-rescore-05.2.txt` |
+| C21 | Met after deviation 05.3: `order_scenarios` holds 30 scenarios meeting the minimums, graded on the final database and outbox, with scenario success 100.0% [88.6, 100.0] against the 90% target and its baseline stored | Increment 24; `.evidence/fase-05/eval-scenarios-replay2.txt`, `.evidence/fase-05/eval-scenarios-baseline.txt`, `.evidence/fase-05/check-r5.txt` |
+| C22 | Met: critical errors are counted per scenario in `order_scenarios` and `failure_recovery` and gated at 0 (0 of 30 and 0 of 34); tests inject each kind and prove exit 1; the excuse rules were tightened in review rounds 4 (K2, E4) and 5 (R5-2) | Increment 24; `tests/test_critical_errors.py`, `.evidence/fase-05/check-r5.txt` |
+| C23 | Met: every report prints the target, whether it is met, the gate, the counting unit and the Wilson upper bound of a zero-event rate; the `critical_errors` count row prints no upper bound (review 4 minor, logged) | Increment 28; `.evidence/fase-05/eval-report-format.txt` |
+| Deviation 05.1 | Applied: increments 24 to 28 added and done, spec amended | `05.1-audit-evaluation-fixes.md` |
+| Deviation 05.2 | Applied: the PR 8 grader matching is in increment 29, with every re-scored figure the same | `05.2-grader-matching-from-pr8.md`, `.evidence/fase-05/grader-rescore-05.2.txt` |
+| Deviation 05.3 | Applied: the ordered quantity is no longer counted as a size (348b9d0), every suite re-scored with no drop, OS-010 re-recorded, target and scenario files unchanged | `05.3-quantity-not-a-size.md`, `.evidence/fase-05/eval-d24-rescore.txt` |
+
+Summary: 22 criteria met and C17 not met in this phase (pending under D10 option B); the phase is delivered for review but does not close until C17 is met.
+
+### Open items and limitations at closing
+- C17 and increment 21: LangSmith trace and experiment, blocked by the trace quota until about 2026-11-05 (decision D10 option B).
+- Open security items in `docs/security.md`, all Low: SEC-001 and SEC-002 deferred, SEC-003 to SEC-007 and SEC-009 to SEC-012 open; SEC-007 (sender identified by `From` only) applies to email orders and answers.
+- Review 3 M2: a WhatsApp answer whose message id collides with a stored source of another customer is rejected instead of answering the pending thread.
+- Review 2 M1 remainder: answers are not recorded in `order_sources`, and email answers carry no message id.
+- Review 4 items P2, P3, P5 to P7, E5, E6, the `--set-baseline` order, the `critical_errors` bound and K3, and review 5 R5-4, as listed in the log below.
+- Review 1 duplication items (store and extract steps, resume commands, thread id format) and the method tooling items (`check:puerta`, the format hook, `whatsapp-dataset check`), as listed in the log below.
+- No Mistakes is not claimed; the review backend was local.
+
+### Log
 - Open item (coordinator decision 2026-10-09): the `message_id` of a WhatsApp clarification answer is not recorded in `order_sources`, so a re-delivered answer could be applied again; to be stated in the increment 23 limitations.
 - Fixed 2026-10-09: in record mode `route`, `failures resume` and `resume` save the channel step recordings (matching, intake, extraction) as well as the clarification ones, which increments 17 and 24 need; `_clarify_graph` fills an optional `channel_clients` list (tests in `tests/test_router.py` and `tests/test_failures_cli.py`).
 - Fixed 2026-10-09 (review 1, F1, C10): `run_inbox` (so `route`), `resume`, `failures resume`, `clarify answer` and `close` and `whatsapp-demo` run the graph with `durability="sync"`, so a step checkpoint is on disk before the next step can crash; the `invoke_durability` spy in four tests failed before the fix (durability None); `uv run pytest -q tests/test_resume_cli.py` 6 runs in a row, 11 passed each (`.evidence/fase-05/resume-sync-f1.txt`).
@@ -303,3 +347,8 @@ Pending items, limitations and what could not be checked, stated plainly.
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
+
+Candidates for the owner to accept or drop at the learning pass; none is applied yet.
+- Deterministic thread ids can meet old checkpoints: a new item must check that its thread id has no checkpoint before it invokes the graph, or it resumes another customer's thread (review 4 S1, "a second run with the same run id and file stem must not resume the first customer's thread"); candidate for a LangGraph note in the project skills.
+- A gate counter is only as strong as its excuse rules: an excuse such as a `failures` row or an unanswered question must be limited to the scenario under test, and each excuse needs an injection test (review 4 K2 and E4 and review 5 R5-2, "a resolved `failures` row used to excuse every dropped line of every scenario"); candidate for the evidence lens of `sdd-review`.
+- Record mode merges and never prunes recordings, so a re-record after a prompt or code fix leaves orphan keys that replay never reads (review 4 E5); candidate gotcha line for the evaluation notes.
