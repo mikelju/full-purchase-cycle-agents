@@ -891,3 +891,51 @@ def test_reused_thread_id_of_an_unfinished_thread_points_to_resume(seeded_db, fo
     assert (result["route"].kind, result["state"]) == (WHATSAPP_NEW, None)
     error = str(result["error"])
     assert "has not finished" in error and "purchase-cycle resume whatsapp-run1-WA-1" in error
+
+
+def test_redelivered_round_one_answer_of_a_finished_two_answer_thread_is_a_duplicate(
+    seeded_db, write_recording, folder, tmp_path, no_network
+):
+    """Review 5, R5-3: `applied_answers` keeps the round 1 answer after round 2 finishes the thread."""
+    db_path, catalog = seeded_db
+    text = model_text({"body": BODY})
+    write_recording(catalog, text, ORDER, task=WHATSAPP_INTAKE)
+    recordings = write_recording(catalog, text, {"lines": LINES}, task=WHATSAPP_EXTRACTION)
+    [doubt] = detect(LINES, catalog, "whatsapp")
+    question = f'We do not carry "{doubt["text"]}"; shall we remove it?'
+    write_recording(catalog, doubts_message([doubt]), {"question": question}, task=CLARIFICATION_QUESTION)
+    second_answer = "Yes, remove it."
+    for answer, action in ((ANSWER, "unclear"), (second_answer, "remove")):
+        resolutions = [{"line_id": doubt["line_id"], "action": action, "sku": None, "quantity": None}]
+        message_text = answer_message([doubt], question, answer)
+        write_recording(catalog, message_text, {"resolutions": resolutions}, task=CLARIFICATION_ANSWER)
+    clients = ClarificationClients(
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_QUESTION),
+        ModelClient("replay", catalog, recordings, task=CLARIFICATION_ANSWER),
+    )
+    intake = ModelClient("replay", catalog, recordings, task=WHATSAPP_INTAKE)
+    extraction = ModelClient("replay", catalog, recordings, task=WHATSAPP_EXTRACTION)
+    graph = build_whatsapp_order_graph(
+        intake, extraction, db_path, tmp_path / "outbox", sqlite_checkpointer(tmp_path / "c.db"), clarification=clients
+    )
+    _write(folder, "WA-1.json", message("wamid.ORDER"))
+    _write(folder, "WA-2.json", message("wamid.ANSWER", body=ANSWER))
+    _write(folder, "WA-3.json", message("wamid.ANSWER2", body=second_answer))
+    _write(folder, "WA-4.json", message("wamid.ANSWER", body=ANSWER))
+    results = run_inbox(folder, {"whatsapp": graph}, db_path, "run1")
+    kinds = [(r["route"].kind, r["thread_id"], r["error"]) for r in results]
+    assert kinds == [
+        (WHATSAPP_NEW, "whatsapp-run1-WA-1", None),
+        (WHATSAPP_ANSWER, "whatsapp-run1-WA-1", None),
+        (WHATSAPP_ANSWER, "whatsapp-run1-WA-1", None),
+        (DUPLICATE, "whatsapp-run1-WA-1", None),
+    ]
+    assert "__interrupt__" not in results[2]["state"]
+    conn = db.connect(db_path)
+    clarifications = [tuple(r) for r in conn.execute("SELECT thread_id, status, round FROM clarifications")]
+    orders = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+    conn.close()
+    assert clarifications == [("whatsapp-run1-WA-1", "answered", 2)]
+    assert orders == 1
+    assert (clients.question.calls, clients.answer.calls) == (2, 2)
+    assert no_network == []
