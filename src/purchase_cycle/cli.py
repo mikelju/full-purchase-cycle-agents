@@ -915,10 +915,14 @@ def main(argv=None) -> int:
     routed.add_argument("--run-id", help="run id in the new thread ids (default: random)")
     routed.set_defaults(handler=cmd_route)
 
-    orders = sub.add_parser("orders-demo", help="run the sample mixed inbox through the router with the recovery scenes")
+    orders = sub.add_parser(
+        "orders-demo", help="run the sample mixed inbox through the router with the recovery scenes"
+    )
     orders.add_argument("folder", nargs="?", default=str(DEMO_ORDERS), help="inbox folder (default: examples/orders)")
     orders.add_argument("--mode", choices=config.MODES, default="replay")
-    orders.add_argument("--workdir", default=str(ORDERS_DEMO_WORKDIR), help="folder for the demo database, checkpoints and outbox")
+    orders.add_argument(
+        "--workdir", default=str(ORDERS_DEMO_WORKDIR), help="folder for the demo database, checkpoints and outbox"
+    )
     orders.set_defaults(handler=cmd_orders_demo)
 
     exceptions = sub.add_parser(
