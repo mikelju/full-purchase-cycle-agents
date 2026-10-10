@@ -197,8 +197,8 @@ def test_a_stored_baseline_is_read_and_gated(tmp_path, capsys, no_network):
     assert "regression vs baseline 2026-10-09: no significant drop" in capsys.readouterr().out
 
 
-def test_the_suite_is_registered_but_out_of_all_and_upload_until_its_baseline_exists():
+def test_the_suite_is_in_all_after_its_baseline_and_stays_out_of_upload():
     assert "order_scenarios" in harness.SUITES
-    assert "order_scenarios" not in harness.ALL_SUITES
+    assert "order_scenarios" in harness.ALL_SUITES
     assert "order_scenarios" not in harness.UPLOAD_SUITES
     assert harness._suite("order_scenarios") is se
