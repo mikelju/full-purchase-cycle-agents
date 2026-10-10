@@ -227,7 +227,7 @@ def new_clients(mode: str, catalog: list, recordings_path: Path, missing: list) 
     }
 
 
-def _graphs(folder: Path, clients: dict) -> dict:
+def build_graphs(folder: Path, clients: dict) -> dict:
     """The three channel graphs with the clarify step and recovery on, built afresh as a new process would."""
     db_path, outbox, checkpoints = folder / "business.db", folder / "outbox", folder / "checkpoints.sqlite"
 
@@ -287,7 +287,7 @@ def _write_answer(inbox: Path, item: dict, n: int, text: str) -> None:
 
 def _run_step(step: str, n: int, item: dict, folder: Path, clients: dict, state: dict) -> None:
     """Run one step with freshly built graphs; `state` keeps the scenario thread, the threads run and the replies."""
-    graphs, channel = _graphs(folder, clients), item["channel"]
+    graphs, channel = build_graphs(folder, clients), item["channel"]
     db_path, inbox = folder / "business.db", folder / f"inbox{n}"
     if step in ("deliver", "redeliver") or (step == "answer" and channel == "whatsapp"):
         if step == "answer":
@@ -380,7 +380,7 @@ def run_item(item: dict, tmp: Path, clients: dict) -> dict:
         finally:
             faults.crash_at = real_crash_at
     replies = state["replies"] + recovery_eval.outbox_replies(folder / "outbox")
-    graph = _graphs(folder, clients)[item["channel"]]
+    graph = build_graphs(folder, clients)[item["channel"]]
     errors = critical.count(
         folder / "business.db", recovery_eval.thread_values(graph, state["threads"]), replies, item["requested"],
         message_text,

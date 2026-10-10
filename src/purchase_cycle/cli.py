@@ -522,7 +522,7 @@ def cmd_orders_demo(args) -> int:
         EMAIL: "re-ask - the first extraction answer breaks its schema; the step asks again with the validation error",
     }
     run_id = uuid.uuid4().hex[:12]
-    graphs = scenarios_eval._graphs(workdir, graph_clients)
+    graphs = scenarios_eval.build_graphs(workdir, graph_clients)
     print(f"mode={args.mode}  inbox={args.folder}  workdir={args.workdir}  run_id={run_id}")
     results = router.run_inbox(inbox, graphs, files["db"], run_id, files["outbox"])
     code = 0
