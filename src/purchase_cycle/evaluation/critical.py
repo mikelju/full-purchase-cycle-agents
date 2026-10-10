@@ -64,7 +64,7 @@ def count(
         clarifications, questions = {}, []
         for r in conn.execute("SELECT thread_id, status, question FROM clarifications"):
             clarifications[r["thread_id"]] = r["status"]
-            if r["status"] != "answered":
+            if r["status"] != "answered" and r["thread_id"] in threads:
                 questions.append(r["question"])
         parked = any(
             r["thread_id"] in threads

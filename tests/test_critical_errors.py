@@ -115,14 +115,20 @@ def test_each_injected_critical_error_fails_failure_recovery_with_exit_one(
 
 
 @pytest.mark.parametrize(
-    ("question", "status", "dropped"),
-    [("Which size of syringes 5 ml?", "pending", 1), (None, "pending", 0), (None, "answered", 1)],
+    ("question", "status", "own", "dropped"),
+    [
+        ("Which size of syringes 5 ml?", "pending", True, 1),
+        (None, "pending", True, 0),
+        (None, "pending", False, 1),
+        (None, "answered", True, 1),
+    ],
 )
 def test_a_dropped_line_counts_as_asked_about_only_when_an_open_question_names_it(
-    question, status, dropped, tmp_path, monkeypatch, no_network
+    question, status, own, dropped, tmp_path, monkeypatch, no_network
 ):
     # Task 1 limit tightened in task 3: any clarification row used to excuse every dropped line.
     # Review round 4: an answered question no longer excuses the line, since the answer settled it.
+    # Review round 5: a pending question of a thread outside the scenario no longer excuses it either.
     item, path = _one_scenario(tmp_path)
     requested_text = recovery_eval.REQUESTED[item["channel"]][0][0]["text"]
     seen = {}
@@ -134,7 +140,7 @@ def test_a_dropped_line_counts_as_asked_about_only_when_an_open_question_names_i
         _sql(
             evidence,
             "INSERT INTO clarifications (thread_id, channel, customer_code, question, round, status) "
-            f"SELECT 'other', channel, customer_code, '{question or 'How many ' + requested_text + '?'}', 1, "
+            f"SELECT '{_first_thread(evidence) if own else 'other'}', channel, customer_code, '{question or 'How many ' + requested_text + '?'}', 1, "
             f"'{status}' FROM orders",
         )
         seen.update(critical.count(**evidence))
