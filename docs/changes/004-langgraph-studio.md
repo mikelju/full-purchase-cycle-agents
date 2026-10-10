@@ -31,7 +31,8 @@ Owner request 2026-10-10 to plan this change, then show it after a context hando
 ## Plan
 - [x] 1. Dependency, `langgraph.json`, `src/purchase_cycle/studio.py` and `tests/test_studio.py` (failing tests first), `.gitignore` and `.env.example`; C1 to C4.
   Evidence: `uv run pytest -q tests/test_studio.py tests/test_secrets.py` 15 passed; `npm run eval` nine replay evaluations PASS (`.evidence/change-004/eval-item1.txt`); C4: langgraph-cli 0.4.33, `langgraph dev --allow-blocking` lists the three graphs.
-- [ ] 2. README section; C5.
+- [x] 2. README section; C5.
+  Evidence: README "Watch the graphs in LangGraph Studio"; the web form input matches `examples/orders/01-web-form.json`.
 - [ ] 3. Owner walkthrough in a fresh session after the context handoff: start `langgraph dev`, open Studio, run the web form sample, then the WhatsApp doubt and its answer; C6.
 - [ ] 4. Adversarial review, `npm run check`, push and PR to `main`; C7.
 
