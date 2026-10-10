@@ -227,8 +227,9 @@ Execution order: batch A0 first, then batches A to E; batch A1 (deviation 05.2) 
   Output in `.evidence/fase-05/fresh-clone.txt`.
 - [ ] 21. LangSmith trace of a live `orders-demo` run (retried attempts, re-ask, resumed crash) and an experiment of `whatsapp_order_extraction` against its uploaded splits (C17) - blocked: the trace quota is exhausted until about 2026-11-05; under D10 option B it is delivered by the catch-up change with phases 02 to 04; executors skip it and leave it pending.
   Evidence:
-- [ ] 22. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` and the nine replay evaluations after the fixes.
-  Evidence:
+- [x] 22. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` and the nine replay evaluations after the fixes.
+  Evidence (2026-10-10): review rounds 1 to 5 in the Adversarial review table; the closing review is round 4 (full range f1a1e4f..1de6157, four lenses) and round 5 (its fix diff 1de6157..5ad9d4b), the second and last round, whose fixes are covered by tests and the check but not re-reviewed.
+  Final `npm run check` after the round 5 fixes: exit 0, ruff clean, 628 passed, the nine replay evaluations with every gate PASS, `order_scenarios` 30 of 30 (100.0% [88.6, 100.0]) with 0 critical errors and `failure_recovery` 34 of 34 with 0 critical errors (`.evidence/fase-05/check-r5.txt`).
 - [ ] 23. Results per criterion in the table below, master plan row 05 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
   - [x] Results per criterion (C1 to C23 and deviations 05.1 to 05.3), status line, open items and limitations, and candidate learnings in this file; master plan row 05 set to built, delivered for review via PR, with C17 pending.
   - [ ] Delivery: push of the branch and PR to `main` (delivery by coordinator).
