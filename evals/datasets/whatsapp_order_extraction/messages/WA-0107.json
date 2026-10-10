@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 130 230",
+  "message_id": "wamid.dataset.WA-0107",
+  "text": {
+    "body": "Hello hello, Merry Christmas and happy new year to everyone at the warehouse!"
+  },
+  "timestamp": "1790946660",
+  "type": "text"
+}

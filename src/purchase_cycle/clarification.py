@@ -13,11 +13,13 @@ from typing import NamedTuple, TypedDict
 from anthropic import APIError
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
+from langgraph.runtime import Runtime
 from langgraph.types import interrupt
 
-from purchase_cycle import db
+from purchase_cycle import db, llm
 from purchase_cycle.llm import InvalidModelOutput, MissingRecording, ModelClient
-from purchase_cycle.quantities import NUMBER_WORDS, supports_quantity
+from purchase_cycle.quantities import NUMBER_WORDS, pack_size, supports_quantity
+from purchase_cycle.recovery import correction_kwargs, reask
 from purchase_cycle.web_form import match_key
 
 MAX_LINE_QUANTITY = 500  # sale units per line
@@ -28,6 +30,8 @@ AMBIGUOUS = "ambiguous"
 UNKNOWN = "unknown"
 QUANTITY = "quantity"
 EMAIL = "email"
+WHATSAPP = "whatsapp"
+FREE_TEXT_CHANNELS = (EMAIL, WHATSAPP)  # channels whose quantity is checked against the line text
 
 # Words that carry no product meaning in a line text; quantities and pack words included.
 FILLER_WORDS = frozenset(
@@ -57,7 +61,9 @@ def _figures(text: str) -> set[str]:
     return set(FIGURE.findall(text))
 
 
-def candidate_search(text: str, catalog: list, limit: int = MAX_CANDIDATES) -> list[dict]:
+def candidate_search(
+    text: str, catalog: list, limit: int = MAX_CANDIDATES, quantity_figures: tuple[int, ...] = ()
+) -> list[dict]:
     """Catalog products the text may mean, best first; empty when nothing fits.
 
     A product is a candidate when its name holds every word of the text that
@@ -68,12 +74,20 @@ def candidate_search(text: str, catalog: list, limit: int = MAX_CANDIDATES) -> l
     When the text shares a figure with them, a product whose name holds fewer
     figures the text does not state wins a remaining tie, so "size 8" picks
     size 8 over 8.5, while a size no sibling has keeps every sibling.
+    `quantity_figures` are the values that may state the ordered quantity of a
+    free-text line; the first figure token equal to one of them is the quantity
+    and is left out of the size figures (deviation 05.3), so "5 boxes of paper
+    tape 2.5 cm" does not also match the 5 cm tape.
     """
     words = _words(text)
     required = {w for w in words if not w.isdigit() and w not in FILLER_WORDS and w not in NUMBER_WORDS}
     if not required:
         return []
-    figures = _figures(text)
+    tokens = FIGURE.findall(text)
+    stating = [t for t in tokens if t in {str(q) for q in quantity_figures}]
+    if stating:
+        tokens.remove(stating[0])
+    figures = set(tokens)
     scored = []
     for row in catalog:
         name = _words(row["name"])
@@ -98,16 +112,21 @@ def line_doubts(line: dict, catalog: list, channel: str) -> tuple[list[str], lis
     """Doubt types of one channel line, in rule order, and the candidates of an ambiguous product."""
     text = line_text(line)
     types, candidates = [], []
+    quantity = line["quantity"]
+    sale_unit = next((row["sale_unit"] for row in catalog if row["sku"] == line["sku"]), None)
+    pack = pack_size(sale_unit) if sale_unit else None
+    # The quantity may be written as sale units or as items; a form product text holds none.
+    stating = (quantity, quantity * pack) if pack else (quantity,)
     # Every line is searched, so a SKU given to a generic text still raises an ambiguous doubt.
-    found = candidate_search(text, catalog)
+    found = candidate_search(text, catalog, quantity_figures=stating if channel in FREE_TEXT_CHANNELS else ())
     if len(found) >= 2:
         types.append(AMBIGUOUS)
         candidates = found
     elif not found and line["sku"] is None:
         types.append(UNKNOWN)
-    quantity = line["quantity"]
-    sale_unit = next((row["sale_unit"] for row in catalog if row["sku"] == line["sku"]), None)
-    if quantity > MAX_LINE_QUANTITY or (channel == EMAIL and not supports_quantity(text, quantity, sale_unit)):
+    if quantity > MAX_LINE_QUANTITY or (
+        channel in FREE_TEXT_CHANNELS and not supports_quantity(text, quantity, sale_unit)
+    ):
         types.append(QUANTITY)
     return types, candidates
 
@@ -250,6 +269,8 @@ class ClarificationState(TypedDict, total=False):
     question: str
     round: int
     answer: str
+    answer_message_id: str | None  # the channel message id of the answer being read, when the channel has one
+    applied_answers: list[str]  # message ids of the answers applied so far, so a re-delivery is not applied again
     closed: bool
     resolutions: list[dict]
     removed: list[dict]
@@ -257,6 +278,8 @@ class ClarificationState(TypedDict, total=False):
     clarification: str | None
     rejected: str | None
     before_answer: dict
+    message: dict  # the WhatsApp message under clarification; only that channel has it
+    source: str  # the source reference of a thread with recovery on, for its `failures` row
 
 
 def settle(lines: list[dict], resolutions: list[dict], open_doubts: list[dict]) -> tuple[list, list, list]:
@@ -278,18 +301,28 @@ def settle(lines: list[dict], resolutions: list[dict], open_doubts: list[dict]) 
     return kept, removed, unresolved
 
 
-def build_clarification_graph(clients: ClarificationClients, db_path: Path | str, channel: str):
+def build_clarification_graph(
+    clients: ClarificationClients, db_path: Path | str, channel: str, on_question=None, park=None
+):
     """Shared subgraph: detect -> ask -> wait (pause) -> interpret -> detect, at most MAX_ROUNDS questions.
 
     It leaves through `detect` when no doubt is open, the rounds are spent or the
     thread was closed; then `lines` holds only the lines to store, and `removed`
     and `unresolved` list the others with the text the customer wrote.
+    `on_question(state, question, round)` runs after a question is saved, to send it to the customer.
+    `park(node, step)` (phase 05 recovery) wraps `ask`: the first question draft is re-asked once when invalid,
+    and a second invalid draft or an exhausted retry parks the thread; later rounds keep the phase 04 fallback.
     """
     conn = db.connect(db_path)
     try:
         catalog = db.catalog_rows(conn)
     finally:
         conn.close()
+    retry = llm.MODEL_RETRY
+
+    def retry_left(error: Exception, runtime: Runtime) -> bool:
+        # A transient error before the last attempt goes to the retry policy; the last one takes the fallback.
+        return retry.retry_on(error) and runtime.execution_info.node_attempt < retry.max_attempts
 
     def detect_step(state: ClarificationState) -> ClarificationState:
         resolutions = state.get("resolutions", [])
@@ -309,17 +342,24 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
             "clarification": status,
         }
 
-    def ask(state: ClarificationState, config: RunnableConfig) -> ClarificationState:
+    def ask(state: ClarificationState, config: RunnableConfig, runtime: Runtime) -> ClarificationState:
         thread_id = config["configurable"]["thread_id"]
         rounds = state.get("round", 0) + 1
-        try:
+
+        def draft(correction):
             drafted = clients.question.extract(
-                doubts_message(state["doubts"]), case_id=f"{thread_id}-question-{rounds}"
+                doubts_message(state["doubts"]),
+                case_id=f"{thread_id}-question-{rounds}",
+                **correction_kwargs(correction),
             )
             check_question(drafted.question, state["doubts"])
+            return drafted
+
+        try:
+            drafted = reask(draft, (InvalidModelOutput, InvalidQuestion)) if park and rounds == 1 else draft(None)
         except STEP_FAILURES as error:
-            if rounds == 1:
-                raise  # nothing is paused yet, so the run stops with nothing written
+            if rounds == 1 or retry_left(error, runtime):
+                raise  # a retry, or round 1 with nothing paused yet, so the run stops with nothing written
             # The answer that led here is undone and the previous question waits again, so the thread
             # stays answerable and closable instead of resting on a question never sent.
             return {
@@ -333,10 +373,13 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
             )
         finally:
             conn.close()
+        if on_question is not None:
+            on_question(state, plain_question(drafted.question), rounds)
         return {"question": drafted.question, "round": rounds}
 
     def wait(state: ClarificationState) -> ClarificationState:
         # Resumed with {"answer": text} or {"close": True}; the question was drafted before the pause.
+        # A WhatsApp answer also carries its `message_id`, kept in `applied_answers` once the answer is applied.
         # The state keeps the drafted question as the model wrote it, so the interpretation message and its
         # recordings stay the same; the customer sees the plain version.
         # `rejected` holds why the previous answer failed its checks; the same question waits again.
@@ -350,9 +393,9 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
         )
         if received.get("close"):
             return {"closed": True, "rejected": None}
-        return {"answer": received["answer"], "rejected": None}
+        return {"answer": received["answer"], "answer_message_id": received.get("message_id"), "rejected": None}
 
-    def interpret(state: ClarificationState, config: RunnableConfig) -> ClarificationState:
+    def interpret(state: ClarificationState, config: RunnableConfig, runtime: Runtime) -> ClarificationState:
         if state.get("closed"):
             return {}
         thread_id = config["configurable"]["thread_id"]
@@ -361,21 +404,26 @@ def build_clarification_graph(clients: ClarificationClients, db_path: Path | str
             read = clients.answer.extract(message, case_id=f"{thread_id}-answer-{state['round']}")
             check_resolutions(read.resolutions, state["doubts"], catalog)
         except STEP_FAILURES as error:
+            if retry_left(error, runtime):
+                raise
             # A rejected answer, an invalid model output, a missing recording or a model error writes nothing;
             # the run stops paused on the same question, so the thread stays answerable and closable.
             reason = str(error) if isinstance(error, InvalidAnswer) else f"Clarification answer not read: {error}"
             return {"rejected": reason}
         resolutions = state.get("resolutions", [])
+        applied = state.get("applied_answers", [])
+        message_id = state.get("answer_message_id")
         return {
             "resolutions": resolutions + [r.model_dump() for r in read.resolutions],
-            "before_answer": {"doubts": state["doubts"], "resolutions": resolutions},
+            "applied_answers": applied + [message_id] if message_id else applied,
+            "before_answer": {"doubts": state["doubts"], "resolutions": resolutions, "applied_answers": applied},
         }
 
     builder = StateGraph(ClarificationState)
     builder.add_node("detect", detect_step)
-    builder.add_node("ask", ask)
+    builder.add_node("ask", park(ask, "ask") if park else ask, retry_policy=retry)
     builder.add_node("wait", wait)
-    builder.add_node("interpret", interpret)
+    builder.add_node("interpret", interpret, retry_policy=retry)
     builder.add_edge(START, "detect")
     builder.add_conditional_edges("detect", lambda s: "ask" if "unresolved" not in s else END, ["ask", END])
     builder.add_edge("ask", "wait")

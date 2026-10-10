@@ -193,12 +193,18 @@ def _case(lines, is_order=True):
     return {"id": "E1", "category": "body_list", "source": "body", "is_order": is_order, "lines": lines}
 
 
-def _expected(n, sku, quantity):
-    return {"line_id": f"E1-L{n}", "expected_sku": sku, "expected_quantity": quantity}
+def _expected(n, sku, quantity, location="body", text="x"):
+    return {
+        "line_id": f"E1-L{n}",
+        "expected_sku": sku,
+        "expected_quantity": quantity,
+        "location": location,
+        "text": text,
+    }
 
 
-def _got(sku, quantity):
-    return {"source": "body", "source_text": "x", "sku": sku, "quantity": quantity}
+def _got(sku, quantity, source="body", text="x"):
+    return {"source": source, "source_text": text, "sku": sku, "quantity": quantity}
 
 
 def test_graders_split_sku_and_quantity_and_count_unmatched_lines():
@@ -213,6 +219,100 @@ def test_graders_split_sku_and_quantity_and_count_unmatched_lines():
     assert summary["field_sku"]["value"] == 1.0 and summary["field_quantity"]["value"] == 0.5
     exact = email_eval.grade(case, True, [_got("A", 2), _got("B", 3), _got(None, 1)])
     assert exact["email_exact_match"] and exact["intake_accuracy"]
+
+
+def test_grader_counts_an_omitted_line_against_recall_and_exact_match():
+    case = _case([_expected(1, "A", 2), _expected(2, "B", 3)])
+    result = email_eval.grade(case, True, [_got("A", 2)])
+    assert [r["line_recall"] for r in result["line_rows"]] == [True, False]
+    assert (result["precision_hits"], result["produced_catalog"]) == (1, 1)
+    assert not result["email_exact_match"]
+
+
+def test_grader_matches_repeated_lines_one_to_one():
+    case = _case([_expected(1, "A", 2), _expected(2, "A", 2)])
+    result = email_eval.grade(case, True, [_got("A", 2)])
+    assert [r["line_recall"] for r in result["line_rows"]] == [True, False]
+    assert [r["field_sku"] for r in result["line_rows"]] == [True, False]
+    assert not result["email_exact_match"]
+    duplicate = email_eval.grade(_case([_expected(1, "A", 2)]), True, [_got("A", 2), _got("A", 2)])
+    assert (duplicate["precision_hits"], duplicate["produced_catalog"]) == (1, 2)
+    assert not duplicate["email_exact_match"]
+
+
+def test_sku_only_credit_goes_to_produced_lines_left_after_exact_matches():
+    case = _case([_expected(1, "A", 5), _expected(2, "A", 3)])
+    result = email_eval.grade(case, True, [_got("A", 3)])
+    assert [r["line_recall"] for r in result["line_rows"]] == [False, True]
+    assert [r["field_sku"] for r in result["line_rows"]] == [False, True]
+    assert [r["field_quantity"] for r in result["line_rows"]] == [False, True]
+
+
+def test_grader_counts_an_invented_line_against_precision_and_exact_match():
+    case = _case([_expected(1, "A", 2)])
+    result = email_eval.grade(case, True, [_got("A", 2), _got("Z", 1)])
+    assert result["line_rows"][0]["line_recall"]
+    assert (result["precision_hits"], result["produced_catalog"]) == (1, 2)
+    assert not result["email_exact_match"]
+    unknown = email_eval.grade(case, True, [_got("A", 2), _got(None, 1)])
+    assert not unknown["out_of_catalog_detection"] and not unknown["email_exact_match"]
+
+
+def test_grader_fails_a_wrong_quantity_on_catalog_and_unknown_lines():
+    case = _case([_expected(1, "A", 2), _expected(2, None, 4)])
+    catalog = email_eval.grade(case, True, [_got("A", 3), _got(None, 4)])
+    assert not catalog["line_rows"][0]["line_recall"] and catalog["line_rows"][0]["field_sku"]
+    assert not catalog["email_exact_match"]
+    unknown = email_eval.grade(case, True, [_got("A", 2), _got(None, 5)])
+    assert unknown["line_rows"][0]["line_recall"]
+    assert not unknown["out_of_catalog_detection"] and not unknown["email_exact_match"]
+
+
+def test_grader_fails_a_false_source_on_catalog_and_unknown_lines():
+    case = _case([_expected(1, "A", 2, "order.pdf"), _expected(2, None, 4, "order.pdf")])
+    catalog = email_eval.grade(case, True, [_got("A", 2, "body"), _got(None, 4, "order.pdf")])
+    assert not catalog["line_rows"][0]["line_recall"] and catalog["line_rows"][0]["field_quantity"]
+    assert catalog["precision_hits"] == 0 and not catalog["email_exact_match"]
+    unknown = email_eval.grade(case, True, [_got("A", 2, "order.pdf"), _got(None, 4, "body")])
+    assert unknown["line_rows"][0]["line_recall"]
+    assert not unknown["out_of_catalog_detection"] and not unknown["email_exact_match"]
+    right = email_eval.grade(case, True, [_got("A", 2, "order.pdf"), _got(None, 4, "order.pdf")])
+    assert right["email_exact_match"]
+
+
+def test_out_of_catalog_text_prefers_the_longest_expected_phrase_and_pairs_optimally():
+    case = _case([_expected(1, None, 2, text="FFP1 masks"), _expected(2, None, 2, text="FFP1 masks, box")])
+    produced = [_got(None, 2, text="FFP1 masks, box"), _got(None, 2, text="FFP1 masks")]
+    result = email_eval.grade(case, True, produced)
+    assert result["unmatched_hits"] == 2 and result["out_of_catalog_detection"] and result["email_exact_match"]
+
+
+def test_out_of_catalog_citation_copying_several_expected_texts_matches_nothing():
+    case = _case([_expected(1, None, 2, text="Stair lifts"), _expected(2, None, 2, text="Patient lifts")])
+    table = "Stair lifts 2 / Patient lifts 2"
+    result = email_eval.grade(case, True, [_got(None, 2, text=table), _got(None, 2, text=table)])
+    assert result["unmatched_hits"] == 0 and not result["out_of_catalog_detection"]
+
+
+def test_out_of_catalog_text_matches_whole_words_only():
+    case = _case([_expected(1, None, 1, text="gel")])
+    result = email_eval.grade(case, True, [_got(None, 1, text="Angel wings")])
+    assert result["unmatched_hits"] == 0 and not result["out_of_catalog_detection"]
+
+
+def test_out_of_catalog_produced_line_counts_for_one_expected_line():
+    case = _case([_expected(1, None, 3, text="Syringes 60 ml"), _expected(2, None, 3, text="Syringes 60 ml")])
+    produced = [_got(None, 3, text="Syringes 60 ml"), _got(None, 3, text="Hospital beds")]
+    result = email_eval.grade(case, True, produced)
+    assert result["unmatched_hits"] == 1
+    assert not result["out_of_catalog_detection"] and not result["email_exact_match"]
+
+
+def test_failure_reason_names_an_out_of_catalog_text_mismatch():
+    case = _case([_expected(1, None, 3, text="Syringes 60 ml")])
+    result = email_eval.grade(case, True, [_got(None, 3, text="Hospital beds")])
+    reason = email_eval._failure_text(result)
+    assert "requested text" in reason and "0 of 1" in reason
 
 
 def test_a_stopped_run_keeps_the_intake_decision_and_counts_no_lines():

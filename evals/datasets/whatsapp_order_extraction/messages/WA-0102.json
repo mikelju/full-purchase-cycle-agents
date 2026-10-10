@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 142 242",
+  "message_id": "wamid.dataset.WA-0102",
+  "text": {
+    "body": "Pharmacy order:\n- 30 packs pull-up pants size L\n- 17 boxes neoprene sterile gloves 6.5\n- 1 box sterle urine containers 60ml\n- 75 tubes sunscreen SPF30 50ml\nthx"
+  },
+  "timestamp": "1790820360",
+  "type": "text"
+}

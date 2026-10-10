@@ -110,3 +110,20 @@ def make_email(path, sender, subject="Order", body="Hello", html=None, attachmen
         message.add_attachment(data, maintype=maintype, subtype=subtype, filename=name)
     path.write_bytes(bytes(message))
     return path
+
+
+@pytest.fixture
+def invoke_durability(monkeypatch):
+    """Record the `durability` of every checkpointed graph run (C10: phase 05 entry points run with "sync")."""
+    from langgraph.pregel import Pregel
+
+    seen = []
+    original = Pregel.invoke
+
+    def spy(self, *args, **kwargs):
+        if self.checkpointer is not None:
+            seen.append(kwargs.get("durability"))
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(Pregel, "invoke", spy)
+    return seen

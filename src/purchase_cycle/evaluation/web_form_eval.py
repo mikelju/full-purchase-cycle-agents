@@ -20,7 +20,7 @@ from purchase_cycle import db
 from purchase_cycle.config import EVALS_DIR, MATCHING_RECORDINGS_PATH, MODEL_ID
 from purchase_cycle.evaluation import web_form_dataset as wf
 from purchase_cycle.evaluation.harness import ALPHA, DEFAULT_THRESHOLD
-from purchase_cycle.evaluation.stats import mcnemar_exact, wilson_interval
+from purchase_cycle.evaluation.stats import mcnemar_exact, target_cells, wilson_interval, zero_event_note
 from purchase_cycle.llm import MATCHING, InvalidModelOutput, MissingRecording, ModelClient
 from purchase_cycle.web_form import build_web_form_graph
 
@@ -208,13 +208,22 @@ def _ci(s: dict) -> str:
 def print_report(mode, split, summary, results, calls, threshold, regression, baseline, experiment) -> None:
     n_subs = summary["submission_accuracy"]["n"]
     print(f"{SUITE}  mode={mode}  split={split}  lines={len(results)}  submissions={n_subs}  model={MODEL_ID}")
-    print(f"{'metric':<22}{'value':<8}{'95% CI':<16}{'threshold':<11}result")
+    print(
+        f"{'metric':<22}{'value':<8}{'95% CI':<16}{'n':<6}{'unit':<16}{'target':<9}{'target met':<12}{'threshold':<11}gate"
+    )
     s = summary[METRIC]
+    target, met = target_cells(s["value"], DEFAULT_THRESHOLD)
     thr = _pct(threshold) if threshold is not None else "none"
     result = "PASS" if threshold is not None and s["value"] >= threshold else "FAIL"
-    print(f"{'line_' + METRIC:<22}{_pct(s['value']):<8}{_ci(s):<16}{thr:<11}{result}")
+    print(
+        f"{'line_' + METRIC:<22}{_pct(s['value']):<8}{_ci(s):<16}{s['n']:<6}{'line':<16}{target:<9}{met:<12}{thr:<11}"
+        f"{result}" + zero_event_note(s)
+    )
     s = summary["submission_accuracy"]
-    print(f"{'submission_accuracy':<22}{_pct(s['value']):<8}{_ci(s):<16}{'none':<11}reported")
+    print(
+        f"{'submission_accuracy':<22}{_pct(s['value']):<8}{_ci(s):<16}{s['n']:<6}{'submission':<16}{'none':<9}"
+        f"{'n/a':<12}{'none':<11}reported" + zero_event_note(s)
+    )
     if baseline is None:
         print("regression vs baseline: no baseline stored")
     elif regression is None:

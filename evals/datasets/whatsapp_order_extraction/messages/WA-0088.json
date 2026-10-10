@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 121 221",
+  "message_id": "wamid.dataset.WA-0088",
+  "text": {
+    "body": "Good morning, is the warehouse open on the bank holiday next Monday?"
+  },
+  "timestamp": "1790467440",
+  "type": "text"
+}

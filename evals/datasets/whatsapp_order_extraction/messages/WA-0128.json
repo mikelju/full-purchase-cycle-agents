@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 123 223",
+  "message_id": "wamid.dataset.WA-0128",
+  "text": {
+    "body": "Hi Laura, the number of diabetic residents went up a lot this year so insulin supplies are flying. Could you send 1000 pen needles 32G 6mm? Please check stock first and tell me if there is any delay. Thank you"
+  },
+  "timestamp": "1791477840",
+  "type": "text"
+}

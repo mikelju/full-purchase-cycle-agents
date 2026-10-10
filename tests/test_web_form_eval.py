@@ -155,8 +155,11 @@ def test_upload_command_uploads_every_suite_and_keeps_the_worst_exit(monkeypatch
     monkeypatch.setattr(harness, "upload_datasets", lambda: uploaded.append("order_line_extraction") or 0)
     monkeypatch.setattr(web_form_eval, "upload_datasets", lambda: uploaded.append("web_form_matching") or 1)
     monkeypatch.setattr(email_eval, "upload_datasets", lambda: uploaded.append("email_order_extraction") or 0)
+    from purchase_cycle.evaluation import whatsapp_eval
+
+    monkeypatch.setattr(whatsapp_eval, "upload_datasets", lambda: uploaded.append("whatsapp_order_extraction") or 0)
     for name in ("detection", "answers"):
         upload = lambda name=name: uploaded.append(f"clarification_{name}") or 0  # noqa: E731
         monkeypatch.setattr(getattr(clarification_eval, name), "upload_datasets", upload)
     assert main(["eval-upload"]) == 1
-    assert uploaded == list(harness.SUITES)
+    assert uploaded == list(harness.UPLOAD_SUITES)

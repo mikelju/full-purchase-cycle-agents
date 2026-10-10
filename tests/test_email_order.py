@@ -1,5 +1,7 @@
 """C2, C4, C5, C6, C7 and C8 (phase 03): the email order subgraph with recorded answers and its demo command."""
 
+import hashlib
+
 import pytest
 
 from conftest import make_email
@@ -122,6 +124,7 @@ def _line(**changes):
         (_line(quantity=0), InvalidModelOutput, "lines.1.quantity"),
         (_line(quantity=-2), InvalidModelOutput, "lines.1.quantity"),
         ({"lines": [{"source": "body", "sku": "GLV-NIT-M", "quantity": 40}]}, InvalidModelOutput, "source_text"),
+        (_line(source="order.pdf"), InvalidExtraction, "source 'order.pdf' is not the body or an attachment"),
     ],
 )
 def test_invalid_extraction_stops_before_any_write(seeded_db, run, answer, error, message):
@@ -130,14 +133,9 @@ def test_invalid_extraction_stops_before_any_write(seeded_db, run, answer, error
     assert _rows(seeded_db[0]) == ([], [])
 
 
-@pytest.mark.parametrize(
-    ("source", "stored"),
-    [(" EXTRA.TXT ", "extra.txt"), ("order.pdf", "order.pdf")],
-    ids=["case-and-spaces", "unmatched-kept"],
-)
-def test_line_source_is_matched_loosely_and_never_stops_the_email(seeded_db, run, source, stored):
-    _, state, _, _ = run(lines_answer=_line(source=source))
-    assert state["lines"][1]["source"] == stored
+def test_line_source_is_matched_ignoring_case_and_spaces(seeded_db, run):
+    _, state, _, _ = run(lines_answer=_line(source=" EXTRA.TXT "))
+    assert state["lines"][1]["source"] == "extra.txt"
     assert state["order_id"] == 1
 
 
@@ -249,3 +247,61 @@ def test_email_demo_command_reports_an_empty_folder(tmp_path, capsys):
         == 1
     )
     assert "no .eml files" in capsys.readouterr().err
+
+
+def test_email_delivered_twice_stores_one_order(seeded_db, run, tmp_path):
+    _, first, _, _ = run()
+    _, again, _, _ = run()
+    conn = db.connect(seeded_db[0])
+    sources = [tuple(r) for r in conn.execute("SELECT channel, message_id, thread_id, order_id FROM order_sources")]
+    conn.close()
+    orders, lines = _rows(seeded_db[0])
+    assert (len(orders), len(lines)) == (1, 2)
+    digest = "sha256:" + hashlib.sha256((tmp_path / "EML-TEST-1.eml").read_bytes()).hexdigest()
+    assert sources == [("email", digest, "EML-TEST-1", first["order_id"])]
+    assert again["order_id"] == first["order_id"]
+    assert f"is registered as order {first['order_id']}:" in again["reply"]
+
+
+def test_emails_without_message_id_and_the_same_file_name_from_two_customers_store_two_orders(seeded_db, run, tmp_path):
+    """F3: the source of an email without Message-ID is a hash of its bytes, not the file name."""
+    paths = []
+    for folder, sender in (("a", SENDER), ("b", CUSTOMERS[2].email)):
+        (tmp_path / folder).mkdir()
+        paths.append(make_email(tmp_path / folder / "order.eml", sender, SUBJECT, BODY, attachments=[EXTRA]))
+    _, first, _, _ = run(path=paths[0])
+    _, second, _, _ = run(path=paths[1])
+    orders, lines = _rows(seeded_db[0])
+    assert [(o["id"], o["customer_code"]) for o in orders] == [(1, "CLI-002"), (2, "CLI-003")]
+    assert (first["order_id"], second["order_id"]) == (1, 2)
+    assert "is registered as order 2:" in second["reply"]
+    conn = db.connect(seeded_db[0])
+    sources = [r[0] for r in conn.execute("SELECT message_id FROM order_sources ORDER BY order_id")]
+    conn.close()
+    assert sources == ["sha256:" + hashlib.sha256(p.read_bytes()).hexdigest() for p in paths]
+
+
+def test_the_same_message_id_from_another_customer_never_returns_the_first_order(seeded_db, run, tmp_path):
+    """F3 (CWE-639): a matching Message-ID from another customer is not a re-delivery; it is rejected."""
+    paths = []
+    for name, sender in (("A.eml", SENDER), ("B.eml", CUSTOMERS[2].email)):
+        data = make_email(tmp_path / f"base-{name}", sender, SUBJECT, BODY, attachments=[EXTRA]).read_bytes()
+        (tmp_path / name).write_bytes(b"Message-ID: <same.1@example.org>\r\n" + data)
+        paths.append(tmp_path / name)
+    _, first, _, _ = run(path=paths[0])
+    with pytest.raises(db.SourceConflict, match="already stored for another customer") as error:
+        run(path=paths[1])
+    assert "order" not in str(error.value).replace("order_sources", "")
+    orders, lines = _rows(seeded_db[0])
+    assert ([o["customer_code"] for o in orders], len(lines)) == (["CLI-002"], 2)
+
+
+def test_email_source_is_the_message_id_header(seeded_db, run, tmp_path):
+    path = tmp_path / "EML-ID.eml"
+    data = make_email(tmp_path / "base.eml", SENDER, SUBJECT, BODY, attachments=[EXTRA]).read_bytes()
+    path.write_bytes(b"Message-ID: <abc.1@example.org>\r\n" + data)
+    run(path=path)
+    run(path=path)
+    conn = db.connect(seeded_db[0])
+    assert [r[0] for r in conn.execute("SELECT message_id FROM order_sources")] == ["<abc.1@example.org>"]
+    conn.close()

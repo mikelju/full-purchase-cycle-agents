@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 135 235",
+  "message_id": "wamid.dataset.WA-0045",
+  "text": {
+    "body": "Hello, do you still sell the compression stockings class II or only class I? Just asking, not ordering yet"
+  },
+  "timestamp": "1789386300",
+  "type": "text"
+}

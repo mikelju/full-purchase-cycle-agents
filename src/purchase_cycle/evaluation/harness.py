@@ -15,13 +15,15 @@ from purchase_cycle import db
 from purchase_cycle.config import EVALS_DIR, MODEL_ID, RECORDINGS_PATH
 from purchase_cycle.evaluation import dataset as ds
 from purchase_cycle.evaluation.planning import DATASET_VERSION, read_jsonl
-from purchase_cycle.evaluation.stats import mcnemar_exact, wilson_interval
+from purchase_cycle.evaluation.stats import mcnemar_exact, target_cells, wilson_interval, zero_event_note
 from purchase_cycle.graph import build_graph
 from purchase_cycle.llm import InvalidModelOutput, MissingRecording, ModelClient
 
 BASELINE_PATH = EVALS_DIR / "baselines" / "order_line_extraction.json"
 METRICS = ("product_accuracy", "quantity_accuracy")
 DEFAULT_THRESHOLD = 0.95
+# Each case is one order line; the target fixed before measuring is DEFAULT_THRESHOLD.
+UNIT = "line"
 ALPHA = 0.05
 
 
@@ -164,13 +166,19 @@ def _pct(x: float) -> str:
 
 def print_report(mode, split, summary, results, threshold, regression, baseline, contrast, experiment) -> None:
     print(f"order_line_extraction  mode={mode}  split={split}  cases={len(results)}  model={MODEL_ID}")
-    print(f"{'metric':<20}{'value':<8}{'95% CI':<16}{'threshold':<11}result")
+    print(
+        f"{'metric':<20}{'value':<8}{'95% CI':<16}{'n':<6}{'unit':<16}{'target':<9}{'target met':<12}{'threshold':<11}gate"
+    )
     for m in METRICS:
         s = summary[m]
         ci = f"[{s['low'] * 100:.1f}, {s['high'] * 100:.1f}]"
+        target, met = target_cells(s["value"], DEFAULT_THRESHOLD)
         thr = _pct(threshold) if threshold is not None else "none"
         result = "PASS" if threshold is not None and s["value"] >= threshold else "FAIL"
-        print(f"{m:<20}{_pct(s['value']):<8}{ci:<16}{thr:<11}{result}")
+        print(
+            f"{m:<20}{_pct(s['value']):<8}{ci:<16}{s['n']:<6}{UNIT:<16}{target:<9}{met:<12}{thr:<11}{result}"
+            + zero_event_note(s)
+        )
     if baseline is None:
         print("regression vs baseline: no baseline stored")
     elif regression is None:
@@ -353,7 +361,7 @@ def add_run_commands(sub, modes) -> None:
     run.set_defaults(handler=cmd_eval)
     upload = sub.add_parser("eval-upload", help="upload the dataset splits to LangSmith")
     upload.add_argument(
-        "--suite", nargs="+", choices=(*SUITES, "all"), default="all", help="splits to upload (default: all)"
+        "--suite", nargs="+", choices=(*UPLOAD_SUITES, "all"), default="all", help="splits to upload (default: all)"
     )
     upload.set_defaults(handler=cmd_upload)
 
@@ -364,13 +372,23 @@ SUITES = (
     "email_order_extraction",
     "clarification_detection",
     "clarification_answers",
+    "whatsapp_order_extraction",
+    "channel_routing",
+    "failure_recovery",
+    "order_scenarios",
 )
+# The deterministic phase 05 suites run locally only, so `eval-upload` leaves them out; `order_scenarios` stays out
+# of `eval-upload` too (phase 05, increment 24).
+UPLOAD_SUITES = tuple(name for name in SUITES if name not in ("channel_routing", "failure_recovery", "order_scenarios"))
+# `all` runs every suite with a baseline; the WhatsApp suite joined once its baseline was recorded (increment 16)
+# and `order_scenarios` once its baseline was recorded (increment 24).
+ALL_SUITES = SUITES
 
 
-def suite_names(suite) -> tuple[str, ...]:
+def suite_names(suite, everything: tuple[str, ...] = ALL_SUITES) -> tuple[str, ...]:
     """`--suite` holds one name, several names or `all`."""
     names = (suite,) if isinstance(suite, str) else tuple(suite)
-    return SUITES if "all" in names else tuple(dict.fromkeys(names))
+    return everything if "all" in names else tuple(dict.fromkeys(names))
 
 
 def _suite(name: str):
@@ -382,6 +400,22 @@ def _suite(name: str):
         from purchase_cycle.evaluation import web_form_eval
 
         return web_form_eval
+    if name == "whatsapp_order_extraction":
+        from purchase_cycle.evaluation import whatsapp_eval
+
+        return whatsapp_eval
+    if name == "channel_routing":
+        from purchase_cycle.evaluation import routing_eval
+
+        return routing_eval
+    if name == "failure_recovery":
+        from purchase_cycle.evaluation import recovery_eval
+
+        return recovery_eval
+    if name == "order_scenarios":
+        from purchase_cycle.evaluation import scenarios_eval
+
+        return scenarios_eval
     if name in ("clarification_detection", "clarification_answers"):
         from purchase_cycle.evaluation import clarification_eval
 
@@ -390,7 +424,7 @@ def _suite(name: str):
 
 
 def cmd_upload(args) -> int:
-    names = suite_names(args.suite)
+    names = suite_names(args.suite, UPLOAD_SUITES)
     return max(_suite(name).upload_datasets() for name in names)
 
 

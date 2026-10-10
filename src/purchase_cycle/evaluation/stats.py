@@ -27,3 +27,14 @@ def mcnemar_exact(lost: int, gained: int) -> float:
     k = min(lost, gained)
     tail = sum(comb(n, i) for i in range(k + 1)) / 2**n
     return min(1.0, 2 * tail)
+
+
+def target_cells(value: float, target: float, op: str = ">=") -> tuple[str, str]:
+    """Target fixed before measuring and whether the value meets it, apart from the gate result."""
+    met = value >= target - 1e-9 if op == ">=" else value <= target + 1e-9
+    return f"{op}{target * 100:.1f}%", "met" if met else "not met"
+
+
+def zero_event_note(s: dict) -> str:
+    """Wilson upper bound of a rate with zero events, printed after its row."""
+    return f"  0 of {s['n']}, Wilson upper bound {s['high'] * 100:.1f}%" if s["n"] and s["hits"] == 0 else ""

@@ -6,6 +6,7 @@ so the evaluated path is the one a real email takes: parsing, intake, extraction
 
 import json
 import os
+import re
 import sys
 import tempfile
 from collections import Counter, defaultdict
@@ -17,16 +18,33 @@ from langsmith.utils import ContextThreadPoolExecutor
 
 from purchase_cycle import db
 from purchase_cycle.config import EMAIL_EXTRACTION_RECORDINGS_PATH, EMAIL_INTAKE_RECORDINGS_PATH, EVALS_DIR, MODEL_ID
-from purchase_cycle.email_order import InvalidExtraction, build_email_order_graph
+from purchase_cycle.email_order import build_email_order_graph
 from purchase_cycle.evaluation import email_dataset as ed
 from purchase_cycle.evaluation.harness import ALPHA, DEFAULT_THRESHOLD
-from purchase_cycle.evaluation.stats import mcnemar_exact, wilson_interval
-from purchase_cycle.llm import EMAIL_EXTRACTION, EMAIL_INTAKE, InvalidModelOutput, MissingRecording, ModelClient
+from purchase_cycle.evaluation.stats import mcnemar_exact, target_cells, wilson_interval, zero_event_note
+from purchase_cycle.llm import (
+    EMAIL_EXTRACTION,
+    EMAIL_INTAKE,
+    InvalidExtraction,
+    InvalidModelOutput,
+    MissingRecording,
+    ModelClient,
+)
 
 SUITE = "email_order_extraction"
 BASELINE_PATH = EVALS_DIR / "baselines" / "email_order_extraction.json"
 GATED = ("intake_accuracy", "line_recall", "line_precision")
 METRICS = (*GATED, "field_sku", "field_quantity", "out_of_catalog_detection", "email_exact_match")
+# Counting unit of each metric (see `summarise`); the target of the gated ones is DEFAULT_THRESHOLD.
+UNITS = {
+    "intake_accuracy": "email",
+    "line_recall": "expected_line",
+    "line_precision": "produced_line",
+    "field_sku": "expected_line",
+    "field_quantity": "sku_found_line",
+    "out_of_catalog_detection": "order_email",
+    "email_exact_match": "order_email",
+}
 SOURCES = ("body", "txt", "pdf", "xlsx")
 
 
@@ -34,35 +52,104 @@ def langsmith_dataset_name(split: str) -> str:
     return f"email-order-extraction-v{ed.DATASET_VERSION}-{split}"
 
 
+def _take(pool: Counter, key) -> bool:
+    """Consume one produced line with this key, so a produced line counts for at most one expected line."""
+    if pool[key] > 0:
+        pool[key] -= 1
+        return True
+    return False
+
+
+def _normalise(text: str) -> str:
+    return " ".join(text.casefold().split())
+
+
+def _has_phrase(text: str, phrase: str) -> bool:
+    """Whole-word containment of normalised `phrase` in normalised `text`, so "gel" is not in "angel wings"."""
+    return re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", text) is not None
+
+
+def _cited_text(source_text: str, texts: set[str]) -> str | None:
+    """The one expected text a citation names: those it contains as whole words, less sub-phrases of another.
+
+    A citation naming more than one distinct expected text (a copied table) names none.
+    """
+    cited = _normalise(source_text)
+    found = {text for text in texts if _has_phrase(cited, text)}
+    kept = {text for text in found if not any(other != text and _has_phrase(other, text) for other in found)}
+    return kept.pop() if len(kept) == 1 else None
+
+
+def _max_matching(edges: list[list[int]], n_right: int) -> int:
+    """Size of a maximum one-to-one matching; `edges[i]` lists the right nodes left node `i` may take."""
+    owner = [-1] * n_right
+
+    def augment(i: int, seen: set[int]) -> bool:
+        for j in edges[i]:
+            if j not in seen:
+                seen.add(j)
+                if owner[j] == -1 or augment(owner[j], seen):
+                    owner[j] = i
+                    return True
+        return False
+
+    return sum(augment(i, set()) for i in range(len(edges)))
+
+
+def _unknown_hits(expected: list[dict], produced: list[dict]) -> int:
+    """Pair out-of-catalog lines one to one on source, quantity and the requested text named by the citation."""
+    texts = {_normalise(line["text"]) for line in expected}
+    cited = [_cited_text(line["source_text"], texts) for line in produced]
+    edges = [
+        [
+            j
+            for j, got in enumerate(produced)
+            if got["source"] == line["location"]
+            and got["quantity"] == line["expected_quantity"]
+            and cited[j] == _normalise(line["text"])
+        ]
+        for line in expected
+    ]
+    return _max_matching(edges, len(produced))
+
+
 def grade(case: dict, is_order: bool | None, lines: list[dict], error: str | None = None) -> dict:
-    """Grade one email; `lines` are the extracted lines, empty when the run stopped or the intake said no order."""
-    expected = Counter(
-        (line["expected_sku"], line["expected_quantity"]) for line in case["lines"] if line["expected_sku"]
-    )
-    produced = Counter((line["sku"], line["quantity"]) for line in lines if line["sku"] is not None)
-    produced_skus = {line["sku"] for line in lines if line["sku"] is not None}
-    hits = expected & produced
-    line_rows = []
-    for line in case["lines"]:
-        if line["expected_sku"] is None:
-            continue
-        key = (line["expected_sku"], line["expected_quantity"])
-        line_rows.append(
-            {
-                "id": line["line_id"],
-                "line_recall": hits[key] > 0,
-                "field_sku": line["expected_sku"] in produced_skus,
-                "field_quantity": key in produced,
-            }
-        )
-    expected_unmatched = sum(1 for line in case["lines"] if line["expected_sku"] is None)
-    unmatched = sum(1 for line in lines if line["sku"] is None)
-    precision_hits = sum(hits.values())
+    """Grade one email; `lines` are the extracted lines, empty when the run stopped or the intake said no order.
+
+    Expected and produced lines are matched one to one: a catalog line hits only with the expected
+    SKU, quantity and source, and an unknown line only with the expected quantity, source and requested
+    text named by its citation (deviation 05.2).
+    """
+    catalog = [line for line in lines if line["sku"] is not None]
+    full = Counter((line["sku"], line["quantity"], line["source"]) for line in catalog)
+    by_sku = Counter(line["sku"] for line in catalog)
+    by_sku_quantity = Counter((line["sku"], line["quantity"]) for line in catalog)
+    expected = [line for line in case["lines"] if line["expected_sku"] is not None]
+    recall = [_take(full, (line["expected_sku"], line["expected_quantity"], line["location"])) for line in expected]
+    # Exact (SKU, quantity) matches first, recalled lines before the others; SKU-only credit on the leftovers.
+    quantity = [False] * len(expected)
+    for i in sorted(range(len(expected)), key=lambda i: not recall[i]):
+        quantity[i] = _take(by_sku_quantity, (expected[i]["expected_sku"], expected[i]["expected_quantity"]))
+    skus_left = by_sku - Counter(line["expected_sku"] for line, q in zip(expected, quantity, strict=True) if q)
+    line_rows = [
+        {
+            "id": line["line_id"],
+            "line_recall": r,
+            "field_sku": q or _take(skus_left, line["expected_sku"]),
+            "field_quantity": q,
+        }
+        for line, r, q in zip(expected, recall, quantity, strict=True)
+    ]
+    precision_hits = sum(row["line_recall"] for row in line_rows)
+    expected_unknown = [line for line in case["lines"] if line["expected_sku"] is None]
+    unknown = [line for line in lines if line["sku"] is None]
+    unknown_hits = _unknown_hits(expected_unknown, unknown)
+    detection = unknown_hits == len(expected_unknown) == len(unknown)
     exact = (
         error is None
         and is_order == case["is_order"]
-        and precision_hits == sum(expected.values()) == sum(produced.values())
-        and unmatched == expected_unmatched
+        and precision_hits == len(line_rows) == len(catalog)
+        and detection
     )
     return {
         "id": case["id"],
@@ -75,11 +162,12 @@ def grade(case: dict, is_order: bool | None, lines: list[dict], error: str | Non
         # A run that stopped after the intake keeps its decision; a rejected email has none.
         "intake_accuracy": is_order is not None and is_order == case["is_order"],
         "line_rows": line_rows,
-        "produced_catalog": sum(produced.values()),
+        "produced_catalog": len(catalog),
         "precision_hits": precision_hits,
-        "expected_unmatched": expected_unmatched,
-        "unmatched": unmatched,
-        "out_of_catalog_detection": unmatched == expected_unmatched,
+        "expected_unmatched": len(expected_unknown),
+        "unmatched": len(unknown),
+        "unmatched_hits": unknown_hits,
+        "out_of_catalog_detection": detection,
         "email_exact_match": exact,
     }
 
@@ -170,7 +258,17 @@ def rate(hits: int, n: int) -> dict:
 
 
 def summarise(results: list[dict]) -> dict:
-    """Each metric over its own unit: emails, expected catalog lines, produced catalog lines or order emails."""
+    """Each metric over its own unit: emails, expected catalog lines, produced catalog lines or order emails.
+
+    line_recall: expected catalog lines matched by a distinct produced line with the same SKU, quantity and source.
+    line_precision: produced catalog lines matched that way by a distinct expected line.
+    field_sku: expected catalog lines whose SKU a distinct produced line carries; field_quantity: of those,
+    the ones whose quantity also matches.
+    out_of_catalog_detection: order emails whose unknown lines pair one to one with the expected ones on
+    quantity, source and the requested text named by the citation.
+    email_exact_match: order emails with the right intake, every catalog line matched, none extra and
+    out-of-catalog detection.
+    """
     lines = [row for r in results for row in r["line_rows"]]
     found = [row for row in lines if row["field_sku"]]
     orders = [r for r in results if r["expected_is_order"]]
@@ -254,23 +352,32 @@ def _failure_text(r: dict) -> str:
     extra = r["produced_catalog"] - r["precision_hits"]
     if extra:
         parts.append(f"{extra} wrong catalog lines")
-    if r["unmatched"] != r["expected_unmatched"]:
-        parts.append(f"unmatched {r['unmatched']}, expected {r['expected_unmatched']}")
+    if not r["out_of_catalog_detection"]:
+        parts.append(
+            f"unknown lines paired {r['unmatched_hits']} of {r['expected_unmatched']} on quantity, source and"
+            f" requested text ({r['unmatched']} produced)"
+        )
     return "; ".join(parts)
 
 
 def print_report(mode, split, summary, results, threshold, regression, baseline, experiment) -> None:
     n_lines = summary["line_recall"]["n"]
     print(f"{SUITE}  mode={mode}  split={split}  emails={len(results)}  expected_lines={n_lines}  model={MODEL_ID}")
-    print(f"{'metric':<26}{'value':<8}{'95% CI':<16}{'n':<6}{'threshold':<11}result")
+    print(
+        f"{'metric':<26}{'value':<8}{'95% CI':<16}{'n':<6}{'unit':<16}{'target':<9}{'target met':<12}{'threshold':<11}gate"
+    )
     for m in METRICS:
         s = summary[m]
         if m in GATED:
+            target, met = target_cells(s["value"], DEFAULT_THRESHOLD)
             thr = _pct(threshold) if threshold is not None else "none"
             result = "PASS" if threshold is not None and s["value"] >= threshold else "FAIL"
         else:
-            thr, result = "none", "reported"
-        print(f"{m:<26}{_pct(s['value']):<8}{_ci(s):<16}{s['n']:<6}{thr:<11}{result}")
+            target, met, thr, result = "none", "n/a", "none", "reported"
+        print(
+            f"{m:<26}{_pct(s['value']):<8}{_ci(s):<16}{s['n']:<6}{UNITS[m]:<16}{target:<9}{met:<12}{thr:<11}{result}"
+            + zero_event_note(s)
+        )
     if baseline is None:
         print("regression vs baseline: no baseline stored")
     elif regression is None:

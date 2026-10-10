@@ -36,16 +36,17 @@ from purchase_cycle.config import (
     EVALS_DIR,
     MODEL_ID,
 )
-from purchase_cycle.email_order import InvalidExtraction, build_email_order_graph
+from purchase_cycle.email_order import build_email_order_graph
 from purchase_cycle.evaluation import clarification_dataset as cd
 from purchase_cycle.evaluation.harness import ALPHA, DEFAULT_THRESHOLD
 from purchase_cycle.evaluation.planning import read_jsonl
-from purchase_cycle.evaluation.stats import mcnemar_exact, wilson_interval
+from purchase_cycle.evaluation.stats import mcnemar_exact, target_cells, wilson_interval, zero_event_note
 from purchase_cycle.llm import (
     CLARIFICATION_ANSWER,
     EMAIL_EXTRACTION,
     EMAIL_INTAKE,
     MATCHING,
+    InvalidExtraction,
     InvalidModelOutput,
     MissingRecording,
     ModelClient,
@@ -71,6 +72,20 @@ DETECTION_THRESHOLDS = {
     "recall_unknown": 50 / 53,
     "recall_quantity": 42 / 46,
     "false_question_rate": 1 - DEFAULT_THRESHOLD,
+}
+# Targets fixed before measuring (phase 04 spec), reported apart from the gates above: 95% recall, at most 5% false questions.
+TARGETS = {
+    **{m: (DEFAULT_THRESHOLD, ">=") for m in RECALLS},
+    "false_question_rate": (1 - DEFAULT_THRESHOLD, "<="),
+    "resolution_accuracy": (DEFAULT_THRESHOLD, ">="),
+}
+# Counting unit of each metric: expected doubts, raised doubts, orders with no expected doubt, doubtful lines, cases.
+UNITS = {
+    **{m: "expected_doubt" for m in RECALLS},
+    **{m: "raised_doubt" for m in PRECISIONS},
+    "false_question_rate": "clear_order",
+    "resolution_accuracy": "doubtful_line",
+    "case_exact_match": "case",
 }
 
 
@@ -549,10 +564,13 @@ def _answer_outputs(r: dict) -> dict:
 
 
 def _print_table(summary: dict, metrics, threshold: float | dict | None, gated: dict[str, str]) -> None:
-    print(f"{'metric':<24}{'value':<8}{'95% CI':<16}{'n':<6}{'threshold':<11}result")
+    print(
+        f"{'metric':<24}{'value':<8}{'95% CI':<16}{'n':<6}{'unit':<16}{'target':<9}{'target met':<12}{'threshold':<11}gate"
+    )
     for m in metrics:
         s = summary[m]
         ci = f"[{s['low'] * 100:.1f}, {s['high'] * 100:.1f}]"
+        target, met = target_cells(s["value"], *TARGETS[m]) if m in gated else ("none", "n/a")
         if m not in gated:
             thr, result = "none", "reported"
         elif threshold is None:
@@ -561,7 +579,10 @@ def _print_table(summary: dict, metrics, threshold: float | dict | None, gated: 
             limit = _limit(threshold, m, gated[m])
             ok = s["value"] >= limit - 1e-9 if gated[m] == ">=" else s["value"] <= limit + 1e-9
             thr, result = f"{gated[m]}{_pct(limit)}", "PASS" if ok else "FAIL"
-        print(f"{m:<24}{_pct(s['value']):<8}{ci:<16}{s['n']:<6}{thr:<11}{result}")
+        print(
+            f"{m:<24}{_pct(s['value']):<8}{ci:<16}{s['n']:<6}{UNITS[m]:<16}{target:<9}{met:<12}{thr:<11}{result}"
+            + zero_event_note(s)
+        )
 
 
 def _print_regression(regression, baseline, split) -> None:

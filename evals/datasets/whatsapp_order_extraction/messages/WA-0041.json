@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 100 200",
+  "message_id": "wamid.dataset.WA-0041",
+  "text": {
+    "body": "Hi, yesterday's delivery arrived with two boxes crushed and wet. Very disappointed, can someone call me?"
+  },
+  "timestamp": "1789285980",
+  "type": "text"
+}

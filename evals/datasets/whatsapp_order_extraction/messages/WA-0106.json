@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 113 213",
+  "message_id": "wamid.dataset.WA-0106",
+  "text": {
+    "body": "Hi, could you tell me if my last invoice has already been paid? Accounts says they sent the transfer"
+  },
+  "timestamp": "1790924280",
+  "type": "text"
+}

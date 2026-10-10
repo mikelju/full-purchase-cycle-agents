@@ -1,4 +1,4 @@
-"""C14 (phases 01 to 03) and C16 (phase 04): no secret is versioned and every variable is documented."""
+"""C14 (phases 01 to 03), C16 (phase 04) and C18 (phase 05): no secret is versioned and every variable is documented."""
 
 import re
 import subprocess
@@ -131,3 +131,35 @@ def test_phase_04_files_are_tracked_and_their_decoded_text_holds_no_keys():
         email = parse_email((ROOT / name).read_bytes())
         decoded = "\n".join([email["sender"], model_text(email)])
         assert not SECRET_PATTERNS.search(decoded), f"possible secret in the decoded text of {name}"
+
+
+def test_phase_05_files_are_tracked_and_hold_no_keys():
+    tracked = set(_tracked())
+    whatsapp = "evals/datasets/whatsapp_order_extraction"
+    fixed = [
+        "evals/recordings/whatsapp_intake.jsonl",
+        "evals/recordings/whatsapp_order_extraction.jsonl",
+        "evals/recordings/order_scenarios.jsonl",
+        "evals/recordings/orders_demo.jsonl",
+        f"{whatsapp}/plan.jsonl",
+        f"{whatsapp}/dataset.jsonl",
+        f"{whatsapp}/second_pass_review.jsonl",
+        "evals/datasets/channel_routing/dataset.jsonl",
+        "evals/datasets/failure_recovery/dataset.jsonl",
+        "evals/baselines/whatsapp_order_extraction.json",
+        "evals/baselines/order_scenarios.json",
+        "evals/audit/whatsapp_order_extraction-audit-v1.0.csv",
+    ]
+    folders = (
+        ROOT / whatsapp / "texts",
+        ROOT / whatsapp / "messages",
+        ROOT / "evals" / "datasets" / "order_scenarios",
+        ROOT / "examples" / "orders",
+    )
+    files = sorted(str(p.relative_to(ROOT).as_posix()) for folder in folders for p in folder.rglob("*") if p.is_file())
+    assert len(files) >= 5 + 160 + 30 + 8  # texts, messages, scenarios and the sample inbox with its crash item
+    for name in fixed + files:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
+    # Outbox files are written under the ignored data/ folder at run time; none is versioned.
+    assert not [name for name in tracked if "outbox" in name.split("/")[0:2]]

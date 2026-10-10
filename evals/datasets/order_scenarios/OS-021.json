@@ -1,0 +1,58 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply"
+  ],
+  "answers": [],
+  "channel": "web_form",
+  "crash_at": null,
+  "customer_code": "RES-002",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": null,
+    "lines": [
+      {
+        "price_eur": 6.9,
+        "quantity": 20,
+        "sku": "GLV-NIT-M"
+      },
+      {
+        "price_eur": 2.6,
+        "quantity": 12,
+        "sku": "SAL-500"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-021",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "lines": [
+      {
+        "product": "nitrile gloves M",
+        "quantity": 20
+      },
+      {
+        "product": "saline 500 ml",
+        "quantity": 12
+      }
+    ]
+  },
+  "requested": [
+    {
+      "sku": "GLV-NIT-M",
+      "text": "nitrile gloves M"
+    },
+    {
+      "sku": "SAL-500",
+      "text": "saline 500 ml"
+    }
+  ],
+  "steps": [
+    "deliver"
+  ],
+  "tags": []
+}

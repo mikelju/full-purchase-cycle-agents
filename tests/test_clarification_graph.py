@@ -356,6 +356,41 @@ def test_store_and_status_change_share_one_transaction(seeded_db, write_recordin
     assert (orders, lines, pending[0]["status"]) == ([], [], "pending")
 
 
+def test_answered_thread_that_crashed_after_the_store_commit_resumes_to_one_order(
+    seeded_db, write_recording, tmp_path, monkeypatch, no_network
+):
+    """C10, C6: resuming re-runs `store`; the stored source returns its order without touching the answered row."""
+    from purchase_cycle import faults
+
+    class Crash(Exception):
+        pass
+
+    def crash_at(point):
+        if point == faults.AFTER_STORE_COMMIT:
+            raise Crash(point)
+
+    db_path, catalog = seeded_db
+    _record_form(catalog, write_recording)
+    doubts = detect(_form_lines(catalog), catalog, "web_form")
+    _record_round(catalog, write_recording, doubts, QUESTION_1, ANSWER_1, RESOLUTIONS_1)
+    recordings = _record_round(catalog, write_recording, doubts[2:], QUESTION_2, ANSWER_2, RESOLUTIONS_2)
+    graph = _form_graph(seeded_db, recordings, tmp_path, _clients(catalog, recordings))
+    graph.invoke({"submission": DOUBT_FORM}, RUN, durability="sync")
+    graph.invoke(Command(resume={"answer": ANSWER_1}), RUN, durability="sync")
+    with monkeypatch.context() as patch:
+        patch.setattr(faults, "crash_at", crash_at)
+        with pytest.raises(Crash):
+            graph.invoke(Command(resume={"answer": ANSWER_2}), RUN, durability="sync")
+    assert len(_rows(db_path)[0]) == 1
+    state = graph.invoke(None, RUN, durability="sync")
+    orders, lines, pending = _rows(db_path)
+    assert [order["id"] for order in orders] == [1]
+    assert [(line["sku"], line["quantity"]) for line in lines] == [("GLV-NIT-M", 40), ("GLV-NIT-L", 10)]
+    assert pending[0]["status"] == "answered"
+    assert state["order_id"] == 1
+    assert state["reply"] == TWO_ROUND_REPLY
+
+
 def test_finishing_a_thread_that_is_not_pending_rolls_back(seeded_db):
     db_path, _ = seeded_db
     conn = db.connect(db_path)

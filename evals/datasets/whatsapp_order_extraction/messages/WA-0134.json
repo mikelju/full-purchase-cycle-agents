@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 107 207",
+  "message_id": "wamid.dataset.WA-0134",
+  "text": {
+    "body": "Hi, clinic order:\n- 13 bottles alcohol 70% 500ml\n- 15 boxes 50ml luer lock syringes\n- 10 boxes syringes 3ml luer slip\n- 10 boxes needles 27G 13mm\n- 15 boxes safety lancets 200\n- 7 sterile suture kits\nthanks"
+  },
+  "timestamp": "1791626520",
+  "type": "text"
+}

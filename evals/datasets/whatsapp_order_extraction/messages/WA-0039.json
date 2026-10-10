@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 133 233",
+  "message_id": "wamid.dataset.WA-0039",
+  "text": {
+    "body": "Hi, quick question: what time does the driver usually arrive on Tuesdays?"
+  },
+  "timestamp": "1789234020",
+  "type": "text"
+}

@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 114 214",
+  "message_id": "wamid.dataset.WA-0038",
+  "text": {
+    "body": "Hello, small order:\n- 9 boxes transparent film dressing 10x12\n- 14 washable bed pads 75x90\nHave a nice day"
+  },
+  "timestamp": "1789208040",
+  "type": "text"
+}

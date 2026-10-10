@@ -1,0 +1,64 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "ask_question"
+  ],
+  "answers": [
+    "The luer lock ones."
+  ],
+  "channel": "web_form",
+  "crash_at": null,
+  "customer_code": "RES-005",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": "answered",
+    "lines": [
+      {
+        "price_eur": 7.5,
+        "quantity": 10,
+        "sku": "SYR-LL-10"
+      },
+      {
+        "price_eur": 19.0,
+        "quantity": 2,
+        "sku": "SUP-LUMBAR"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-024",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "lines": [
+      {
+        "product": "syringe 10 ml",
+        "quantity": 10
+      },
+      {
+        "product": "lumbar support belt",
+        "quantity": 2
+      }
+    ]
+  },
+  "requested": [
+    {
+      "sku": "SYR-LL-10",
+      "text": "syringe 10 ml"
+    },
+    {
+      "sku": "SUP-LUMBAR",
+      "text": "lumbar support belt"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "answer"
+  ],
+  "tags": [
+    "clarification"
+  ]
+}

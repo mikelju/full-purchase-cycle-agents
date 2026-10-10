@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 148 248",
+  "message_id": "wamid.dataset.WA-0005",
+  "text": {
+    "body": "Hello team, order for this week:\nfour dozen boxes of neoprene surgical gloves latex-free size 8.5\ntwo hundred pairs of knee-high compression stockings class I size S\nforty-five rolls of black kinesiology tape 5 cm x 5 m\nThanks, Marta"
+  },
+  "timestamp": "1788375900",
+  "type": "text"
+}

@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 109 209",
+  "message_id": "wamid.dataset.WA-0109",
+  "text": {
+    "body": "Hello, what is the minimum amount for free delivery?"
+  },
+  "timestamp": "1790998620",
+  "type": "text"
+}

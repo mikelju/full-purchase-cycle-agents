@@ -1,0 +1,67 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "ask_question"
+  ],
+  "answers": [
+    "Let me check with the nurse in charge and I will get back to you.",
+    "The boxes of 100 strips."
+  ],
+  "channel": "web_form",
+  "crash_at": null,
+  "customer_code": "RES-006",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": "answered",
+    "lines": [
+      {
+        "price_eur": 26.0,
+        "quantity": 4,
+        "sku": "GLU-STRIP-100"
+      },
+      {
+        "price_eur": 2.6,
+        "quantity": 24,
+        "sku": "SAL-500"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-025",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "lines": [
+      {
+        "product": "blood glucose test strips",
+        "quantity": 4
+      },
+      {
+        "product": "saline 500 ml",
+        "quantity": 24
+      }
+    ]
+  },
+  "requested": [
+    {
+      "sku": "GLU-STRIP-100",
+      "text": "blood glucose test strips"
+    },
+    {
+      "sku": "SAL-500",
+      "text": "saline 500 ml"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "answer",
+    "answer"
+  ],
+  "tags": [
+    "clarification",
+    "two_answers"
+  ]
+}

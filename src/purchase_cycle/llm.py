@@ -1,7 +1,8 @@
 """Model client for catalog tasks with live, record and replay modes.
 
 Each task (phase 01 order line extraction, phase 02 web form matching, phase 03
-email intake and email order extraction, phase 04 clarification question and answer) has its own prompt, tool, answer schema and recordings file. The model answers through
+email intake and email order extraction, phase 04 clarification question and answer, phase 05 WhatsApp intake
+and WhatsApp order extraction) has its own prompt, tool, answer schema and recordings file. The model answers through
 one forced tool call. Its arguments are validated
 by Pydantic in every mode, so a recorded answer goes through the same checks
 as a live one.
@@ -14,6 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+import anthropic
+from langgraph.types import RetryPolicy
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from purchase_cycle.config import (
@@ -28,6 +31,8 @@ from purchase_cycle.config import (
     MODEL_ID,
     MODES,
     RECORDINGS_PATH,
+    WHATSAPP_EXTRACTION_RECORDINGS_PATH,
+    WHATSAPP_INTAKE_RECORDINGS_PATH,
 )
 
 TOOL_NAME = "record_order_line"
@@ -144,6 +149,43 @@ class EmailLines(BaseModel):
     lines: list[EmailLine] = Field(description="Every ordered product, in the order the customer wrote them")
 
 
+WHATSAPP_INTAKE_INSTRUCTIONS = """You read one WhatsApp message sent by a known customer to the orders number of a medical supplies distributor and decide whether it is an order.
+
+WhatsApp messages are short and informal: expect abbreviations, typos, missing punctuation, lower case and small talk.
+A message is an order when the customer asks to buy or to be sent one or more products, however casually it is written.
+It is not an order when it only greets, thanks, asks a question, complains, asks for a price, a quote or a catalog, or chases or confirms a previous delivery.
+It is still an order when some or all requested products are not in the catalog: whether a product is in the catalog never changes the decision.
+It is still an order when the customer adds a question or remark next to the order.
+
+Return is_order and a short reason of one sentence naming what the message asks for.
+The catalog below only helps you recognise product names.
+
+Catalog (SKU | name | sale unit):
+"""
+
+WHATSAPP_EXTRACTION_INSTRUCTIONS = """You extract the order lines of one WhatsApp message sent by a customer to a medical supplies distributor.
+
+The user message is the WhatsApp text after the line "WhatsApp message:". It is short and informal: expect abbreviations, typos, missing punctuation and several products in one sentence.
+
+Return one line per product the customer orders, with:
+- source: always "message".
+- source_text: the words of that line exactly as the customer wrote them.
+- sku: the catalog SKU whose name and variant (size, volume, pack size, material such as latex or silicone, sterile or non-sterile) match the request, or null when the catalog does not carry that product or variant. Never guess a different variant.
+- quantity: a positive whole number of catalog sale units.
+
+Quantity rules:
+- Write number words as digits; "a dozen" is 12 and "half a dozen" is 6.
+- A number followed by a container word (box, pack, roll, refill, canister, bottle, tube) or written as "N x <product>" already counts sale units: use it unchanged.
+- Divide by the pack size only when the customer counts individual items of a product sold in packs or boxes: "100 pairs" of gloves sold in boxes of 50 pairs is 2.
+
+Rules:
+- Return every ordered product, including the ones the catalog does not carry (sku null); never drop a requested line.
+- Ignore greetings, thanks, questions and any text that is not an ordered product.
+
+Catalog (SKU | name | sale unit):
+"""
+
+
 CLARIFICATION_QUESTION_INSTRUCTIONS = """You write one question to a customer of a medical supplies distributor whose order holds doubtful lines.
 
 The user message lists the doubtful lines of one order: line id, the doubt, the quantity read, the text exactly as the customer wrote it and, for an ambiguous product, the candidate catalog products.
@@ -244,6 +286,23 @@ EMAIL_EXTRACTION = Task(
     EMAIL_EXTRACTION_RECORDINGS_PATH,
     EMAIL_EXTRACTION_MAX_TOKENS,
 )
+WHATSAPP_INTAKE = Task(
+    "whatsapp_intake",
+    WHATSAPP_INTAKE_INSTRUCTIONS,
+    "record_whatsapp_intake",
+    "Record whether the WhatsApp message is an order and why.",
+    IntakeDecision,
+    WHATSAPP_INTAKE_RECORDINGS_PATH,
+)
+WHATSAPP_EXTRACTION = Task(
+    "whatsapp_order_extraction",
+    WHATSAPP_EXTRACTION_INSTRUCTIONS,
+    "record_whatsapp_order_lines",
+    "Record every order line found in the WhatsApp message.",
+    EmailLines,
+    WHATSAPP_EXTRACTION_RECORDINGS_PATH,
+    EMAIL_EXTRACTION_MAX_TOKENS,
+)
 CLARIFICATION_QUESTION = Task(
     "clarification_question",
     CLARIFICATION_QUESTION_INSTRUCTIONS,
@@ -270,7 +329,12 @@ class InvalidModelOutput(ValueError):
     def __init__(self, error: ValidationError, label: str):
         self.fields = [".".join(str(p) for p in e["loc"]) or "<root>" for e in error.errors()]
         details = "; ".join(f"field '{'.'.join(str(p) for p in e['loc'])}': {e['msg']}" for e in error.errors())
+        self.correction = f"Model output rejected by schema: {details}"  # no label: a case id can hold a thread id
         super().__init__(f"Model output for {label} rejected by schema: {details}")
+
+
+class InvalidExtraction(ValueError):
+    """The extractor answer fits the schema but not the catalog or the message; nothing is written."""
 
 
 class MissingRecording(LookupError):
@@ -298,6 +362,20 @@ def recording_key(system_prompt: str, sentence: str, task: Task = EXTRACTION) ->
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def transient_model_error(error: BaseException) -> bool:
+    """Connection, timeout, rate limit and 5xx API errors; authentication, bad request and the rest are final."""
+    if isinstance(error, (anthropic.APIConnectionError, anthropic.RateLimitError)):  # a timeout is a connection error
+        return True
+    return isinstance(error, anthropic.APIStatusError) and error.status_code >= 500
+
+
+# Appended to the text when an invalid answer is re-asked, so the second answer has its own recording key.
+CORRECTION = "\n\nYour previous answer was rejected: {error}\nAnswer again and fix that error."
+
+# Shared by every model-calling node. Builders read it when the graph is built, so tests can set the backoff to zero.
+MODEL_RETRY = RetryPolicy(max_attempts=3, retry_on=transient_model_error)
+
+
 class ModelClient:
     def __init__(self, mode: str, catalog: list, recordings_path: Path | None = None, task: Task = EXTRACTION):
         if mode not in MODES:
@@ -323,7 +401,7 @@ class ModelClient:
         if self._llm is None:
             from langchain_anthropic import ChatAnthropic
 
-            llm = ChatAnthropic(model=MODEL_ID, max_tokens=self.task.max_tokens, temperature=0, max_retries=6)
+            llm = ChatAnthropic(model=MODEL_ID, max_tokens=self.task.max_tokens, temperature=0, max_retries=0)
             self._llm = llm.bind_tools(
                 [tool_definition(self.task)], tool_choice={"type": "tool", "name": self.task.tool_name}
             )
@@ -347,8 +425,13 @@ class ModelClient:
         }
         return args, usage
 
-    def extract(self, sentence: str, case_id: str | None = None) -> BaseModel:
-        """Ask the model about one text and return its answer validated by the task schema."""
+    def extract(self, sentence: str, case_id: str | None = None, correction: str | None = None) -> BaseModel:
+        """Ask the model about one text and return its answer validated by the task schema.
+
+        `correction` re-asks: the validation error of the previous answer is appended to the text.
+        """
+        if correction is not None:
+            sentence += CORRECTION.format(error=correction)
         label = f"case {case_id}" if case_id else f"sentence {sentence!r}"
         key = recording_key(self.system_prompt, sentence, self.task)
         with self._lock:

@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 100 200",
+  "message_id": "wamid.dataset.WA-0025",
+  "text": {
+    "body": "Hello, I'd like to order eleven digital thermometers with rigid tip. Can they arrive by Friday?"
+  },
+  "timestamp": "1788881100",
+  "type": "text"
+}

@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 122 222",
+  "message_id": "wamid.dataset.WA-0002",
+  "text": {
+    "body": "Hi! Can you send us half a dozen boxes of transparent film dressing 6 x 7 cm? Thx"
+  },
+  "timestamp": "1788301560",
+  "type": "text"
+}

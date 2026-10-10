@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 148 248",
+  "message_id": "wamid.dataset.WA-0098",
+  "text": {
+    "body": "Good afternoon! Pharmacy here, testing this number. Please reply when you see it"
+  },
+  "timestamp": "1790720040",
+  "type": "text"
+}

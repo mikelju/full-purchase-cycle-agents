@@ -1,0 +1,59 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply",
+    "ask_question"
+  ],
+  "answers": [
+    "Let me check with the nurse in charge and I will get back to you.",
+    "The adult ones."
+  ],
+  "channel": "email",
+  "crash_at": null,
+  "customer_code": "CLI-017",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": "answered",
+    "lines": [
+      {
+        "price_eur": 19.0,
+        "quantity": 2,
+        "sku": "OXI-FING"
+      },
+      {
+        "price_eur": 19.0,
+        "quantity": 1,
+        "sku": "SUP-LUMBAR"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-016",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "body": "Hello,\nPlease send:\n- 2 units of pulse oximeter\n- 1 units of lumbar support belt\nThanks,\nRuben Alvarez",
+    "subject": "Order"
+  },
+  "requested": [
+    {
+      "sku": "OXI-FING",
+      "text": "pulse oximeter"
+    },
+    {
+      "sku": "SUP-LUMBAR",
+      "text": "lumbar support belt"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "answer",
+    "answer"
+  ],
+  "tags": [
+    "clarification",
+    "two_answers"
+  ]
+}

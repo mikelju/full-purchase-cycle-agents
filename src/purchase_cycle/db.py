@@ -51,6 +51,23 @@ CREATE TABLE IF NOT EXISTS clarifications (
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS order_sources (
+    channel TEXT NOT NULL,
+    message_id TEXT NOT NULL,
+    thread_id TEXT,
+    order_id INTEGER NOT NULL REFERENCES orders (id),
+    PRIMARY KEY (channel, message_id)
+);
+CREATE TABLE IF NOT EXISTS failures (
+    thread_id TEXT PRIMARY KEY,
+    channel TEXT NOT NULL,
+    source TEXT NOT NULL,
+    step TEXT NOT NULL,
+    error TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('needs_review', 'resolved')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")
@@ -107,23 +124,56 @@ def insert_order(
     status: str,
     lines: list[tuple],
     clarification: tuple[str, str] | None = None,
+    source: tuple[str, str | None] | None = None,
 ) -> int:
     """Insert one order and its (sku, quantity) lines in one transaction: all of it, or nothing.
 
     `clarification` is a (thread id, final status) pair whose row changes status in the same transaction.
+    `source` is the (message id, thread id) of the delivered message; a message id already stored for the
+    channel for the same customer returns its order id and writes no order, line or source (a re-delivery or a
+    resumed `store`), but a still pending clarification of the thread is finished; stored for another customer it
+    raises SourceConflict, writes no order and closes a still pending clarification of the thread.
     """
     with conn:
+        if source:
+            row = stored_source(conn, channel, source[0])
+            if row and row["customer_code"] == customer_code:
+                if clarification:  # the current thread's question is finished too; an answered one stays as it is
+                    _finish_if_pending(conn, *clarification)
+                return row["order_id"]
+            if row:
+                message = f"the {channel} message id '{source[0]}' is already stored for another customer"
+                if clarification:  # closed, not left pending, so the customer's next message is not its answer
+                    _finish_if_pending(conn, clarification[0], "closed")
+                    conn.commit()
+                    message += f"; thread {clarification[0]} closed"
+                raise SourceConflict(f"{message}; nothing stored")
         if clarification:
             finish_clarification(conn, *clarification)
         cursor = conn.execute(
             "INSERT INTO orders (customer_code, channel, status) VALUES (?, ?, ?)", (customer_code, channel, status)
         )
         order_id = cursor.lastrowid
+        if source:
+            conn.execute(
+                "INSERT INTO order_sources (channel, message_id, thread_id, order_id) VALUES (?, ?, ?, ?)",
+                (channel, *source, order_id),
+            )
         conn.executemany(
             "INSERT INTO order_lines (order_id, sku, quantity) VALUES (?, ?, ?)",
             [(order_id, sku, quantity) for sku, quantity in lines],
         )
     return order_id
+
+
+def stored_source(conn: sqlite3.Connection, channel: str, message_id: str) -> dict | None:
+    """The stored order of a channel message id: its order id, customer code and thread id, or None."""
+    row = conn.execute(
+        "SELECT s.order_id, s.thread_id, o.customer_code FROM order_sources s JOIN orders o ON o.id = s.order_id "
+        "WHERE s.channel = ? AND s.message_id = ?",
+        (channel, message_id),
+    ).fetchone()
+    return dict(row) if row else None
 
 
 def order_line_details(conn: sqlite3.Connection, order_id: int) -> list[dict]:
@@ -157,6 +207,10 @@ def save_clarification(
         raise NotPending(f"thread {thread_id} is not pending; nothing changed")
 
 
+class SourceConflict(RuntimeError):
+    """A message id already stored for another customer: not a re-delivery, and never answered with that order."""
+
+
 class NotPending(RuntimeError):
     """The clarification is no longer pending, for example another process finished it first."""
 
@@ -174,6 +228,14 @@ def finish_clarification(conn: sqlite3.Connection, thread_id: str, status: str) 
         raise NotPending(f"thread {thread_id} is not pending; nothing changed")
 
 
+def _finish_if_pending(conn: sqlite3.Connection, thread_id: str, status: str) -> None:
+    """Like finish_clarification, but a row that is not pending stays as it is and nothing is raised."""
+    conn.execute(
+        "UPDATE clarifications SET status = ?, updated_at = datetime('now') WHERE thread_id = ? AND status = 'pending'",
+        (status, thread_id),
+    )
+
+
 def get_clarification(conn: sqlite3.Connection, thread_id: str) -> dict | None:
     row = conn.execute("SELECT * FROM clarifications WHERE thread_id = ?", (thread_id,)).fetchone()
     return dict(row) if row else None
@@ -189,3 +251,63 @@ def pending_clarifications(conn: sqlite3.Connection) -> list[dict]:
             "FROM clarifications WHERE status = 'pending' ORDER BY created_at, thread_id"
         )
     ]
+
+
+def customer_threads(conn: sqlite3.Connection, channel: str, customer_code: str) -> list[str]:
+    """Thread ids of every clarification of the customer on the channel, whatever its status, oldest first."""
+    rows = conn.execute(
+        "SELECT thread_id FROM clarifications WHERE channel = ? AND customer_code = ? ORDER BY rowid",
+        (channel, customer_code),
+    )
+    return [r["thread_id"] for r in rows]
+
+
+def latest_pending_clarification(conn: sqlite3.Connection, customer_code: str) -> dict | None:
+    """The pending thread of the customer whose question was asked last, or None."""
+    row = conn.execute(
+        "SELECT * FROM clarifications WHERE customer_code = ? AND status = 'pending' "
+        "ORDER BY updated_at DESC, rowid DESC LIMIT 1",
+        (customer_code,),
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def park_failure(conn: sqlite3.Connection, thread_id: str, channel: str, source: str, step: str, error: str) -> None:
+    """Park a thread as needs_review; parking it again updates its one row and keeps the creation time."""
+    with conn:
+        conn.execute(
+            "INSERT INTO failures (thread_id, channel, source, step, error, status) "
+            "VALUES (?, ?, ?, ?, ?, 'needs_review') ON CONFLICT (thread_id) DO UPDATE SET channel = excluded.channel, "
+            "source = excluded.source, step = excluded.step, error = excluded.error, status = 'needs_review', "
+            "updated_at = datetime('now')",
+            (thread_id, channel, source, step, error),
+        )
+
+
+def get_failure(conn: sqlite3.Connection, thread_id: str) -> dict | None:
+    row = conn.execute("SELECT * FROM failures WHERE thread_id = ?", (thread_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def list_failures(conn: sqlite3.Connection) -> list[dict]:
+    """Parked threads (needs_review), oldest first, with their age in whole minutes."""
+    return [
+        dict(r)
+        for r in conn.execute(
+            "SELECT thread_id, channel, source, step, error, status, created_at, "
+            "CAST((julianday('now') - julianday(created_at)) * 1440 AS INTEGER) AS age_minutes "
+            "FROM failures WHERE status = 'needs_review' ORDER BY created_at, thread_id"
+        )
+    ]
+
+
+def resolve_failure(conn: sqlite3.Connection, thread_id: str) -> None:
+    """Mark a parked thread resolved; raises NotPending when it is not needs_review."""
+    with conn:
+        cursor = conn.execute(
+            "UPDATE failures SET status = 'resolved', updated_at = datetime('now') "
+            "WHERE thread_id = ? AND status = 'needs_review'",
+            (thread_id,),
+        )
+    if cursor.rowcount == 0:
+        raise NotPending(f"thread {thread_id} is not parked as needs_review; nothing changed")

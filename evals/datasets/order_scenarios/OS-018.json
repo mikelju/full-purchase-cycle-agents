@@ -1,0 +1,53 @@
+{
+  "allowed_effects": [
+    "store_order",
+    "reply"
+  ],
+  "answers": [],
+  "channel": "email",
+  "crash_at": "after_channel_steps",
+  "customer_code": "CLI-019",
+  "dataset_version": "1.0",
+  "expected": {
+    "clarification": null,
+    "lines": [
+      {
+        "price_eur": 29.0,
+        "quantity": 2,
+        "sku": "WHEELCHAIR-CUSH"
+      },
+      {
+        "price_eur": 6.1,
+        "quantity": 4,
+        "sku": "TAPE-PAP-25"
+      }
+    ],
+    "needs_review": 0,
+    "orders": 1
+  },
+  "id": "OS-018",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock and customers; no orders, clarifications or failures"
+  },
+  "message": {
+    "body": "Hello,\nPlease send:\n- 2 units of wheelchair cushion\n- 4 boxes of paper tape 2.5 cm\nThanks,\nAlberto Sanz",
+    "subject": "Order"
+  },
+  "requested": [
+    {
+      "sku": "WHEELCHAIR-CUSH",
+      "text": "wheelchair cushion"
+    },
+    {
+      "sku": "TAPE-PAP-25",
+      "text": "paper tape 2.5 cm"
+    }
+  ],
+  "steps": [
+    "deliver",
+    "resume"
+  ],
+  "tags": [
+    "crash_resume"
+  ]
+}

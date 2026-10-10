@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 118 218",
+  "message_id": "wamid.dataset.WA-0024",
+  "text": {
+    "body": "Hi, pharmacy order: half a dozen cotton wol rolls 100 g, plus fourteen elastic ankle supports, size L. When can you deliver?"
+  },
+  "timestamp": "1788855120",
+  "type": "text"
+}

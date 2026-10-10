@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 103 203",
+  "message_id": "wamid.dataset.WA-0062",
+  "text": {
+    "body": "hi, we are still waiting for last week's order, it was supposed to arrive monday. what is going on?"
+  },
+  "timestamp": "1789813560",
+  "type": "text"
+}

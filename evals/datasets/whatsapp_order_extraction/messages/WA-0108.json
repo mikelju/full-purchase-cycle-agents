@@ -1,0 +1,9 @@
+{
+  "from": "+34 600 147 247",
+  "message_id": "wamid.dataset.WA-0108",
+  "text": {
+    "body": "Hello! Weekly order for the pharmacy:\n* half a dozen packs of wet body wipes for patient hygiene\n* nine boxes of sterile stich cutters\n* two dozen digital thermometers, flexible tip\n* a dozen packs of adult pull-up pants size XL\nThanks"
+  },
+  "timestamp": "1790972640",
+  "type": "text"
+}
