@@ -847,3 +847,31 @@ def test_reused_run_id_with_a_repeated_file_stem_runs_nothing_on_the_old_thread(
     assert orders == 0
     assert [c.calls for c in calls] == before
     assert no_network == []
+
+
+def test_redelivered_answer_of_a_finished_thread_is_a_duplicate_not_an_answer_to_a_later_thread(
+    seeded_db, write_recording, folder, tmp_path, no_network
+):
+    """Review 4, K1: WA-2 answers WA-1 and stores it, WA-4 pauses, WA-5 re-delivers WA-2 and must not answer WA-4."""
+    db_path = seeded_db[0]
+    graph, calls, _ = _whatsapp_graph(seeded_db, write_recording, tmp_path)
+    _write(folder, "WA-1.json", message("wamid.ORDER"))
+    _write(folder, "WA-2.json", message("wamid.ANSWER", body=ANSWER))
+    _write(folder, "WA-4.json", message("wamid.NEW"))
+    _write(folder, "WA-5.json", message("wamid.ANSWER", body=ANSWER))
+    results = run_inbox(folder, {"whatsapp": graph}, db_path, "run1")
+    kinds = [(r["route"].kind, r["thread_id"], r["error"]) for r in results]
+    assert kinds == [
+        (WHATSAPP_NEW, "whatsapp-run1-WA-1", None),
+        (WHATSAPP_ANSWER, "whatsapp-run1-WA-1", None),
+        (WHATSAPP_NEW, "whatsapp-run1-WA-4", None),
+        (DUPLICATE, "whatsapp-run1-WA-1", None),
+    ]
+    conn = db.connect(db_path)
+    clarifications = [tuple(r) for r in conn.execute("SELECT thread_id, status FROM clarifications ORDER BY rowid")]
+    orders = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+    conn.close()
+    assert clarifications == [("whatsapp-run1-WA-1", "answered"), ("whatsapp-run1-WA-4", "pending")]
+    assert orders == 1
+    assert [c.calls for c in calls] == [2, 2, 2, 1]
+    assert no_network == []

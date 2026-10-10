@@ -6,8 +6,8 @@ A WhatsApp text from a known customer whose most recent pending clarification is
 thread's answer; any other WhatsApp message starts a new order, and the WhatsApp graph rejects what it cannot read.
 An email or WhatsApp message whose message id is the source of a pending thread of the same customer and channel
 is a re-delivery of that paused order: a duplicate, which runs no graph.
-A WhatsApp message whose message id is an answer already applied to a pending thread of the same customer is a
-re-delivery of that answer: a duplicate too, so a thread that asked again never reads the same answer twice.
+A WhatsApp message whose message id is an answer already applied to a thread of the same customer, pending or
+finished, is a re-delivery of that answer: a duplicate too, so no thread ever reads the same answer twice.
 An email or WhatsApp message whose message id is already stored is checked before any extraction or question:
 from the same customer it is a duplicate of the stored order, from another customer it is rejected.
 A duplicate of a stored order runs no graph and writes no row, but gets the channel's reply naming that order again.
@@ -57,14 +57,12 @@ def _paused_duplicate(conn: sqlite3.Connection, channel: str, message: dict, pau
 
 
 def _applied_answer(conn: sqlite3.Connection, message: dict, applied_answers: AnswerLookup | None):
-    """The pending WhatsApp thread of the same customer that already applied this message as an answer, or None."""
+    """The WhatsApp thread of the same customer, of any status, that already applied this message as an answer."""
     if applied_answers is None:
         return None
-    for pending in db.pending_clarifications(conn):
-        if (pending["channel"], pending["customer_code"]) != ("whatsapp", message["customer"]["code"]):
-            continue
-        if message["message_id"] in applied_answers("whatsapp", pending["thread_id"]):
-            return pending["thread_id"]
+    for thread in db.customer_threads(conn, "whatsapp", message["customer"]["code"]):
+        if message["message_id"] in applied_answers("whatsapp", thread):
+            return thread
     return None
 
 
@@ -122,7 +120,7 @@ def route(
     """The route of one inbox item, read from the item and the `clarifications` table only.
 
     `paused_source`, when given, returns the message id a pending thread started from, to spot a re-delivery;
-    `applied_answers`, when given, returns the message ids of the answers a pending thread already applied.
+    `applied_answers`, when given, returns the message ids of the answers a thread already applied.
     """
     path = Path(item)
     suffix = path.suffix.lower()
@@ -205,9 +203,11 @@ def run_inbox(
         return (values.get("message") or values.get("email") or {}).get("message_id")
 
     def applied_answers(channel: str, thread: str) -> list[str]:
-        # The paused clarify subgraph keeps the applied answer ids in its own state, read through its task.
+        # A paused clarify subgraph keeps the applied answer ids in its own state, read through its task;
+        # once it finishes they are in the thread's own state.
         snapshot = graphs[channel].get_state({"configurable": {"thread_id": thread}}, subgraphs=True)
-        return [m for task in snapshot.tasks if task.state for m in task.state.values.get("applied_answers", [])]
+        paused = [m for task in snapshot.tasks if task.state for m in task.state.values.get("applied_answers", [])]
+        return snapshot.values.get("applied_answers", []) + paused
 
     results = []
     for path in sorted(p for p in Path(folder).iterdir() if p.is_file()):

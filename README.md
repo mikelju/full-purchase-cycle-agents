@@ -167,8 +167,9 @@ The router is deterministic and calls no model: a `.eml` file goes to the email 
 A WhatsApp text from a known customer whose most recent pending clarification is a WhatsApp thread is the answer to that thread (route `whatsapp_answer`); any other WhatsApp message starts a new order (route `whatsapp_new`).
 Storage is idempotent: the table `order_sources` keeps the channel's message id (the submission id, the email `Message-ID` or a hash of its content, the WhatsApp `message_id`) of every stored order.
 A re-delivered message already stored for the same customer is route `duplicate`: no graph runs, no row is written and the customer gets the channel reply naming the stored order again; the same id from another customer is rejected.
-A re-delivered message of a paused order, or a WhatsApp answer already applied to a pending thread, is a duplicate too.
+A re-delivered message of a paused order, or a WhatsApp answer already applied to a thread of the same customer (pending or finished), is a duplicate too.
 Each item runs in its own checkpoint thread `<channel>-<run_id>-<file stem>`; `--run-id` fixes the run id, which is random by default.
+A new item whose thread id already has a checkpoint (a run id reused with the same file name) is not run: it fails with an error asking for a new `--run-id`.
 In `--mode replay` an item runs only when every model answer it needs is recorded, and the question keys include the run id, so the sample inbox is replayed through `orders-demo` below; an item with no recording stops with exit 1 and names the missing recording.
 
 ## Recovery from failures
@@ -432,7 +433,7 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - Several WhatsApp messages that together form one order are processed as separate requests.
 - A parked or crashed thread is resumed by an operator, never automatically.
 - The idempotency key is the message id the channel gives; the same order sent twice with two different message ids is stored twice.
-- The message id of a WhatsApp clarification answer is not stored in `order_sources`: an answer re-delivered while its thread is still pending is a duplicate, but one re-delivered after the thread finished starts a new order or answers a later pending thread; email answers given with `clarify answer` carry no message id.
+- The message id of a WhatsApp clarification answer is not stored in `order_sources`, only in its thread's checkpoint: a re-delivered answer is a duplicate while that checkpoint file is used, but with another `--checkpoints` file it starts a new order or answers a later pending thread; email answers given with `clarify answer` carry no message id.
 - A WhatsApp answer whose message id collides with a stored source of another customer is rejected instead of answering the pending thread, because stored sources are checked first.
 - The WhatsApp instructions are tuned on a development split of 40 messages; chat styles absent from the dataset may score lower than the test split shows.
 - The candidate search, the extractor and the security limitations of phases 03 and 04 (SEC-003, SEC-004 and SEC-007 of `docs/security.md`) apply to the WhatsApp channel too; the sender is identified only by the phone number in the file.

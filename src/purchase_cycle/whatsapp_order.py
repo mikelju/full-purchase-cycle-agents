@@ -178,6 +178,7 @@ class WhatsAppOrderState(TypedDict, total=False):
     removed: list[dict]
     unresolved: list[dict]
     clarification: str | None
+    applied_answers: list[str]  # answer message ids the clarify step applied, kept after the thread finishes
 
 
 def build_whatsapp_order_graph(

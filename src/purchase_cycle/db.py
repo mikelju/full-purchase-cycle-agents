@@ -253,6 +253,15 @@ def pending_clarifications(conn: sqlite3.Connection) -> list[dict]:
     ]
 
 
+def customer_threads(conn: sqlite3.Connection, channel: str, customer_code: str) -> list[str]:
+    """Thread ids of every clarification of the customer on the channel, whatever its status, oldest first."""
+    rows = conn.execute(
+        "SELECT thread_id FROM clarifications WHERE channel = ? AND customer_code = ? ORDER BY rowid",
+        (channel, customer_code),
+    )
+    return [r["thread_id"] for r in rows]
+
+
 def latest_pending_clarification(conn: sqlite3.Connection, customer_code: str) -> dict | None:
     """The pending thread of the customer whose question was asked last, or None."""
     row = conn.execute(
