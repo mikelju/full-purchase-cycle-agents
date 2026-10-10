@@ -11,4 +11,5 @@ __pycache__/
 .env.*
 !.env.example
 data/
+.langgraph_api/
 .claude/relevo/
