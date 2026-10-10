@@ -4,7 +4,7 @@ Portfolio project that demonstrates multi-agent orchestration with [LangGraph](h
 Status: phase 01 (foundations) built: shared database, model client, persistent graph state, tracing and the evaluation harness.
 Phase 02 (web form orders) built: the first order channel, from a form submission to a stored order and a reply.
 Phase 03 (email orders) built: the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
-Phase 04 (exceptions) built and delivered for review: both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
+Phase 04 (exceptions) built and merged (PR #6): both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
 Phase 05 (closing the orders module) built: a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
 
 ## What it does
@@ -170,7 +170,7 @@ A re-delivered message already stored for the same customer is route `duplicate`
 A re-delivered message of a paused order, or a WhatsApp answer already applied to a thread of the same customer (pending or finished), is a duplicate too.
 Each item runs in its own checkpoint thread `<channel>-<run_id>-<file stem>`; `--run-id` fixes the run id, which is random by default.
 A new item whose thread id already has a checkpoint (a run id reused with the same file name) is not run: it fails with an error asking for a new `--run-id`.
-In `--mode replay` an item runs only when every model answer it needs is recorded, and the question keys include the run id, so the sample inbox is replayed through `orders-demo` below; an item with no recording stops with exit 1 and names the missing recording.
+In `--mode replay` an item runs only when every model answer it needs is recorded; `route` reads the per-task recordings of phases 01 to 04, not `evals/recordings/orders_demo.jsonl`, so the sample inbox is replayed through `orders-demo` below; an item with no recording stops with exit 1 and names the missing recording.
 
 ## Recovery from failures
 
