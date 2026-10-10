@@ -823,3 +823,27 @@ def test_an_answer_not_applied_is_not_kept_and_its_redelivery_is_an_answer(
         conn.close()
     assert routed == (WHATSAPP_ANSWER, "whatsapp-run1-WA-1", None)
     assert no_network == []
+
+
+def test_reused_run_id_with_a_repeated_file_stem_runs_nothing_on_the_old_thread(
+    seeded_db, write_recording, folder, tmp_path, no_network
+):
+    """Review 4, S1: a second run with the same run id and file stem must not resume the first customer's thread."""
+    db_path = seeded_db[0]
+    graph, calls, _ = _whatsapp_graph(seeded_db, write_recording, tmp_path)
+    _write(folder, "WA-1.json", message("wamid.ORDER"))
+    [first] = run_inbox(folder, {"whatsapp": graph}, db_path, "run1")
+    assert first["state"]["__interrupt__"]
+    before = [c.calls for c in calls]
+    _write(folder, "WA-1.json", message("wamid.OTHER", sender=CUSTOMERS[2].phone))
+    [second] = run_inbox(folder, {"whatsapp": graph}, db_path, "run1")
+    assert (second["route"].kind, second["thread_id"], second["state"]) == (WHATSAPP_NEW, "whatsapp-run1-WA-1", None)
+    assert "already used" in str(second["error"]) and "--run-id" in str(second["error"])
+    conn = db.connect(db_path)
+    clarifications = [tuple(r) for r in conn.execute("SELECT thread_id, customer_code, status FROM clarifications")]
+    orders = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+    conn.close()
+    assert clarifications == [("whatsapp-run1-WA-1", CUSTOMER.code, "pending")]
+    assert orders == 0
+    assert [c.calls for c in calls] == before
+    assert no_network == []

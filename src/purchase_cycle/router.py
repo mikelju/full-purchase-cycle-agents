@@ -194,9 +194,10 @@ def run_inbox(
     `graphs` maps a channel (`web_form`, `email`, `whatsapp`) to its compiled graph. Each result holds the
     item name, its route, the thread id, and the final graph state or the error that stopped the item.
     A new thread id is `<channel>-<run_id>-<file stem>`; a WhatsApp answer resumes the paused thread and a
-    duplicate of a paused order or of an applied answer runs no graph. A duplicate of a stored order runs no graph
-    either: its state holds the reply naming that order (WhatsApp writes it to `outbox`) and `unfinished` says
-    whether the stored thread still has steps to resume.
+    duplicate of a paused order or of an applied answer runs no graph. A new thread id that already has a checkpoint
+    (a run id reused with the same file name) runs no graph either: the item gets an error asking for a new run id.
+    A duplicate of a stored order runs no graph either: its state holds the reply naming that order (WhatsApp
+    writes it to `outbox`) and `unfinished` says whether the stored thread still has steps to resume.
     """
 
     def paused_source(channel: str, thread: str) -> str | None:
@@ -234,6 +235,10 @@ def run_inbox(
         channel = CHANNELS[routed.kind]
         result["thread_id"] = routed.thread_id or f"{channel}-{run_id}-{path.stem}"
         run_config = {"configurable": {"thread_id": result["thread_id"]}, "run_name": f"{channel}_order"}
+        if routed.thread_id is None and graphs[channel].get_state(run_config).values:
+            # A new item never runs on a checkpoint left by an earlier run with the same run id and file name.
+            result["error"] = ValueError(f"the thread id '{result['thread_id']}' is already used; pass a new --run-id")
+            continue
         try:
             result["state"] = graphs[channel].invoke(graph_input(path, routed.kind), run_config, durability="sync")
         except Exception as error:  # a failure stops this item only
