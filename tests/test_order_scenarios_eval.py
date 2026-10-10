@@ -121,6 +121,70 @@ def test_an_injected_critical_error_fails_with_exit_one(tmp_path, capsys, monkey
     assert "GATE FAILED: critical_errors 1 above threshold 0" in out
 
 
+def test_a_real_dropped_line_in_the_database_fails_with_exit_one(tmp_path, capsys, monkeypatch, no_network):
+    # Review round 4: the stored lines are deleted from the scenario database before the real counter reads it.
+    real = critical.count
+    seen = {}
+
+    def after_losing_the_lines(db_path, *args, **kwargs):
+        conn = db.connect(db_path)
+        try:
+            with conn:
+                conn.execute("DELETE FROM order_lines")
+        finally:
+            conn.close()
+        seen.update(real(db_path, *args, **kwargs))
+        return seen
+
+    monkeypatch.setattr(critical, "count", after_losing_the_lines)
+    assert _evaluate(tmp_path, ("OS-021",)) == 1
+    out = capsys.readouterr().out
+    assert seen["line_dropped"] > 0
+    assert f"line_dropped={seen['line_dropped']}" in out and "'critical'" in _line(out, "  OS-021")
+    assert f"GATE FAILED: critical_errors {seen['line_dropped']} above threshold 0" in out
+    assert no_network == []
+
+
+def test_set_baseline_below_the_target_stops_without_writing(tmp_path, capsys, no_network):
+    dataset, recordings = _setup(tmp_path, ("OS-001", "OS-011"))
+    for path in dataset.glob("OS-*.json"):
+        item = json.loads(path.read_text(encoding="utf-8"))
+        item["expected"]["lines"][0]["quantity"] += 1
+        path.write_text(json.dumps(item), encoding="utf-8")
+    baseline = tmp_path / "baseline.json"
+    code = se.evaluate("replay", "test", dataset_dir=dataset, recordings_path=recordings, baseline_path=baseline,
+                       set_baseline=True)  # fmt: skip
+    assert code == 3
+    assert "STOP: the scenarios did not reach the 90% target" in capsys.readouterr().out
+    assert not baseline.exists()
+    assert no_network == []
+
+
+def test_set_baseline_with_a_critical_error_stops_without_writing(tmp_path, capsys, monkeypatch, no_network):
+    real = critical.count
+    monkeypatch.setattr(critical, "count", lambda *a, **k: {**real(*a, **k), "line_dropped": 1})
+    dataset, recordings = _setup(tmp_path, CLEAN)
+    baseline = tmp_path / "baseline.json"
+    code = se.evaluate("replay", "test", dataset_dir=dataset, recordings_path=recordings, baseline_path=baseline,
+                       set_baseline=True)  # fmt: skip
+    assert code == 3
+    assert "STOP:" in capsys.readouterr().out
+    assert not baseline.exists()
+    assert no_network == []
+
+
+def test_set_baseline_meeting_the_target_writes_the_baseline(tmp_path, capsys, no_network):
+    dataset, recordings = _setup(tmp_path, ("OS-001", "OS-011"))
+    baseline = tmp_path / "baseline.json"
+    code = se.evaluate("replay", "test", dataset_dir=dataset, recordings_path=recordings, baseline_path=baseline,
+                       set_baseline=True)  # fmt: skip
+    assert code == 0
+    stored = json.loads(baseline.read_text(encoding="utf-8"))
+    assert stored["scenarios"] == {"OS-001": True, "OS-011": True}
+    assert "STOP:" not in capsys.readouterr().out
+    assert no_network == []
+
+
 def test_missing_recordings_exit_two(tmp_path, capsys, no_network):
     dataset, recordings = _setup(tmp_path, ("OS-001",))
     recordings.write_text("", encoding="utf-8")
