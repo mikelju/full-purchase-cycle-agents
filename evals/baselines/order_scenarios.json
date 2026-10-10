@@ -1,0 +1,48 @@
+{
+ "dataset_version": "1.0",
+ "measured_at": "2026-10-10",
+ "metrics": {
+  "scenario_success": {
+   "high": 0.9999999999999999,
+   "hits": 30,
+   "low": 0.8864866068260312,
+   "n": 30,
+   "value": 1.0
+  }
+ },
+ "mode": "record",
+ "model": "claude-haiku-4-5",
+ "scenarios": {
+  "OS-001": true,
+  "OS-002": true,
+  "OS-003": true,
+  "OS-004": true,
+  "OS-005": true,
+  "OS-006": true,
+  "OS-007": true,
+  "OS-008": true,
+  "OS-009": true,
+  "OS-010": true,
+  "OS-011": true,
+  "OS-012": true,
+  "OS-013": true,
+  "OS-014": true,
+  "OS-015": true,
+  "OS-016": true,
+  "OS-017": true,
+  "OS-018": true,
+  "OS-019": true,
+  "OS-020": true,
+  "OS-021": true,
+  "OS-022": true,
+  "OS-023": true,
+  "OS-024": true,
+  "OS-025": true,
+  "OS-026": true,
+  "OS-027": true,
+  "OS-028": true,
+  "OS-029": true,
+  "OS-030": true
+ },
+ "threshold": 0.9
+}
