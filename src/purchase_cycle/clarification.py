@@ -18,7 +18,7 @@ from langgraph.types import interrupt
 
 from purchase_cycle import db, llm
 from purchase_cycle.llm import InvalidModelOutput, MissingRecording, ModelClient
-from purchase_cycle.quantities import NUMBER_WORDS, supports_quantity
+from purchase_cycle.quantities import NUMBER_WORDS, pack_size, supports_quantity
 from purchase_cycle.recovery import correction_kwargs, reask
 from purchase_cycle.web_form import match_key
 
@@ -61,7 +61,9 @@ def _figures(text: str) -> set[str]:
     return set(FIGURE.findall(text))
 
 
-def candidate_search(text: str, catalog: list, limit: int = MAX_CANDIDATES) -> list[dict]:
+def candidate_search(
+    text: str, catalog: list, limit: int = MAX_CANDIDATES, quantity_figures: tuple[int, ...] = ()
+) -> list[dict]:
     """Catalog products the text may mean, best first; empty when nothing fits.
 
     A product is a candidate when its name holds every word of the text that
@@ -72,12 +74,20 @@ def candidate_search(text: str, catalog: list, limit: int = MAX_CANDIDATES) -> l
     When the text shares a figure with them, a product whose name holds fewer
     figures the text does not state wins a remaining tie, so "size 8" picks
     size 8 over 8.5, while a size no sibling has keeps every sibling.
+    `quantity_figures` are the values that may state the ordered quantity of a
+    free-text line; the first figure token equal to one of them is the quantity
+    and is left out of the size figures (deviation 05.3), so "5 boxes of paper
+    tape 2.5 cm" does not also match the 5 cm tape.
     """
     words = _words(text)
     required = {w for w in words if not w.isdigit() and w not in FILLER_WORDS and w not in NUMBER_WORDS}
     if not required:
         return []
-    figures = _figures(text)
+    tokens = FIGURE.findall(text)
+    stating = [t for t in tokens if t in {str(q) for q in quantity_figures}]
+    if stating:
+        tokens.remove(stating[0])
+    figures = set(tokens)
     scored = []
     for row in catalog:
         name = _words(row["name"])
@@ -102,15 +112,18 @@ def line_doubts(line: dict, catalog: list, channel: str) -> tuple[list[str], lis
     """Doubt types of one channel line, in rule order, and the candidates of an ambiguous product."""
     text = line_text(line)
     types, candidates = [], []
+    quantity = line["quantity"]
+    sale_unit = next((row["sale_unit"] for row in catalog if row["sku"] == line["sku"]), None)
+    pack = pack_size(sale_unit) if sale_unit else None
+    # The quantity may be written as sale units or as items; a form product text holds none.
+    stating = (quantity, quantity * pack) if pack else (quantity,)
     # Every line is searched, so a SKU given to a generic text still raises an ambiguous doubt.
-    found = candidate_search(text, catalog)
+    found = candidate_search(text, catalog, quantity_figures=stating if channel in FREE_TEXT_CHANNELS else ())
     if len(found) >= 2:
         types.append(AMBIGUOUS)
         candidates = found
     elif not found and line["sku"] is None:
         types.append(UNKNOWN)
-    quantity = line["quantity"]
-    sale_unit = next((row["sale_unit"] for row in catalog if row["sku"] == line["sku"]), None)
     if quantity > MAX_LINE_QUANTITY or (
         channel in FREE_TEXT_CHANNELS and not supports_quantity(text, quantity, sale_unit)
     ):

@@ -140,6 +140,32 @@ def test_text_singling_out_one_product_with_a_sku_raises_nothing(seeded_db):
     assert detect([_web("flux capacitor", 2, "GLV-NIT-M")], catalog, WEB) == []
 
 
+# Deviation 05.3: the ordered quantity in a free-text line is not a size figure (OS-002, OS-010, OS-012, OS-020).
+@pytest.mark.parametrize("channel", [EMAIL, "whatsapp"])
+@pytest.mark.parametrize(
+    ("text", "quantity", "sku"),
+    [
+        ("5 boxes of paper tape 2.5 cm", 5, "TAPE-PAP-25"),
+        ("10 units of sharps container 5 litres", 10, "SHARPS-5"),
+        ("2 units of sharps container 5 litres", 2, "SHARPS-5"),
+        ("8 boxes of sterile latex surgical gloves size 8", 8, "GLV-SURG-LTX-8"),
+        ("5 boxes of disposable syringe 5 ml, luer slip", 5, "SYR-5"),
+        ("800 pen needles 31G x 8 mm", 8, "PEN-31-8"),
+    ],
+)
+def test_the_ordered_quantity_is_not_counted_as_a_size(seeded_db, channel, text, quantity, sku):
+    _, catalog = seeded_db
+    assert detect([_email(text, quantity, sku)], catalog, channel) == []
+
+
+@pytest.mark.parametrize("channel", [EMAIL, "whatsapp"])
+def test_a_text_naming_no_size_stays_ambiguous_with_its_quantity_left_out(seeded_db, channel):
+    _, catalog = seeded_db
+    [doubt] = detect([_email("5 boxes of paper tape", 5, "TAPE-PAP-25")], catalog, channel)
+    assert doubt["types"] == [AMBIGUOUS]
+    assert sorted(c["sku"] for c in doubt["candidates"]) == ["TAPE-PAP-12", "TAPE-PAP-25", "TAPE-PAP-50"]
+
+
 def test_unknown_line_has_no_candidates(seeded_db):
     _, catalog = seeded_db
     for lines, channel in (([_web("flux capacitor", 2, None)], WEB), ([_email("2 flux capacitors", 2, None)], EMAIL)):
