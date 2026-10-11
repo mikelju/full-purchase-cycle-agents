@@ -51,11 +51,21 @@ A separate Studio database and outbox, so Studio runs never touch `data/purchase
 Factories compile without a checkpointer because the dev server supplies persistence.
 On 2026-10-10, during the walkthrough, Studio's resume box sent the typed value as text, even when it looked like JSON, and `wait` in clarify crashed on `received.get`.
 The owner approved letting clarify accept a text resume: JSON text of a dict is used as the dict, any other text becomes `{"answer": <stripped text>}`, and an empty text goes through the existing answer checks; a dict resume behaves as before.
+After review round 1, a JSON string resume is read as the answer without quotes, and an empty, odd or answerless resume is rejected as an empty answer without a model call; the same question waits again.
 Known risks: a community report says Studio may restart instead of resuming an interrupt inside a subgraph, and the dev server's blocking-call detector may need `--allow-blocking` for our sync SQLite nodes; both are checked first in item 1 and, if they bite, recorded rather than worked around by changing the graphs.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | local, 2026-10-11 | `main..0149d64` | fresh lens | four minor, all fixed (below) | closed |
+
+Round 1 findings, failing tests in b8c3b03:
+- Minor: a JSON string resume (Studio's `""` prefill with the answer typed inside) kept its quotes; `resume_value` now uses the decoded string, and `""` becomes an empty answer (191c5d1).
+- Minor: a non-text, non-dict resume (`42`, a list) crashed `wait`, and a dict with neither `answer` nor `close` raised `KeyError`; any resume now goes through `resume_value`, an odd one becomes an empty answer, and `interpret` rejects an empty answer without a model call, so the same question waits again (191c5d1).
+- Minor: `studio.py` set `LANGGRAPH_CLI_NO_ANALYTICS`, which the CLI reads before any factory runs; the line and its test assertion were removed, and the README keeps setting it in the shell (b8c3b03, c2f4024).
+- Minor: first use was decided by the database file existing, so a failed first seed was never repeated; the Studio database is now seeded when its catalog is missing or empty (c2f4024).
+
+Scope note: this branch also carries the master plan row 05 status bookkeeping (phase 05 integrated via PR #9, commit 7ba48ff); accepted, and mentioned in the PR.
 
 ## Delivery
 Owner walkthrough (item 3, C6), confirmed by the owner on 2026-10-11:
