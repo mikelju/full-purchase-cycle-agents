@@ -158,16 +158,17 @@ TIMELINES = [
      [order((D, 4)), scan(), advance(3), tick(), advance(1), receive(("QR-0001", S2)), advance(hours=1),
       receive(("QR-0001", S2)), advance(hours=23), tick()],
      [request("QR-0001", D, 4, READY, [S2], [S1, S2])]),
-    # A re-run scan starts nothing while the request waits; a closed request no longer blocks a new one.
+    # A re-run scan starts nothing, while the request waits or after it closed; only new orders start a new one.
     (["none_replied", "rescan"],
-     [order((A, 10)), scan(), scan(), advance(1), scan(), advance(4), tick()],
+     [order((A, 10)), scan(), scan(), advance(1), scan(), advance(4), tick(), scan()],
      [request("QR-0001", A, 10, NONE)]),
     (["none_replied", "rescan"],  # the new B demand waits behind the open B request; C starts its own
      [order((B, 5)), scan(), extra((C, STOCK[C] + 7), (B, 3)), scan(), advance(5), tick()],
      [request("QR-0001", B, 5, NONE), request("QR-0002", C, 7, NONE)]),
     (["all_replied", "rescan"],
-     [order((D, 4)), scan(), advance(1), receive(("QR-0001", S1), ("QR-0001", S2)), scan(), scan()],
-     [request("QR-0001", D, 4, READY, [S1, S2]), request("QR-0002", D, 4, WAITING)]),
+     [order((D, 4)), scan(), advance(1), receive(("QR-0001", S1), ("QR-0001", S2)), scan(), extra((D, 3)), scan(),
+      scan()],
+     [request("QR-0001", D, 4, READY, [S1, S2]), request("QR-0002", D, 3, WAITING)]),
     # A tick repeated at the same time writes nothing new.
     (["none_replied", "repeated_tick"],
      [order((A, 10)), scan(), advance(3), tick(), tick(), advance(1), tick(), advance(1), tick(), tick()],
@@ -244,7 +245,8 @@ EMAIL = {s.code: s.email for s in SUPPLIERS}
 def _snapshot(paths: dict) -> dict:
     """Clock, outbox names, every request with its replied and reminded suppliers, and the shortfall per SKU.
 
-    The shortfall is computed here from the `received` order lines and `on_hand`, apart from `quotes.shortfalls`.
+    The shortfall is computed here from the `received` order lines, `on_hand` and the units of every request so far,
+    apart from `quotes.shortfalls`.
     """
     outbox = paths["outbox"]
     conn = db.connect(paths["db"])
@@ -269,11 +271,18 @@ def _snapshot(paths: dict) -> dict:
             "JOIN orders o ON o.id = l.order_id JOIN stock s ON s.sku = l.sku "
             "WHERE o.status = 'received' GROUP BY l.sku"
         ).fetchall()
+        requested = {}
+        for r in requests.values():
+            requested[r["sku"]] = requested.get(r["sku"], 0) + r["quantity"]
         return {
             "now": sim_clock.now(conn).strftime(sim_clock.FORMAT),
             "outbox": {p.name for p in outbox.glob("*.eml")} if outbox.is_dir() else set(),
             "requests": requests,
-            "shortfall": {r["sku"]: r["short"] for r in demand if r["short"] > 0},
+            "shortfall": {
+                r["sku"]: r["short"] - requested.get(r["sku"], 0)
+                for r in demand
+                if r["short"] > requested.get(r["sku"], 0)
+            },
         }
     finally:
         conn.close()
@@ -291,7 +300,8 @@ def _step_errors(before: dict, after: dict, step: dict) -> dict[str, int]:
     for ref, r in after["requests"].items():
         old = before["requests"].get(ref)
         if old is None:
-            # A closed request no longer blocks demand still `received`, so only the shortfall size is checked.
+            # The shortfall already nets out every earlier request, closed or not, so a rescan with no new orders
+            # that starts one is a request without shortfall.
             shortfall = before["shortfall"].get(r["sku"], 0)
             if shortfall <= 0:
                 counts["request_without_shortfall"] += 1

@@ -70,9 +70,11 @@ def test_a_sku_with_a_waiting_request_is_skipped(tmp_path):
         (EMPTY,),
     )
     assert [r["sku"] for r in quotes.shortfalls(conn)] == [LOW]
-    # a closed request does not block a new one
+    # a closed request still covers its units: only new demand beyond them counts
     conn.execute("UPDATE quote_requests SET status = 'no_offers'")
-    assert [r["sku"] for r in quotes.shortfalls(conn)] == sorted([EMPTY, LOW])
+    assert [r["sku"] for r in quotes.shortfalls(conn)] == [LOW]
+    _order(conn, [(EMPTY, 2)])
+    assert [(r["sku"], r["shortfall"]) for r in quotes.shortfalls(conn)] == sorted([(EMPTY, 2), (LOW, 3)])
 
 
 def test_a_second_waiting_request_for_the_same_sku_is_refused_by_the_schema(tmp_path):

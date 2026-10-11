@@ -21,7 +21,7 @@
         "status": "ready_for_decision"
       },
       {
-        "quantity": 4,
+        "quantity": 3,
         "reference": "QR-0002",
         "reminded": [],
         "replied": [],
@@ -63,6 +63,18 @@
           "supplier": "SUP-002"
         }
       ]
+    },
+    {
+      "op": "scan"
+    },
+    {
+      "lines": [
+        [
+          "GLV-SURG-NEO-6.5",
+          3
+        ]
+      ],
+      "op": "order"
     },
     {
       "op": "scan"

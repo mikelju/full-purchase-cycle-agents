@@ -58,17 +58,30 @@ def thread_id(request_id: int) -> str:
 
 
 def shortfalls(conn: sqlite3.Connection) -> list[dict]:
-    """Per SKU, units asked by stored orders minus `on_hand`, when positive and no request for it is waiting."""
+    """Per SKU, units asked by stored orders minus `on_hand` minus the units of every earlier request for it.
+
+    Only a positive remainder counts, and only for a SKU with no waiting request, so a rescan with no new orders
+    starts nothing, even after a request closed.
+    """
     marks = ", ".join("?" for _ in ORDER_STATUSES)
     rows = conn.execute(
-        "SELECT l.sku, SUM(l.quantity) AS demand, s.on_hand FROM order_lines l "
-        "JOIN orders o ON o.id = l.order_id JOIN stock s ON s.sku = l.sku "
+        "SELECT l.sku, SUM(l.quantity) AS demand, s.on_hand, "
+        "(SELECT COALESCE(SUM(q.quantity), 0) FROM quote_requests q WHERE q.sku = l.sku) AS requested "
+        "FROM order_lines l JOIN orders o ON o.id = l.order_id JOIN stock s ON s.sku = l.sku "
         f"WHERE o.status IN ({marks}) "
         "AND l.sku NOT IN (SELECT sku FROM quote_requests WHERE status = ?) "
-        "GROUP BY l.sku HAVING SUM(l.quantity) > s.on_hand ORDER BY l.sku",
+        "GROUP BY l.sku HAVING SUM(l.quantity) > s.on_hand + requested ORDER BY l.sku",
         (*ORDER_STATUSES, WAITING),
     ).fetchall()
-    return [{**dict(r), "shortfall": r["demand"] - r["on_hand"]} for r in rows]
+    return [
+        {
+            "sku": r["sku"],
+            "demand": r["demand"],
+            "on_hand": r["on_hand"],
+            "shortfall": r["demand"] - r["on_hand"] - r["requested"],
+        }
+        for r in rows
+    ]
 
 
 def _request(conn: sqlite3.Connection, request_id: int) -> dict:
@@ -249,11 +262,19 @@ def _config(request_id: int) -> dict:
 
 
 def scan(db_path: Path | str, checkpointer, outbox: Path | str) -> list[dict]:
-    """Start one quote request thread per short SKU with no waiting request; no model call."""
+    """Finish any send that failed partway, then start one request thread per short SKU; no model call."""
     graph = build_quote_request_graph(db_path, outbox, checkpointer)
     conn = db.connect(db_path)
     started = []
     try:
+        # A send that failed partway left its request waiting before `wait`; send is idempotent, so finish it.
+        waiting = conn.execute("SELECT id FROM quote_requests WHERE status = ? ORDER BY id", (WAITING,)).fetchall()
+        for (request_id,) in waiting:
+            state = graph.get_state(_config(request_id))
+            if not state.values:
+                graph.invoke({"request_id": request_id}, _config(request_id))
+            elif state.next == ("send",):
+                graph.invoke(None, _config(request_id))
         for short in shortfalls(conn):
             created = sim_clock.now(conn)
             with conn:

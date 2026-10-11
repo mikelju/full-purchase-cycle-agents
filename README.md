@@ -230,8 +230,8 @@ The demo prints, per item, the channel, route, scene, outcome, order number and 
 ## Request supplier quotes
 
 The quotes module (`src/purchase_cycle/quotes.py`) asks suppliers for quotes when stored orders need more units than the stock holds.
-Demand per SKU is the sum of the order lines of orders with status `received`; the shortfall is demand minus `stock.on_hand`.
-`quotes scan` starts one quote request `QR-NNNN` per SKU with a positive shortfall and no request already waiting, and writes one request email per supplier of the product family to the supplier outbox (`data/supplier_outbox/`).
+Demand per SKU is the sum of the order lines of orders with status `received`; the shortfall is demand minus `stock.on_hand` minus the units of every earlier request for the SKU, waiting or closed.
+`quotes scan` starts one quote request `QR-NNNN` per SKU with a positive shortfall and no request already waiting, for that shortfall, so a scan with no new orders starts nothing; it writes one request email per supplier of the product family to the supplier outbox (`data/supplier_outbox/`).
 Three fictional suppliers live in `src/purchase_cycle/suppliers.py`; every product has at least two.
 Each request is a LangGraph thread `quote-QR-NNNN` with the nodes `send`, `wait` and `close`, saved in the checkpoint file, so the wait survives the end of the process.
 A supplier reply is an `.eml` file whose subject names the request reference and whose sender is a supplier of that request; it only marks the supplier as replied, and offers are not read.
@@ -264,6 +264,7 @@ uv run purchase-cycle quotes list
 
 Every command takes `--db <path>` before the command name; `scan`, `receive` and `tick` take `--checkpoints`, and `scan` and `tick` take `--outbox` for the supplier emails.
 Running `scan` or `tick` twice at the same simulated time writes nothing new.
+A `scan` also finishes the request emails of a request whose send failed partway, for example on a full disk, without writing any email twice.
 
 ### Run the quotes demo
 

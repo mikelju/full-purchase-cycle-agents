@@ -559,3 +559,43 @@ def test_quotes_list_shows_every_request_with_its_suppliers_and_times(env, tmp_p
 def test_quotes_list_with_no_requests(tmp_path, capsys):
     assert cli.main(["--db", str(tmp_path / "b.db"), "quotes", "list"]) == 0
     assert capsys.readouterr().out.strip() == "no quote requests"
+
+
+# Review round 1: a rescan after a close, and a send that failed partway (C4, C5, C7, C8)
+
+
+def test_a_rescan_after_a_close_with_no_new_orders_starts_nothing(env):
+    env.short(THREE, 10)
+    env.scan()
+    sim_clock.advance(env.conn, days=5)
+    [result] = _tick(env)
+    assert result["status"] == "no_offers"
+    before = (env.requests(), env.request_suppliers(), env.files())
+    assert env.scan() == []
+    assert (env.requests(), env.request_suppliers(), env.files()) == before
+
+
+def test_new_orders_after_a_close_start_a_request_for_the_new_quantity_only(env):
+    env.short(THREE, 10)
+    env.scan()
+    sim_clock.advance(env.conn, days=5)
+    _tick(env)
+    env.order([(THREE.sku, 4)])
+    started = env.scan()
+    assert [(s["reference"], s["sku"], s["quantity"]) for s in started] == [("QR-0002", THREE.sku, 4)]
+    assert env.scan() == []
+
+
+def test_a_rescan_completes_a_send_that_failed_partway(env):
+    env.short(THREE, 8)
+    env.outbox.write_text("not a folder")
+    with pytest.raises(OSError):
+        env.scan()
+    env.outbox.unlink()
+    assert env.scan() == []
+    assert env.files() == [f"QR-0001-request-{code}.eml" for code in _suppliers(THREE)]
+    assert len(env.request_suppliers()) == len(_suppliers(THREE))
+    assert env.state("quote-QR-0001").next == ("wait",)
+    sim_clock.advance(env.conn, days=5)
+    [result] = _tick(env)
+    assert result["status"] == "no_offers"
