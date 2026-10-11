@@ -6,6 +6,7 @@ when its quantity is doubtful. The rules are deterministic and read only
 the lines the channel already produced and the catalog.
 """
 
+import json
 import re
 from pathlib import Path
 from typing import NamedTuple, TypedDict
@@ -173,6 +174,23 @@ def doubts_message(doubts: list[dict]) -> str:
         )
         out += [f"  candidate: {c['sku']} | {c['name']}" for c in doubt["candidates"]]
     return "\n".join(out)
+
+
+def resume_value(received) -> dict:
+    """Any resume as {"answer": text} or {"close": True}, the dict as sent or the reading of a text resume.
+
+    LangGraph Studio's resume box sends text: JSON text of a dict, a JSON string such as its "" prefill, or the plain
+    answer. Anything else, or a dict with neither answer nor close, becomes an empty answer, which is asked again.
+    """
+    value = received
+    if isinstance(received, str):
+        try:
+            value = json.loads(received)
+        except json.JSONDecodeError:
+            value = received
+    if isinstance(value, dict):
+        return value if value.get("close") or isinstance(value.get("answer"), str) else {"answer": ""}
+    return {"answer": "" if value is None else str(value).strip()}
 
 
 def answer_message(doubts: list[dict], question: str, answer: str) -> str:
@@ -379,6 +397,7 @@ def build_clarification_graph(
 
     def wait(state: ClarificationState) -> ClarificationState:
         # Resumed with {"answer": text} or {"close": True}; the question was drafted before the pause.
+        # Studio's resume box sends text instead; `resume_value` reads any resume, an odd one as an empty answer.
         # A WhatsApp answer also carries its `message_id`, kept in `applied_answers` once the answer is applied.
         # The state keeps the drafted question as the model wrote it, so the interpretation message and its
         # recordings stay the same; the customer sees the plain version.
@@ -391,6 +410,7 @@ def build_clarification_graph(
                 "rejected": state.get("rejected"),
             }
         )
+        received = resume_value(received)
         if received.get("close"):
             return {"closed": True, "rejected": None}
         return {"answer": received["answer"], "answer_message_id": received.get("message_id"), "rejected": None}
@@ -398,6 +418,8 @@ def build_clarification_graph(
     def interpret(state: ClarificationState, config: RunnableConfig, runtime: Runtime) -> ClarificationState:
         if state.get("closed"):
             return {}
+        if not state["answer"].strip():
+            return {"rejected": "Clarification answer rejected: the answer is empty"}  # no model call
         thread_id = config["configurable"]["thread_id"]
         message = answer_message(state["doubts"], state["question"], state["answer"])
         try:

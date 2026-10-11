@@ -1,0 +1,8 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "web_form": "./src/purchase_cycle/studio.py:web_form_graph",
+    "email": "./src/purchase_cycle/studio.py:email_graph",
+    "whatsapp": "./src/purchase_cycle/studio.py:whatsapp_graph"
+  }
+}

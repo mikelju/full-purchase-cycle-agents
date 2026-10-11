@@ -226,6 +226,47 @@ The demo prints, per item, the channel, route, scene, outcome, order number and 
 `--mode replay` (the default) needs no key: the model answers are recorded in `evals/recordings/orders_demo.jsonl`.
 `--mode live` calls Claude Haiku 4.5 and `--mode record` also stores the answers; the expected result is five stored orders and no parked failure.
 
+## Watch the graphs in LangGraph Studio
+
+```
+LANGGRAPH_CLI_NO_ANALYTICS=1 uv run langgraph dev --allow-blocking
+```
+
+In PowerShell: `$env:LANGGRAPH_CLI_NO_ANALYTICS=1; uv run langgraph dev --allow-blocking`.
+The local server starts on port 2024 and serves three graphs from `langgraph.json`: `web_form`, `email` and `whatsapp`.
+`--allow-blocking` is needed because the graphs open SQLite inside the server's event loop.
+Open Studio at `https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024`; it may ask for a free LangSmith login.
+Pick a graph, paste the input for a sample and submit it to watch each node and the state after each step:
+
+- `web_form`: `{"submission": {"submission_id": "WF-ORDERS-01", "customer_code": "CLI-001", "lines": [{"product": "nitrile gloves M", "quantity": 20}, {"product": "saline 500 ml", "quantity": 12}]}}`
+- `email`: `{"email_path": "examples/orders/02-email-order.eml"}`
+- `whatsapp`, clear order: `{"message_path": "examples/orders/03-whatsapp-order.json"}`
+- `whatsapp`, doubtful order: `{"message_path": "examples/orders/04-whatsapp-doubt.json"}`; the run pauses on the clarification question, then resume it to store the order by typing the answer as plain text, `Size L please, all of them.`, in the resume box (delete the prefilled `""` first); `{"answer": "Size L please, all of them."}` works too.
+
+Studio runs in replay mode by default and needs no key: the answers come from `evals/recordings/orders_demo.jsonl` plus `evals/recordings/studio.jsonl`.
+`PURCHASE_CYCLE_STUDIO_MODE=live` calls Claude Haiku 4.5 instead, costs a few cents per run and needs `ANTHROPIC_API_KEY`.
+LangSmith tracing is forced off in both modes.
+The graphs use their own database and outbox under `data/studio/`, never `data/purchase_cycle.db` or the demo outboxes.
+
+Live mode with your own messages:
+
+- Start the server with `PURCHASE_CYCLE_STUDIO_MODE=live` set (in PowerShell: `$env:PURCHASE_CYCLE_STUDIO_MODE="live"` before the command above).
+  The dev server does not load the project's dotenv file by itself, so live mode loads `ANTHROPIC_API_KEY` from it; tracing stays off.
+- Put your messages in `data/studio/inbox/`, which Git ignores.
+- WhatsApp: a JSON file shaped like `examples/orders/03-whatsapp-order.json`, with `from` set to the phone digits of a seeded customer, for example `34600103203` (Jon Arrieta, CLI-004).
+  Input for the `whatsapp` graph: `{"message_path": "data/studio/inbox/<file>.json"}`.
+- Email: an `.eml` file whose `From` is a seeded customer, for example `iker.cli-002@example.com`.
+  Input for the `email` graph: `{"email_path": "data/studio/inbox/<file>.eml"}`.
+- Use a new `message_id` (WhatsApp) or `Message-ID` (email) each time: a message already processed is recognized and returns the existing order.
+- Each graph takes only its own channel's input: sending one channel's input to another graph fails with a `KeyError` naming the missing input key.
+
+Limits:
+
+- Studio threads live in the dev server and are separate from the CLI `clarify`, `resume` and `failures` commands.
+- In replay only the recorded answer works; any other input or answer has no recording, so it needs live mode.
+- Each sample can be stored only once per Studio database: running it again returns the order already stored.
+  To replay a sample from scratch, stop the server and delete `data/studio/` and `.langgraph_api/`; the database is seeded again on next use (move your inbox files out first).
+
 ## Run the tests
 
 ```
