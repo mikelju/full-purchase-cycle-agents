@@ -106,19 +106,23 @@ Execution order: batches A to E.
   Evidence: `npm run check` at `6d643c5` exit 0, 698 passed, ten evaluations in replay with every gate PASS, `quote_wait` 100% [86.2, 100.0] (`.evidence/fase-06/check-6d643c5.txt`); it ran in the worktree, not in the clean clone, and the final check after the review fixes is rerun by the coordinator (increment 17).
   Unchanged behaviour at `164b193` with the Anthropic and LangSmith variables unset (`.evidence/fase-06/unchanged-behaviour.txt`): `orders-demo` exit 0 and equal to `orders-demo-before.txt` apart from the run id inside one thread id; `npm run eval` exit 0, its first 261 lines identical to `eval-before.txt` and the only addition the `quote_wait` suite; `git diff --stat ada28ab -- evals/recordings evals/datasets evals/baselines` lists only the 24 new `quote_wait` timelines.
   Fresh clone of the branch at `164b193` in a temporary folder with no `.env` and the variables unset (`.evidence/fase-06/fresh-clone.txt`): `uv sync` exit 0, the README `quotes-demo` exit 0 (QR-0001 `ready_for_decision` after a reminder, QR-0002 `no_offers`) and `eval --suite quote_wait` exit 0 with 24 of 24 and zero critical errors; `npm ci` and the full `npm run check` were not run in the clone; the clone was deleted afterwards.
-- [ ] 17. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
-  Evidence:
+- [x] 17. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
+  Evidence: two rounds over `ada28ab..HEAD`, recorded in "Adversarial review" below; round 1 gave 1 major and 2 minor findings, fixed in `3901722` and `6d643c5`; round 2 gave 1 minor finding, fixed in `164b193`; no finding is open.
+  Each fix has its regression test in `tests/test_quote_request.py`: `test_a_rescan_after_a_close_with_no_new_orders_starts_nothing`, `test_new_orders_after_a_close_start_a_request_for_the_new_quantity_only`, `test_a_rescan_completes_a_send_that_failed_partway` and `test_a_tick_finishes_a_request_with_no_checkpoint_and_still_handles_later_requests`.
+  Final check after the fixes: fresh clone of the branch at `828d7a7`, `npm ci`, `uv sync` and `npm run check` with the Anthropic and LangSmith variables unset and no `.env`: exit 0, 699 passed, ten evaluations in replay with every gate PASS, `quote_wait` 24 of 24, success 100.0% [86.2, 100.0], 0 critical errors (`.evidence/fase-06/fresh-clone-check-828d7a7.txt`).
 - [ ] 18. Results per criterion in the table below, master plan row 06 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
   Evidence:
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
-| DV-01 | The phase 05 test `tests/test_whatsapp_eval.py` (suite order of `eval all`) gains `quote_wait` at the end of its expected list, because `ALL_SUITES` grew in increment 12; the behaviour of the nine earlier suites is unchanged | C13 | Accepted by the owner (review round 1, finding 3) |
+| DV-01 | The phase 05 test `tests/test_whatsapp_eval.py` (suite order of `eval all`) gains `quote_wait` at the end of its expected list, because `ALL_SUITES` grew in increment 12; the behaviour of the nine earlier suites is unchanged | C13 | Accepted with the recommended option under the owner's standing instruction of 2026-10-11 to resolve every decision with the recommended option (review round 1, finding 3); pending the owner's review in the PR |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | local `sdd-review` | `ada28ab..d063bb0` | `sdd-review` default lenses | Major: a rescan after a close requested the same demand again (C4). Minor: a send that failed partway left a `waiting` request with no emails and no thread in `wait` (C5, C7, C8). Minor: the earlier-phase test `tests/test_whatsapp_eval.py` was edited without a deviation (C13) | All three fixed: the shortfall nets out every earlier request and `scan` finishes an unfinished send (`3901722`); deviation DV-01 recorded and the decisions added to the design notes (`6d643c5`) |
+| 2 | local `sdd-review` | `ada28ab..6d643c5` | `sdd-review` default lenses, over the round 1 fixes | Minor: `quotes tick` crashed on a `waiting` request with no checkpoint, leaving later requests without their reminder or close (C7, C8) | Fixed: `tick` first finishes such a send, as `scan` does (`164b193`); no finding open |
 
 ## Results
 Per criterion: command or path run, observed result and evidence reference.
