@@ -84,6 +84,26 @@ CREATE TABLE IF NOT EXISTS sim_clock (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     now TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS quote_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sku TEXT NOT NULL REFERENCES products (sku),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    thread_id TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL CHECK (status IN ('waiting', 'ready_for_decision', 'no_offers')),
+    created_at TEXT NOT NULL,
+    reminder_at TEXT NOT NULL,
+    deadline TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS quote_requests_one_waiting_per_sku ON quote_requests (sku) WHERE status = 'waiting';
+CREATE TABLE IF NOT EXISTS quote_request_suppliers (
+    request_id INTEGER NOT NULL REFERENCES quote_requests (id),
+    supplier_code TEXT NOT NULL REFERENCES suppliers (code),
+    sent_at TEXT NOT NULL,
+    reminded_at TEXT,
+    replied_at TEXT,
+    reply_file TEXT,
+    PRIMARY KEY (request_id, supplier_code)
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")

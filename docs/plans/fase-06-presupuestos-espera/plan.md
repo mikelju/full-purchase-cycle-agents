@@ -1,6 +1,6 @@
 # Phase 06 - Quotes, request and wait: plan and results
 
-Status: in execution since 2026-10-11; batch A in progress
+Status: in execution since 2026-10-11; batch A done, batch B next
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-11)
 Base: branch `fase-06-presupuestos-espera` from `main` at commit `ada28ab`.
 
@@ -46,8 +46,9 @@ Execution order: batches A to E.
 - [x] 3. `sim_clock` table, `sim_clock.now` and `advance`, and the `clock show` and `clock advance --days N | --hours N` commands (C2, C3) - check: new `tests/test_sim_clock.py`: seed time 2026-10-12 09:00, days and hours advance, a zero or negative step fails with a message and leaves the row unchanged, one test reads the advanced time from a second process through `subprocess`.
   Evidence: new `tests/test_sim_clock.py` failed first on the missing `sim_clock` module, then `uv run pytest -q tests/test_sim_clock.py tests/test_seed.py` 21 passed; ruff check and format clean.
   The clock is stored as `YYYY-MM-DD HH:MM:SS` in a single row with id 1; `advance` rejects any negative part or an all-zero step with a "only moves forward" message; `clock advance` takes exactly one of `--days` and `--hours`; like `clarify list`, the `clock` commands run the idempotent seed first, so a missing database starts at 2026-10-12 09:00.
-- [ ] 4. `quote_requests` and `quote_request_suppliers` tables and `quotes.shortfalls(conn)` over `received` orders and `stock` (C2, C4) - check: new `tests/test_quotes.py` cases on a temporary database: shortfall equals demand minus `on_hand`, a SKU with enough stock gives none, orders with another status are ignored, a SKU with a `waiting` request is skipped.
-  Evidence:
+- [x] 4. `quote_requests` and `quote_request_suppliers` tables and `quotes.shortfalls(conn)` over `received` orders and `stock` (C2, C4) - check: new `tests/test_quotes.py` cases on a temporary database: shortfall equals demand minus `on_hand`, a SKU with enough stock gives none, orders with another status are ignored, a SKU with a `waiting` request is skipped.
+  Evidence: new `tests/test_quotes.py` failed first on the missing `quotes` module, then `uv run pytest -q tests/test_quotes.py tests/test_seed.py tests/test_sim_clock.py` 27 passed; ruff check and format clean; full `uv run pytest -q` 649 passed at batch A close (`npm run check` left to the coordinator).
+  `quote_requests` times carry no `datetime('now')` default, so the quotes code must write them from the clock; a partial unique index allows only one `waiting` request per SKU as a schema guard against the first critical error; `shortfalls` returns rows in SKU order.
 
 ### Batch B - Quote request graph and its events
 - [ ] 5. `build_quote_request_graph` with `send` and `wait`, request and reminder templates, supplier outbox writer and `quotes scan` (C4, C5) - check: tests fail first, then pass: `scan` starts one thread per short SKU with the exact quantity, a second `scan` starts nothing, a stub model client counts zero calls; one `.eml` per family supplier with the supplier address, `QR-NNNN` in the subject and SKU, product name, sale unit, quantity and deadline in the body; the checkpoint shows the thread paused in `wait`; re-running `send` on resumption writes no second file or row.
