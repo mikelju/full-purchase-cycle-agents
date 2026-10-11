@@ -1,5 +1,9 @@
 """C4 to C10: the quote request graph, its CLI commands and the wait on the simulated clock."""
 
+import datetime
+import subprocess
+import sys
+import time
 from email import policy
 from email.parser import BytesParser
 
@@ -394,3 +398,111 @@ def test_a_single_tick_past_the_deadline_sends_no_reminder(waiting):
     assert (result["reminders"], result["status"]) == (0, "no_offers")
     assert waiting.files() == files
     assert all(r["reminded_at"] is None for r in waiting.request_suppliers())
+
+
+# Increment 9: cross-process wait and real-time independence (C9, C3)
+
+
+def _timeline(env, inbox):
+    """Scan, a reply, a reminder tick, a duplicate reply and a deadline tick, as CLI argument lists."""
+    common = ["--db", str(env.db)]
+    checkpoints = ["--checkpoints", str(env.checkpoints)]
+    outbox = ["--outbox", str(env.outbox)]
+    return [
+        [*common, "quotes", "scan", *checkpoints, *outbox],
+        [*common, "clock", "advance", "--days", "1"],
+        [*common, "quotes", "receive", str(inbox), *checkpoints],
+        [*common, "clock", "advance", "--days", "2"],
+        [*common, "quotes", "tick", *checkpoints, *outbox],
+        [*common, "quotes", "receive", str(inbox), *checkpoints],
+        [*common, "clock", "advance", "--days", "2"],
+        [*common, "quotes", "tick", *checkpoints, *outbox],
+    ]
+
+
+def _timeline_env(tmp_path, name):
+    """Two short SKUs; the inbox holds one reply to QR-0001 from a supplier of both products."""
+    (tmp_path / name).mkdir()
+    env = Env(tmp_path / name)
+    env.short(THREE, 8)
+    env.short(TWO, 13)
+    _reply(tmp_path / "inbox", "r1.eml", EMAIL[_suppliers(TWO)[0]], "Re: Quote request QR-0001")
+    return env
+
+
+def _final(env):
+    """Rows, outbox bytes and thread states; `failures` times come from SQLite `datetime('now')` and are left out."""
+    rows = {
+        table: [dict(r) for r in env.conn.execute(f"SELECT * FROM {table} ORDER BY 1, 2")]
+        for table in ("quote_requests", "quote_request_suppliers", "sim_clock")
+    }
+    rows["failures"] = [
+        dict(r)
+        for r in env.conn.execute("SELECT thread_id, channel, source, step, error, status FROM failures ORDER BY 1")
+    ]
+    files = {p.name: p.read_bytes() for p in env.outbox.iterdir()}
+    saver = sqlite_checkpointer(env.checkpoints)
+    graph = quotes.build_quote_request_graph(env.db, env.outbox, checkpointer=saver)
+    threads = sorted({c.config["configurable"]["thread_id"] for c in saver.list(None)})
+    states = {
+        t: (
+            graph.get_state({"configurable": {"thread_id": t}}).values,
+            graph.get_state({"configurable": {"thread_id": t}}).next,
+        )
+        for t in threads
+    }
+    return rows, files, states
+
+
+def test_a_request_survives_separate_processes(tmp_path):
+    single = _timeline_env(tmp_path, "single")
+    for argv in _timeline(single, tmp_path / "inbox"):
+        assert cli.main(argv) == 0
+    separate = _timeline_env(tmp_path, "separate")
+    for argv in _timeline(separate, tmp_path / "inbox"):
+        run = subprocess.run(
+            [sys.executable, "-m", "purchase_cycle.cli", *argv], capture_output=True, text=True, timeout=120
+        )
+        assert run.returncode == 0, run.stderr
+    rows, files, states = _final(separate)
+    assert sorted(r["status"] for r in rows["quote_requests"]) == ["no_offers", "ready_for_decision"]
+    assert list(states) == ["quote-QR-0001", "quote-QR-0002"]
+    assert any("reminder" in name for name in files)
+    assert (rows, files, states) == _final(single)
+
+
+def _freeze_real_time(monkeypatch, moment):
+    """Patch the real-time sources this process reads: `time.time` and `datetime.now` in the loaded modules."""
+    real = datetime.datetime
+
+    class Frozen(real):
+        @classmethod
+        def now(cls, tz=None):
+            return moment if tz is None else moment.replace(tzinfo=datetime.UTC).astimezone(tz)
+
+        @classmethod
+        def utcnow(cls):
+            return moment
+
+        @classmethod
+        def today(cls):
+            return moment
+
+    monkeypatch.setattr(datetime, "datetime", Frozen)
+    for name, module in list(sys.modules.items()):
+        if name.startswith(("purchase_cycle", "langgraph")) and getattr(module, "datetime", None) is real:
+            monkeypatch.setattr(module, "datetime", Frozen)
+    monkeypatch.setattr(time, "time", lambda: moment.timestamp())
+
+
+@pytest.mark.parametrize("moments", [(datetime.datetime(2001, 2, 3, 4, 5), datetime.datetime(2039, 11, 30, 23, 59))])
+def test_the_same_timeline_gives_the_same_results_whatever_the_real_time(tmp_path, monkeypatch, moments):
+    results = []
+    for i, moment in enumerate(moments):
+        with monkeypatch.context() as patch:
+            _freeze_real_time(patch, moment)
+            env = _timeline_env(tmp_path, f"run{i}")
+            for argv in _timeline(env, tmp_path / "inbox"):
+                assert cli.main(argv) == 0
+            results.append(_final(env))
+    assert results[0] == results[1]
