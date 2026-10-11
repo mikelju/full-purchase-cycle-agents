@@ -91,7 +91,8 @@ Execution order: batches A to E.
   `uv run purchase-cycle quotes-demo` (exit 0) in `.evidence/fase-06/quotes-demo.txt`: scan, clock advance, receive, clock advance, tick with four reminders, receive, clock advance to day 5 and the closing tick.
   The two sample orders are loaded by the demo process itself into a fresh database in `--workdir` (default `data/quotes-demo`), like `orders-demo`, because no CLI command stores an order without a model call; the eight steps then run as `python -m purchase_cycle.cli` processes (decided in execution, batch D).
 - [ ] 14. README sections in English for the quotes module, the simulated clock, the `clock` and `quotes` commands, `quotes-demo`, how `quote_wait` was built and run, and the known limitations of the spec (C15) - check: followed step by step in the clean clone of increment 16.
-  Evidence:
+  Evidence (2026-10-11): README gains the phase 06 status line, `Request supplier quotes` with `The simulated clock`, `Commands` and `Run the quotes demo`, the `quote_wait` dataset and evaluation paragraphs, ten evaluations instead of nine, `quote_wait` in the not uploaded list and the five spec limitations under `Limits`.
+  The commands block was run on a copy of the demo database: `clock show`, `quotes scan`, `quotes tick`, `quotes receive` (a reply to a closed request rejected with its reason) and `quotes list` work as written, and a second `scan` and `tick` wrote nothing new; the clean-clone walk-through stays with increment 16.
 - [ ] 15. Secret scan of the supplier seed, sample replies, outbox examples and scenario files, asserting they are tracked (C14) - check: `tests/test_secrets.py` gains a phase 06 test.
   Evidence:
 

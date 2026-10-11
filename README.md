@@ -6,6 +6,7 @@ Phase 02 (web form orders) built: the first order channel, from a form submissio
 Phase 03 (email orders) built: the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
 Phase 04 (exceptions) built and merged (PR #6): both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
 Phase 05 (closing the orders module) built: a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
+Phase 06 (quote requests and wait) in progress: quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
 
 ## What it does
 
@@ -226,13 +227,70 @@ The demo prints, per item, the channel, route, scene, outcome, order number and 
 `--mode replay` (the default) needs no key: the model answers are recorded in `evals/recordings/orders_demo.jsonl`.
 `--mode live` calls Claude Haiku 4.5 and `--mode record` also stores the answers; the expected result is five stored orders and no parked failure.
 
+## Request supplier quotes
+
+The quotes module (`src/purchase_cycle/quotes.py`) asks suppliers for quotes when stored orders need more units than the stock holds.
+Demand per SKU is the sum of the order lines of orders with status `received`; the shortfall is demand minus `stock.on_hand`.
+`quotes scan` starts one quote request `QR-NNNN` per SKU with a positive shortfall and no request already waiting, and writes one request email per supplier of the product family to the supplier outbox (`data/supplier_outbox/`).
+Three fictional suppliers live in `src/purchase_cycle/suppliers.py`; every product has at least two.
+Each request is a LangGraph thread `quote-QR-NNNN` with the nodes `send`, `wait` and `close`, saved in the checkpoint file, so the wait survives the end of the process.
+A supplier reply is an `.eml` file whose subject names the request reference and whose sender is a supplier of that request; it only marks the supplier as replied, and offers are not read.
+The wait schedule: one reminder on day 3 to the suppliers that have not replied, and a deadline on day 5.
+A request closes as `ready_for_decision` when every supplier replied, or at the deadline with at least one reply; with no reply it closes as `no_offers` and is parked in `failures` with step `quote_wait`.
+
+### The simulated clock
+
+Days pass on a simulated clock, one current time in the `sim_clock` table, which starts at 2026-10-12 09:00 on seed.
+Nothing in the quotes code reads the real time: the clock moves only with `clock advance`, and waiting requests see it only when `quotes tick` delivers it.
+A tick at or after the reminder time sends the reminder; a tick at or after the deadline closes the request.
+
+### Commands
+
+```
+uv run purchase-cycle clock show
+uv run purchase-cycle clock advance --days 3
+uv run purchase-cycle clock advance --hours 6
+uv run purchase-cycle quotes scan
+uv run purchase-cycle quotes receive examples/quotes/replies-day-1
+uv run purchase-cycle quotes tick
+uv run purchase-cycle quotes list
+```
+
+- `clock show` prints the simulated time; `clock advance` moves it forward by `--days N` or `--hours N`.
+- `quotes scan` starts the requests and writes the request emails.
+- `quotes receive <folder>` reads the reply files of a folder in name order; a reply to an unknown or closed request, from a sender that is not a supplier of the request or from a supplier that already replied is rejected with its reason and changes nothing.
+- `quotes tick` delivers the simulated time to every waiting request, which sends the due reminders and closes the requests past their deadline.
+- `quotes list` prints every request with its status, replied and pending suppliers, next reminder and deadline.
+
+Every command takes `--db <path>` before the command name; `scan`, `receive` and `tick` take `--checkpoints`, and `scan` and `tick` take `--outbox` for the supplier emails.
+Running `scan` or `tick` twice at the same simulated time writes nothing new.
+
+### Run the quotes demo
+
+```
+uv run purchase-cycle quotes-demo
+```
+
+`quotes-demo` stores the two sample orders of `examples/quotes/orders.json` as `received` in a fresh database, checkpoints and supplier outbox in `data/quotes-demo/` (`--workdir <folder>` to change it), then runs eight steps, each one as its own `purchase-cycle` process:
+
+1. `quotes scan` on day 0 starts `QR-0001` (12 units of `GLV-NIT-XS`, three suppliers) and `QR-0002` (4 units of `GLV-SURG-NEO-6.5`, two suppliers) and writes five request emails.
+2. `clock advance --days 1`.
+3. `quotes receive examples/quotes/replies-day-1`: `SUP-002` replies to `QR-0001`.
+4. `clock advance --days 2`.
+5. `quotes tick` on day 3 sends four reminders, to the suppliers that have not replied.
+6. `quotes receive examples/quotes/replies-day-3`: `SUP-003` replies to `QR-0001` after its reminder.
+7. `clock advance --days 2`.
+8. `quotes tick` on day 5 closes `QR-0001` as `ready_for_decision` and `QR-0002` as `no_offers`.
+
+The demo prints, per step, the simulated time, the requests started, the emails written, the replies received and the status of every request, then a summary; it needs no key and no network.
+
 ## Run the tests
 
 ```
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and the nine evaluations in replay mode.
+Runs the method's hook tests, ruff, pytest and the ten evaluations in replay mode.
 
 ## The golden dataset
 
@@ -321,6 +379,8 @@ Three more datasets are hand-built and versioned with the code:
 - `evals/datasets/failure_recovery/` holds 34 scripted fault scenarios in 8 categories: transient errors within and beyond the retry budget, an authentication error, an invalid then valid answer, two invalid answers, a parked thread resumed with `failures resume`, a crash at each of the three points on each channel resumed with `resume`, and a re-delivered message.
 - `evals/datasets/order_scenarios/` holds 30 end-to-end scenarios, 10 per channel, each with its initial state, messages, scripted customer answers, steps, crash point and expected final state: 17 with a clarification, 5 with two answers, 3 with an unknown product, 3 with a crash and resume and 4 with a re-delivered message.
   The scripted answers were committed before the first live record.
+- `evals/datasets/quote_wait/` holds 24 scripted quote timelines of orders, scans, clock advances, supplier replies and ticks, each with the hand-written expected final requests, `failures` rows and outbox file names: at least 3 each for all replied, some replied, none replied, a late reply, a duplicate reply, a re-run scan, a repeated tick and a process restart.
+  They are built by `uv run python -m purchase_cycle.evaluation.quote_wait_eval` from the D5 schedule.
 
 ## Run the evaluation
 
@@ -329,7 +389,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the nine evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
+`npm run eval` replays the ten evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:
@@ -409,8 +469,11 @@ The instructions were tuned on the development split only and were not changed a
 The Claude Haiku 4.5 baseline (`evals/baselines/order_scenarios.json`) is 100.0% scenario success (88.6% to 100.0%, 30 of 30, 10 per channel), over the 90% target, with a McNemar gate per scenario.
 `failure_recovery` and `order_scenarios` also count critical errors (a duplicate order, a price not from the catalog, a dropped line, an open doubt stored, a false confirmation and a line source outside its message), gated at 0; both measure 0.
 The two deterministic suites have no split and no baseline.
+`uv run purchase-cycle eval --suite quote_wait` runs the 24 quote timelines with no model call, each on a temporary database, with the steps flagged as a restart in their own process.
+It grades the final requests, the parked `quote_wait` failures and the outbox file names, and counts eight critical errors from a snapshot before and after each step: a second open request for a SKU, a request without shortfall, a wrong quantity, a reminder after a reply, a repeated reminder, an email after the close, a request still waiting after its deadline and a lost or duplicated thread.
+Scenario success is 100.0% (86.2% to 100.0%) with 0 critical errors; the gate is 100% success and 0 critical errors.
 
-`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the six dataset evaluations once; `--suite <name>` uploads one; `channel_routing`, `failure_recovery` and `order_scenarios` are not uploaded).
+`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the six dataset evaluations once; `--suite <name>` uploads one; `channel_routing`, `failure_recovery`, `order_scenarios` and `quote_wait` are not uploaded).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
 Recordings in `evals/recordings/` are tied to the exact prompt and model: changing either needs a new recording and a new comparison against the baseline.
 
@@ -440,6 +503,11 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - A free-text line's ordered quantity is not counted as a size figure in the candidate search; when that figure is really the size (for example "surgical gloves size 8" read as quantity 8), the line becomes ambiguous and the customer is asked.
 - In `order_scenarios` the customer answers are scripted before any question is seen, so they cannot react to an odd question, and thirty scenarios give a wide interval.
 - The LangSmith trace of a live `orders-demo` run and the experiment of `whatsapp_order_extraction` are pending until the LangSmith trace quota resets, around 2026-11-05.
+- Suppliers are simulated by email files; nothing is sent or received over a network.
+- The quotes module reads no offer content; prices and delivery times are read in phase 07.
+- Stock is not reserved or decremented, so demand is the sum of stored `received` orders.
+- The simulated clock has no business days, holidays or time zones, and nothing ticks by itself: an operator or the demo runs `quotes tick`.
+- A supplier reply is accepted on the subject reference and the sender address in the file; there is no sender authentication, as in the email channel.
 
 ## License
 
