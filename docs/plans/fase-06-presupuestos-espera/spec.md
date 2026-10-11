@@ -1,7 +1,7 @@
 # Phase 06 - Quotes, request and wait: specification
 
-Status: spec in review
-Approved by the owner:
+Status: approved
+Approved by the owner: 2026-10-11 (via Lavish)
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
@@ -12,7 +12,7 @@ It is needed now because phase 05 closed the orders module and stores orders wit
 It shows the master plan capability "persistent state" over a long wait: the thread survives separate processes and days of simulated time.
 
 ## Scope
-The recommended option of each open decision is assumed below; each decision id points to "Open decisions".
+Each decision id points to "Owner decisions (2026-10-11)".
 In:
 - Suppliers (D2):
   - New `suppliers` table (code, name, email) and `supplier_families` table (supplier code, product family), seeded with three fictional Spanish suppliers whose families overlap so every catalog product is sold by at least two of them.
@@ -80,6 +80,7 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 
 ## Constraints and risks
 - No new dependency and no model cost are expected: `interrupt`, `Command` and the SQLite checkpointer are already in `langgraph`, and the emails use the standard library `email` package (D4).
+- The live model cost ceiling for the phase is 5 USD (D9); with D4 A no model call is planned, so the expected cost is 0 USD.
 - Five new tables in the shared schema; the existing tables are not changed, and `failures` is reused as it is.
 - LangGraph re-runs an interrupted node from its start on resumption, so `send`, the reminder step and the close step must be idempotent; keyed outbox file names and the reminded-at and replied-at columns provide that.
 - The stock seed gives some products zero units (`(i * 37) % 250`), so a small sample order already shows a shortfall; the sample orders are chosen against that seed.
@@ -104,46 +105,15 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 - The clock has no business days, holidays or time zones, and nothing ticks by itself: an operator or the demo runs `quotes tick`.
 - A reply is accepted on the subject reference and the sender address in the file; there is no sender authentication, as in the email channel.
 
-## Open decisions
-Questions the owner must resolve before approval; empty on approval.
-The recommended option is marked; the scope and criteria above are written for it.
-
-### D1 - What triggers a quote request
-- A (recommended): a `quotes scan` command over the shared database: units asked by stored `received` orders minus `on_hand`, one request per SKU with a positive shortfall and none open. Trade-off: links the modules only through the database, leaves the orders module untouched and keeps composition for phase 10, but needs a command to run.
-- B: a reorder point per product (`on_hand` below a fixed minimum), independent of orders. Trade-off: classic stock policy and simpler, but ignores customer demand and needs a new minimum column chosen by hand.
-- C: the orders `store` node starts the request when a line exceeds stock. Trade-off: immediate and realistic, but changes phase 05 graphs, recordings and gates and does the orchestrator's job early.
-
-### D2 - How many suppliers and how they are modelled
-- A (recommended): three fictional suppliers in new tables, each selling a set of product families, with overlap so every product has at least two suppliers. Trade-off: enough to compare offers in phase 07 and small to seed and test.
-- B: five suppliers with per-product coverage. Trade-off: richer comparison, but more seed data and more files per request with little extra to show.
-- C: one supplier per family. Trade-off: simplest, but leaves nothing to compare in phase 07.
-
-### D3 - Simulated clock
-- A (recommended): one current time stored in a `sim_clock` table, moved forward only by `clock advance`, read by all quotes code; `quotes tick` delivers the current time to waiting threads. Trade-off: shared across processes and visible in the database, fully reproducible.
-- B: a fixed start time plus an offset in an environment variable. Trade-off: no table, but the time is not shared across processes unless every command gets the same variable, and it is easy to forget.
-- C: real time with the deadlines scaled to minutes. Trade-off: feels live, but tests and the demo depend on waiting and are not reproducible.
-
-### D4 - How the request and reminder emails are written
-- A (recommended): fixed English templates, no model call. Trade-off: no cost, no recordings and no new evaluation of text quality; the texts are plain.
-- B: Claude Haiku 4.5 drafts each request and reminder. Trade-off: more natural text and more agent work to show, but adds cost, recordings and a text-quality evaluation for a message whose content is fixed anyway.
-
-### D5 - Supplier replies in this phase, and the wait schedule
-- A (recommended): replies are received in this phase as files that only mark the supplier as replied, with no extraction; a 5-day deadline with one reminder on day 3 to suppliers that have not replied; early close when all replied. Trade-off: the wait reacts to real events and phase 07 gets the reply files ready to extract, at small cost.
-- B: no replies in this phase; every request waits until the deadline and phase 07 adds replies. Trade-off: smaller, but the wait never reacts to an event and the demo shows only reminders and timeouts.
-- C: as A, with a 7-day deadline and reminders on days 2 and 5. Trade-off: closer to a patient buyer and shows repeated reminders, with one more rule to test.
-
-### D6 - Shape of the demo
-- A (recommended): one `quotes-demo` command that runs a scripted timeline, each step in its own process, over sample orders and replies in `examples/quotes/`, ending with one request answered after a reminder and one with no offers. Trade-off: one command shows the saved state and the clock, with subprocess overhead of a few seconds.
-- B: a single-process demo. Trade-off: faster and simpler, but does not show that the wait survives a restart.
-
-### D7 - Evaluation of the module
-- A (recommended): a deterministic `quote_wait` suite of at least 20 scripted timelines graded by the final database and outbox, gated at 100% with critical errors 0. Trade-off: fits the deterministic module and the phase 05 recovery suites, with no audit needed.
-- B: tests only, no evaluation. Trade-off: less work, but breaks the master plan rule that every module has an evaluation in `npm run check`.
-
-### D8 - Observability criterion
-- A (recommended): no LangSmith criterion in this phase, since the module calls no model and the trace quota is exhausted until about 2026-11-05. Trade-off: no blocked criterion, but no trace evidence for this module until phase 10 or 11.
-- B: a criterion with a live trace of `quotes-demo` showing the thread across processes, delivered with the pending catch-up change after the quota reset. Trade-off: adds observability evidence, but leaves a criterion blocked for weeks.
-
-### D9 - Cost
-- A (recommended): no live model cost in this phase, consistent with D4 A. Trade-off: none beyond the plain templates.
-- B: a ceiling of 0.5 USD, needed only if D4 B is chosen. Trade-off: covers drafting and recording about 100 texts with margin.
+## Owner decisions (2026-10-11)
+The owner approved the spec via Lavish on 2026-10-11, chose the recommended option A in D1 to D6 and D8, chose option B in D9 with a raised ceiling, left D7 unanswered and accepted the assumptions above.
+Each reason is the owner decision of 2026-10-11.
+- D1 - What triggers a quote request: A, a `quotes scan` command over the shared database, units asked by stored `received` orders minus `on_hand`, one request per SKU with a positive shortfall and none open.
+- D2 - How many suppliers and how they are modelled: A, three fictional suppliers in new tables, each selling a set of product families, with overlap so every product has at least two suppliers.
+- D3 - Simulated clock: A, one current time in a `sim_clock` table, moved forward only by `clock advance` and delivered to waiting threads by `quotes tick`.
+- D4 - How the request and reminder emails are written: A, fixed English templates, no model call.
+- D5 - Supplier replies in this phase, and the wait schedule: A, reply files that only mark the supplier as replied, with no extraction; a 5-day deadline with one reminder on day 3 to suppliers that have not replied; early close when all replied.
+- D6 - Shape of the demo: A, one `quotes-demo` command running a scripted timeline with each step in its own process over `examples/quotes/`.
+- D7 - Evaluation of the module: A, a deterministic `quote_wait` suite of at least 20 scripted timelines gated at 100% with critical errors 0; recommended option, the owner approved the spec with their choices and left D7 unanswered.
+- D8 - Observability criterion: A, no LangSmith criterion in this phase.
+- D9 - Cost: B, with the owner's note to raise the ceiling to 5 USD so the phase is not caught short; the live model cost ceiling for the phase is 5 USD, and with D4 A no model call is planned, so the expected cost is 0 USD.
