@@ -8,7 +8,7 @@ from email.utils import format_datetime
 from pathlib import Path
 from typing import TypedDict
 
-from langgraph.graph import START, StateGraph
+from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 
 from purchase_cycle import db, email_order, sim_clock, web_form, whatsapp_order
@@ -46,6 +46,7 @@ Purchasing department
 class QuoteRequestState(TypedDict, total=False):
     request_id: int
     reminders: list[str]  # supplier codes reminded by the last event
+    done: bool  # the last event closes the request
 
 
 def reference(request_id: int) -> str:
@@ -169,6 +170,31 @@ def send_reminders(conn: sqlite3.Connection, outbox: Path | str, request_id: int
     return reminded
 
 
+def _pending(conn: sqlite3.Connection, request_id: int) -> int:
+    return conn.execute(
+        "SELECT COUNT(*) FROM quote_request_suppliers WHERE request_id = ? AND replied_at IS NULL", (request_id,)
+    ).fetchone()[0]
+
+
+def close_request(conn: sqlite3.Connection, request_id: int) -> str:
+    """Close a waiting request as `ready_for_decision` with a reply, or `no_offers` with a parked failure."""
+    request = _request(conn, request_id)
+    replied = conn.execute(
+        "SELECT COUNT(*) FROM quote_request_suppliers WHERE request_id = ? AND replied_at IS NOT NULL", (request_id,)
+    ).fetchone()[0]
+    status = "ready_for_decision" if replied else "no_offers"
+    if request["status"] != WAITING:
+        return request["status"]
+    if not replied:
+        # Parked before the status changes, so a re-run after a crash between both writes still parks it once.
+        ref = reference(request_id)
+        error = f"no supplier replied to quote request {ref} for {request['sku']} by {request['deadline'][:16]}"
+        db.park_failure(conn, thread_id(request_id), "quotes", ref, "quote_wait", error)
+    with conn:
+        conn.execute("UPDATE quote_requests SET status = ? WHERE id = ? AND status = ?", (status, request_id, WAITING))
+    return status
+
+
 def build_quote_request_graph(db_path: Path | str, outbox: Path | str | None = None, checkpointer=None):
     def send(state: QuoteRequestState) -> QuoteRequestState:
         send_request(db_path, outbox, state["request_id"])
@@ -179,11 +205,13 @@ def build_quote_request_graph(db_path: Path | str, outbox: Path | str | None = N
         # a reply against the database first, so only an accepted one reaches the thread.
         event = interrupt({"reference": reference(state["request_id"])})
         conn = db.connect(db_path)
-        reminders = []
+        reminders, done = [], False
         try:
             if event["event"] == "tick":
                 request = _request(conn, state["request_id"])
-                if event["now"] >= request["reminder_at"]:
+                # The deadline closes the request at its first tick, with no reminder, since no email follows a close.
+                done = event["now"] >= request["deadline"]
+                if not done and event["now"] >= request["reminder_at"]:
                     reminders = send_reminders(conn, outbox, state["request_id"], event["now"])
             elif event["event"] == "reply":
                 with conn:
@@ -192,16 +220,27 @@ def build_quote_request_graph(db_path: Path | str, outbox: Path | str | None = N
                         "WHERE request_id = ? AND supplier_code = ? AND replied_at IS NULL",
                         (event["now"], event["file"], state["request_id"], event["supplier"]),
                     )
+                done = _pending(conn, state["request_id"]) == 0
         finally:
             conn.close()
-        return {"reminders": reminders}
+        return {"reminders": reminders, "done": done}
+
+    def close(state: QuoteRequestState) -> QuoteRequestState:
+        conn = db.connect(db_path)
+        try:
+            close_request(conn, state["request_id"])
+        finally:
+            conn.close()
+        return {}
 
     builder = StateGraph(QuoteRequestState)
     builder.add_node("send", send)
     builder.add_node("wait", wait)
     builder.add_edge(START, "send")
     builder.add_edge("send", "wait")
-    builder.add_edge("wait", "wait")
+    builder.add_node("close", close)
+    builder.add_conditional_edges("wait", lambda s: "close" if s["done"] else "wait", ["wait", "close"])
+    builder.add_edge("close", END)
     return builder.compile(checkpointer=checkpointer, name="quote_request")
 
 

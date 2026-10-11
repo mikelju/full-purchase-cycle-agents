@@ -318,3 +318,79 @@ def test_quotes_tick_command_prints_each_waiting_request(three, capsys):
     out = capsys.readouterr().out
     assert "simulated time: 2026-10-15 09:00" in out
     assert "QR-0001  reminders=2  status=waiting" in out
+
+
+# Increment 8: closing (C8)
+
+
+def _status(env):
+    return env.conn.execute("SELECT status FROM quote_requests WHERE id = 1").fetchone()[0]
+
+
+def _quote_failures(env):
+    return [
+        dict(r)
+        for r in env.conn.execute(
+            "SELECT thread_id, channel, source, step, status FROM failures WHERE step = 'quote_wait' ORDER BY thread_id"
+        )
+    ]
+
+
+def _after_close_nothing_changes(env, tmp_path, supplier):
+    """A later tick and a later reply write no email and change no row or checkpoint."""
+    before = _snapshot(env)
+    sim_clock.advance(env.conn, days=2)
+    assert _tick(env) == []
+    _reply(tmp_path / "late", "late.eml", EMAIL[supplier], "Re: Quote request QR-0001")
+    [result] = _receive(env, tmp_path / "late")
+    assert result["accepted"] is False and "QR-0001 is closed" in result["reason"]
+    assert _snapshot(env) == before
+
+
+def test_the_request_closes_at_once_when_every_supplier_replied(waiting, tmp_path):
+    for i, code in enumerate(_suppliers(TWO)):
+        _reply(tmp_path / "inbox", f"r{i}.eml", EMAIL[code], "Re: Quote request QR-0001")
+    _receive(waiting, tmp_path / "inbox")
+    assert _status(waiting) == "ready_for_decision"
+    assert waiting.state("quote-QR-0001").next == ()
+    assert _quote_failures(waiting) == []
+    _after_close_nothing_changes(waiting, tmp_path, _suppliers(TWO)[0])
+
+
+def test_the_deadline_tick_closes_as_ready_for_decision_with_one_reply(three, tmp_path):
+    sim_clock.advance(three.conn, days=3)
+    _tick(three)
+    files = three.files()
+    sim_clock.advance(three.conn, days=2)
+    [result] = _tick(three)
+    assert (result["reminders"], result["status"]) == (0, "ready_for_decision")
+    assert three.files() == files
+    assert _quote_failures(three) == []
+    _after_close_nothing_changes(three, tmp_path, _suppliers(THREE)[1])
+
+
+def test_the_deadline_tick_closes_as_no_offers_with_a_failure_row(waiting, tmp_path):
+    sim_clock.advance(waiting.conn, days=3)
+    _tick(waiting)
+    sim_clock.advance(waiting.conn, days=2)
+    [result] = _tick(waiting)
+    assert result["status"] == "no_offers"
+    assert _quote_failures(waiting) == [
+        {
+            "thread_id": "quote-QR-0001",
+            "channel": "quotes",
+            "source": "QR-0001",
+            "step": "quote_wait",
+            "status": "needs_review",
+        }
+    ]
+    _after_close_nothing_changes(waiting, tmp_path, _suppliers(TWO)[0])
+
+
+def test_a_single_tick_past_the_deadline_sends_no_reminder(waiting):
+    files = waiting.files()
+    sim_clock.advance(waiting.conn, days=6)
+    [result] = _tick(waiting)
+    assert (result["reminders"], result["status"]) == (0, "no_offers")
+    assert waiting.files() == files
+    assert all(r["reminded_at"] is None for r in waiting.request_suppliers())
