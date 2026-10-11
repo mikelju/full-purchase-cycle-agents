@@ -1,6 +1,6 @@
 # 004 - Watch the orders graphs in LangGraph Studio
 
-Status: planned
+Status: delivered (PR to `main`, pending owner merge)
 
 ## Contract
 Goal and reason:
@@ -39,7 +39,7 @@ Owner request 2026-10-10 to plan this change, then show it after a context hando
   Evidence: `tests/test_studio.py::test_live_mode_loads_the_key_from_dotenv_and_keeps_tracing_off`.
 - [x] 3. Owner walkthrough in a fresh session after the context handoff: start `langgraph dev`, open Studio, run the web form sample, then the WhatsApp doubt and its answer; C6.
   Evidence: owner confirmed on 2026-10-11; notes in Delivery.
-- [ ] 4. Adversarial review, `npm run check`, push and PR to `main`; C7.
+- [x] 4. Adversarial review, `npm run check`, push and PR to `main`; C7. Evidence: `.evidence/change-004/check-f0319f1.txt` (exit=0, 660 passed; the nine replay evaluation metrics identical to `eval-resume-text.txt`).
 
 ## Decisions
 Replay by default so watching costs nothing and needs no key; replay recordings come from `evals/recordings/orders_demo.jsonl` plus the Studio-only `evals/recordings/studio.jsonl`.
@@ -76,3 +76,8 @@ Owner walkthrough (item 3, C6), confirmed by the owner on 2026-10-11:
 - Idempotency: a message already processed returns the existing order; to start over, stop the server and delete `data/studio/` and `.langgraph_api/`.
 - Replay mode only understands the recorded clarify answer; any other answer needs live mode.
 - Known limit, not fixed: an input meant for another graph raises a raw `KeyError` naming the missing input key, observed during the walkthrough.
+
+Results per criterion:
+- C1-C5: met (tests in `tests/test_studio.py`, README section, server started on Windows during the walkthrough).
+- C6: met, owner walkthrough above.
+- C7: met, `npm run check` exit 0 at f0319f1 and the nine replay evaluations unchanged.
