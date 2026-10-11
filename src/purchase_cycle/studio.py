@@ -61,11 +61,11 @@ def build(channel: str, checkpointer=None):
     if mode == "live":
         load_dotenv()  # the key lives in .env, which the dev server does not load
     config.configure_tracing("replay")  # forces tracing off, also in live mode
-    os.environ.setdefault("LANGGRAPH_CLI_NO_ANALYTICS", "1")
-    first_use = not DB_PATH.exists()
     conn = db.connect(DB_PATH)
     try:
-        if first_use:
+        # First use is a database without catalog, also one a failed first seed left behind.
+        has_catalog = conn.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'products'").fetchone()
+        if not has_catalog or not db.catalog_rows(conn):
             db.seed(conn)
         catalog = db.catalog_rows(conn)
     finally:
