@@ -1,6 +1,6 @@
 # Phase 06 - Quotes, request and wait: plan and results
 
-Status: in execution since 2026-10-11; batch A done, batch B in progress
+Status: built, delivered for review via PR on 2026-10-11
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-11)
 Base: branch `fase-06-presupuestos-espera` from `main` at commit `ada28ab`.
 
@@ -94,10 +94,11 @@ Execution order: batches A to E.
   Evidence (2026-10-11): new `tests/test_quotes_demo.py` failed first on the missing `quotes-demo` command, then passed (34 s): exit 0, empty stderr, no network attempt, nine processes (the demo and one per step), every per-step label printed, QR-0001 `ready_for_decision` with a reply from a reminded supplier, QR-0002 `no_offers` parked in `failures`, and the nine outbox names; ruff check and format clean.
   `uv run purchase-cycle quotes-demo` (exit 0) in `.evidence/fase-06/quotes-demo.txt`: scan, clock advance, receive, clock advance, tick with four reminders, receive, clock advance to day 5 and the closing tick.
   The two sample orders are loaded by the demo process itself into a fresh database in `--workdir` (default `data/quotes-demo`), like `orders-demo`, because no CLI command stores an order without a model call; the eight steps then run as `python -m purchase_cycle.cli` processes (decided in execution, batch D).
-- [ ] 14. README sections in English for the quotes module, the simulated clock, the `clock` and `quotes` commands, `quotes-demo`, how `quote_wait` was built and run, and the known limitations of the spec (C15) - check: followed step by step in the clean clone of increment 16.
+- [x] 14. README sections in English for the quotes module, the simulated clock, the `clock` and `quotes` commands, `quotes-demo`, how `quote_wait` was built and run, and the known limitations of the spec (C15) - check: followed step by step in the clean clone of increment 16.
   Evidence (2026-10-11): README gains the phase 06 status line, `Request supplier quotes` with `The simulated clock`, `Commands` and `Run the quotes demo`, the `quote_wait` dataset and evaluation paragraphs, ten evaluations instead of nine, `quote_wait` in the not uploaded list and the five spec limitations under `Limits`.
   The commands block was run on a copy of the demo database: `clock show`, `quotes scan`, `quotes tick`, `quotes receive` (a reply to a closed request rejected with its reason) and `quotes list` work as written, and a second `scan` and `tick` wrote nothing new; the clean-clone walk-through stays with increment 16.
-- [ ] 15. Secret scan of the supplier seed, sample replies, outbox examples and scenario files, asserting they are tracked (C14) - check: `tests/test_secrets.py` gains a phase 06 test.
+  Closed in increment 18: the fresh clone of increment 16 followed the README `quotes-demo` and `eval --suite quote_wait` steps with exit 0 (`.evidence/fase-06/fresh-clone.txt`), and the fresh-clone `npm run check` at `828d7a7` passed.
+- [x] 15. Secret scan of the supplier seed, sample replies, outbox examples and scenario files, asserting they are tracked (C14) - check: `tests/test_secrets.py` gains a phase 06 test.
   Evidence (2026-10-11): new `test_phase_06_files_are_tracked_and_hold_no_keys` passes with the other 7 secret tests (8 passed); it asserts `suppliers.py`, `quotes.py`, the 24 `quote_wait` timelines and the `examples/quotes/` files are tracked and hold no key pattern, and an untracked probe file in `examples/quotes/` made it fail with "is not versioned"; ruff check and format clean.
   Outbox emails are never versioned, so the test renders a request and a reminder through `quotes.scan` and `quotes.tick` on a temporary database and scans them (decided in execution, batch D).
 
@@ -110,8 +111,8 @@ Execution order: batches A to E.
   Evidence: two rounds over `ada28ab..HEAD`, recorded in "Adversarial review" below; round 1 gave 1 major and 2 minor findings, fixed in `3901722` and `6d643c5`; round 2 gave 1 minor finding, fixed in `164b193`; no finding is open.
   Each fix has its regression test in `tests/test_quote_request.py`: `test_a_rescan_after_a_close_with_no_new_orders_starts_nothing`, `test_new_orders_after_a_close_start_a_request_for_the_new_quantity_only`, `test_a_rescan_completes_a_send_that_failed_partway` and `test_a_tick_finishes_a_request_with_no_checkpoint_and_still_handles_later_requests`.
   Final check after the fixes: fresh clone of the branch at `828d7a7`, `npm ci`, `uv sync` and `npm run check` with the Anthropic and LangSmith variables unset and no `.env`: exit 0, 699 passed, ten evaluations in replay with every gate PASS, `quote_wait` 24 of 24, success 100.0% [86.2, 100.0], 0 critical errors (`.evidence/fase-06/fresh-clone-check-828d7a7.txt`).
-- [ ] 18. Results per criterion in the table below, master plan row 06 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
-  Evidence:
+- [x] 18. Results per criterion in the table below, master plan row 06 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+  Evidence: results table filled for C1 to C15, all met; master plan row 06 set to "built, delivered for review via PR"; open items and limitations listed under "Results"; no candidate learning with a verbatim quote was recorded; the branch is pushed and the PR to `main` is left for the owner to merge.
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
@@ -130,6 +131,29 @@ Pending items, limitations and what could not be checked, stated plainly.
 
 | Criterion | Result | Evidence |
 |---|---|---|
+| C1 | Met | Fresh clone at `828d7a7` with the Anthropic and LangSmith variables unset and no `.env`: `npm ci`, `uv sync` and `npm run check` exit 0, 699 passed, ten evaluations in replay with every gate PASS (`.evidence/fase-06/fresh-clone-check-828d7a7.txt`); earlier check at `6d643c5` 698 passed, exit 0 (`check-6d643c5.txt`) |
+| C2 | Met | `tests/test_seed.py`: `test_seed_creates_three_suppliers_and_their_families`, `test_seed_twice_gives_the_same_supplier_rows_and_keeps_the_existing_tables`; `tests/test_quotes.py`: `test_seed_creates_the_empty_quote_request_tables`; `tests/test_sim_clock.py`: `test_seed_starts_the_clock_once_and_a_reseed_keeps_it` (increments 2 to 4) |
+| C3 | Met | `tests/test_sim_clock.py`: show, advance by days and hours, zero or negative step rejected, `test_the_advanced_time_persists_across_processes`; `tests/test_quote_request.py`: `test_the_same_timeline_gives_the_same_results_whatever_the_real_time`, `test_the_email_date_comes_from_the_simulated_clock` (increments 3 and 9) |
+| C4 | Met | `tests/test_quotes.py` shortfall cases; `tests/test_quote_request.py`: `test_scan_starts_one_request_per_short_sku_for_the_exact_shortfall` (zero model calls), `test_a_second_scan_starts_nothing`, `test_a_sku_with_enough_stock_starts_nothing`, `test_a_rescan_after_a_close_with_no_new_orders_starts_nothing`, `test_new_orders_after_a_close_start_a_request_for_the_new_quantity_only` (increments 4 and 5, review fix `3901722`) |
+| C5 | Met | `tests/test_quote_request.py`: `test_send_writes_one_email_per_supplier_of_the_family`, `test_the_thread_pauses_in_wait_with_its_state_in_the_checkpoint`, `test_re_running_send_writes_no_second_file_or_row`, `test_a_rescan_completes_a_send_that_failed_partway` (increment 5, review fix `3901722`) |
+| C6 | Met | `tests/test_quote_request.py`: `test_an_accepted_reply_marks_the_supplier_as_replied`, `test_a_rejected_reply_changes_nothing` (unknown reference, foreign sender), `test_a_reply_to_a_closed_request_is_rejected`, `test_the_same_reply_twice_changes_nothing_the_second_time` (increment 6) |
+| C7 | Met | `tests/test_quote_request.py`: `test_a_tick_before_the_reminder_time_writes_nothing`, `test_a_tick_at_the_reminder_time_reminds_only_the_suppliers_that_have_not_replied`, `test_a_second_tick_before_the_deadline_writes_no_new_reminder`, `test_a_tick_finishes_a_request_with_no_checkpoint_and_still_handles_later_requests` (increment 7, review fix `164b193`) |
+| C8 | Met | `tests/test_quote_request.py`: `test_the_request_closes_at_once_when_every_supplier_replied`, `test_the_deadline_tick_closes_as_ready_for_decision_with_one_reply`, `test_the_deadline_tick_closes_as_no_offers_with_a_failure_row`, `test_a_single_tick_past_the_deadline_sends_no_reminder` (increment 8) |
+| C9 | Met | `tests/test_quote_request.py`: `test_a_request_survives_separate_processes`, eight CLI steps each in a subprocess compared with the in-process run on rows, outbox bytes and checkpoints (increment 9) |
+| C10 | Met | `tests/test_quote_request.py`: `test_quotes_list_shows_every_request_with_its_suppliers_and_times`, `test_quotes_list_with_no_requests` (increment 10) |
+| C11 | Met | `tests/test_quote_wait_eval.py`: coverage minimums over 24 timelines, one injection per critical kind with exit 1, a wrong expectation with exit 1; fresh-clone check `quote_wait` 24 of 24, success 100.0% [86.2, 100.0], Wilson upper bound of failed scenarios 13.8%, 0 critical errors (`fresh-clone-check-828d7a7.txt`, `eval-quote-wait.txt`) (increments 11 and 12) |
+| C12 | Met | `tests/test_quotes_demo.py`: `test_quotes_demo_ends_ready_after_a_reminder_and_no_offers_with_the_network_blocked`; output in `.evidence/fase-06/quotes-demo.txt` and in the fresh clone (`fresh-clone.txt`) (increment 13) |
+| C13 | Met, with DV-01 | `.evidence/fase-06/unchanged-behaviour.txt`: `orders-demo` identical to the baseline once run ids are masked; `npm run eval` first 261 lines identical, only the `quote_wait` block added; `git diff --stat ada28ab` on recordings, datasets and baselines lists only the new `quote_wait` timelines; phase 01 to 05 tests pass, the only edit is DV-01 (increments 1 and 16) |
+| C14 | Met | `tests/test_secrets.py`: `test_phase_06_files_are_tracked_and_hold_no_keys`, which also renders and scans a request and a reminder email (increment 15) |
+| C15 | Met | README sections of increment 14; the fresh clone at `164b193` followed the README `quotes-demo` and `eval --suite quote_wait` steps with exit 0 (`fresh-clone.txt`) |
+
+Open items and limitations:
+- DV-01 and every decision taken in execution and review used the recommended option under the owner's standing instruction of 2026-10-11; they are pending the owner's review in the PR.
+- The spec's known limitations stand: simulated suppliers by email files, no offer content read, no stock reservation, a clock with no business days or automatic ticks, and no sender authentication.
+- Model cost of the phase: 0 USD, since no model is called (ceiling 5 USD).
+- No LangSmith criterion in this phase (D8); the trace quota stays exhausted until about 2026-11-05.
+- The master plan row 05 status overlaps the change merged with PR #10, with identical text.
+- Evidence files in `.evidence/fase-06/` are not versioned.
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
