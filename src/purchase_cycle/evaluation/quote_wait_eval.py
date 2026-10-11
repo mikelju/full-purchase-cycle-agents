@@ -6,15 +6,31 @@ request, the `failures` rows and the supplier outbox. Every expectation is writt
 a reminder at the first tick on or after day 3 to each supplier that has not replied, a close at the first tick
 on or after day 5, and an early close when every supplier replied.
 
+The runner seeds a temporary database per timeline and runs each step through `cli.main` (a `new_process` step
+through `python -m purchase_cycle.cli`). The grader compares the final requests, the `needs_review` failures rows
+of step `quote_wait` and the outbox file names with the expectation; a snapshot before and after each step feeds
+the critical-error counter. The gate is 100% success and 0 critical errors.
+
 Build the versioned timeline files with `uv run python -m purchase_cycle.evaluation.quote_wait_eval`.
 """
 
+import contextlib
+import io
 import json
+import re
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
-from purchase_cycle.catalog import PRODUCTS
+from purchase_cycle import cli, db, quotes, sim_clock
+from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
 from purchase_cycle.config import EVALS_DIR
-from purchase_cycle.suppliers import SUPPLIER_FAMILIES
+from purchase_cycle.evaluation.email_eval import _ci, _pct
+from purchase_cycle.evaluation.recovery_eval import _rate
+from purchase_cycle.evaluation.stats import target_cells, zero_event_note
+from purchase_cycle.graph import sqlite_checkpointer
+from purchase_cycle.suppliers import SUPPLIER_FAMILIES, SUPPLIERS
 
 SUITE = "quote_wait"
 DATASET_VERSION = "1.0"
@@ -24,6 +40,19 @@ TAGS = ("all_replied", "some_replied", "none_replied", "late_reply", "duplicate_
         "restart")  # fmt: skip
 # C11 minimums: timelines in all and per coverage tag.
 MINIMUMS = {"timelines": 20, **dict.fromkeys(TAGS, 3)}
+TARGET = 1.0  # deterministic: every timeline must end as scripted
+UNIT = "scenario"
+CRITICAL_KINDS = (
+    "second_open_request",
+    "request_without_shortfall",
+    "wrong_quantity",
+    "reminder_after_reply",
+    "repeated_reminder",
+    "email_after_close",
+    "waiting_after_deadline",
+    "lost_or_duplicated_thread",
+)
+OUTBOX_NAME = re.compile(r"(QR-\d+)-(request|reminder)-(.+)\.eml")
 INITIAL_STATE = {"seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"}
 
 # Seeded stock is (i * 37) % 250 over the catalog order; each order below asks stock plus the shortfall.
@@ -205,6 +234,254 @@ def write_items(items: list[dict], folder: Path = DATASET_DIR) -> None:
 
 def load_dataset(folder: Path = DATASET_DIR) -> list[dict]:
     return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(folder.glob("QW-*.json"))]
+
+
+# Runner, grader and critical errors (increment 12).
+
+EMAIL = {s.code: s.email for s in SUPPLIERS}
+
+
+def _snapshot(paths: dict) -> dict:
+    """Clock, outbox names, every request with its replied and reminded suppliers, and the shortfall per SKU.
+
+    The shortfall is computed here from the `received` order lines and `on_hand`, apart from `quotes.shortfalls`.
+    """
+    outbox = paths["outbox"]
+    conn = db.connect(paths["db"])
+    try:
+        requests = {}
+        for r in conn.execute("SELECT * FROM quote_requests ORDER BY id").fetchall():
+            suppliers = conn.execute(
+                "SELECT supplier_code, reminded_at, replied_at FROM quote_request_suppliers WHERE request_id = ?",
+                (r["id"],),
+            ).fetchall()
+            requests[quotes.reference(r["id"])] = {
+                "sku": r["sku"],
+                "quantity": r["quantity"],
+                "status": r["status"],
+                "deadline": r["deadline"],
+                "thread_id": r["thread_id"],
+                "replied": {s["supplier_code"] for s in suppliers if s["replied_at"] is not None},
+                "reminded": {s["supplier_code"]: s["reminded_at"] for s in suppliers},
+            }
+        demand = conn.execute(
+            "SELECT l.sku, SUM(l.quantity) - s.on_hand AS short FROM order_lines l "
+            "JOIN orders o ON o.id = l.order_id JOIN stock s ON s.sku = l.sku "
+            "WHERE o.status = 'received' GROUP BY l.sku"
+        ).fetchall()
+        return {
+            "now": sim_clock.now(conn).strftime(sim_clock.FORMAT),
+            "outbox": {p.name for p in outbox.glob("*.eml")} if outbox.is_dir() else set(),
+            "requests": requests,
+            "shortfall": {r["sku"]: r["short"] for r in demand if r["short"] > 0},
+        }
+    finally:
+        conn.close()
+
+
+def _excess_waiting(snapshot: dict) -> int:
+    skus = [r["sku"] for r in snapshot["requests"].values() if r["status"] == WAITING]
+    return sum(skus.count(sku) - 1 for sku in set(skus))
+
+
+def _step_errors(before: dict, after: dict, step: dict) -> dict[str, int]:
+    """Critical errors one step added, read from the snapshots before and after it."""
+    counts = dict.fromkeys(CRITICAL_KINDS, 0)
+    counts["second_open_request"] = max(0, _excess_waiting(after) - _excess_waiting(before))
+    for ref, r in after["requests"].items():
+        old = before["requests"].get(ref)
+        if old is None:
+            # A closed request no longer blocks demand still `received`, so only the shortfall size is checked.
+            shortfall = before["shortfall"].get(r["sku"], 0)
+            if shortfall <= 0:
+                counts["request_without_shortfall"] += 1
+            elif r["quantity"] != shortfall:
+                counts["wrong_quantity"] += 1
+            continue
+        for code, at in r["reminded"].items():
+            if old["reminded"].get(code) is not None and at != old["reminded"][code]:
+                counts["repeated_reminder"] += 1
+        if step["op"] == "tick" and r["status"] == WAITING and r["deadline"] <= after["now"]:
+            counts["waiting_after_deadline"] += 1
+    for name in sorted(after["outbox"] - before["outbox"]):
+        found = OUTBOX_NAME.fullmatch(name)
+        old = before["requests"].get(found.group(1)) if found else None
+        if old is None:
+            continue
+        if old["status"] != WAITING:
+            counts["email_after_close"] += 1
+        elif found.group(2) == "reminder" and found.group(3) in old["replied"]:
+            counts["reminder_after_reply"] += 1
+    return counts
+
+
+def _thread_errors(requests: dict, threads: dict) -> dict[str, int]:
+    """A request thread missing from the checkpoints or not paused while waiting, and any thread of no request."""
+    counts = dict.fromkeys(CRITICAL_KINDS, 0)
+    owned = {r["thread_id"] for r in requests.values()}
+    lost = [
+        r for r in requests.values()
+        if r["thread_id"] not in threads or (r["status"] == WAITING and not threads[r["thread_id"]])
+    ]  # fmt: skip
+    counts["lost_or_duplicated_thread"] = len(lost) + len(set(threads) - owned)
+    return counts
+
+
+def _threads(paths: dict) -> dict[str, tuple]:
+    """The pending nodes of every checkpoint thread."""
+    saver = sqlite_checkpointer(paths["checkpoints"])
+    graph = quotes.build_quote_request_graph(paths["db"], paths["outbox"], checkpointer=saver)
+    ids = sorted({c.config["configurable"]["thread_id"] for c in saver.list(None)})
+    return {t: graph.get_state({"configurable": {"thread_id": t}}).next for t in ids}
+
+
+def _argv(step: dict, n: int, paths: dict) -> list[str]:
+    common = ["--db", str(paths["db"])]
+    checkpoints = ["--checkpoints", str(paths["checkpoints"])]
+    if step["op"] == "advance":
+        unit = "days" if "days" in step else "hours"
+        return [*common, "clock", "advance", f"--{unit}", str(step[unit])]
+    if step["op"] == "receive":
+        inbox = paths["folder"] / f"inbox-{n:02d}"
+        inbox.mkdir()
+        for k, reply in enumerate(step["replies"], start=1):
+            (inbox / f"reply-{k:02d}.eml").write_text(
+                f"From: {EMAIL[reply['supplier']]}\nTo: purchasing@distributor.example.com\n"
+                f"Subject: Re: Quote request {reply['reference']}\n\nOur offer is attached.\n",
+                encoding="utf-8",
+            )
+        return [*common, "quotes", "receive", str(inbox), *checkpoints]
+    return [*common, "quotes", step["op"], *checkpoints, "--outbox", str(paths["outbox"])]
+
+
+def _run_step(step: dict, n: int, paths: dict) -> int:
+    if step["op"] == "order":
+        conn = db.connect(paths["db"])
+        try:
+            db.insert_order(conn, CUSTOMERS[0].code, "web_form", "received", [tuple(line) for line in step["lines"]])
+        finally:
+            conn.close()
+        return 0
+    argv = _argv(step, n, paths)
+    if step.get("new_process"):
+        run = [sys.executable, "-m", "purchase_cycle.cli", *argv]
+        return subprocess.run(run, capture_output=True, text=True, timeout=120).returncode
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        return cli.main(argv)
+
+
+def _measure(paths: dict, snapshot: dict) -> dict:
+    """The final requests, the parked `quote_wait` failures and the outbox names, shaped like the expectation."""
+    conn = db.connect(paths["db"])
+    try:
+        failures = conn.execute(
+            "SELECT COUNT(*) FROM failures WHERE status = 'needs_review' AND step = 'quote_wait'"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    requests = [
+        {"reference": ref, "sku": r["sku"], "quantity": r["quantity"], "status": r["status"],
+         "replied": sorted(r["replied"]), "reminded": sorted(c for c, at in r["reminded"].items() if at)}
+        for ref, r in snapshot["requests"].items()
+    ]  # fmt: skip
+    return {"requests": requests, "failures": failures, "outbox": sorted(snapshot["outbox"])}
+
+
+def run_item(item: dict, tmp: Path) -> dict:
+    folder = tmp / item["id"]
+    folder.mkdir(parents=True)
+    paths = {
+        "folder": folder,
+        "db": folder / "business.db",
+        "checkpoints": folder / "checkpoints.sqlite",
+        "outbox": folder / "supplier_outbox",
+    }
+    conn = db.connect(paths["db"])
+    try:
+        db.seed(conn)
+    finally:
+        conn.close()
+    errors, codes = dict.fromkeys(CRITICAL_KINDS, 0), []
+    before = _snapshot(paths)
+    for n, step in enumerate(item["steps"], start=1):
+        codes.append(_run_step(step, n, paths))
+        after = _snapshot(paths)
+        for kind, c in _step_errors(before, after, step).items():
+            errors[kind] += c
+        before = after
+    for kind, c in _thread_errors(before["requests"], _threads(paths)).items():
+        errors[kind] += c
+    measured = _measure(paths, before)
+    correct = measured == item["expected"] and not any(codes)
+    return {"id": item["id"], "tags": item["tags"], "expected": item["expected"], **measured, "codes": codes,
+            "correct": correct, "critical": errors}  # fmt: skip
+
+
+def critical_totals(results: list[dict]) -> dict[str, int]:
+    return {kind: sum(r["critical"][kind] for r in results) for kind in CRITICAL_KINDS}
+
+
+def print_critical(errors: dict[str, int], n: int) -> None:
+    """The critical-error row: a count gated at 0 with no averaging, then the count per kind."""
+    total = sum(errors.values())
+    target, met = target_cells(total, 0, "<=")
+    print(
+        f"{'critical_errors':<26}{total:<8}{'-':<16}{n:<6}{UNIT:<16}{'=0':<9}{met:<12}{'0':<11}"
+        f"{'PASS' if total == 0 else 'FAIL'}"
+    )
+    print("  by kind: " + "  ".join(f"{kind}={errors[kind]}" for kind in CRITICAL_KINDS))
+
+
+def critical_gate(errors: dict[str, int], results: list[dict]) -> int:
+    """Exit 1 when any timeline holds a critical error, naming each one."""
+    if not sum(errors.values()):
+        return 0
+    for r in results:
+        found = {kind: c for kind, c in r["critical"].items() if c}
+        if found:
+            print(f"  {r['id']}  critical errors {found}")
+    print(f"GATE FAILED: critical_errors {sum(errors.values())} above threshold 0")
+    return 1
+
+
+def evaluate(
+    mode: str, split: str, *, dataset_dir: Path = DATASET_DIR, set_baseline: bool = False, workers: int = 1
+) -> int:
+    """Run every timeline and print the report; exit 1 below 100% success or with a critical error."""
+    items = load_dataset(dataset_dir)
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        results = [run_item(item, Path(tmp)) for item in items]
+    s = _rate(results)
+    # At 100% success the zero-event rate is the failed scenarios, so its Wilson upper bound follows the row.
+    failed = zero_event_note(_rate([{"correct": not r["correct"]} for r in results]))
+    target, met = target_cells(s["value"], TARGET)
+    gate = "PASS" if s["value"] >= TARGET else "FAIL"
+    errors = critical_totals(results)
+    print(f"{SUITE}  mode={mode}  scenarios={len(results)}  (deterministic: scripted timelines, no model call, no split, no baseline)")  # fmt: skip
+    print(
+        f"{'metric':<26}{'value':<8}{'95% CI':<16}{'n':<6}{'unit':<16}{'target':<9}{'target met':<12}{'threshold':<11}gate"
+    )
+    print(
+        f"{'scenario_success':<26}{_pct(s['value']):<8}{_ci(s):<16}{s['n']:<6}{UNIT:<16}{target:<9}{met:<12}"
+        f"{_pct(TARGET):<11}{gate}" + zero_event_note(s) + (f"  failed scenarios{failed}" if failed else "")
+    )
+    print_critical(errors, len(results))
+    print("per tag:")
+    for tag in TAGS:
+        rows = [r for r in results if tag in r["tags"]]
+        if rows:
+            g = _rate(rows)
+            print(f"  {tag:<16} {_pct(g['value'])} {_ci(g)} n={g['n']}")
+    failures = [r for r in results if not r["correct"]]
+    print(f"failures: {len(failures)}")
+    for r in failures:
+        got = {k: r[k] for k in ("requests", "failures", "outbox", "codes")}
+        print(f"  {r['id']}  expected {r['expected']}  got {got}")
+    code = 0
+    if failures:
+        print(f"GATE FAILED: scenario_success {_pct(s['value'])} below threshold {_pct(TARGET)}")
+        code = 1
+    return max(code, critical_gate(errors, results))
 
 
 def main() -> None:
