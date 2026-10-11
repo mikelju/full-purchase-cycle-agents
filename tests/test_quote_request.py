@@ -599,3 +599,41 @@ def test_a_rescan_completes_a_send_that_failed_partway(env):
     sim_clock.advance(env.conn, days=5)
     [result] = _tick(env)
     assert result["status"] == "no_offers"
+
+
+def _insert_waiting(env, product, units):
+    created = sim_clock.now(env.conn)
+    with env.conn:
+        request_id = env.conn.execute(
+            "INSERT INTO quote_requests (sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
+            "VALUES (?, ?, ?, 'waiting', ?, ?, ?)",
+            (
+                product.sku,
+                units,
+                f"pending-{product.sku}",
+                created.strftime(sim_clock.FORMAT),
+                (created + quotes.REMINDER_AFTER).strftime(sim_clock.FORMAT),
+                (created + quotes.DEADLINE_AFTER).strftime(sim_clock.FORMAT),
+            ),
+        ).lastrowid
+        env.conn.execute(
+            "UPDATE quote_requests SET thread_id = ? WHERE id = ?", (quotes.thread_id(request_id), request_id)
+        )
+    return request_id
+
+
+def test_a_tick_finishes_a_request_with_no_checkpoint_and_still_handles_later_requests(env):
+    # The process stopped after the request row was committed and before its first checkpoint.
+    env.short(THREE, 8)
+    env.short(TWO, 5)
+    _insert_waiting(env, THREE, 8)
+    later = _insert_waiting(env, TWO, 5)
+    graph = quotes.build_quote_request_graph(env.db, env.outbox, checkpointer=env.saver)
+    graph.invoke({"request_id": later}, {"configurable": {"thread_id": quotes.thread_id(later)}})
+    sim_clock.advance(env.conn, days=5)
+    results = _tick(env)
+    assert [(r["reference"], r["status"]) for r in results] == [("QR-0001", "no_offers"), ("QR-0002", "no_offers")]
+    assert [f"QR-0001-request-{code}.eml" for code in _suppliers(THREE)] == [
+        name for name in env.files() if name.startswith("QR-0001-request-")
+    ]
+    assert env.state("quote-QR-0001").next == ()

@@ -261,6 +261,15 @@ def _config(request_id: int) -> dict:
     return {"configurable": {"thread_id": thread_id(request_id)}}
 
 
+def _finish_send(graph, request_id: int) -> None:
+    """Run `send` for a waiting request whose thread has no checkpoint yet or stopped before `wait`."""
+    state = graph.get_state(_config(request_id))
+    if not state.values:
+        graph.invoke({"request_id": request_id}, _config(request_id))
+    elif state.next == ("send",):
+        graph.invoke(None, _config(request_id))
+
+
 def scan(db_path: Path | str, checkpointer, outbox: Path | str) -> list[dict]:
     """Finish any send that failed partway, then start one request thread per short SKU; no model call."""
     graph = build_quote_request_graph(db_path, outbox, checkpointer)
@@ -270,11 +279,7 @@ def scan(db_path: Path | str, checkpointer, outbox: Path | str) -> list[dict]:
         # A send that failed partway left its request waiting before `wait`; send is idempotent, so finish it.
         waiting = conn.execute("SELECT id FROM quote_requests WHERE status = ? ORDER BY id", (WAITING,)).fetchall()
         for (request_id,) in waiting:
-            state = graph.get_state(_config(request_id))
-            if not state.values:
-                graph.invoke({"request_id": request_id}, _config(request_id))
-            elif state.next == ("send",):
-                graph.invoke(None, _config(request_id))
+            _finish_send(graph, request_id)
         for short in shortfalls(conn):
             created = sim_clock.now(conn)
             with conn:
@@ -362,6 +367,8 @@ def tick(db_path: Path | str, checkpointer, outbox: Path | str) -> list[dict]:
             r["id"] for r in conn.execute("SELECT id FROM quote_requests WHERE status = ? ORDER BY id", (WAITING,))
         ]
         for request_id in waiting:
+            # A request stopped before its first checkpoint or partway through `send` is sent first, as `scan` does.
+            _finish_send(graph, request_id)
             state = graph.invoke(Command(resume={"event": "tick", "now": now}), _config(request_id))
             status = conn.execute("SELECT status FROM quote_requests WHERE id = ?", (request_id,)).fetchone()[0]
             results.append(
