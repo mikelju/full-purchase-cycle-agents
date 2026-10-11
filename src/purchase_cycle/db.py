@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
+from purchase_cycle.suppliers import SUPPLIER_FAMILIES, SUPPLIERS
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS customers (
@@ -68,6 +69,16 @@ CREATE TABLE IF NOT EXISTS failures (
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS suppliers (
+    code TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE
+);
+CREATE TABLE IF NOT EXISTS supplier_families (
+    supplier_code TEXT NOT NULL REFERENCES suppliers (code),
+    family TEXT NOT NULL,
+    PRIMARY KEY (supplier_code, family)
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")
@@ -97,6 +108,8 @@ def seed(conn: sqlite3.Connection) -> dict[str, int]:
         "INSERT OR REPLACE INTO stock VALUES (?, ?)",
         [(p.sku, (i * 37) % 250) for i, p in enumerate(PRODUCTS)],
     )
+    conn.executemany("INSERT OR IGNORE INTO suppliers VALUES (?, ?, ?)", [(s.code, s.name, s.email) for s in SUPPLIERS])
+    conn.executemany("INSERT OR IGNORE INTO supplier_families VALUES (?, ?)", SUPPLIER_FAMILIES)
     conn.commit()
     return row_counts(conn)
 

@@ -3,6 +3,7 @@
 from collections import Counter
 
 from purchase_cycle import db
+from purchase_cycle.catalog import PRODUCTS
 
 
 def test_seed_creates_tables_and_catalog(tmp_path):
@@ -90,3 +91,46 @@ def test_failure_inside_the_store_transaction_leaves_no_partial_row(tmp_path):
     with pytest.raises(sqlite3.IntegrityError):
         db.insert_order(conn, "CLI-002", "email", "received", [("GLV-NIT-M", 4), ("GLV-NIT-M", 0)], source=("m", "t"))
     assert _stored(conn) == (0, 0, 0)
+
+
+def _rows(conn, table):
+    return [tuple(r) for r in conn.execute(f"SELECT * FROM {table} ORDER BY 1, 2")]
+
+
+def test_seed_creates_three_suppliers_and_their_families(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    counts = db.seed(conn)
+    supplier_columns = [r["name"] for r in conn.execute("PRAGMA table_info(suppliers)")]
+    assert supplier_columns == ["code", "name", "email"]
+    family_columns = [r["name"] for r in conn.execute("PRAGMA table_info(supplier_families)")]
+    assert family_columns == ["supplier_code", "family"]
+    suppliers = _rows(conn, "suppliers")
+    assert len(suppliers) == 3
+    assert len({s[2] for s in suppliers}) == 3, "each supplier has its own email"
+    # every catalog product is sold by at least two suppliers
+    sellers = conn.execute(
+        "SELECT p.sku, COUNT(f.supplier_code) FROM products p "
+        "LEFT JOIN supplier_families f ON f.family = p.family GROUP BY p.sku"
+    ).fetchall()
+    assert len(sellers) == counts["products"]
+    assert all(n >= 2 for _, n in sellers)
+    # the families overlap but no supplier sells everything
+    per_supplier = Counter(r[0] for r in conn.execute("SELECT supplier_code FROM supplier_families"))
+    families = conn.execute("SELECT COUNT(DISTINCT family) FROM products").fetchone()[0]
+    assert all(n < families for n in per_supplier.values())
+
+
+def test_seed_twice_gives_the_same_supplier_rows_and_keeps_the_existing_tables(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    first_counts = db.seed(conn)
+    tables = ("customers", "products", "stock", "suppliers", "supplier_families")
+    first = {t: _rows(conn, t) for t in tables}
+    second_counts = db.seed(conn)
+    assert {t: _rows(conn, t) for t in tables} == first
+    # the seed summary and the existing rows are as before the phase
+    assert first_counts == second_counts
+    assert set(second_counts) == {"customers", "products", "stock", "orders", "order_lines"}
+    stock = dict(conn.execute("SELECT sku, on_hand FROM stock"))
+    skus = [r[0] for r in conn.execute("SELECT sku FROM products")]
+    assert stock == {p.sku: (i * 37) % 250 for i, p in enumerate(PRODUCTS)}
+    assert sorted(skus) == sorted(p.sku for p in PRODUCTS)
