@@ -1,0 +1,60 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 1,
+    "outbox": [
+      "QR-0001-request-SUP-001.eml",
+      "QR-0001-request-SUP-002.eml",
+      "QR-0001-request-SUP-003.eml"
+    ],
+    "requests": [
+      {
+        "quantity": 10,
+        "reference": "QR-0001",
+        "reminded": [],
+        "replied": [],
+        "sku": "GLV-NIT-XS",
+        "status": "no_offers"
+      }
+    ]
+  },
+  "id": "QW-016",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "steps": [
+    {
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          10
+        ]
+      ],
+      "op": "order"
+    },
+    {
+      "op": "scan"
+    },
+    {
+      "op": "scan"
+    },
+    {
+      "days": 1,
+      "op": "advance"
+    },
+    {
+      "op": "scan"
+    },
+    {
+      "days": 4,
+      "op": "advance"
+    },
+    {
+      "op": "tick"
+    }
+  ],
+  "tags": [
+    "none_replied",
+    "rescan"
+  ]
+}

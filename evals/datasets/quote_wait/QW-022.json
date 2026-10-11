@@ -1,0 +1,79 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "outbox": [
+      "QR-0001-reminder-SUP-001.eml",
+      "QR-0001-reminder-SUP-002.eml",
+      "QR-0001-reminder-SUP-003.eml",
+      "QR-0001-request-SUP-001.eml",
+      "QR-0001-request-SUP-002.eml",
+      "QR-0001-request-SUP-003.eml"
+    ],
+    "requests": [
+      {
+        "quantity": 10,
+        "reference": "QR-0001",
+        "reminded": [
+          "SUP-001",
+          "SUP-002",
+          "SUP-003"
+        ],
+        "replied": [
+          "SUP-002"
+        ],
+        "sku": "GLV-NIT-XS",
+        "status": "ready_for_decision"
+      }
+    ]
+  },
+  "id": "QW-022",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "steps": [
+    {
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          10
+        ]
+      ],
+      "op": "order"
+    },
+    {
+      "new_process": true,
+      "op": "scan"
+    },
+    {
+      "days": 3,
+      "op": "advance"
+    },
+    {
+      "new_process": true,
+      "op": "tick"
+    },
+    {
+      "new_process": true,
+      "op": "receive",
+      "replies": [
+        {
+          "reference": "QR-0001",
+          "supplier": "SUP-002"
+        }
+      ]
+    },
+    {
+      "days": 2,
+      "op": "advance"
+    },
+    {
+      "new_process": true,
+      "op": "tick"
+    }
+  ],
+  "tags": [
+    "some_replied",
+    "restart"
+  ]
+}
