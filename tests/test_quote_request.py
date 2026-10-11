@@ -155,3 +155,98 @@ def test_quotes_scan_command_prints_the_started_requests(env, capsys):
     assert "QR-0001" in out and THREE.sku in out and "quantity=8" in out
     assert cli.main([*base, "scan", *paths]) == 0
     assert "no new quote requests" in capsys.readouterr().out
+
+
+# Increment 6: supplier replies (C6)
+
+
+def _reply(folder, name, sender, subject):
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / name
+    path.write_text(
+        f"From: {sender}\nTo: purchasing@distributor.example.com\nSubject: {subject}\n\nOur offer is attached.\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def _snapshot(env, thread="quote-QR-0001"):
+    state = env.state(thread)
+    files = {p.name: p.read_bytes() for p in env.outbox.iterdir()}
+    return env.requests(), env.request_suppliers(), files, state.config["configurable"]["checkpoint_id"]
+
+
+def _receive(env, folder):
+    return quotes.receive(env.db, env.saver, folder)
+
+
+@pytest.fixture
+def waiting(env):
+    """One waiting request QR-0001 for the two-supplier product, created at the clock start."""
+    env.short(TWO, 13)
+    env.scan()
+    return env
+
+
+def test_an_accepted_reply_marks_the_supplier_as_replied(waiting, tmp_path):
+    code = _suppliers(TWO)[0]
+    sim_clock.advance(waiting.conn, hours=2)
+    path = _reply(tmp_path / "inbox", "r1.eml", EMAIL[code], "Re: Quote request QR-0001 - offer")
+    results = _receive(waiting, tmp_path / "inbox")
+    assert [(r["reference"], r["supplier"], r["accepted"]) for r in results] == [("QR-0001", code, True)]
+    rows = {r["supplier_code"]: r for r in waiting.request_suppliers()}
+    assert (rows[code]["replied_at"], rows[code]["reply_file"]) == ("2026-10-12 11:00:00", str(path))
+    other = _suppliers(TWO)[1]
+    assert (rows[other]["replied_at"], rows[other]["reply_file"]) == (None, None)
+    assert waiting.state("quote-QR-0001").next == ("wait",)
+
+
+@pytest.mark.parametrize(
+    ("sender", "subject", "reason"),
+    [
+        (None, "Re: Quote request QR-0099", "unknown request reference QR-0099"),
+        (None, "Re: our offer", "no quote request reference"),
+        ("foreign", "Re: Quote request QR-0001", "is not a supplier of QR-0001"),
+        ("stranger@nowhere.example.com", "Re: Quote request QR-0001", "is not a supplier of QR-0001"),
+    ],
+)
+def test_a_rejected_reply_changes_nothing(waiting, tmp_path, sender, subject, reason):
+    if sender is None:
+        sender = EMAIL[_suppliers(TWO)[0]]
+    elif sender == "foreign":
+        sender = next(email for code, email in EMAIL.items() if code not in _suppliers(TWO))
+    before = _snapshot(waiting)
+    _reply(tmp_path / "inbox", "r1.eml", sender, subject)
+    [result] = _receive(waiting, tmp_path / "inbox")
+    assert result["accepted"] is False and reason in result["reason"]
+    assert _snapshot(waiting) == before
+
+
+def test_a_reply_to_a_closed_request_is_rejected(waiting, tmp_path):
+    waiting.conn.execute("UPDATE quote_requests SET status = 'no_offers'")
+    waiting.conn.commit()
+    before = _snapshot(waiting)
+    _reply(tmp_path / "inbox", "r1.eml", EMAIL[_suppliers(TWO)[0]], "Re: Quote request QR-0001")
+    [result] = _receive(waiting, tmp_path / "inbox")
+    assert result["accepted"] is False and "QR-0001 is closed" in result["reason"]
+    assert _snapshot(waiting) == before
+
+
+def test_the_same_reply_twice_changes_nothing_the_second_time(waiting, tmp_path):
+    _reply(tmp_path / "inbox", "r1.eml", EMAIL[_suppliers(TWO)[0]], "Re: Quote request QR-0001")
+    _receive(waiting, tmp_path / "inbox")
+    before = _snapshot(waiting)
+    sim_clock.advance(waiting.conn, hours=1)
+    [result] = _receive(waiting, tmp_path / "inbox")
+    assert result["accepted"] is False and "already replied" in result["reason"]
+    assert _snapshot(waiting) == before
+
+
+def test_quotes_receive_command_prints_each_reply(waiting, tmp_path, capsys):
+    _reply(tmp_path / "inbox", "a.eml", EMAIL[_suppliers(TWO)[0]], "Re: Quote request QR-0001")
+    _reply(tmp_path / "inbox", "b.eml", EMAIL[_suppliers(TWO)[0]], "Re: Quote request QR-0042")
+    args = ["--db", str(waiting.db), "quotes", "receive", str(tmp_path / "inbox")]
+    assert cli.main([*args, "--checkpoints", str(waiting.checkpoints)]) == 0
+    out = capsys.readouterr().out
+    assert "a.eml  accepted  QR-0001" in out
+    assert "b.eml  rejected: unknown request reference QR-0042" in out

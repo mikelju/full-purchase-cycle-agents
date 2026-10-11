@@ -99,6 +99,20 @@ def cmd_quotes_scan(args) -> int:
     return 0
 
 
+def cmd_quotes_receive(args) -> int:
+    conn = db.connect(args.db)
+    db.seed(conn)
+    conn.close()
+    results = quotes.receive(args.db, sqlite_checkpointer(args.checkpoints), args.folder)
+    print(f"replies read: {len(results)}  accepted: {sum(r['accepted'] for r in results)}")
+    for result in results:
+        if result["accepted"]:
+            print(f"  {result['file']}  accepted  {result['reference']}  supplier={result['supplier']}")
+        else:
+            print(f"  {result['file']}  rejected: {result['reason']}")
+    return 0
+
+
 def cmd_demo(args) -> int:
     conn = db.connect(args.db)
     db.seed(conn)
@@ -1024,6 +1038,10 @@ def main(argv=None) -> int:
     quotes_sub = quotes_parser.add_subparsers(dest="quotes_command", required=True)
     scan = quotes_sub.add_parser("scan", help="start one quote request per product short of stock")
     scan.set_defaults(handler=cmd_quotes_scan)
+    receive = quotes_sub.add_parser("receive", help="read a folder of supplier reply .eml files")
+    receive.add_argument("folder", help="folder of supplier reply .eml files")
+    receive.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    receive.set_defaults(handler=cmd_quotes_receive)
     for command in (scan,):
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
         command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")

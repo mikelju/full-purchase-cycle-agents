@@ -1,5 +1,6 @@
 """Quotes module: notice out-of-stock demand and request quotes from suppliers, waiting on a simulated clock."""
 
+import re
 import sqlite3
 from datetime import datetime, timedelta
 from email.message import EmailMessage
@@ -8,7 +9,7 @@ from pathlib import Path
 from typing import TypedDict
 
 from langgraph.graph import START, StateGraph
-from langgraph.types import interrupt
+from langgraph.types import Command, interrupt
 
 from purchase_cycle import db, email_order, sim_clock, web_form, whatsapp_order
 
@@ -17,6 +18,7 @@ ORDER_STATUSES = sorted({web_form.STATUS, email_order.STATUS, whatsapp_order.STA
 WAITING = "waiting"
 REMINDER_AFTER = timedelta(days=3)
 DEADLINE_AFTER = timedelta(days=5)
+REFERENCE = re.compile(r"\bQR-(\d{4,})\b")
 BUYER = "Purchasing department <purchasing@distributor.example.com>"
 
 REQUEST_TEXT = """Dear {name},
@@ -137,7 +139,20 @@ def build_quote_request_graph(db_path: Path | str, outbox: Path | str | None = N
         return {}
 
     def wait(state: QuoteRequestState) -> QuoteRequestState:
-        interrupt({"reference": reference(state["request_id"])})
+        # Resumed with {"event": "reply", "supplier", "file", "now"} or {"event": "tick", "now"}; the CLI checks
+        # a reply against the database first, so only an accepted one reaches the thread.
+        event = interrupt({"reference": reference(state["request_id"])})
+        conn = db.connect(db_path)
+        try:
+            if event["event"] == "reply":
+                with conn:
+                    conn.execute(
+                        "UPDATE quote_request_suppliers SET replied_at = ?, reply_file = ? "
+                        "WHERE request_id = ? AND supplier_code = ? AND replied_at IS NULL",
+                        (event["now"], event["file"], state["request_id"], event["supplier"]),
+                    )
+        finally:
+            conn.close()
         return {}
 
     builder = StateGraph(QuoteRequestState)
@@ -145,6 +160,7 @@ def build_quote_request_graph(db_path: Path | str, outbox: Path | str | None = N
     builder.add_node("wait", wait)
     builder.add_edge(START, "send")
     builder.add_edge("send", "wait")
+    builder.add_edge("wait", "wait")
     return builder.compile(checkpointer=checkpointer, name="quote_request")
 
 
@@ -183,3 +199,52 @@ def scan(db_path: Path | str, checkpointer, outbox: Path | str) -> list[dict]:
     finally:
         conn.close()
     return started
+
+
+def check_reply(conn: sqlite3.Connection, path: Path) -> dict:
+    """Match a reply file to a waiting request and one of its suppliers that has not replied; no body is read."""
+    result = {"file": path.name, "reference": None, "supplier": None, "accepted": False, "reason": None}
+    try:
+        message, sender = email_order._parse_message(path.read_bytes())
+    except (OSError, email_order.EmailRejected) as error:
+        return {**result, "reason": f"the reply cannot be read: {error}"}
+    found = REFERENCE.search(email_order._subject(message))
+    if not found:
+        return {**result, "reason": "no quote request reference in the subject"}
+    request_id = int(found.group(1))
+    ref = reference(request_id)
+    result["reference"] = ref
+    row = conn.execute("SELECT status FROM quote_requests WHERE id = ?", (request_id,)).fetchone()
+    if row is None:
+        return {**result, "reason": f"unknown request reference {ref}"}
+    if row["status"] != WAITING:
+        return {**result, "reason": f"request {ref} is closed ({row['status']})"}
+    supplier = conn.execute(
+        "SELECT r.supplier_code, r.replied_at FROM quote_request_suppliers r "
+        "JOIN suppliers s ON s.code = r.supplier_code WHERE r.request_id = ? AND lower(s.email) = ?",
+        (request_id, sender.lower()),
+    ).fetchone()
+    if supplier is None:
+        return {**result, "reason": f"the sender {sender} is not a supplier of {ref}"}
+    result["supplier"] = supplier["supplier_code"]
+    if supplier["replied_at"] is not None:
+        return {**result, "reason": f"supplier {supplier['supplier_code']} already replied to {ref}"}
+    return {**result, "accepted": True, "request_id": request_id}
+
+
+def receive(db_path: Path | str, checkpointer, folder: Path | str) -> list[dict]:
+    """Read the reply `.eml` files of a folder in name order; each accepted reply resumes its request thread."""
+    graph = build_quote_request_graph(db_path, None, checkpointer)
+    conn = db.connect(db_path)
+    results = []
+    try:
+        for path in sorted(Path(folder).glob("*.eml")):
+            result = check_reply(conn, path)
+            if result["accepted"]:
+                now = sim_clock.now(conn).strftime(sim_clock.FORMAT)
+                event = {"event": "reply", "supplier": result["supplier"], "file": str(path), "now": now}
+                graph.invoke(Command(resume=event), _config(result.pop("request_id")))
+            results.append(result)
+    finally:
+        conn.close()
+    return results
