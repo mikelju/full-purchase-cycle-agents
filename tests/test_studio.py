@@ -134,7 +134,11 @@ def test_replay_whatsapp_doubt_pauses_and_resumes_with_the_recorded_answer(studi
     assert no_network == []
 
 
-@pytest.mark.parametrize("resume", ['""', "", 42, [], {}], ids=["empty-prefill", "empty-text", "int", "list", "dict"])
+@pytest.mark.parametrize(
+    "resume",
+    ['""', "", 42, [], {"message_id": "wamid-1"}],  # an empty {} is no resume for LangGraph: it just pauses again
+    ids=["empty-prefill", "empty-text", "int", "list", "dict-without-answer"],
+)
 def test_replay_whatsapp_empty_or_odd_resume_asks_again_then_takes_the_answer(studio_paths, no_network, resume):
     graph = studio.build("whatsapp", MemorySaver())
     run = {"configurable": {"thread_id": "studio-odd-resume"}}
