@@ -506,3 +506,56 @@ def test_the_same_timeline_gives_the_same_results_whatever_the_real_time(tmp_pat
                 assert cli.main(argv) == 0
             results.append(_final(env))
     assert results[0] == results[1]
+
+
+# Increment 10: quotes list (C10)
+
+
+def test_quotes_list_shows_every_request_with_its_suppliers_and_times(env, tmp_path, capsys):
+    other = next(p for p in PRODUCTS if p.family not in (THREE.family, TWO.family))
+
+    def goods_arrive(product):
+        # Demand keeps counting after a close, so stock rises and the next scan does not ask for it again.
+        with env.conn:
+            env.conn.execute("UPDATE stock SET on_hand = on_hand + 100 WHERE sku = ?", (product.sku,))
+
+    env.short(TWO, 13)
+    env.scan()
+    for i, code in enumerate(_suppliers(TWO)):
+        _reply(tmp_path / "all", f"r{i}.eml", EMAIL[code], "Re: Quote request QR-0001")
+    _receive(env, tmp_path / "all")
+    goods_arrive(TWO)
+    env.short(THREE, 8)
+    env.scan()
+    sim_clock.advance(env.conn, days=6)
+    _tick(env)
+    goods_arrive(THREE)
+    env.short(other, 5)
+    env.scan()
+    first, *rest = _suppliers(other)
+    _reply(tmp_path / "one", "r.eml", EMAIL[first], "Re: Quote request QR-0003")
+    _receive(env, tmp_path / "one")
+
+    assert cli.main(["--db", str(env.db), "quotes", "list"]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == "quote requests: 3"
+    two = ",".join(_suppliers(TWO))
+    three = ",".join(_suppliers(THREE))
+    assert lines[1:] == [
+        f"  QR-0001  sku={TWO.sku}  quantity=13  status=ready_for_decision  replied={two}  pending=-  "
+        "next reminder=-  deadline=2026-10-17 09:00",
+        f"  QR-0002  sku={THREE.sku}  quantity=8  status=no_offers  replied=-  pending={three}  "
+        "next reminder=-  deadline=2026-10-17 09:00",
+        f"  QR-0003  sku={other.sku}  quantity=5  status=waiting  replied={first}  pending={','.join(rest)}  "
+        "next reminder=2026-10-21 09:00  deadline=2026-10-23 09:00",
+    ]
+
+    sim_clock.advance(env.conn, days=3)
+    _tick(env)
+    assert cli.main(["--db", str(env.db), "quotes", "list"]) == 0
+    assert "next reminder=-  deadline=2026-10-23 09:00" in capsys.readouterr().out.splitlines()[3]
+
+
+def test_quotes_list_with_no_requests(tmp_path, capsys):
+    assert cli.main(["--db", str(tmp_path / "b.db"), "quotes", "list"]) == 0
+    assert capsys.readouterr().out.strip() == "no quote requests"

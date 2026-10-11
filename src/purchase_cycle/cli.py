@@ -127,6 +127,27 @@ def cmd_quotes_tick(args) -> int:
     return 0
 
 
+def cmd_quotes_list(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+        rows = quotes.list_requests(conn)
+    finally:
+        conn.close()
+    if not rows:
+        print("no quote requests")
+        return 0
+    print(f"quote requests: {len(rows)}")
+    for row in rows:
+        reminder = row["next_reminder"][:16] if row["next_reminder"] else "-"
+        print(
+            f"  {row['reference']}  sku={row['sku']}  quantity={row['quantity']}  status={row['status']}  "
+            f"replied={','.join(row['replied']) or '-'}  pending={','.join(row['pending']) or '-'}  "
+            f"next reminder={reminder}  deadline={row['deadline'][:16]}"
+        )
+    return 0
+
+
 def cmd_demo(args) -> int:
     conn = db.connect(args.db)
     db.seed(conn)
@@ -1058,6 +1079,9 @@ def main(argv=None) -> int:
     receive.set_defaults(handler=cmd_quotes_receive)
     tick = quotes_sub.add_parser("tick", help="deliver the simulated time to every waiting quote request")
     tick.set_defaults(handler=cmd_quotes_tick)
+    quotes_sub.add_parser("list", help="list every quote request and its suppliers").set_defaults(
+        handler=cmd_quotes_list
+    )
     for command in (scan, tick):
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
         command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")

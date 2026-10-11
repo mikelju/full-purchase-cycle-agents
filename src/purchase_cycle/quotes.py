@@ -349,3 +349,29 @@ def tick(db_path: Path | str, checkpointer, outbox: Path | str) -> list[dict]:
     finally:
         conn.close()
     return results
+
+
+def list_requests(conn: sqlite3.Connection) -> list[dict]:
+    """Every request in id order with its replied and pending suppliers and its next reminder, if one is still due."""
+    rows = []
+    for request in conn.execute("SELECT * FROM quote_requests ORDER BY id").fetchall():
+        suppliers = conn.execute(
+            "SELECT supplier_code, reminded_at, replied_at FROM quote_request_suppliers "
+            "WHERE request_id = ? ORDER BY supplier_code",
+            (request["id"],),
+        ).fetchall()
+        reminded = any(s["reminded_at"] for s in suppliers)
+        rows.append(
+            {
+                "reference": reference(request["id"]),
+                "sku": request["sku"],
+                "quantity": request["quantity"],
+                "status": request["status"],
+                "replied": [s["supplier_code"] for s in suppliers if s["replied_at"]],
+                "pending": [s["supplier_code"] for s in suppliers if not s["replied_at"]],
+                # One reminder per request (D5): none is due once it was sent or the request closed.
+                "next_reminder": request["reminder_at"] if request["status"] == WAITING and not reminded else None,
+                "deadline": request["deadline"],
+            }
+        )
+    return rows

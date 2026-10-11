@@ -68,8 +68,10 @@ Execution order: batches A to E.
   Both passed on their first run, since increments 5 to 8 already read time only from the clock and keep state in SQLite; to prove the real-time test can fail, the `.eml` `Date` was switched to `datetime.now()` and the test failed, then the change was reverted.
   `uv run pytest -q tests/test_quote_request.py tests/test_sim_clock.py` 39 passed; ruff check and format clean.
   The real-time source is patched in-process (`time.time` and `datetime.datetime` in the `datetime` module and the loaded `purchase_cycle` and `langgraph` modules), because a subprocess cannot change the system clock; the reply inbox is one shared folder so `reply_file` paths match across runs.
-- [ ] 10. `quotes list` (C10) - check: a test on a temporary database with requests `waiting`, `ready_for_decision` and `no_offers` checks SKU, quantity, status, replied and pending suppliers, next reminder and deadline per row.
-  Evidence:
+- [x] 10. `quotes list` (C10) - check: a test on a temporary database with requests `waiting`, `ready_for_decision` and `no_offers` checks SKU, quantity, status, replied and pending suppliers, next reminder and deadline per row.
+  Evidence: two new tests in `tests/test_quote_request.py` failed first on the missing `list` choice of `quotes`, then passed with `quotes.list_requests` and `cmd_quotes_list`; `uv run pytest -q` over the quotes, clock, seed and clarify, failures and resume CLI tests 92 passed; ruff check and format clean.
+  Each row prints reference, SKU, quantity, status, replied and pending supplier codes (`-` when none), next reminder and deadline; the next reminder is the request's `reminder_at` while it is `waiting` and no reminder was sent, and `-` otherwise, since D5 sends one reminder per request (decided in execution, batch B).
+  A closed request does not stop demand from counting, so the next `scan` asks again for the same SKU while its orders stay `received`; the test raises stock after each close to keep three requests, and the `quote_wait` timelines must account for this spec behaviour.
 
 ### Batch C - Evaluation `quote_wait`
 - [ ] 11. At least 20 scripted timelines in `evals/datasets/quote_wait/` with expected final states, meeting the spec coverage minimums (at least 3 each for all replied, some replied, none replied, late reply, duplicate reply, re-run scan and repeated tick, and at least 3 with a process restart) (C11) - check: a test over the scenario files counts the total and each coverage tag and fails below a minimum.
