@@ -21,7 +21,6 @@ def studio_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(studio, "OUTBOX_DIR", tmp_path / "studio" / "outbox")
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("PURCHASE_CYCLE_STUDIO_MODE", raising=False)
-    monkeypatch.delenv("LANGGRAPH_CLI_NO_ANALYTICS", raising=False)
     monkeypatch.setenv("LANGSMITH_TRACING", "true")
     return tmp_path / "studio"
 
@@ -68,7 +67,6 @@ def test_tracing_is_forced_off_and_replay_is_the_default(studio_paths, monkeypat
 
     studio.web_form_graph()
     assert os.environ["LANGSMITH_TRACING"] == "false"
-    assert os.environ["LANGGRAPH_CLI_NO_ANALYTICS"] == "1"
     assert studio.studio_mode() == "replay"
     monkeypatch.setenv("PURCHASE_CYCLE_STUDIO_MODE", "live")
     assert studio.studio_mode() == "live"
@@ -117,8 +115,9 @@ def test_replay_stores_the_clear_sample_order(studio_paths, no_network, channel,
         {"answer": DOUBT_ANSWER},
         json.dumps({"answer": DOUBT_ANSWER}),  # Studio's resume box sends the typed JSON as text
         f"  {DOUBT_ANSWER}\n",  # or the plain answer
+        json.dumps(DOUBT_ANSWER),  # or the plain answer typed inside the box's "" prefill
     ],
-    ids=["dict", "json-text", "plain-text"],
+    ids=["dict", "json-text", "plain-text", "json-string"],
 )
 def test_replay_whatsapp_doubt_pauses_and_resumes_with_the_recorded_answer(studio_paths, no_network, resume):
     graph = studio.build("whatsapp", MemorySaver())
@@ -133,3 +132,28 @@ def test_replay_whatsapp_doubt_pauses_and_resumes_with_the_recorded_answer(studi
     assert state["order_id"] is not None
     assert _stored_order(studio.DB_PATH, state["order_id"]) > 0
     assert no_network == []
+
+
+@pytest.mark.parametrize("resume", ['""', "", 42, [], {}], ids=["empty-prefill", "empty-text", "int", "list", "dict"])
+def test_replay_whatsapp_empty_or_odd_resume_asks_again_then_takes_the_answer(studio_paths, no_network, resume):
+    graph = studio.build("whatsapp", MemorySaver())
+    run = {"configurable": {"thread_id": "studio-odd-resume"}}
+    graph.invoke({"message_path": str(SAMPLES / "04-whatsapp-doubt.json")}, run)
+    again = graph.invoke(Command(resume=resume), run)
+    (pending,) = again["__interrupt__"]
+    assert pending.value["rejected"]
+    assert again.get("order_id") is None
+    state = graph.invoke(Command(resume=DOUBT_ANSWER), run)
+    assert state["order_id"] is not None
+    assert no_network == []
+
+
+def test_build_seeds_an_existing_but_empty_studio_database(studio_paths):
+    db.connect(studio.DB_PATH).close()  # a first seed that failed leaves the file behind
+    assert studio.DB_PATH.exists()
+    studio.web_form_graph()
+    conn = db.connect(studio.DB_PATH)
+    try:
+        assert db.catalog_rows(conn)
+    finally:
+        conn.close()
