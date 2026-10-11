@@ -1,0 +1,4 @@
+[
+  {"customer": "CLI-001", "channel": "web_form", "lines": [["GLV-NIT-XS", 12]]},
+  {"customer": "CLI-002", "channel": "email", "lines": [["GLV-SURG-NEO-6.5", 40], ["GLV-LTX-L", 10]]}
+]

@@ -39,6 +39,8 @@ DEMO_EXCEPTIONS = config.ROOT / "examples" / "exceptions"
 DEMO_ORDERS = config.ROOT / "examples" / "orders"
 ORDERS_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "orders_demo.jsonl"  # one file for every task
 ORDERS_DEMO_WORKDIR = config.DATA_DIR / "orders-demo"
+DEMO_QUOTES = config.ROOT / "examples" / "quotes"
+QUOTES_DEMO_WORKDIR = config.DATA_DIR / "quotes-demo"
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
 EXCEPTIONS_RECORDINGS = {
     MATCHING.name: config.CLARIFICATION_DETECTION_MATCHING_RECORDINGS_PATH,
@@ -145,6 +147,119 @@ def cmd_quotes_list(args) -> int:
             f"replied={','.join(row['replied']) or '-'}  pending={','.join(row['pending']) or '-'}  "
             f"next reminder={reminder}  deadline={row['deadline'][:16]}"
         )
+    return 0
+
+
+def _quotes_state(files: dict) -> dict:
+    """The simulated time, the requests, the replied and reminded suppliers and the outbox names of the demo."""
+    conn = db.connect(files["db"])
+    try:
+        state = {"now": sim_clock.text(sim_clock.now(conn)), "requests": quotes.list_requests(conn)}
+        reminded = conn.execute(
+            "SELECT request_id, group_concat(supplier_code) FROM quote_request_suppliers "
+            "WHERE reminded_at IS NOT NULL GROUP BY request_id"
+        ).fetchall()
+    finally:
+        conn.close()
+    state["reminded"] = {quotes.reference(row[0]): sorted(row[1].split(",")) for row in reminded}
+    state["replies"] = {(r["reference"], s) for r in state["requests"] for s in r["replied"]}
+    outbox = files["outbox"]
+    state["outbox"] = sorted(p.name for p in outbox.glob("*.eml")) if outbox.is_dir() else []
+    return state
+
+
+def cmd_quotes_demo(args) -> int:
+    """The sample orders and supplier replies through scan, clock, receive and tick, each step in its own process."""
+    import subprocess
+
+    examples, workdir = Path(args.examples), Path(args.workdir)
+    # The demo clears its work folder, so it never runs in the data folder.
+    if workdir.resolve() == config.DATA_DIR.resolve():
+        print(f"Error: --workdir {args.workdir} is the data folder; pick another folder", file=sys.stderr)
+        return 1
+    # Each run starts from an empty database, checkpoint file and supplier outbox in the work folder.
+    files = {
+        "db": workdir / "business.db",
+        "checkpoints": workdir / "checkpoints.sqlite",
+        "outbox": workdir / "supplier_outbox",
+    }
+    workdir.mkdir(parents=True, exist_ok=True)
+    for name in ("db", "checkpoints"):
+        files[name].unlink(missing_ok=True)
+    for old in files["outbox"].glob("*.eml") if files["outbox"].is_dir() else []:
+        old.unlink()
+    orders = json.loads((examples / "orders.json").read_text(encoding="utf-8"))
+    conn = db.connect(files["db"])
+    try:
+        db.seed(conn)
+        for order in orders:
+            db.insert_order(conn, order["customer"], order["channel"], "received", [tuple(x) for x in order["lines"]])
+    finally:
+        conn.close()
+    print(f"quotes-demo  examples={args.examples}  workdir={args.workdir}")
+    print(f"sample orders stored as received: {len(orders)}")
+    for order in orders:
+        lines = ", ".join(f"{sku} x {quantity}" for sku, quantity in order["lines"])
+        print(f"  {order['customer']}  channel={order['channel']}  lines={lines}")
+    paths = ["--checkpoints", str(files["checkpoints"])]
+    outbox = ["--outbox", str(files["outbox"])]
+    steps = [
+        ["quotes", "scan", *paths, *outbox],
+        ["clock", "advance", "--days", "1"],
+        ["quotes", "receive", str(examples / "replies-day-1"), *paths],
+        ["clock", "advance", "--days", "2"],
+        ["quotes", "tick", *paths, *outbox],
+        ["quotes", "receive", str(examples / "replies-day-3"), *paths],
+        ["clock", "advance", "--days", "2"],
+        ["quotes", "tick", *paths, *outbox],
+    ]
+    before = _quotes_state(files)
+    for n, step in enumerate(steps, start=1):
+        run = subprocess.run(
+            [sys.executable, "-m", "purchase_cycle.cli", "--db", str(files["db"]), *step],
+            capture_output=True,
+            text=True,
+        )
+        shown = " ".join(step[:4] if step[0] == "clock" else step[:2])
+        print()
+        print(f"== step {n}: purchase-cycle {shown}  (own process, exit code {run.returncode})")
+        if run.returncode != 0:
+            print(f"Error: step {n} failed: {run.stderr.strip()}", file=sys.stderr)
+            return 1
+        after = _quotes_state(files)
+        known = {r["reference"] for r in before["requests"]}
+        started = [r["reference"] for r in after["requests"] if r["reference"] not in known]
+        written = [name for name in after["outbox"] if name not in before["outbox"]]
+        replies = sorted(after["replies"] - before["replies"])
+        print(f"simulated time: {after['now']}")
+        print(f"requests started: {', '.join(started) or 'none'}")
+        print(f"emails written: {len(written) or 'none'}")
+        for name in written:
+            print(f"  {name}")
+        print(f"replies received: {', '.join(f'{ref} from {code}' for ref, code in replies) or 'none'}")
+        print("requests:")
+        for row in after["requests"]:
+            print(
+                f"  {row['reference']}  sku={row['sku']}  quantity={row['quantity']}  status={row['status']}  "
+                f"replied={','.join(row['replied']) or '-'}  "
+                f"reminded={','.join(after['reminded'].get(row['reference'], [])) or '-'}"
+            )
+        before = after
+    ready = [
+        r["reference"]
+        for r in before["requests"]
+        if r["status"] == "ready_for_decision" and r["reference"] in before["reminded"]
+    ]
+    no_offers = [r["reference"] for r in before["requests"] if r["status"] == "no_offers"]
+    print()
+    print("summary:")
+    print(f"ready_for_decision after a reminder: {', '.join(ready) or 'none'}")
+    print(f"no_offers, parked in failures for review: {', '.join(no_offers) or 'none'}")
+    if not ready or not no_offers:
+        print(
+            "Error: the demo did not end with a request ready after a reminder and one with no offers", file=sys.stderr
+        )
+        return 1
     return 0
 
 
@@ -1085,6 +1200,14 @@ def main(argv=None) -> int:
     for command in (scan, tick):
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
         command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")
+    quotes_demo = sub.add_parser(
+        "quotes-demo", help="run the sample quote timeline, each scan, clock, receive and tick step in its own process"
+    )
+    quotes_demo.add_argument("--examples", default=str(DEMO_QUOTES), help="folder of sample orders and replies")
+    quotes_demo.add_argument(
+        "--workdir", default=str(QUOTES_DEMO_WORKDIR), help="folder for the demo database, checkpoints and outbox"
+    )
+    quotes_demo.set_defaults(handler=cmd_quotes_demo)
 
     from purchase_cycle.evaluation.cli import add_eval_commands
 
