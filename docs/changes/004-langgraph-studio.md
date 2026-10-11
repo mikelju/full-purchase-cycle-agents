@@ -35,7 +35,10 @@ Owner request 2026-10-10 to plan this change, then show it after a context hando
   Evidence: README "Watch the graphs in LangGraph Studio"; the web form input matches `examples/orders/01-web-form.json`.
 - [x] 2b. Clarify accepts a text resume from Studio (owner decision during item 3).
   Evidence: `uv run pytest -q tests/test_studio.py tests/test_clarification*.py tests/test_clarify_cli.py` 120 passed (dict, JSON-text and plain-text resumes reach a stored order in replay); `npm run eval` nine replay evaluations PASS, output identical to item 1 (`.evidence/change-004/eval-resume-text.txt`).
-- [ ] 3. Owner walkthrough in a fresh session after the context handoff: start `langgraph dev`, open Studio, run the web form sample, then the WhatsApp doubt and its answer; C6.
+- [x] 2c. Live mode loads the model key from the dotenv file, because the dev server does not load it; LangSmith tracing stays forced off (commit 24a5d53).
+  Evidence: `tests/test_studio.py::test_live_mode_loads_the_key_from_dotenv_and_keeps_tracing_off`.
+- [x] 3. Owner walkthrough in a fresh session after the context handoff: start `langgraph dev`, open Studio, run the web form sample, then the WhatsApp doubt and its answer; C6.
+  Evidence: owner confirmed on 2026-10-11; notes in Delivery.
 - [ ] 4. Adversarial review, `npm run check`, push and PR to `main`; C7.
 
 ## Decisions
@@ -55,3 +58,11 @@ Known risks: a community report says Studio may restart instead of resuming an i
 |---|---|---|---|---|---|
 
 ## Delivery
+Owner walkthrough (item 3, C6), confirmed by the owner on 2026-10-11:
+- The owner ran the `web_form` and `whatsapp` graphs in replay in Studio and watched each node and the state step by step.
+- The WhatsApp doubt paused on the clarification question and resumed to a stored order, after the fix for Studio's resume box always sending a string (commits 2f7f660 and d086d7e).
+- The owner then ran live mode (Claude Haiku 4.5) with their own messages from `data/studio/inbox/` and completed orders on the `whatsapp` graph; live mode loads the key from the dotenv file since commit 24a5d53.
+- The built-in Claude desktop browser pane cannot load Studio, because it blocks `smith.langchain.com` from calling `127.0.0.1`; the owner used their own browser.
+- Idempotency: a message already processed returns the existing order; to start over, stop the server and delete `data/studio/` and `.langgraph_api/`.
+- Replay mode only understands the recorded clarify answer; any other answer needs live mode.
+- Known limit, not fixed: an input meant for another graph raises a raw `KeyError` naming the missing input key, observed during the walkthrough.

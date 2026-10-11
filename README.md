@@ -248,12 +248,24 @@ Studio runs in replay mode by default and needs no key: the answers come from `e
 LangSmith tracing is forced off in both modes.
 The graphs use their own database and outbox under `data/studio/`, never `data/purchase_cycle.db` or the demo outboxes.
 
+Live mode with your own messages:
+
+- Start the server with `PURCHASE_CYCLE_STUDIO_MODE=live` set (in PowerShell: `$env:PURCHASE_CYCLE_STUDIO_MODE="live"` before the command above).
+  The dev server does not load the project's dotenv file by itself, so live mode loads `ANTHROPIC_API_KEY` from it; tracing stays off.
+- Put your messages in `data/studio/inbox/`, which Git ignores.
+- WhatsApp: a JSON file shaped like `examples/orders/03-whatsapp-order.json`, with `from` set to the phone digits of a seeded customer, for example `34600103203` (Jon Arrieta, CLI-004).
+  Input for the `whatsapp` graph: `{"message_path": "data/studio/inbox/<file>.json"}`.
+- Email: an `.eml` file whose `From` is a seeded customer, for example `iker.cli-002@example.com`.
+  Input for the `email` graph: `{"email_path": "data/studio/inbox/<file>.eml"}`.
+- Use a new `message_id` (WhatsApp) or `Message-ID` (email) each time: a message already processed is recognized and returns the existing order.
+- Each graph takes only its own channel's input: sending one channel's input to another graph fails with a `KeyError` naming the missing input key.
+
 Limits:
 
 - Studio threads live in the dev server and are separate from the CLI `clarify`, `resume` and `failures` commands.
 - In replay only the recorded answer works; any other input or answer has no recording, so it needs live mode.
 - Each sample can be stored only once per Studio database: running it again returns the order already stored.
-  To replay a sample from scratch, stop the server and delete `data/studio/`; it is seeded again on next use.
+  To replay a sample from scratch, stop the server and delete `data/studio/` and `.langgraph_api/`; the database is seeded again on next use (move your inbox files out first).
 
 ## Run the tests
 
