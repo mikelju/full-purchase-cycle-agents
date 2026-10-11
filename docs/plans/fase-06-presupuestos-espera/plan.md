@@ -1,6 +1,6 @@
 # Phase 06 - Quotes, request and wait: plan and results
 
-Status: planned on 2026-10-11; no increment started
+Status: in execution since 2026-10-11; batch A in progress
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-11)
 Base: branch `fase-06-presupuestos-espera` from `main` at commit `ada28ab`.
 
@@ -19,6 +19,7 @@ Written for the owner decisions of 2026-10-11 recorded in the spec (option A in 
 - A reply is accepted while its request is `waiting`; the deadline takes effect at the first tick at or after it, as the spec states; a "late reply" timeline is a reply after that closing tick (C6, C8).
 - A tick at or after the deadline closes the request and sends no reminder, even when the reminder was never sent, because no email may follow the close (C7, C8).
 - `no_offers` writes a `failures` row through `db.park_failure` with channel `quotes`, source the request reference, step `quote_wait` and status `needs_review` (C8).
+- Supplier rows live in a new data module `purchase_cycle/suppliers.py`, not in `catalog.py`, because that file's rows feed the prompts and its header ties changes to new recordings; family i goes to suppliers i and i + 1 (mod 3) and every fourth family also to the third, over the 32 families the catalog actually has (decided in execution, batch A).
 - New config path `config.SUPPLIER_OUTBOX_DIR = DATA_DIR / "supplier_outbox"` next to `OUTBOX_DIR`.
 - CLI in `cli.py`: `clock show`, `clock advance --days N | --hours N`, `quotes scan`, `quotes receive <folder>`, `quotes tick`, `quotes list` and `quotes-demo`, each with `--db`, `--checkpoints` and, where it writes email, `--outbox`, following the phase 05 commands; the graph uses `graph.sqlite_checkpointer`.
 - New evaluation module `purchase_cycle/evaluation/quote_wait_eval.py` with scenario files in `evals/datasets/quote_wait/`, registered in `harness.SUITES` and `ALL_SUITES` and left out of `UPLOAD_SUITES`, like `failure_recovery` and `order_scenarios`; it reuses `stats.wilson_interval` and `stats.target_cells` and the phase 05 report columns (D7).
@@ -38,10 +39,10 @@ This file is the durable state: a new session resumes from here and from Git.
 Execution order: batches A to E.
 
 ### Batch A - Baseline evidence, suppliers, clock and shortfall
-- [ ] 1. Unchanged-behaviour baseline before any code change (C13) - check: `orders-demo` in replay output saved as `.evidence/fase-06/orders-demo-before.txt` and `npm run eval` output as `.evidence/fase-06/eval-before.txt`, both from commit `ada28ab` code.
-  Evidence:
-- [ ] 2. `suppliers` and `supplier_families` tables and their seed: three fictional Spanish suppliers, every catalog family sold by at least two (C2) - check: new tests in `tests/test_seed.py` fail first, then pass: tables exist, three suppliers, every product in `products` has at least two suppliers, seeding twice gives the same rows, `row_counts` of the existing tables and their rows unchanged.
-  Evidence:
+- [x] 1. Unchanged-behaviour baseline before any code change (C13) - check: `orders-demo` in replay output saved as `.evidence/fase-06/orders-demo-before.txt` and `npm run eval` output as `.evidence/fase-06/eval-before.txt`, both from commit `ada28ab` code.
+  Evidence: run at `e747bbf`, whose `src/` and `evals/` equal `ada28ab` (`git diff --stat ada28ab e747bbf` touches only `docs/plans/`), with the Anthropic and LangSmith variables unset; `orders-demo` exit 0, five orders stored, no parked failures; `npm run eval` exit 0 with every gate PASS in the nine evaluations; files in `.evidence/fase-06/` (git-ignored).
+- [x] 2. `suppliers` and `supplier_families` tables and their seed: three fictional Spanish suppliers, every catalog family sold by at least two (C2) - check: new tests in `tests/test_seed.py` fail first, then pass: tables exist, three suppliers, every product in `products` has at least two suppliers, seeding twice gives the same rows, `row_counts` of the existing tables and their rows unchanged.
+  Evidence: two new tests in `tests/test_seed.py` failed first (no `suppliers` table), then `uv run pytest -q tests/test_seed.py` 8 passed; ruff check and format clean.
 - [ ] 3. `sim_clock` table, `sim_clock.now` and `advance`, and the `clock show` and `clock advance --days N | --hours N` commands (C2, C3) - check: new `tests/test_sim_clock.py`: seed time 2026-10-12 09:00, days and hours advance, a zero or negative step fails with a message and leaves the row unchanged, one test reads the advanced time from a second process through `subprocess`.
   Evidence:
 - [ ] 4. `quote_requests` and `quote_request_suppliers` tables and `quotes.shortfalls(conn)` over `received` orders and `stock` (C2, C4) - check: new `tests/test_quotes.py` cases on a temporary database: shortfall equals demand minus `on_hand`, a SKU with enough stock gives none, orders with another status are ignored, a SKU with a `waiting` request is skipped.
