@@ -11,6 +11,9 @@ Written for the owner decisions of 2026-10-11 recorded in the spec (option A in 
 - New tables in `db.SCHEMA`: `suppliers`, `supplier_families`, `sim_clock`, `quote_requests` and `quote_request_suppliers`; `db.seed` inserts the three suppliers, their families and the clock start 2026-10-12 09:00 with `INSERT OR IGNORE`, so a re-run changes nothing; the existing tables, `TABLES` and their seed rows stay as they are (D2, D3).
 - Supplier families are chosen against the 31 families in `catalog.py`, with overlap so every family has at least two suppliers.
 - Demand per SKU is the sum of `order_lines` quantities of orders with status `received` (the `STATUS` constant of the three channel modules); shortfall is demand minus `stock.on_hand`; a SKU with a request in status `waiting` gets no new request (D1).
+- Review round 1, finding 1 (C4): the shortfall to request is demand minus `on_hand` minus the units of every earlier request for the SKU, whatever its status, and a request starts only for a positive remainder, so a rescan with no new orders starts nothing even after a close and new orders start a request for just the new units (owner decision, recommended option).
+- Review round 1, finding 2 (C5, C7, C8): `quotes scan` first resumes every `waiting` request whose thread has not reached `wait` (no checkpoint, or next node `send`), so a send that failed partway is finished by the next scan without a second email or row; the resumed request is not listed as started (owner decision, recommended option).
+- Review round 1, finding 3 (C13): the earlier-phase test `tests/test_whatsapp_eval.py` lists `quote_wait` in the `eval all` suite order because `ALL_SUITES` grew; recorded as deviation DV-01 (owner decision, recommended option).
 - Request reference `QR-NNNN` from the `quote_requests` id, thread id `quote-QR-NNNN`; reminder time is created at plus 3 days and deadline created at plus 5 days, both stored in the row at `send` (D5).
 - The graph state carries the creation time given by `scan`, and every resume payload carries the event and the current simulated time, so a node re-run on resumption gives the same rows and files.
 - `wait` is one `interrupt` resumed by `Command(resume={"event": "reply", ...})` or `Command(resume={"event": "tick", "now": ...})`; the CLI checks the database before resuming, so a rejected reply never reaches the thread.
@@ -73,7 +76,7 @@ Execution order: batches A to E.
 - [x] 10. `quotes list` (C10) - check: a test on a temporary database with requests `waiting`, `ready_for_decision` and `no_offers` checks SKU, quantity, status, replied and pending suppliers, next reminder and deadline per row.
   Evidence: two new tests in `tests/test_quote_request.py` failed first on the missing `list` choice of `quotes`, then passed with `quotes.list_requests` and `cmd_quotes_list`; `uv run pytest -q` over the quotes, clock, seed and clarify, failures and resume CLI tests 92 passed; ruff check and format clean.
   Each row prints reference, SKU, quantity, status, replied and pending supplier codes (`-` when none), next reminder and deadline; the next reminder is the request's `reminder_at` while it is `waiting` and no reminder was sent, and `-` otherwise, since D5 sends one reminder per request (decided in execution, batch B).
-  A closed request does not stop demand from counting, so the next `scan` asks again for the same SKU while its orders stay `received`; the test raises stock after each close to keep three requests, and the `quote_wait` timelines must account for this spec behaviour.
+  The test raises stock after each close to keep three requests; this first read a closed request as no longer covering its units, which contradicts C4 and was corrected in review round 1 (finding 1), where a closed request keeps covering its units.
 
 ### Batch C - Evaluation `quote_wait`
 - [x] 11. At least 20 scripted timelines in `evals/datasets/quote_wait/` with expected final states, meeting the spec coverage minimums (at least 3 each for all replied, some replied, none replied, late reply, duplicate reply, re-run scan and repeated tick, and at least 3 with a process restart) (C11) - check: a test over the scenario files counts the total and each coverage tag and fails below a minimum.
@@ -82,7 +85,7 @@ Execution order: batches A to E.
 - [x] 12. Runner, deterministic grader over the database, supplier outbox and `failures` table, critical-error counter for the eight spec errors, scenario success with Wilson interval, report columns of phase 05, and registration in `harness.SUITES` (C11, C1) - check: tests that inject each critical error into a measured result and prove a non-zero exit of `purchase-cycle eval --suite quote_wait`; a test that a success below 100% exits non-zero; `npm run eval` report with ten evaluations saved as `.evidence/fase-06/eval-quote-wait.txt`, `quote_wait` 100% with 0 critical errors and the Wilson upper bound of the zero-event rate.
   Evidence (2026-10-11): 13 new tests in `tests/test_quote_wait_eval.py` failed first on the missing `CRITICAL_KINDS`, then 16 passed: each of the eight critical kinds injected into the step snapshots (or the final threads) of QW-004 exits 1 naming the kind, a wrong expectation exits 1, a clean timeline exits 0 with no network, and `cli.main(["eval", "--suite", "quote_wait"])` exits 0 at 100% per tag; ruff check and format clean.
   `npm run eval` (exit 0, 179 s) in `.evidence/fase-06/eval-quote-wait.txt` reports ten evaluations; `quote_wait` 24 scenarios, success 100.0% [86.2, 100.0], 0 failed scenarios with Wilson upper bound 13.8%, critical errors 0.
-  The runner snapshots the database and outbox before and after each step; the shortfall for the quantity check is computed from `received` order lines minus `on_hand`, apart from `quotes.shortfalls`, and the injection tests call `quote_wait_eval.evaluate`, the function `eval --suite quote_wait` runs (decided in execution, batch C).
+  The runner snapshots the database and outbox before and after each step; the shortfall for the quantity check is computed from `received` order lines minus `on_hand` (minus the units of every earlier request since review round 1), apart from `quotes.shortfalls`, and the injection tests call `quote_wait_eval.evaluate`, the function `eval --suite quote_wait` runs (decided in execution, batch C).
   At 100% success the zero-event rate is the failed scenarios, so its Wilson upper bound follows the `scenario_success` row (decided in execution, batch C).
 
 ### Batch D - Demo, documentation and secrets
@@ -98,7 +101,7 @@ Execution order: batches A to E.
   Outbox emails are never versioned, so the test renders a request and a reminder through `quotes.scan` and `quotes.tick` on a temporary database and scans them (decided in execution, batch D).
 
 ### Batch E - Validation and closing
-- [ ] 16. `npm run check`, unchanged-behaviour evidence and fresh-clone run with the Anthropic and LangSmith variables unset and no `.env` (C1, C13, C15) - check: `uv sync`, `npm ci` and `npm run check` in a clean clone with ten evaluations in replay; phase 01 to 05 tests unchanged and passing; the nine earlier evaluations with every gate PASS; `git diff --stat ada28ab -- evals/recordings evals/datasets evals/baselines` empty apart from the new `quote_wait` files; `orders-demo` replay output equal to increment 1 once run-specific ids are masked.
+- [ ] 16. `npm run check`, unchanged-behaviour evidence and fresh-clone run with the Anthropic and LangSmith variables unset and no `.env` (C1, C13, C15) - check: `uv sync`, `npm ci` and `npm run check` in a clean clone with ten evaluations in replay; phase 01 to 05 tests passing and unchanged apart from deviation DV-01; the nine earlier evaluations with every gate PASS; `git diff --stat ada28ab -- evals/recordings evals/datasets evals/baselines` empty apart from the new `quote_wait` files; `orders-demo` replay output equal to increment 1 once run-specific ids are masked.
   Evidence:
 - [ ] 17. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
   Evidence:
@@ -108,6 +111,7 @@ Execution order: batches A to E.
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
+| DV-01 | The phase 05 test `tests/test_whatsapp_eval.py` (suite order of `eval all`) gains `quote_wait` at the end of its expected list, because `ALL_SUITES` grew in increment 12; the behaviour of the nine earlier suites is unchanged | C13 | Accepted by the owner (review round 1, finding 3) |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
