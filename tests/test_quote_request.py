@@ -250,3 +250,71 @@ def test_quotes_receive_command_prints_each_reply(waiting, tmp_path, capsys):
     out = capsys.readouterr().out
     assert "a.eml  accepted  QR-0001" in out
     assert "b.eml  rejected: unknown request reference QR-0042" in out
+
+
+# Increment 7: ticks and reminders (C7)
+
+
+def _tick(env):
+    return quotes.tick(env.db, env.saver, env.outbox)
+
+
+def _reminders(env):
+    return [name for name in env.files() if "-reminder-" in name]
+
+
+@pytest.fixture
+def three(env, tmp_path):
+    """QR-0001 for the three-supplier product, where the first supplier has replied."""
+    env.short(THREE, 8)
+    env.scan()
+    _reply(tmp_path / "inbox", "r1.eml", EMAIL[_suppliers(THREE)[0]], "Re: Quote request QR-0001")
+    _receive(env, tmp_path / "inbox")
+    return env
+
+
+def test_a_tick_before_the_reminder_time_writes_nothing(three):
+    sim_clock.advance(three.conn, days=2, hours=23)
+    files = three.files()
+    [result] = _tick(three)
+    assert (result["reference"], result["reminders"], result["status"]) == ("QR-0001", 0, "waiting")
+    assert three.files() == files
+
+
+def test_a_tick_at_the_reminder_time_reminds_only_the_suppliers_that_have_not_replied(three):
+    sim_clock.advance(three.conn, days=3)
+    [result] = _tick(three)
+    pending = _suppliers(THREE)[1:]
+    assert result["reminders"] == 2
+    assert _reminders(three) == [f"QR-0001-reminder-{code}.eml" for code in pending]
+    rows = {r["supplier_code"]: r["reminded_at"] for r in three.request_suppliers()}
+    assert rows == {_suppliers(THREE)[0]: None, **{code: "2026-10-15 09:00:00" for code in pending}}
+    message = BytesParser(policy=policy.default).parsebytes(
+        (three.outbox / f"QR-0001-reminder-{pending[0]}.eml").read_bytes()
+    )
+    assert message["To"].addresses[0].addr_spec == EMAIL[pending[0]]
+    assert "QR-0001" in message["Subject"] and "Reminder" in message["Subject"]
+    assert message["Date"].datetime.replace(tzinfo=None) == sim_clock.now(three.conn)
+    for text in (THREE.sku, THREE.name, "Quantity: 8", "2026-10-17 09:00"):
+        assert text in message.get_content()
+
+
+def test_a_second_tick_before_the_deadline_writes_no_new_reminder(three):
+    sim_clock.advance(three.conn, days=3, hours=1)
+    _tick(three)
+    files = {p.name: p.read_bytes() for p in three.outbox.iterdir()}
+    rows = three.request_suppliers()
+    assert _tick(three)[0]["reminders"] == 0
+    sim_clock.advance(three.conn, days=1)
+    assert _tick(three)[0]["reminders"] == 0
+    assert {p.name: p.read_bytes() for p in three.outbox.iterdir()} == files
+    assert three.request_suppliers() == rows
+
+
+def test_quotes_tick_command_prints_each_waiting_request(three, capsys):
+    sim_clock.advance(three.conn, days=3)
+    paths = ["--checkpoints", str(three.checkpoints), "--outbox", str(three.outbox)]
+    assert cli.main(["--db", str(three.db), "quotes", "tick", *paths]) == 0
+    out = capsys.readouterr().out
+    assert "simulated time: 2026-10-15 09:00" in out
+    assert "QR-0001  reminders=2  status=waiting" in out

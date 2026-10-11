@@ -113,6 +113,20 @@ def cmd_quotes_receive(args) -> int:
     return 0
 
 
+def cmd_quotes_tick(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+        now = sim_clock.now(conn)
+    finally:
+        conn.close()
+    results = quotes.tick(args.db, sqlite_checkpointer(args.checkpoints), args.outbox)
+    print(f"simulated time: {sim_clock.text(now)}  waiting requests: {len(results)}")
+    for result in results:
+        print(f"  {result['reference']}  reminders={result['reminders']}  status={result['status']}")
+    return 0
+
+
 def cmd_demo(args) -> int:
     conn = db.connect(args.db)
     db.seed(conn)
@@ -1042,7 +1056,9 @@ def main(argv=None) -> int:
     receive.add_argument("folder", help="folder of supplier reply .eml files")
     receive.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     receive.set_defaults(handler=cmd_quotes_receive)
-    for command in (scan,):
+    tick = quotes_sub.add_parser("tick", help="deliver the simulated time to every waiting quote request")
+    tick.set_defaults(handler=cmd_quotes_tick)
+    for command in (scan, tick):
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
         command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")
 

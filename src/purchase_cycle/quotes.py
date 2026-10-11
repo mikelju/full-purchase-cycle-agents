@@ -21,9 +21,14 @@ DEADLINE_AFTER = timedelta(days=5)
 REFERENCE = re.compile(r"\bQR-(\d{4,})\b")
 BUYER = "Purchasing department <purchasing@distributor.example.com>"
 
-REQUEST_TEXT = """Dear {name},
+REQUEST_OPENING = "Please send us your best price and delivery time for the following product:"
+REMINDER_OPENING = (
+    "We have not received your offer for our quote request {reference} yet.\n"
+    "Please send us your best price and delivery time for the following product:"
+)
+EMAIL_TEXT = """Dear {name},
 
-Please send us your best price and delivery time for the following product:
+{opening}
 
   SKU: {sku}
   Product: {product}
@@ -40,6 +45,7 @@ Purchasing department
 
 class QuoteRequestState(TypedDict, total=False):
     request_id: int
+    reminders: list[str]  # supplier codes reminded by the last event
 
 
 def reference(request_id: int) -> str:
@@ -100,6 +106,20 @@ def _write_email(outbox: Path, name: str, to: str, subject: str, body: str, sent
     return path
 
 
+def _email_body(opening: str, supplier: dict, request: dict) -> str:
+    ref = reference(request["id"])
+    return EMAIL_TEXT.format(
+        name=supplier["name"],
+        opening=opening.format(reference=ref),
+        sku=request["sku"],
+        product=request["product"],
+        sale_unit=request["sale_unit"],
+        quantity=request["quantity"],
+        deadline=request["deadline"][:16],
+        reference=ref,
+    )
+
+
 def send_request(db_path: Path | str, outbox: Path | str, request_id: int) -> list[Path]:
     """One supplier row and one request email per supplier of the family; a re-run adds no row or file."""
     conn = db.connect(db_path)
@@ -108,15 +128,7 @@ def send_request(db_path: Path | str, outbox: Path | str, request_id: int) -> li
         ref = reference(request_id)
         written = []
         for supplier in _family_suppliers(conn, request["family"]):
-            body = REQUEST_TEXT.format(
-                name=supplier["name"],
-                sku=request["sku"],
-                product=request["product"],
-                sale_unit=request["sale_unit"],
-                quantity=request["quantity"],
-                deadline=request["deadline"][:16],
-                reference=ref,
-            )
+            body = _email_body(REQUEST_OPENING, supplier, request)
             subject = f"Quote request {ref} - {request['sku']}"
             path = _write_email(
                 outbox, f"{ref}-request-{supplier['code']}", supplier["email"], subject, body, request["created_at"]
@@ -133,6 +145,30 @@ def send_request(db_path: Path | str, outbox: Path | str, request_id: int) -> li
         conn.close()
 
 
+def send_reminders(conn: sqlite3.Connection, outbox: Path | str, request_id: int, now: str) -> list[str]:
+    """One reminder to each supplier that has neither replied nor been reminded; a re-run writes nothing new."""
+    request = _request(conn, request_id)
+    ref = reference(request_id)
+    pending = conn.execute(
+        "SELECT s.* FROM quote_request_suppliers r JOIN suppliers s ON s.code = r.supplier_code "
+        "WHERE r.request_id = ? AND r.replied_at IS NULL AND r.reminded_at IS NULL ORDER BY s.code",
+        (request_id,),
+    ).fetchall()
+    reminded = []
+    for supplier in map(dict, pending):
+        body = _email_body(REMINDER_OPENING, supplier, request)
+        subject = f"Reminder: quote request {ref} - {request['sku']}"
+        _write_email(outbox, f"{ref}-reminder-{supplier['code']}", supplier["email"], subject, body, now)
+        with conn:
+            conn.execute(
+                "UPDATE quote_request_suppliers SET reminded_at = ? "
+                "WHERE request_id = ? AND supplier_code = ? AND reminded_at IS NULL",
+                (now, request_id, supplier["code"]),
+            )
+        reminded.append(supplier["code"])
+    return reminded
+
+
 def build_quote_request_graph(db_path: Path | str, outbox: Path | str | None = None, checkpointer=None):
     def send(state: QuoteRequestState) -> QuoteRequestState:
         send_request(db_path, outbox, state["request_id"])
@@ -143,8 +179,13 @@ def build_quote_request_graph(db_path: Path | str, outbox: Path | str | None = N
         # a reply against the database first, so only an accepted one reaches the thread.
         event = interrupt({"reference": reference(state["request_id"])})
         conn = db.connect(db_path)
+        reminders = []
         try:
-            if event["event"] == "reply":
+            if event["event"] == "tick":
+                request = _request(conn, state["request_id"])
+                if event["now"] >= request["reminder_at"]:
+                    reminders = send_reminders(conn, outbox, state["request_id"], event["now"])
+            elif event["event"] == "reply":
                 with conn:
                     conn.execute(
                         "UPDATE quote_request_suppliers SET replied_at = ?, reply_file = ? "
@@ -153,7 +194,7 @@ def build_quote_request_graph(db_path: Path | str, outbox: Path | str | None = N
                     )
         finally:
             conn.close()
-        return {}
+        return {"reminders": reminders}
 
     builder = StateGraph(QuoteRequestState)
     builder.add_node("send", send)
@@ -245,6 +286,27 @@ def receive(db_path: Path | str, checkpointer, folder: Path | str) -> list[dict]
                 event = {"event": "reply", "supplier": result["supplier"], "file": str(path), "now": now}
                 graph.invoke(Command(resume=event), _config(result.pop("request_id")))
             results.append(result)
+    finally:
+        conn.close()
+    return results
+
+
+def tick(db_path: Path | str, checkpointer, outbox: Path | str) -> list[dict]:
+    """Resume every waiting request thread with the current simulated time, in request order."""
+    graph = build_quote_request_graph(db_path, outbox, checkpointer)
+    conn = db.connect(db_path)
+    results = []
+    try:
+        now = sim_clock.now(conn).strftime(sim_clock.FORMAT)
+        waiting = [
+            r["id"] for r in conn.execute("SELECT id FROM quote_requests WHERE status = ? ORDER BY id", (WAITING,))
+        ]
+        for request_id in waiting:
+            state = graph.invoke(Command(resume={"event": "tick", "now": now}), _config(request_id))
+            status = conn.execute("SELECT status FROM quote_requests WHERE id = ?", (request_id,)).fetchone()[0]
+            results.append(
+                {"reference": reference(request_id), "reminders": len(state.get("reminders", [])), "status": status}
+            )
     finally:
         conn.close()
     return results

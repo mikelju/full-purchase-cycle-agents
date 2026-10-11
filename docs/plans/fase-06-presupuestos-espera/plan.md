@@ -57,7 +57,8 @@ Execution order: batches A to E.
 - [x] 6. `quotes receive <folder>` with reference and sender checks and duplicate handling (C6) - check: one test per case: accepted reply sets `replied_at` and the file path; unknown reference, closed request and foreign sender are rejected with a reason and leave rows, outbox and checkpoint state unchanged; the same reply twice changes nothing the second time.
   Evidence: seven new receive cases in `tests/test_quote_request.py` failed first on the missing `quotes.receive`, then `uv run pytest -q tests/test_quote_request.py tests/test_quotes.py` 22 passed; ruff check and format clean.
   Evidence:
-- [ ] 7. `quotes tick` and reminders (C7) - check: scripted timelines counting outbox files: a tick before day 3 writes nothing; a tick at or after day 3 writes one reminder to each supplier that has not replied and none to those that replied; a second tick at the same or a later time before the deadline writes nothing new.
+- [x] 7. `quotes tick` and reminders (C7) - check: scripted timelines counting outbox files: a tick before day 3 writes nothing; a tick at or after day 3 writes one reminder to each supplier that has not replied and none to those that replied; a second tick at the same or a later time before the deadline writes nothing new.
+  Evidence: four new tick cases in `tests/test_quote_request.py` failed first on the missing `quotes.tick`, then `uv run pytest -q tests/test_quote_request.py` 20 passed; ruff check and format clean.
   Evidence:
 - [ ] 8. Closing: early close when every supplier replied, deadline close as `ready_for_decision` or `no_offers` with its `failures` row, no email and rejected replies after close (C8) - check: one test per outcome counting `quote_requests` status, `failures` rows with status `needs_review` and step `quote_wait`, and outbox files before and after a later tick and reply; a single tick past the deadline sends no reminder.
   Evidence:
