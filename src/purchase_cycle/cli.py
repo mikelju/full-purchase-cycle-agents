@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import config, db, router
+from purchase_cycle import config, db, router, sim_clock
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import build_email_order_graph
@@ -58,6 +58,30 @@ def cmd_seed(args) -> int:
     print(f"Seeded {args.db}")
     for table, count in counts.items():
         print(f"  {table:<12} {count}")
+    return 0
+
+
+def cmd_clock_show(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+        print(f"simulated time: {sim_clock.text(sim_clock.now(conn))}")
+    finally:
+        conn.close()
+    return 0
+
+
+def cmd_clock_advance(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+        moved = sim_clock.advance(conn, days=args.days or 0, hours=args.hours or 0)
+    except ValueError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    finally:
+        conn.close()
+    print(f"simulated time: {sim_clock.text(moved)}")
     return 0
 
 
@@ -972,6 +996,15 @@ def main(argv=None) -> int:
     crashed.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     crashed.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
     crashed.set_defaults(handler=cmd_resume)
+
+    clock = sub.add_parser("clock", help="show or move forward the simulated clock of the quotes module")
+    clock_sub = clock.add_subparsers(dest="clock_command", required=True)
+    clock_sub.add_parser("show", help="print the simulated time").set_defaults(handler=cmd_clock_show)
+    advance = clock_sub.add_parser("advance", help="move the simulated time forward")
+    step = advance.add_mutually_exclusive_group(required=True)
+    step.add_argument("--days", type=int, help="days to move forward")
+    step.add_argument("--hours", type=int, help="hours to move forward")
+    advance.set_defaults(handler=cmd_clock_advance)
 
     from purchase_cycle.evaluation.cli import add_eval_commands
 

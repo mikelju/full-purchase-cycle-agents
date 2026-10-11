@@ -3,6 +3,7 @@
 import sqlite3
 from pathlib import Path
 
+from purchase_cycle import sim_clock
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
 from purchase_cycle.suppliers import SUPPLIER_FAMILIES, SUPPLIERS
 
@@ -79,6 +80,10 @@ CREATE TABLE IF NOT EXISTS supplier_families (
     family TEXT NOT NULL,
     PRIMARY KEY (supplier_code, family)
 );
+CREATE TABLE IF NOT EXISTS sim_clock (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    now TEXT NOT NULL
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")
@@ -110,6 +115,7 @@ def seed(conn: sqlite3.Connection) -> dict[str, int]:
     )
     conn.executemany("INSERT OR IGNORE INTO suppliers VALUES (?, ?, ?)", [(s.code, s.name, s.email) for s in SUPPLIERS])
     conn.executemany("INSERT OR IGNORE INTO supplier_families VALUES (?, ?)", SUPPLIER_FAMILIES)
+    conn.execute("INSERT OR IGNORE INTO sim_clock VALUES (1, ?)", (sim_clock.START.strftime(sim_clock.FORMAT),))
     conn.commit()
     return row_counts(conn)
 
