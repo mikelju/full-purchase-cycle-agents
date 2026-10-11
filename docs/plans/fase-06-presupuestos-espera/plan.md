@@ -1,6 +1,6 @@
 # Phase 06 - Quotes, request and wait: plan and results
 
-Status: in execution since 2026-10-11; batch A done, batch B next
+Status: in execution since 2026-10-11; batch A done, batch B in progress
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-11)
 Base: branch `fase-06-presupuestos-espera` from `main` at commit `ada28ab`.
 
@@ -51,7 +51,8 @@ Execution order: batches A to E.
   `quote_requests` times carry no `datetime('now')` default, so the quotes code must write them from the clock; a partial unique index allows only one `waiting` request per SKU as a schema guard against the first critical error; `shortfalls` returns rows in SKU order.
 
 ### Batch B - Quote request graph and its events
-- [ ] 5. `build_quote_request_graph` with `send` and `wait`, request and reminder templates, supplier outbox writer and `quotes scan` (C4, C5) - check: tests fail first, then pass: `scan` starts one thread per short SKU with the exact quantity, a second `scan` starts nothing, a stub model client counts zero calls; one `.eml` per family supplier with the supplier address, `QR-NNNN` in the subject and SKU, product name, sale unit, quantity and deadline in the body; the checkpoint shows the thread paused in `wait`; re-running `send` on resumption writes no second file or row.
+- [x] 5. `build_quote_request_graph` with `send` and `wait`, request and reminder templates, supplier outbox writer and `quotes scan` (C4, C5) - check: tests fail first, then pass: `scan` starts one thread per short SKU with the exact quantity, a second `scan` starts nothing, a stub model client counts zero calls; one `.eml` per family supplier with the supplier address, `QR-NNNN` in the subject and SKU, product name, sale unit, quantity and deadline in the body; the checkpoint shows the thread paused in `wait`; re-running `send` on resumption writes no second file or row.
+  Evidence: new `tests/test_quote_request.py` failed first on the missing `quotes.scan` and `quotes` command, then `uv run pytest -q tests/test_quote_request.py tests/test_quotes.py tests/test_sim_clock.py tests/test_seed.py` 35 passed; ruff check and format clean.
   Evidence:
 - [ ] 6. `quotes receive <folder>` with reference and sender checks and duplicate handling (C6) - check: one test per case: accepted reply sets `replied_at` and the file path; unknown reference, closed request and foreign sender are rejected with a reason and leave rows, outbox and checkpoint state unchanged; the same reply twice changes nothing the second time.
   Evidence:

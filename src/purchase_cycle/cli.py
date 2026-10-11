@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import config, db, router, sim_clock
+from purchase_cycle import config, db, quotes, router, sim_clock
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import build_email_order_graph
@@ -82,6 +82,20 @@ def cmd_clock_advance(args) -> int:
     finally:
         conn.close()
     print(f"simulated time: {sim_clock.text(moved)}")
+    return 0
+
+
+def cmd_quotes_scan(args) -> int:
+    conn = db.connect(args.db)
+    db.seed(conn)
+    conn.close()
+    started = quotes.scan(args.db, sqlite_checkpointer(args.checkpoints), args.outbox)
+    if not started:
+        print("no new quote requests")
+        return 0
+    print(f"quote requests started: {len(started)}  outbox={args.outbox}")
+    for request in started:
+        print(f"  {request['reference']}  sku={request['sku']}  quantity={request['quantity']}")
     return 0
 
 
@@ -1005,6 +1019,14 @@ def main(argv=None) -> int:
     step.add_argument("--days", type=int, help="days to move forward")
     step.add_argument("--hours", type=int, help="hours to move forward")
     advance.set_defaults(handler=cmd_clock_advance)
+
+    quotes_parser = sub.add_parser("quotes", help="request quotes for out-of-stock products and wait for the replies")
+    quotes_sub = quotes_parser.add_subparsers(dest="quotes_command", required=True)
+    scan = quotes_sub.add_parser("scan", help="start one quote request per product short of stock")
+    scan.set_defaults(handler=cmd_quotes_scan)
+    for command in (scan,):
+        command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+        command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")
 
     from purchase_cycle.evaluation.cli import add_eval_commands
 
