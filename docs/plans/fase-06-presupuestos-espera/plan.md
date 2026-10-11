@@ -21,6 +21,8 @@ Written for the owner decisions of 2026-10-11 recorded in the spec (option A in 
 - `no_offers` writes a `failures` row through `db.park_failure` with channel `quotes`, source the request reference, step `quote_wait` and status `needs_review` (C8).
 - Supplier rows live in a new data module `purchase_cycle/suppliers.py`, not in `catalog.py`, because that file's rows feed the prompts and its header ties changes to new recordings; family i goes to suppliers i and i + 1 (mod 3) and every fourth family also to the third, over the 32 families the catalog actually has (decided in execution, batch A).
 - New config path `config.SUPPLIER_OUTBOX_DIR = DATA_DIR / "supplier_outbox"` next to `OUTBOX_DIR`.
+- `quotes list` shows `reminder_at` as the next reminder only while the request waits and no reminder was sent, and `-` otherwise, because D5 sends one reminder per request (decided in execution, batch B).
+- The C3 real-time test patches `time.time` and `datetime.datetime` in-process instead of running under another system clock, because a test cannot change the machine clock (decided in execution, batch B).
 - CLI in `cli.py`: `clock show`, `clock advance --days N | --hours N`, `quotes scan`, `quotes receive <folder>`, `quotes tick`, `quotes list` and `quotes-demo`, each with `--db`, `--checkpoints` and, where it writes email, `--outbox`, following the phase 05 commands; the graph uses `graph.sqlite_checkpointer`.
 - New evaluation module `purchase_cycle/evaluation/quote_wait_eval.py` with scenario files in `evals/datasets/quote_wait/`, registered in `harness.SUITES` and `ALL_SUITES` and left out of `UPLOAD_SUITES`, like `failure_recovery` and `order_scenarios`; it reuses `stats.wilson_interval` and `stats.target_cells` and the phase 05 report columns (D7).
 
