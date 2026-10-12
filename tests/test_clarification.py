@@ -16,6 +16,7 @@ from purchase_cycle.clarification import (
     detect,
     doubts_message,
     plain_question,
+    resume_value,
 )
 from purchase_cycle.llm import ClarificationResolutions
 
@@ -329,3 +330,30 @@ def test_answer_breaking_a_check_is_rejected(seeded_db, rows, message):
     _, catalog = seeded_db
     with pytest.raises(InvalidAnswer, match=message):
         check_resolutions(_resolutions(*rows), _order_doubts(catalog), catalog)
+
+
+@pytest.mark.parametrize(
+    ("received", "expected"),
+    [
+        ({"answer": "Size L"}, {"answer": "Size L"}),
+        ({"close": True}, {"close": True}),
+        ('{"answer": "Size L"}', {"answer": "Size L"}),
+        ("  Size L please\n", {"answer": "Size L please"}),
+        ('"Size L please, all of them."', {"answer": "Size L please, all of them."}),
+        ('""', {"answer": ""}),
+        ("", {"answer": ""}),
+        (42, {"answer": "42"}),
+        ("42", {"answer": "42"}),
+        (None, {"answer": ""}),
+        (["Size L"], {"answer": "['Size L']"}),
+        ({}, {"answer": ""}),
+        ({"message_id": "m1"}, {"answer": ""}),
+        ({"answer": None}, {"answer": ""}),
+    ],
+    ids=[
+        "dict", "close", "json-text", "plain-text", "json-string", "empty-prefill", "empty-text",
+        "int", "json-int", "none", "list", "empty-dict", "dict-without-answer", "dict-null-answer",
+    ],
+)  # fmt: skip
+def test_resume_value_normalizes_any_resume_to_an_answer_or_a_close(received, expected):
+    assert resume_value(received) == expected
