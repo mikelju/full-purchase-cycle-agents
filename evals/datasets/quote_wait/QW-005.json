@@ -1,0 +1,63 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "outbox": [
+      "QR-0001-request-SUP-002.eml",
+      "QR-0001-request-SUP-003.eml"
+    ],
+    "requests": [
+      {
+        "quantity": 5,
+        "reference": "QR-0001",
+        "reminded": [],
+        "replied": [
+          "SUP-003"
+        ],
+        "sku": "GLV-LTX-L",
+        "status": "ready_for_decision"
+      }
+    ]
+  },
+  "id": "QW-005",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "steps": [
+    {
+      "lines": [
+        [
+          "GLV-LTX-L",
+          23
+        ]
+      ],
+      "op": "order"
+    },
+    {
+      "op": "scan"
+    },
+    {
+      "days": 4,
+      "op": "advance"
+    },
+    {
+      "op": "receive",
+      "replies": [
+        {
+          "reference": "QR-0001",
+          "supplier": "SUP-003"
+        }
+      ]
+    },
+    {
+      "days": 1,
+      "op": "advance"
+    },
+    {
+      "op": "tick"
+    }
+  ],
+  "tags": [
+    "some_replied"
+  ]
+}

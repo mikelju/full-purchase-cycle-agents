@@ -1,0 +1,51 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 1,
+    "outbox": [
+      "QR-0001-request-SUP-001.eml",
+      "QR-0001-request-SUP-002.eml"
+    ],
+    "requests": [
+      {
+        "quantity": 4,
+        "reference": "QR-0001",
+        "reminded": [],
+        "replied": [],
+        "sku": "GLV-SURG-NEO-6.5",
+        "status": "no_offers"
+      }
+    ]
+  },
+  "id": "QW-023",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "steps": [
+    {
+      "lines": [
+        [
+          "GLV-SURG-NEO-6.5",
+          40
+        ]
+      ],
+      "op": "order"
+    },
+    {
+      "op": "scan"
+    },
+    {
+      "days": 5,
+      "new_process": true,
+      "op": "advance"
+    },
+    {
+      "new_process": true,
+      "op": "tick"
+    }
+  ],
+  "tags": [
+    "none_replied",
+    "restart"
+  ]
+}

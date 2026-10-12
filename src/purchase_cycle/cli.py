@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import config, db, router
+from purchase_cycle import config, db, quotes, router, sim_clock
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import build_email_order_graph
@@ -39,6 +39,8 @@ DEMO_EXCEPTIONS = config.ROOT / "examples" / "exceptions"
 DEMO_ORDERS = config.ROOT / "examples" / "orders"
 ORDERS_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "orders_demo.jsonl"  # one file for every task
 ORDERS_DEMO_WORKDIR = config.DATA_DIR / "orders-demo"
+DEMO_QUOTES = config.ROOT / "examples" / "quotes"
+QUOTES_DEMO_WORKDIR = config.DATA_DIR / "quotes-demo"
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
 EXCEPTIONS_RECORDINGS = {
     MATCHING.name: config.CLARIFICATION_DETECTION_MATCHING_RECORDINGS_PATH,
@@ -58,6 +60,206 @@ def cmd_seed(args) -> int:
     print(f"Seeded {args.db}")
     for table, count in counts.items():
         print(f"  {table:<12} {count}")
+    return 0
+
+
+def cmd_clock_show(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+        print(f"simulated time: {sim_clock.text(sim_clock.now(conn))}")
+    finally:
+        conn.close()
+    return 0
+
+
+def cmd_clock_advance(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+        moved = sim_clock.advance(conn, days=args.days or 0, hours=args.hours or 0)
+    except ValueError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    finally:
+        conn.close()
+    print(f"simulated time: {sim_clock.text(moved)}")
+    return 0
+
+
+def cmd_quotes_scan(args) -> int:
+    conn = db.connect(args.db)
+    db.seed(conn)
+    conn.close()
+    started = quotes.scan(args.db, sqlite_checkpointer(args.checkpoints), args.outbox)
+    if not started:
+        print("no new quote requests")
+        return 0
+    print(f"quote requests started: {len(started)}  outbox={args.outbox}")
+    for request in started:
+        print(f"  {request['reference']}  sku={request['sku']}  quantity={request['quantity']}")
+    return 0
+
+
+def cmd_quotes_receive(args) -> int:
+    conn = db.connect(args.db)
+    db.seed(conn)
+    conn.close()
+    results = quotes.receive(args.db, sqlite_checkpointer(args.checkpoints), args.folder)
+    print(f"replies read: {len(results)}  accepted: {sum(r['accepted'] for r in results)}")
+    for result in results:
+        if result["accepted"]:
+            print(f"  {result['file']}  accepted  {result['reference']}  supplier={result['supplier']}")
+        else:
+            print(f"  {result['file']}  rejected: {result['reason']}")
+    return 0
+
+
+def cmd_quotes_tick(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+        now = sim_clock.now(conn)
+    finally:
+        conn.close()
+    results = quotes.tick(args.db, sqlite_checkpointer(args.checkpoints), args.outbox)
+    print(f"simulated time: {sim_clock.text(now)}  waiting requests: {len(results)}")
+    for result in results:
+        print(f"  {result['reference']}  reminders={result['reminders']}  status={result['status']}")
+    return 0
+
+
+def cmd_quotes_list(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+        rows = quotes.list_requests(conn)
+    finally:
+        conn.close()
+    if not rows:
+        print("no quote requests")
+        return 0
+    print(f"quote requests: {len(rows)}")
+    for row in rows:
+        reminder = row["next_reminder"][:16] if row["next_reminder"] else "-"
+        print(
+            f"  {row['reference']}  sku={row['sku']}  quantity={row['quantity']}  status={row['status']}  "
+            f"replied={','.join(row['replied']) or '-'}  pending={','.join(row['pending']) or '-'}  "
+            f"next reminder={reminder}  deadline={row['deadline'][:16]}"
+        )
+    return 0
+
+
+def _quotes_state(files: dict) -> dict:
+    """The simulated time, the requests, the replied and reminded suppliers and the outbox names of the demo."""
+    conn = db.connect(files["db"])
+    try:
+        state = {"now": sim_clock.text(sim_clock.now(conn)), "requests": quotes.list_requests(conn)}
+        reminded = conn.execute(
+            "SELECT request_id, group_concat(supplier_code) FROM quote_request_suppliers "
+            "WHERE reminded_at IS NOT NULL GROUP BY request_id"
+        ).fetchall()
+    finally:
+        conn.close()
+    state["reminded"] = {quotes.reference(row[0]): sorted(row[1].split(",")) for row in reminded}
+    state["replies"] = {(r["reference"], s) for r in state["requests"] for s in r["replied"]}
+    outbox = files["outbox"]
+    state["outbox"] = sorted(p.name for p in outbox.glob("*.eml")) if outbox.is_dir() else []
+    return state
+
+
+def cmd_quotes_demo(args) -> int:
+    """The sample orders and supplier replies through scan, clock, receive and tick, each step in its own process."""
+    import subprocess
+
+    examples, workdir = Path(args.examples), Path(args.workdir)
+    # The demo clears its work folder, so it never runs in the data folder.
+    if workdir.resolve() == config.DATA_DIR.resolve():
+        print(f"Error: --workdir {args.workdir} is the data folder; pick another folder", file=sys.stderr)
+        return 1
+    # Each run starts from an empty database, checkpoint file and supplier outbox in the work folder.
+    files = {
+        "db": workdir / "business.db",
+        "checkpoints": workdir / "checkpoints.sqlite",
+        "outbox": workdir / "supplier_outbox",
+    }
+    workdir.mkdir(parents=True, exist_ok=True)
+    for name in ("db", "checkpoints"):
+        files[name].unlink(missing_ok=True)
+    for old in files["outbox"].glob("*.eml") if files["outbox"].is_dir() else []:
+        old.unlink()
+    orders = json.loads((examples / "orders.json").read_text(encoding="utf-8"))
+    conn = db.connect(files["db"])
+    try:
+        db.seed(conn)
+        for order in orders:
+            db.insert_order(conn, order["customer"], order["channel"], "received", [tuple(x) for x in order["lines"]])
+    finally:
+        conn.close()
+    print(f"quotes-demo  examples={args.examples}  workdir={args.workdir}")
+    print(f"sample orders stored as received: {len(orders)}")
+    for order in orders:
+        lines = ", ".join(f"{sku} x {quantity}" for sku, quantity in order["lines"])
+        print(f"  {order['customer']}  channel={order['channel']}  lines={lines}")
+    paths = ["--checkpoints", str(files["checkpoints"])]
+    outbox = ["--outbox", str(files["outbox"])]
+    steps = [
+        ["quotes", "scan", *paths, *outbox],
+        ["clock", "advance", "--days", "1"],
+        ["quotes", "receive", str(examples / "replies-day-1"), *paths],
+        ["clock", "advance", "--days", "2"],
+        ["quotes", "tick", *paths, *outbox],
+        ["quotes", "receive", str(examples / "replies-day-3"), *paths],
+        ["clock", "advance", "--days", "2"],
+        ["quotes", "tick", *paths, *outbox],
+    ]
+    before = _quotes_state(files)
+    for n, step in enumerate(steps, start=1):
+        run = subprocess.run(
+            [sys.executable, "-m", "purchase_cycle.cli", "--db", str(files["db"]), *step],
+            capture_output=True,
+            text=True,
+        )
+        shown = " ".join(step[:4] if step[0] == "clock" else step[:2])
+        print()
+        print(f"== step {n}: purchase-cycle {shown}  (own process, exit code {run.returncode})")
+        if run.returncode != 0:
+            print(f"Error: step {n} failed: {run.stderr.strip()}", file=sys.stderr)
+            return 1
+        after = _quotes_state(files)
+        known = {r["reference"] for r in before["requests"]}
+        started = [r["reference"] for r in after["requests"] if r["reference"] not in known]
+        written = [name for name in after["outbox"] if name not in before["outbox"]]
+        replies = sorted(after["replies"] - before["replies"])
+        print(f"simulated time: {after['now']}")
+        print(f"requests started: {', '.join(started) or 'none'}")
+        print(f"emails written: {len(written) or 'none'}")
+        for name in written:
+            print(f"  {name}")
+        print(f"replies received: {', '.join(f'{ref} from {code}' for ref, code in replies) or 'none'}")
+        print("requests:")
+        for row in after["requests"]:
+            print(
+                f"  {row['reference']}  sku={row['sku']}  quantity={row['quantity']}  status={row['status']}  "
+                f"replied={','.join(row['replied']) or '-'}  "
+                f"reminded={','.join(after['reminded'].get(row['reference'], [])) or '-'}"
+            )
+        before = after
+    ready = [
+        r["reference"]
+        for r in before["requests"]
+        if r["status"] == "ready_for_decision" and r["reference"] in before["reminded"]
+    ]
+    no_offers = [r["reference"] for r in before["requests"] if r["status"] == "no_offers"]
+    print()
+    print("summary:")
+    print(f"ready_for_decision after a reminder: {', '.join(ready) or 'none'}")
+    print(f"no_offers, parked in failures for review: {', '.join(no_offers) or 'none'}")
+    if not ready or not no_offers:
+        print(
+            "Error: the demo did not end with a request ready after a reminder and one with no offers", file=sys.stderr
+        )
+        return 1
     return 0
 
 
@@ -972,6 +1174,40 @@ def main(argv=None) -> int:
     crashed.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     crashed.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
     crashed.set_defaults(handler=cmd_resume)
+
+    clock = sub.add_parser("clock", help="show or move forward the simulated clock of the quotes module")
+    clock_sub = clock.add_subparsers(dest="clock_command", required=True)
+    clock_sub.add_parser("show", help="print the simulated time").set_defaults(handler=cmd_clock_show)
+    advance = clock_sub.add_parser("advance", help="move the simulated time forward")
+    step = advance.add_mutually_exclusive_group(required=True)
+    step.add_argument("--days", type=int, help="days to move forward")
+    step.add_argument("--hours", type=int, help="hours to move forward")
+    advance.set_defaults(handler=cmd_clock_advance)
+
+    quotes_parser = sub.add_parser("quotes", help="request quotes for out-of-stock products and wait for the replies")
+    quotes_sub = quotes_parser.add_subparsers(dest="quotes_command", required=True)
+    scan = quotes_sub.add_parser("scan", help="start one quote request per product short of stock")
+    scan.set_defaults(handler=cmd_quotes_scan)
+    receive = quotes_sub.add_parser("receive", help="read a folder of supplier reply .eml files")
+    receive.add_argument("folder", help="folder of supplier reply .eml files")
+    receive.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    receive.set_defaults(handler=cmd_quotes_receive)
+    tick = quotes_sub.add_parser("tick", help="deliver the simulated time to every waiting quote request")
+    tick.set_defaults(handler=cmd_quotes_tick)
+    quotes_sub.add_parser("list", help="list every quote request and its suppliers").set_defaults(
+        handler=cmd_quotes_list
+    )
+    for command in (scan, tick):
+        command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+        command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")
+    quotes_demo = sub.add_parser(
+        "quotes-demo", help="run the sample quote timeline, each scan, clock, receive and tick step in its own process"
+    )
+    quotes_demo.add_argument("--examples", default=str(DEMO_QUOTES), help="folder of sample orders and replies")
+    quotes_demo.add_argument(
+        "--workdir", default=str(QUOTES_DEMO_WORKDIR), help="folder for the demo database, checkpoints and outbox"
+    )
+    quotes_demo.set_defaults(handler=cmd_quotes_demo)
 
     from purchase_cycle.evaluation.cli import add_eval_commands
 

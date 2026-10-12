@@ -3,7 +3,9 @@
 import sqlite3
 from pathlib import Path
 
+from purchase_cycle import sim_clock
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
+from purchase_cycle.suppliers import SUPPLIER_FAMILIES, SUPPLIERS
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS customers (
@@ -68,6 +70,40 @@ CREATE TABLE IF NOT EXISTS failures (
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS suppliers (
+    code TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE
+);
+CREATE TABLE IF NOT EXISTS supplier_families (
+    supplier_code TEXT NOT NULL REFERENCES suppliers (code),
+    family TEXT NOT NULL,
+    PRIMARY KEY (supplier_code, family)
+);
+CREATE TABLE IF NOT EXISTS sim_clock (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    now TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS quote_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sku TEXT NOT NULL REFERENCES products (sku),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    thread_id TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL CHECK (status IN ('waiting', 'ready_for_decision', 'no_offers')),
+    created_at TEXT NOT NULL,
+    reminder_at TEXT NOT NULL,
+    deadline TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS quote_requests_one_waiting_per_sku ON quote_requests (sku) WHERE status = 'waiting';
+CREATE TABLE IF NOT EXISTS quote_request_suppliers (
+    request_id INTEGER NOT NULL REFERENCES quote_requests (id),
+    supplier_code TEXT NOT NULL REFERENCES suppliers (code),
+    sent_at TEXT NOT NULL,
+    reminded_at TEXT,
+    replied_at TEXT,
+    reply_file TEXT,
+    PRIMARY KEY (request_id, supplier_code)
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")
@@ -97,6 +133,9 @@ def seed(conn: sqlite3.Connection) -> dict[str, int]:
         "INSERT OR REPLACE INTO stock VALUES (?, ?)",
         [(p.sku, (i * 37) % 250) for i, p in enumerate(PRODUCTS)],
     )
+    conn.executemany("INSERT OR IGNORE INTO suppliers VALUES (?, ?, ?)", [(s.code, s.name, s.email) for s in SUPPLIERS])
+    conn.executemany("INSERT OR IGNORE INTO supplier_families VALUES (?, ?)", SUPPLIER_FAMILIES)
+    conn.execute("INSERT OR IGNORE INTO sim_clock VALUES (1, ?)", (sim_clock.START.strftime(sim_clock.FORMAT),))
     conn.commit()
     return row_counts(conn)
 

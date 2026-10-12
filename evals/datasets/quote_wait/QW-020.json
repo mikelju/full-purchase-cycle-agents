@@ -1,0 +1,88 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "outbox": [
+      "QR-0001-reminder-SUP-001.eml",
+      "QR-0001-reminder-SUP-003.eml",
+      "QR-0001-request-SUP-001.eml",
+      "QR-0001-request-SUP-003.eml"
+    ],
+    "requests": [
+      {
+        "quantity": 7,
+        "reference": "QR-0001",
+        "reminded": [
+          "SUP-001",
+          "SUP-003"
+        ],
+        "replied": [
+          "SUP-001"
+        ],
+        "sku": "GLV-VIN-L",
+        "status": "ready_for_decision"
+      }
+    ]
+  },
+  "id": "QW-020",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "steps": [
+    {
+      "lines": [
+        [
+          "GLV-VIN-L",
+          34
+        ]
+      ],
+      "op": "order"
+    },
+    {
+      "op": "scan"
+    },
+    {
+      "op": "tick"
+    },
+    {
+      "days": 2,
+      "op": "advance"
+    },
+    {
+      "op": "tick"
+    },
+    {
+      "op": "tick"
+    },
+    {
+      "days": 1,
+      "op": "advance"
+    },
+    {
+      "op": "tick"
+    },
+    {
+      "op": "receive",
+      "replies": [
+        {
+          "reference": "QR-0001",
+          "supplier": "SUP-001"
+        }
+      ]
+    },
+    {
+      "op": "tick"
+    },
+    {
+      "days": 2,
+      "op": "advance"
+    },
+    {
+      "op": "tick"
+    }
+  ],
+  "tags": [
+    "some_replied",
+    "repeated_tick"
+  ]
+}

@@ -163,3 +163,37 @@ def test_phase_05_files_are_tracked_and_hold_no_keys():
         assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
     # Outbox files are written under the ignored data/ folder at run time; none is versioned.
     assert not [name for name in tracked if "outbox" in name.split("/")[0:2]]
+
+
+def test_phase_06_files_are_tracked_and_hold_no_keys(tmp_path):
+    from purchase_cycle import db, quotes, sim_clock
+    from purchase_cycle.graph import sqlite_checkpointer
+
+    tracked = set(_tracked())
+    fixed = ["src/purchase_cycle/suppliers.py", "src/purchase_cycle/quotes.py"]
+    folders = (ROOT / "evals" / "datasets" / "quote_wait", ROOT / "examples" / "quotes")
+    files = sorted(str(p.relative_to(ROOT).as_posix()) for folder in folders for p in folder.rglob("*") if p.is_file())
+    assert len(files) >= 20 + 3  # the timelines, the sample orders and the two sample replies
+    for name in fixed + files:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
+    # Outbox emails are written at run time and never versioned: render a request and a reminder and scan them.
+    path, outbox = tmp_path / "business.db", tmp_path / "supplier_outbox"
+    conn = db.connect(path)
+    try:
+        db.seed(conn)
+        db.insert_order(conn, "CLI-001", "web_form", "received", [("GLV-NIT-XS", 12)])
+    finally:
+        conn.close()
+    saver = sqlite_checkpointer(tmp_path / "checkpoints.sqlite")
+    assert quotes.scan(path, saver, outbox)
+    conn = db.connect(path)
+    try:
+        sim_clock.advance(conn, days=3)
+    finally:
+        conn.close()
+    quotes.tick(path, saver, outbox)
+    written = sorted(outbox.glob("*.eml"))
+    assert {p.name.split("-")[2] for p in written} == {"request", "reminder"}
+    for email in written:
+        assert not SECRET_PATTERNS.search(email.read_text(encoding="utf-8", errors="ignore")), email.name
