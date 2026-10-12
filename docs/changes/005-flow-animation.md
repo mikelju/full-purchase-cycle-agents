@@ -22,7 +22,7 @@ Owner request 2026-10-12 to save the video and the GIF of the final version; del
 
 ## Plan
 - [x] 1. Copy the recordings and link them from the README; C1, C2.
-- [ ] 2. `npm run check`, review of the diff, push and PR to `main`; C3.
+- [x] 2. `npm run check`, review of the diff, push and PR to `main`; C3.
 
 ## Decisions
 The GIF is the README picture because GitHub renders it inline; the MP4 is kept for LinkedIn, where video plays better than GIF.
@@ -30,5 +30,13 @@ The GIF is the README picture because GitHub renders it inline; the MP4 is kept 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | local, 2026-10-12 | `main..b256842` | fresh lens | none | closed |
+
+Round 1 checked the README image and video paths, the alt text, the conceptual-flow sentence and the recordings with `ffprobe`; no findings.
+Out of scope, left for the start of phase 07: README line 9 still says phase 06 is in progress, and the master plan row 06 status predates the merge of PR #11.
 
 ## Delivery
+Results per criterion:
+- C1: met; `ffprobe` shows the GIF at 960x540 with 521 frames and infinite loop, and the MP4 at 1280x720 H.264, 521 frames, 34.73 s; both are the light version approved by the owner on 2026-10-12.
+- C2: met; the README shows the GIF before "What it does", links the MP4 and states the flow is conceptual.
+- C3: met; `npm run check` exit 0 at b256842 (731 tests passed), evidence in `.evidence/change-005/check-b256842.txt` (git-ignored).
