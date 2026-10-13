@@ -205,7 +205,8 @@ function renderConversations(entries) {
     line(div, "Outcome", entry.outcome);
     line(div, "Order", entry.order_id);
     if (entry.reply) {
-      const label = entry.status === "question" ? "Question to the customer" : "Reply to the customer";
+      const asking = entry.status === "question" || entry.status === "answer_rejected";
+      const label = asking ? "Question to the customer" : "Reply to the customer";
       line(div, label, "");
       const pre = document.createElement("pre");
       pre.textContent = entry.reply;

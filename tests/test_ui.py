@@ -65,11 +65,13 @@ def server(tmp_path, loopback_only):
     yield httpd
     httpd.shutdown()
     httpd.server_close()
+    httpd.app.close()
 
 
 def call(server, method: str, path: str, body=None, raw: bytes | None = None):
     data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
-    request = urllib.request.Request(server.base + path, data=data, method=method)
+    headers = {"Content-Type": "application/json"} if data is not None else {}
+    request = urllib.request.Request(server.base + path, data=data, method=method, headers=headers)
     try:
         with urllib.request.urlopen(request) as response:
             return response.status, json.loads(response.read())
@@ -264,6 +266,7 @@ def test_c4_web_form_and_email_questions_are_answered_through_the_answer_endpoin
     finally:
         httpd.shutdown()
         httpd.server_close()
+        httpd.app.close()
 
 
 def test_c5_the_sample_texts_give_the_same_outcomes_as_route(server, tmp_path):
@@ -370,3 +373,104 @@ def test_the_page_is_part_of_the_package_build(tmp_path):
     assert result.returncode == 0, result.stderr
     with zipfile.ZipFile(next(tmp_path.glob("*.whl"))) as wheel:
         assert "purchase_cycle/ui.html" in wheel.namelist()
+
+
+def _rewrite_status(root, status):
+    log = root / "conversations.jsonl"
+    entries = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+    entries[-1]["status"] = status
+    log.write_text("".join(json.dumps(e) + "\n" for e in entries), encoding="utf-8")
+
+
+def test_review_a_rejected_answer_leaves_the_thread_answerable(server):
+    doubt = "hi, pls send 20 boxes of nitrile gloves and 6 units of sharps container 5 litres thx"
+    _, asked = call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-004", "text": doubt})
+    assert asked["status"] == "question"
+    _rewrite_status(server.root, "answer_rejected")
+    last = call(server, "GET", "/api/conversations")[1][-1]
+    assert last["pending"] is True and last["can_answer"] is False
+    conn = db.connect(server.root / "purchase_cycle.db")
+    with conn:
+        conn.execute("UPDATE clarifications SET channel = 'email' WHERE thread_id = ?", (asked["thread_id"],))
+    conn.close()
+    last = call(server, "GET", "/api/conversations")[1][-1]
+    assert last["pending"] is True and last["can_answer"] is True
+
+
+def test_review_a_whatsapp_thread_takes_a_message_only_when_it_is_the_latest_pending_one(server):
+    doubt = "hi, pls send 20 boxes of nitrile gloves and 6 units of sharps container 5 litres thx"
+    _, asked = call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-004", "text": doubt})
+    conn = db.connect(server.root / "purchase_cycle.db")
+    with conn:
+        conn.execute(
+            "INSERT INTO clarifications (thread_id, channel, customer_code, question, round, status, updated_at) "
+            "VALUES ('web_form-newer', 'web_form', 'CLI-004', 'q', 1, 'pending', datetime('now', '+1 minute'))"
+        )
+    conn.close()
+    first = call(server, "GET", "/api/conversations")[1][0]
+    assert first["thread_id"] == asked["thread_id"] and first["pending"] is False
+
+
+def test_review_posts_from_other_origins_or_without_json_are_refused(server):
+    body = json.dumps({"channel": "whatsapp", "customer": "CLI-001", "text": "x"}).encode()
+
+    def post(headers):
+        request = urllib.request.Request(server.base + "/api/send", data=body, method="POST", headers=headers)
+        try:
+            with urllib.request.urlopen(request) as response:
+                return response.status
+        except urllib.error.HTTPError as error:
+            assert "error" in json.loads(error.read())
+            return error.code
+
+    json_type = {"Content-Type": "application/json"}
+    assert post(json_type | {"Origin": "http://evil.example"}) == 403
+    assert post(json_type | {"Origin": f"http://127.0.0.1:{server.server_port + 1}"}) == 403
+    assert post({"Content-Type": "text/plain"}) == 415
+    assert post({}) == 415
+    assert post(json_type | {"Origin": server.base}) == 200
+    assert post({"Content-Type": "application/json; charset=utf-8"}) == 200
+    assert post({"Content-Type": "application/json", "Origin": f"http://localhost:{server.server_port}"}) == 200
+
+
+def test_review_the_server_answers_while_an_idle_connection_is_open(server):
+    idle = socket.create_connection(("127.0.0.1", server.server_port))
+    try:
+        assert call(server, "GET", "/api/info")[0] == 200
+    finally:
+        idle.close()
+
+
+def test_review_a_truncated_log_line_is_skipped(server):
+    server.app.root.mkdir(parents=True, exist_ok=True)
+    (server.root / "conversations.jsonl").write_text('{"channel": "web_form", "thre\n', encoding="utf-8")
+    assert call(server, "GET", "/api/conversations") == (200, [])
+
+
+def test_review_a_parked_run_shows_as_under_review():
+    from purchase_cycle.recovery import NeedsReview
+
+    app = object.__new__(ui.UiApp)
+    customer = {"code": "CLI-001", "name": "Clinic"}
+    entry = app._entry("email", customer, "x", router.Route(router.EMAIL), "email-1", {}, NeedsReview("twice"))
+    assert entry["status"] == "under_review"
+
+
+def test_review_errors_show_the_class_not_the_text(server, monkeypatch):
+    def boom(payload):
+        raise RuntimeError("secret path C:/x")
+
+    monkeypatch.setattr(server.app, "send", boom)
+    request = urllib.request.Request(
+        server.base + "/api/send", data=b"{}", method="POST", headers={"Content-Type": "application/json"}
+    )
+    with pytest.raises(urllib.error.HTTPError) as error:
+        urllib.request.urlopen(request)
+    assert error.value.code == 500
+    message = json.loads(error.value.read())["error"]
+    assert "RuntimeError" in message and "secret" not in message
+
+
+def test_review_port_out_of_range_is_a_friendly_error(capsys):
+    assert ui.serve("replay", 70000) == 1
+    assert "port" in capsys.readouterr().err

@@ -48,6 +48,19 @@ Delivery is the work branch `cambio-006-local-test-ui`, created from `main` afte
 The page runs every input through `router.run_inbox`, so it exercises the same path as `purchase-cycle route` and gets idempotency, duplicate handling and WhatsApp resumption for free.
 Each send gets its own inbox folder under `data/ui/inbox/`, which also leaves a record of what was sent.
 Replay is not the default, unlike Studio in change 004: the point of the page is typing new orders, which only live mode understands.
+Replay reuses `studio.StudioModelClient` with `orders_demo.jsonl` plus `studio.jsonl`, so it answers the sample texts and the Studio scenes.
+Sample 06 (a re-delivered message id) is excluded from the C5 test, because the page gives every send a new message id.
+WhatsApp accepts an optional `"type": "image"` and the page a "send a photo" checkbox, so sample 05 can be sent.
+Extra endpoints: `/api/info` (mode) and `/api/conversations` (reads the log `data/ui/conversations.jsonl`); every request also passes a Host header check (127.0.0.1 or localhost).
+A WhatsApp answer sent to `/api/answer` returns 400, because it is a new message from the same customer.
+Request limits: 100 KB per request, 4000 characters per text, 50 lines per form.
+An occupied port gives a friendly error, and so does a port outside 1-65535.
+Review round 1 decisions: a POST with an `Origin` header other than `http://127.0.0.1:<port>` or `http://localhost:<port>` gets 403, and a POST whose `Content-Type` is not `application/json` gets 415 (CSRF, CWE-352).
+The server is a `ThreadingHTTPServer` with a 30 s handler timeout, so an idle pre-connect socket does not block the page; graph runs and log writes stay serialised by `UiApp.lock`, and reads tolerate a half-written log line.
+An `answer_rejected` entry counts as pending like `question`, and a WhatsApp thread shows its answer control only when it is the customer's latest pending clarification, as the router decides.
+A run parked by recovery shows as `under_review` (status only, no notice text).
+A 500 returns the exception class and a generic message; the detail goes to the server's stderr.
+The `outcome` of a failed run still carries the first line of the exception text (shown on the local page and kept in the log).
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |

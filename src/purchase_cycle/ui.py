@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate, make_msgid
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -38,6 +38,7 @@ from purchase_cycle.llm import (
     InvalidModelOutput,
     MissingRecording,
 )
+from purchase_cycle.recovery import NeedsReview
 from purchase_cycle.studio import StudioModelClient
 from purchase_cycle.web_form import build_web_form_graph
 from purchase_cycle.whatsapp_order import build_whatsapp_order_graph, phone_digits
@@ -51,6 +52,8 @@ HOST = "127.0.0.1"
 MAX_BODY = 100_000  # bytes of one request
 MAX_TEXT = 4000  # characters of one email body, WhatsApp text or answer
 MAX_LINES = 50
+REQUEST_TIMEOUT = 30  # seconds a connection may sit idle before the handler drops it
+PENDING_STATUSES = ("question", "answer_rejected")  # entries that leave the clarification waiting
 KNOWN_ANSWER_ERRORS = (
     MissingRecording,
     InvalidModelOutput,
@@ -70,7 +73,7 @@ class BadRequest(Exception):
 
 
 class UiApp:
-    """The database, graphs and conversation log behind the page; one request runs at a time."""
+    """The database, graphs and conversation log behind the page; graph runs and log writes go one at a time."""
 
     def __init__(self, mode: str, root: Path | str = UI_DIR):
         if mode not in UI_MODES:
@@ -98,11 +101,14 @@ class UiApp:
             conn.close()
         self.graphs = self._build_graphs(catalog)
 
+    def close(self) -> None:
+        self.checkpointer.conn.close()
+
     def _build_graphs(self, catalog) -> dict:
         def client(task):
             return StudioModelClient(self.mode, catalog, RECORDINGS_PATH, task=task)
 
-        checkpointer = sqlite_checkpointer(self.root / "checkpoints.db")
+        checkpointer = self.checkpointer = sqlite_checkpointer(self.root / "checkpoints.db")
         clarification = ClarificationClients(client(CLARIFICATION_QUESTION), client(CLARIFICATION_ANSWER))
         return {
             "web_form": build_web_form_graph(
@@ -160,15 +166,31 @@ class UiApp:
         entries = []
         if self.log_path.exists():
             with self.log_path.open(encoding="utf-8") as fh:
-                entries = [json.loads(line) for line in fh if line.strip()]
+                for line in fh:
+                    try:
+                        entry = json.loads(line)
+                    except json.JSONDecodeError:  # a line cut short, for instance by a write in progress
+                        continue
+                    if isinstance(entry, dict):
+                        entries.append(entry)
         pending = {
             row["thread_id"]: row for row in self._query("SELECT * FROM clarifications WHERE status = 'pending'")
         }
+        conn = db.connect(self.db_path)
+        try:  # the router answers a WhatsApp message only for the customer's latest pending clarification
+            latest = {
+                code: db.latest_pending_clarification(conn, code)
+                for code in {row["customer_code"] for row in pending.values()}
+            }
+        finally:
+            conn.close()
         last = {entry["thread_id"]: i for i, entry in enumerate(entries) if entry.get("thread_id")}
         for i, entry in enumerate(entries):
             row = pending.get(entry.get("thread_id"))
-            entry["pending"] = bool(row) and last[entry["thread_id"]] == i and entry["status"] == "question"
-            entry["can_answer"] = entry["pending"] and entry["channel"] != "whatsapp"
+            entry["pending"] = bool(row) and last[entry["thread_id"]] == i and entry.get("status") in PENDING_STATUSES
+            if entry["pending"] and row["channel"] == "whatsapp":
+                entry["pending"] = latest[row["customer_code"]]["thread_id"] == row["thread_id"]
+            entry["can_answer"] = entry["pending"] and row["channel"] != "whatsapp"
         return entries
 
     # Writes --------------------------------------------------------------------------------------------------------
@@ -182,7 +204,9 @@ class UiApp:
     def _entry(self, channel: str, customer: dict, sent: str, routed, thread_id, state, error) -> dict:
         state = state or {}
         paused = state.get("__interrupt__")
-        if error is not None:
+        if isinstance(error, NeedsReview):
+            status = "under_review"
+        elif error is not None:
             status = "failed"
         elif routed.kind == router.REJECTED:
             status = "rejected"
@@ -336,6 +360,7 @@ def _text(value, missing: str) -> str:
 class Handler(BaseHTTPRequestHandler):
     app: UiApp  # set by `make_server`
     server_version = "purchase-cycle-ui"
+    timeout = REQUEST_TIMEOUT
 
     def log_message(self, format, *args):  # quiet; the page shows what happened
         pass
@@ -353,6 +378,17 @@ class Handler(BaseHTTPRequestHandler):
 
     def _error(self, status: int, message: str) -> None:
         self._json(status, {"error": message})
+
+    def _server_error(self, error: Exception) -> None:
+        # The page gets the class only; the detail (paths, model output) stays in this process's stderr.
+        print(f"Error: {type(error).__name__}: {error}", file=sys.stderr)
+        self._error(HTTPStatus.INTERNAL_SERVER_ERROR, f"{type(error).__name__}: the request failed; see the server log")
+
+    def _origin_ok(self) -> bool:
+        # A page on another site can send a form POST to this server without a preflight (CSRF).
+        origin = self.headers.get("Origin")
+        port = self.server.server_port
+        return origin is None or origin in (f"http://127.0.0.1:{port}", f"http://localhost:{port}")
 
     def _host_ok(self) -> bool:
         # A page on another site must not reach this server through the browser (DNS rebinding).
@@ -376,12 +412,17 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(HTTPStatus.OK, routes[path]())
             self._error(HTTPStatus.NOT_FOUND, f"nothing at {path}")
         except Exception as error:  # a failed request never stops the server
-            self._error(HTTPStatus.INTERNAL_SERVER_ERROR, f"{type(error).__name__}: {error}")
+            self._server_error(error)
 
     def do_POST(self):
         try:
             if not self._host_ok():
                 return self._error(HTTPStatus.FORBIDDEN, "only 127.0.0.1 and localhost are served")
+            if not self._origin_ok():
+                return self._error(HTTPStatus.FORBIDDEN, "requests from other origins are refused")
+            content_type = (self.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
+            if content_type != "application/json":
+                return self._error(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "send the body as application/json")
             path = self.path.split("?", 1)[0]
             actions = {"/api/send": self.app.send, "/api/answer": self.app.answer}
             if path not in actions:
@@ -402,19 +443,23 @@ class Handler(BaseHTTPRequestHandler):
         except BadRequest as error:
             self._error(error.status, str(error))
         except Exception as error:  # a failed graph run never stops the server
-            self._error(HTTPStatus.INTERNAL_SERVER_ERROR, f"{type(error).__name__}: {error}")
+            self._server_error(error)
 
 
-def make_server(mode: str, port: int = 8765, root: Path | str = UI_DIR) -> HTTPServer:
+def make_server(mode: str, port: int = 8765, root: Path | str = UI_DIR) -> ThreadingHTTPServer:
     """The server bound to 127.0.0.1 on `port` (0 picks a free one), with its app ready; `serve_forever` runs it."""
     app = UiApp(mode, root)
     handler = type("BoundHandler", (Handler,), {"app": app})
-    server = HTTPServer((HOST, port), handler)
+    server = ThreadingHTTPServer((HOST, port), handler)
+    server.daemon_threads = True
     server.app = app
     return server
 
 
 def serve(mode: str, port: int) -> int:
+    if not 1 <= port <= 65535:
+        print(f"Error: --port must be between 1 and 65535, not {port}", file=sys.stderr)
+        return 1
     try:
         server = make_server(mode, port)
     except OSError as error:
@@ -429,4 +474,5 @@ def serve(mode: str, port: int) -> int:
         print()
     finally:
         server.server_close()
+        server.app.close()
     return 0
