@@ -135,6 +135,28 @@ def test_validation_rejects_mutated_numbers_and_extra_lines_written_by_name(plan
         assert dd.validate_document(planned, {"id": planned["id"], "body": body}), body[:80]
 
 
+def test_validation_rejects_a_catalog_name_inside_a_labelled_name_written_as_an_extra_line(plan):
+    by_sku = {p.sku: p for p in PRODUCTS}
+    for planned in plan:
+        wanted = {x["sku"] for x in planned["lines"]}
+        for line in planned["lines"]:
+            if line["written_as"] != "name":
+                continue
+            inner = next(
+                (
+                    p
+                    for p in PRODUCTS
+                    if p.sku not in wanted and dd.match_key(p.name) in dd.match_key(by_sku[line["sku"]].name)
+                ),
+                None,
+            )
+            if inner is not None:
+                body = good_body(planned) + "\n" + inner.name + " 1 1.00 1.00"
+                assert dd.validate_document(planned, {"id": planned["id"], "body": body})
+                return
+    pytest.fail("no planned document has a labelled name that contains another catalog name")
+
+
 def test_delivery_notes_state_no_price(plan):
     planned = next(p for p in plan if p["kind"] == "delivery_note")
     body = good_body(planned) + "\nTotal 12.50 EUR"

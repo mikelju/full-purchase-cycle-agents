@@ -299,12 +299,12 @@ def validate_document(planned: dict, text: dict) -> list[str]:
     for sku, pattern in SKU_PATTERNS.items():
         if sku not in wanted and pattern.search(low):
             errors.append(f"body names {sku}, which is not in the label")
-    wanted_names = [match_key(p.name) for p in PRODUCTS if p.sku in wanted]
+    # A catalog name inside the name of a labelled product is not another line: cut the labelled names out first.
+    rest = key
+    for name in sorted((match_key(p.name) for p in PRODUCTS if p.sku in wanted), key=len, reverse=True):
+        rest = rest.replace(name, " ")
     for product in PRODUCTS:
-        name = match_key(product.name)
-        if product.sku in wanted or any(name in longer for longer in wanted_names):
-            continue  # a name inside the name of a labelled product is not another line
-        if _has_token(key, name):
+        if product.sku not in wanted and _has_token(rest, match_key(product.name)):
             errors.append(f"body names the product {product.sku}, which is not in the label")
     if invoice and "eur" not in low:
         errors.append("body does not name the currency EUR")
