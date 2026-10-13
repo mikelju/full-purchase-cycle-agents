@@ -1,7 +1,7 @@
 # Phase 07 - Quotes, decision: plan and results
 
-Status: draft, waiting for the spec approval
-Spec: `spec.md` (in review, not frozen yet)
+Status: in execution
+Spec: `spec.md` (approved 2026-10-13, frozen)
 Base: branch `fase-07-decision-presupuestos` from `main` at commit `723109c`.
 
 ## Design notes

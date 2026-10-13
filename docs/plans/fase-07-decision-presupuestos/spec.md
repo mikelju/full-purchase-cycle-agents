@@ -1,7 +1,7 @@
 # Phase 07 - Quotes, decision: specification
 
-Status: spec in review (pending owner approval)
-Approved by the owner:
+Status: approved
+Approved by the owner: 2026-10-13 (in chat, D11 option A)
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
@@ -147,6 +147,7 @@ The recommended option is marked; the scope and criteria above are written for i
 
 ## Owner decisions (2026-10-13)
 The owner chose D1 explicitly and accepted the recommended option for everything else on 2026-10-13.
+- D11 - Owner audit of the `offer_extraction` labels: option A, no owner audit (approved with the spec on 2026-10-13).
 - D1 - Offer extraction: Claude Haiku 4.5 over each reply body with record and replay as in phases 02 and 03; tests and evaluations run in replay with no key, and live mode records.
 - D2 - Comparison: deterministic, no model; unusable offers discarded and flagged; full-quantity offers first, then the lowest total, then the shorter lead time, then the supplier code; partial offers shown and chosen only when no full offer exists; no split orders.
 - D3 - Human approval: a LangGraph `interrupt` as in phase 04, resumed from the command line with approve, reject or choose another supplier's offer; reject closes the request as `rejected` with no purchase order and no re-quote; the recommendation is shown with its reason.
