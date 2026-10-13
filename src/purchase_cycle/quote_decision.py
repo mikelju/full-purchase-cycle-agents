@@ -1,9 +1,10 @@
 """Quotes module, decision step: extract one offer per supplier reply, check it and store it."""
 
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 
-from purchase_cycle import db, email_order, llm, quotes
+from purchase_cycle import db, email_order, llm, quotes, sim_clock
 
 CURRENCY = "EUR"
 CHANNEL = "quotes"
@@ -146,3 +147,67 @@ def extract_offers(db_path: Path | str, request_id: int, client: llm.ModelClient
         return stored_offers(conn, request_id)
     finally:
         conn.close()
+
+
+def lead_days(offer: dict, start: datetime) -> int:
+    """Lead time in calendar days from the start; a null working days flag counts calendar days."""
+    reached = sim_clock.add_days(start, offer["lead_time_days"], bool(offer["working_days"]))
+    return (reached - start).days
+
+
+def _entry(offer: dict, requested: int, start: datetime) -> dict:
+    full = offer["quantity"] >= requested
+    quantity = requested if full else offer["quantity"]
+    return {
+        "supplier": offer["supplier_code"],
+        "full": full,
+        "quantity": quantity,
+        "total": round(offer["net_unit_price"] * quantity, 2),
+        "lead": lead_days(offer, start),
+    }
+
+
+def _describe(entry: dict, requested: int) -> str:
+    kind = "full" if entry["full"] else f"partial {entry['quantity']} of {requested}"
+    return f"{entry['supplier']} {CURRENCY} {entry['total']:.2f} ({kind}, {entry['lead']} days)"
+
+
+def compare_offers(offers: list[dict], requested: int, start: datetime) -> dict:
+    """Pick the offer to recommend by the fixed rule; no model is called.
+
+    Order: full offers first, then the lowest total, the shortest lead time in calendar days from `start`
+    and the lower supplier code.
+    The result names the deciding rule: full_quantity, lowest_total, shortest_lead_time, supplier_code,
+    only_usable_offer, partial_only (no full offer is usable) or none.
+    """
+    usable = [o for o in offers if o["usable"]]
+    if not usable:
+        why = ", ".join(f"{o['supplier_code']} {o['reason']}" for o in offers) or "no supplier replied"
+        return {"supplier": None, "rule": "none", "quantity": None, "total": None, "reason": f"No usable offer: {why}."}
+    entries = sorted(
+        (_entry(o, requested, start) for o in usable),
+        key=lambda e: (not e["full"], e["total"], e["lead"], e["supplier"]),
+    )
+    best = entries[0]
+    if len(entries) == 1:
+        rule, text = "only_usable_offer", "it is the only usable offer"
+    else:
+        second = entries[1]
+        if best["full"] != second["full"]:
+            rule, text = "full_quantity", "it is the only offer that covers the full quantity"
+        elif best["total"] != second["total"]:
+            rule, text = "lowest_total", "it has the lowest total"
+        elif best["lead"] != second["lead"]:
+            rule, text = "shortest_lead_time", "totals are equal and it has the shortest lead time"
+        else:
+            rule, text = "supplier_code", "total and lead time are equal and it has the lower supplier code"
+    if not best["full"]:
+        rule, text = "partial_only", f"no usable offer covers the full quantity and {text}"
+    compared = "; ".join(_describe(e, requested) for e in entries)
+    return {
+        "supplier": best["supplier"],
+        "rule": rule,
+        "quantity": best["quantity"],
+        "total": best["total"],
+        "reason": f"Recommended {best['supplier']}: {text}. Compared: {compared}.",
+    }

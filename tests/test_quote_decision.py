@@ -1,6 +1,7 @@
 """C3: offer extraction, usability and net price, and the `quote_offers` storage."""
 
 import json
+from datetime import datetime
 
 import pytest
 
@@ -155,3 +156,101 @@ def test_the_prompt_holds_the_request_and_the_body_without_headers(tmp_path):
     client = llm.ModelClient("replay", [], task=llm.OFFER_EXTRACTION)
     assert "GLV-" not in client.system_prompt  # no catalog in the instructions
     assert client.recordings_path.name == "offer_extraction.jsonl"
+
+
+# C4: the comparison rule, over fixed offer sets and with no model client.
+START = datetime(2026, 10, 12, 9, 0)  # a Monday
+
+
+def _offer(supplier, quantity=12, net=4.0, lead=5, working=False, usable=True, reason=None):
+    return {
+        "supplier_code": supplier,
+        "quantity": quantity,
+        "net_unit_price": net,
+        "lead_time_days": lead,
+        "working_days": None if working is None else int(working),
+        "usable": int(usable),
+        "reason": reason,
+    }
+
+
+def _pick(offers, quantity=12):
+    return quote_decision.compare_offers(offers, quantity, START)
+
+
+def test_a_full_offer_beats_a_cheaper_partial_one():
+    result = _pick([_offer("SUP-001", quantity=6, net=1.0), _offer("SUP-002", net=9.0)])
+    assert (result["supplier"], result["rule"], result["quantity"]) == ("SUP-002", "full_quantity", 12)
+    assert "SUP-001" in result["reason"] and "SUP-002" in result["reason"]
+
+
+def test_among_full_offers_the_lowest_total_wins():
+    result = _pick([_offer("SUP-001", net=4.2), _offer("SUP-002", net=4.0, lead=30), _offer("SUP-003", net=4.1)])
+    assert (result["supplier"], result["rule"]) == ("SUP-002", "lowest_total")
+    assert "48.00" in result["reason"] and "49.20" in result["reason"]
+
+
+def test_a_full_offer_over_the_requested_quantity_is_priced_on_the_requested_quantity():
+    result = _pick([_offer("SUP-001", quantity=100, net=4.0), _offer("SUP-002", net=4.1)])
+    assert (result["supplier"], result["total"]) == ("SUP-001", 48.0)
+
+
+def test_equal_totals_go_to_the_shorter_lead_time_in_calendar_days():
+    # 3 working days from Monday is Thursday (3 calendar days); 4 calendar days is later.
+    result = _pick([_offer("SUP-001", lead=4), _offer("SUP-002", lead=3, working=True)])
+    assert (result["supplier"], result["rule"]) == ("SUP-002", "shortest_lead_time")
+
+
+def test_working_days_over_a_weekend_count_as_more_calendar_days():
+    # 5 working days from Monday end the next Monday: 7 calendar days, later than 6 calendar days.
+    result = _pick([_offer("SUP-001", lead=5, working=True), _offer("SUP-002", lead=6)])
+    assert result["supplier"] == "SUP-002"
+
+
+def test_a_null_working_days_flag_counts_calendar_days():
+    result = _pick([_offer("SUP-001", lead=6, working=None), _offer("SUP-002", lead=5, working=True)])
+    assert result["supplier"] == "SUP-001"
+
+
+def test_equal_total_and_lead_time_go_to_the_lower_supplier_code():
+    result = _pick([_offer("SUP-003"), _offer("SUP-001"), _offer("SUP-002")])
+    assert (result["supplier"], result["rule"]) == ("SUP-001", "supplier_code")
+
+
+def test_a_partial_offer_is_recommended_only_when_no_full_offer_is_usable():
+    offers = [
+        _offer("SUP-001", quantity=6, net=5.0),
+        _offer("SUP-002", quantity=8, net=3.0),
+        _offer("SUP-003", usable=False),
+    ]
+    result = _pick(offers)
+    assert (result["supplier"], result["rule"], result["quantity"], result["total"]) == (
+        "SUP-002",
+        "partial_only",
+        8,
+        24.0,
+    )
+
+
+def test_a_single_usable_offer_is_recommended_by_that_rule():
+    result = _pick([_offer("SUP-001", usable=False, reason="declined"), _offer("SUP-002")])
+    assert (result["supplier"], result["rule"]) == ("SUP-002", "only_usable_offer")
+
+
+def test_no_usable_offer_gives_no_recommendation_and_names_the_reasons():
+    result = _pick(
+        [_offer("SUP-001", usable=False, reason="declined"), _offer("SUP-002", usable=False, reason="currency")]
+    )
+    assert (result["supplier"], result["rule"]) == (None, "none")
+    assert "declined" in result["reason"] and "currency" in result["reason"]
+    assert _pick([])["supplier"] is None
+
+
+def test_comparing_calls_no_model(tmp_path):
+    client = _client_without_calls(tmp_path)
+    _pick([_offer("SUP-001"), _offer("SUP-002", net=3.0)])
+    assert client.calls == 0
+
+
+def _client_without_calls(tmp_path):
+    return llm.ModelClient("replay", [], recordings_path=tmp_path / "none.jsonl", task=llm.OFFER_EXTRACTION)
