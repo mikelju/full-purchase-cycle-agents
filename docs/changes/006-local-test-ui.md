@@ -1,0 +1,53 @@
+# 006 - Local test page for the orders channels
+
+Status: in progress
+
+## Contract
+Goal and reason:
+The owner wants to try the orders module by hand from a browser, without preparing files or typing CLI commands.
+One local page lets the owner pick a channel (web form, email or WhatsApp) and a seeded customer, browse the catalog, send an order and read what the system answers: stored order, clarification question, not an order, under review or rejected.
+When the system asks a question, the owner answers it from the same page and the paused order resumes.
+Everything stays simulated: the page writes the same inputs the channels already read and runs them through the existing router and graphs.
+The owner decided on 2026-10-13 that this is a standalone change, not a phase, and that a real WhatsApp connection (Meta Cloud API with its free test number) is a later step.
+Out of scope:
+The graphs, prompts, recordings, datasets, evaluations and baselines.
+The quotes module and any later module; a real WhatsApp, email or web connection; authentication, deployment or access from another machine.
+Sample buttons, styling beyond a plain usable page, and a mobile layout.
+Constraints / decisions that need the owner:
+- No new dependency: the server uses the Python standard library (`http.server`) and the page is one HTML file with plain JavaScript, no CDN.
+- Model cost: live mode (Claude Haiku 4.5) is the default, because free text only works live; a few cents per order, and it needs the model key in `.env`.
+  `--mode replay` costs nothing but only understands the recorded sample texts of `examples/orders/`.
+- LangSmith trace cost: none; the command forces tracing off, as the Studio module does, so the page does not spend the trace quota.
+Current authorization and limits:
+Owner request 2026-10-13 to draft this contract; approved by the owner on 2026-10-13.
+Delivery is the work branch `cambio-006-local-test-ui`, created from `main` after phase 07 was merged (PR #13), and a PR to `main`.
+
+| ID | Observable criterion | Evidence when verifying |
+|---|---|---|
+| C1 | `purchase-cycle ui [--mode live\|replay] [--port N]` serves the page on `127.0.0.1` only, on its own database `data/ui/purchase_cycle.db` (seeded on first use), checkpoints and outbox under `data/ui/`, never the business database; LangSmith tracing is forced off | `tests/test_ui.py`; `git diff` |
+| C2 | The page lists the catalog (SKU, name, family, sale unit, price and stock) with a text filter, and the seeded customers with the email and phone each channel uses to identify them | `tests/test_ui.py` (JSON endpoints); owner walkthrough |
+| C3 | Sending from the page writes one input in the channel's own format (web form JSON with catalog-assisted lines, `.eml` from the customer's email, WhatsApp message from the customer's phone) and runs it through `router.run_inbox`; the answer shows the route, the thread id, the outcome and the reply text the customer would get | `tests/test_ui.py` |
+| C4 | A clarification question shows on the page; for WhatsApp the answer is a new message from the same phone, as the router already resumes it, and for web form and email the answer resumes the thread as `clarify answer` does; the resumed order shows its outcome | `tests/test_ui.py` |
+| C5 | In replay, with no key and the network blocked, the sample texts of `examples/orders/` sent through the page give the same outcomes as `purchase-cycle route` on that folder: stored orders, the WhatsApp doubt paused and then stored with the recorded answer, and the photo message answered as text only | `tests/test_ui.py` |
+| C6 | A malformed request (unknown channel or customer, empty text, missing answer) returns a JSON error that the page shows, never a traceback; a failed graph run shows its error and keeps the server running | `tests/test_ui.py` |
+| C7 | README section "Try the orders by hand": command, URL, live and replay modes with their cost, how to answer a question, how to start over, and the limits | README; followed step by step in item 4 |
+| C8 | Owner walkthrough in live mode: one order per channel, one clarification answered from the page, and the stored orders visible in the outcome | Owner sees it; notes in Delivery |
+| C9 | `npm run check` exits 0 and the replay evaluations are unchanged | Command output |
+
+## Plan
+- [ ] 1. `tests/test_ui.py` first (failing), then `src/purchase_cycle/ui.py` (server, JSON endpoints, input writers, router call and resume) and the `ui` CLI command; C1 to C6.
+- [ ] 2. The page `src/purchase_cycle/ui.html`: catalog with filter, channel and customer pickers, one input form per channel, the conversation with outcomes and the answer box; C2 to C4.
+- [ ] 3. README section and `.gitignore` for `data/ui/`; C7.
+- [ ] 4. Owner walkthrough in live mode; C8.
+- [ ] 5. Adversarial review, `npm run check`, push and PR to `main`; C9.
+
+## Decisions
+The page runs every input through `router.run_inbox`, so it exercises the same path as `purchase-cycle route` and gets idempotency, duplicate handling and WhatsApp resumption for free.
+Each send gets its own inbox folder under `data/ui/inbox/`, which also leaves a record of what was sent.
+Replay is not the default, unlike Studio in change 004: the point of the page is typing new orders, which only live mode understands.
+
+## Adversarial review
+| Round | Backend | Range | Lenses | Findings | Status |
+|---|---|---|---|---|---|
+
+## Delivery
