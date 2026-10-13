@@ -1,14 +1,17 @@
-"""C12: `quotes-demo` runs the sample timeline, each step in its own process, with the network blocked."""
+"""C12 and C15: `quotes-demo` runs the sample timeline to the purchase order, each step in its own process, with the network blocked."""
 
 import os
 import sqlite3
 import subprocess
 import sys
+from pathlib import Path
 
 from test_orders_demo import SITECUSTOMIZE
 
+PHASE_06_OUTPUT = Path(__file__).parent / "golden" / "quotes_demo_phase06.txt"  # the output before phase 07, header left out
 
-def test_quotes_demo_ends_ready_after_a_reminder_and_no_offers_with_the_network_blocked(tmp_path):
+
+def test_quotes_demo_ends_with_an_order_and_no_offers_listed_with_the_network_blocked(tmp_path):
     site = tmp_path / "site"
     site.mkdir()
     (site / "sitecustomize.py").write_text(SITECUSTOMIZE, encoding="utf-8")
@@ -23,12 +26,19 @@ def test_quotes_demo_ends_ready_after_a_reminder_and_no_offers_with_the_network_
     noted = log.read_text(encoding="utf-8").split()
     assert "network" not in noted
     steps = [line for line in out.splitlines() if line.startswith("== step ")]
-    assert len(steps) == 8
+    assert len(steps) == 11
     assert noted.count("process") == 1 + len(steps)  # the demo and one process per step
     for label in ("simulated time:", "requests started:", "emails written:", "replies received:", "requests:"):
         assert out.count(label) >= len(steps), label
-    assert "QR-0001  sku=GLV-NIT-XS  quantity=12  status=ready_for_decision" in out
+    # The phase 06 steps and their summary print as before the phase, apart from the header line.
+    before = PHASE_06_OUTPUT.read_text(encoding="utf-8").splitlines()
+    assert out.splitlines()[1 : 1 + len(before)] == before
+    assert "QR-0001  sku=GLV-NIT-XS  quantity=12  status=ordered" in out
     assert "QR-0002  sku=GLV-SURG-NEO-6.5  quantity=4  status=no_offers" in out
+    assert "recommended: SUP-002" in out and "SUP-003  usable  quantity=8" in out
+    assert "waiting for a person (no offers, no order): QR-0002" in out
+    assert "QR-0001 ordered  PO-0001  supplier=SUP-002" in out
+    assert "recommended=SUP-002  order=PO-0001" in out
 
     conn = sqlite3.connect(workdir / "business.db")
     try:
@@ -43,10 +53,17 @@ def test_quotes_demo_ends_ready_after_a_reminder_and_no_offers_with_the_network_
         parked = conn.execute("SELECT source, step FROM failures WHERE status = 'needs_review'").fetchall()
     finally:
         conn.close()
-    assert statuses == {1: "ready_for_decision", 2: "no_offers"}
+    assert statuses == {1: "ordered", 2: "no_offers"}
     assert reminded >= 1 and replied_after == 1  # a reminder went out, and a reply came after it
     assert parked == [("QR-0002", "quote_wait")]
+    conn = sqlite3.connect(workdir / "business.db")
+    try:
+        orders = conn.execute("SELECT request_id, supplier_code, quantity, status FROM purchase_orders").fetchall()
+    finally:
+        conn.close()
+    assert orders == [(1, "SUP-002", 12, "issued")]
     assert sorted(p.name for p in (workdir / "supplier_outbox").iterdir()) == [
+        "PO-0001-SUP-002.eml",
         "QR-0001-reminder-SUP-001.eml",
         "QR-0001-reminder-SUP-003.eml",
         "QR-0001-request-SUP-001.eml",

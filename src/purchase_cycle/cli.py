@@ -41,6 +41,7 @@ DEMO_ORDERS = config.ROOT / "examples" / "orders"
 ORDERS_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "orders_demo.jsonl"  # one file for every task
 ORDERS_DEMO_WORKDIR = config.DATA_DIR / "orders-demo"
 DEMO_QUOTES = config.ROOT / "examples" / "quotes"
+QUOTES_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "quotes_demo.jsonl"  # the offer extraction of the demo
 QUOTES_DEMO_WORKDIR = config.DATA_DIR / "quotes-demo"
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
 EXCEPTIONS_RECORDINGS = {
@@ -267,7 +268,7 @@ def _quotes_state(files: dict) -> dict:
 
 
 def cmd_quotes_demo(args) -> int:
-    """The sample orders and supplier replies through scan, clock, receive and tick, each step in its own process."""
+    """The sample orders and replies through scan, clock, receive, tick, decide and approve, each step in its own process."""
     import subprocess
 
     examples, workdir = Path(args.examples), Path(args.workdir)
@@ -311,6 +312,21 @@ def cmd_quotes_demo(args) -> int:
         ["clock", "advance", "--days", "2"],
         ["quotes", "tick", *paths, *outbox],
     ]
+    waiting_steps = len(steps)
+    steps += [  # the decision: the offers are extracted and compared, then the operator approves the recommendation
+        [
+            "quotes",
+            "decide",
+            "--mode",
+            args.mode,
+            "--recordings",
+            str(QUOTES_DEMO_RECORDINGS),
+            "--checkpoints",
+            str(files["checkpoints"]),
+        ],
+        ["quotes", "approve", "QR-0001", *paths, *outbox],
+        ["quotes", "list"],
+    ]
     before = _quotes_state(files)
     for n, step in enumerate(steps, start=1):
         run = subprocess.run(
@@ -342,21 +358,37 @@ def cmd_quotes_demo(args) -> int:
                 f"replied={','.join(row['replied']) or '-'}  "
                 f"reminded={','.join(after['reminded'].get(row['reference'], [])) or '-'}"
             )
+        if n > waiting_steps:
+            print("step output:")
+            for line in run.stdout.splitlines():
+                print(f"  {line}")
+        if n == waiting_steps:
+            ready = [
+                r["reference"]
+                for r in after["requests"]
+                if r["status"] == "ready_for_decision" and r["reference"] in after["reminded"]
+            ]
+            no_offers = [r["reference"] for r in after["requests"] if r["status"] == "no_offers"]
+            print()
+            print("summary:")
+            print(f"ready_for_decision after a reminder: {', '.join(ready) or 'none'}")
+            print(f"no_offers, parked in failures for review: {', '.join(no_offers) or 'none'}")
+            if not ready or not no_offers:
+                print(
+                    "Error: the demo did not end with a request ready after a reminder and one with no offers",
+                    file=sys.stderr,
+                )
+                return 1
         before = after
-    ready = [
-        r["reference"]
-        for r in before["requests"]
-        if r["status"] == "ready_for_decision" and r["reference"] in before["reminded"]
-    ]
-    no_offers = [r["reference"] for r in before["requests"] if r["status"] == "no_offers"]
+    ordered = [r["reference"] for r in before["requests"] if r["status"] == "ordered"]
+    waiting = [r["reference"] for r in before["requests"] if r["status"] == "no_offers"]
+    orders = [name for name in before["outbox"] if name.startswith("PO-")]
     print()
-    print("summary:")
-    print(f"ready_for_decision after a reminder: {', '.join(ready) or 'none'}")
-    print(f"no_offers, parked in failures for review: {', '.join(no_offers) or 'none'}")
-    if not ready or not no_offers:
-        print(
-            "Error: the demo did not end with a request ready after a reminder and one with no offers", file=sys.stderr
-        )
+    print("decision summary:")
+    print(f"ordered: {', '.join(ordered) or 'none'}  purchase order emails: {', '.join(orders) or 'none'}")
+    print(f"no_offers, listed for a person: {', '.join(waiting) or 'none'}")
+    if len(ordered) != 1 or len(waiting) != 1:
+        print("Error: the demo did not end with one ordered request and one listed for a person", file=sys.stderr)
         return 1
     return 0
 
@@ -1316,6 +1348,9 @@ def main(argv=None) -> int:
     quotes_demo.add_argument("--examples", default=str(DEMO_QUOTES), help="folder of sample orders and replies")
     quotes_demo.add_argument(
         "--workdir", default=str(QUOTES_DEMO_WORKDIR), help="folder for the demo database, checkpoints and outbox"
+    )
+    quotes_demo.add_argument(
+        "--mode", choices=config.MODES, default="replay", help="offer extraction mode; record needs ANTHROPIC_API_KEY"
     )
     quotes_demo.set_defaults(handler=cmd_quotes_demo)
 
