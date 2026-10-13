@@ -29,7 +29,7 @@ UNKNOWN_ORDER = "unknown_order"
 SUPPLIER_MISMATCH = "supplier_mismatch"
 DUPLICATE = "duplicate"
 
-DISCREPANCY_COLUMNS = ("sku", "type", "expected", "found", "unit_amount", "amount")
+DISCREPANCY_COLUMNS = ("sku", "type", "expected", "found", "unit_amount", "amount", "text")
 DOCUMENT_TEXT = "Supplier document:\n{text}"
 PO_REFERENCE = re.compile(r"\bPO\s*-?\s*0*(\d+)\b", re.IGNORECASE)
 
@@ -221,7 +221,7 @@ def invoice_reference(invoice_id: int) -> str:
 
 def _lines(conn: sqlite3.Connection, doc_id: int) -> list[dict]:
     rows = conn.execute(
-        "SELECT sku, quantity, unit_price, line_total FROM document_lines WHERE document_id = ? ORDER BY line_no",
+        "SELECT sku, product_text, quantity, unit_price, line_total FROM document_lines WHERE document_id = ? ORDER BY line_no",
         (doc_id,),
     )
     return [dict(row) for row in rows]
@@ -232,7 +232,7 @@ def _stored_result(conn: sqlite3.Connection, invoice_id: int) -> tuple[dict | No
     if current is None:
         return None, []
     rows = conn.execute(
-        "SELECT sku, type, expected, found, unit_amount, amount FROM discrepancies WHERE reconciliation_id = ?",
+        "SELECT sku, type, expected, found, unit_amount, amount, text FROM discrepancies WHERE reconciliation_id = ?",
         (current["id"],),
     )
     return dict(current), sorted((tuple(r) for r in rows), key=repr)
@@ -284,8 +284,8 @@ def store_plan(conn: sqlite3.Connection, plan: dict) -> int:
             conn.execute("DELETE FROM discrepancies WHERE reconciliation_id = ?", (reconciliation_id,))
         for row in plan["rows"]:
             conn.execute(
-                "INSERT INTO discrepancies (reconciliation_id, sku, type, expected, found, unit_amount, amount) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO discrepancies (reconciliation_id, sku, type, expected, found, unit_amount, amount, text) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (reconciliation_id, *row),
             )
     return reconciliation_id
@@ -432,3 +432,63 @@ def _result_of(conn: sqlite3.Connection, doc_id: int, kind: str | None) -> str |
         return None
     row = conn.execute("SELECT result FROM reconciliations WHERE invoice_id = ?", (doc_id,)).fetchone()
     return row["result"] if row else None
+
+
+RESULTS = ("matched", "discrepancies", "awaiting_delivery_note")
+DISCREPANCY_TYPES = ("price", "quantity", "extra_line", "missing_line")
+
+
+def order_reference(order_id: int) -> str:
+    return f"PO-{order_id:04d}"
+
+
+def invoice_id_from_reference(text: str) -> int | None:
+    found = re.fullmatch(r"INV-(\d+)", text.strip(), re.IGNORECASE)
+    return int(found.group(1)) if found else None
+
+
+def list_results(conn: sqlite3.Connection) -> dict:
+    """Every reconciliation in invoice order, the counts by result and the discrepancy counts by type."""
+    rows = [
+        dict(row)
+        for row in conn.execute(
+            "SELECT r.invoice_id, r.purchase_order_id AS order_id, r.result, o.supplier_code, "
+            "(SELECT COUNT(*) FROM discrepancies d WHERE d.reconciliation_id = r.id) AS differences "
+            "FROM reconciliations r JOIN purchase_orders o ON o.id = r.purchase_order_id ORDER BY r.invoice_id"
+        )
+    ]
+    by_type = {kind: 0 for kind in DISCREPANCY_TYPES}
+    by_type.update(
+        {row["type"]: row["n"] for row in conn.execute("SELECT type, COUNT(*) AS n FROM discrepancies GROUP BY type")}
+    )
+    return {
+        "rows": rows,
+        "by_result": {result: sum(r["result"] == result for r in rows) for result in RESULTS},
+        "by_type": by_type,
+    }
+
+
+def show_result(conn: sqlite3.Connection, invoice_id: int) -> dict | None:
+    """The stored reconciliation of one invoice with its order, delivery note and discrepancies, or None."""
+    current = conn.execute("SELECT * FROM reconciliations WHERE invoice_id = ?", (invoice_id,)).fetchone()
+    if current is None:
+        return None
+    invoice = conn.execute("SELECT number FROM supplier_documents WHERE id = ?", (invoice_id,)).fetchone()
+    note = None
+    if current["delivery_note_id"] is not None:
+        note = conn.execute("SELECT number FROM supplier_documents WHERE id = ?", (current["delivery_note_id"],)).fetchone()
+    order = conn.execute("SELECT * FROM purchase_orders WHERE id = ?", (current["purchase_order_id"],)).fetchone()
+    rows = conn.execute(
+        "SELECT sku, type, expected, found, unit_amount, amount, text FROM discrepancies "
+        "WHERE reconciliation_id = ? ORDER BY id",
+        (current["id"],),
+    )
+    return {
+        "invoice_id": invoice_id,
+        "invoice_number": invoice["number"],
+        "result": current["result"],
+        "reconciled_at": current["reconciled_at"],
+        "order": dict(order),
+        "delivery_note": None if note is None else (note["number"] or "-"),
+        "discrepancies": [dict(row) for row in rows],
+    }

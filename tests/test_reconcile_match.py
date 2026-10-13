@@ -30,7 +30,7 @@ def test_price_over_the_tolerance_stores_unit_and_total_amount():
     result, rows = rm.classify(ORDER, [_line(price=4.50)], [_note()])
     assert result == rm.DISCREPANCIES
     assert rows == [
-        {"sku": "GLV-NIT-XS", "type": "price", "expected": 4.1, "found": 4.5, "unit_amount": 0.4, "amount": 4.0}
+        {"sku": "GLV-NIT-XS", "type": "price", "expected": 4.1, "found": 4.5, "unit_amount": 0.4, "amount": 4.0, "text": None}
     ]
 
 

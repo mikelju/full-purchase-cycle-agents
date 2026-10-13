@@ -179,6 +179,7 @@ CREATE TABLE IF NOT EXISTS discrepancies (
     found REAL,
     unit_amount REAL,
     amount REAL,
+    text TEXT,
     UNIQUE (reconciliation_id, sku, type)
 );
 """

@@ -263,6 +263,7 @@ def test_seed_creates_empty_reconciliation_tables(tmp_path):
         "found",
         "unit_amount",
         "amount",
+        "text",
     ]
     for table in RECONCILIATION_TABLES:
         assert conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0

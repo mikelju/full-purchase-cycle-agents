@@ -32,6 +32,7 @@ def _merge(lines: list[dict]) -> dict[str | None, dict]:
         else:
             merged[key] = {
                 "sku": line["sku"],
+                "text": line.get("product_text"),
                 "quantity": line["quantity"],
                 "unit_price": line["unit_price"],
                 "line_total": line.get("line_total"),
@@ -39,7 +40,7 @@ def _merge(lines: list[dict]) -> dict[str | None, dict]:
     return merged
 
 
-def _row(sku, kind, expected, found, unit_amount, amount) -> dict:
+def _row(sku, kind, expected, found, unit_amount, amount, text=None) -> dict:
     return {
         "sku": sku,
         "type": kind,
@@ -47,6 +48,7 @@ def _row(sku, kind, expected, found, unit_amount, amount) -> dict:
         "found": _money(found),
         "unit_amount": _money(unit_amount),
         "amount": _money(amount),
+        "text": text,
     }
 
 
@@ -66,7 +68,7 @@ def classify(order: dict, invoice_lines: list[dict], note_lines: list[dict] | No
             total = line["line_total"]
             if total is None and line["unit_price"] is not None:
                 total = line["unit_price"] * line["quantity"]
-            rows.append(_row(sku, EXTRA_LINE, None, line["quantity"], line["unit_price"], total))
+            rows.append(_row(sku, EXTRA_LINE, None, line["quantity"], line["unit_price"], total, line["text"]))
             continue
         price = line["unit_price"]
         if price is not None and round(abs(price - order["unit_price"]), 6) > PRICE_TOLERANCE:

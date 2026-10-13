@@ -211,6 +211,65 @@ def cmd_reconcile_scan(args) -> int:
     return 0
 
 
+def _seeded(path):
+    conn = db.connect(path)
+    db.seed(conn)
+    return conn
+
+
+def cmd_reconcile_list(args) -> int:
+    conn = _seeded(args.db)
+    try:
+        listing = reconciliation.list_results(conn)
+    finally:
+        conn.close()
+    counts = "  ".join(f"{name}={n}" for name, n in listing["by_result"].items())
+    print(f"reconciliations: {len(listing['rows'])}  {counts}")
+    print("differences by type: " + "  ".join(f"{name}={n}" for name, n in listing["by_type"].items()))
+    for row in listing["rows"]:
+        print(
+            f"  {reconciliation.invoice_reference(row['invoice_id'])}  {reconciliation.order_reference(row['order_id'])}"
+            f"  supplier={row['supplier_code']}  {row['result']}  differences={row['differences']}"
+        )
+    return 0
+
+
+def _amount(value, places: int) -> str:
+    return "-" if value is None else f"{value:.{places}f}"
+
+
+def cmd_reconcile_show(args) -> int:
+    invoice_id = reconciliation.invoice_id_from_reference(args.reference)
+    if invoice_id is None:
+        print(f"Error: '{args.reference}' is not an invoice reference like INV-0001", file=sys.stderr)
+        return 1
+    conn = _seeded(args.db)
+    try:
+        shown = reconciliation.show_result(conn, invoice_id)
+    finally:
+        conn.close()
+    if shown is None:
+        print(f"Error: no reconciliation for {args.reference}", file=sys.stderr)
+        return 1
+    order = shown["order"]
+    print(f"{reconciliation.invoice_reference(invoice_id)}  invoice {shown['invoice_number'] or '-'}  result={shown['result']}")
+    print(
+        f"purchase order: {reconciliation.order_reference(order['id'])}  supplier={order['supplier_code']}  "
+        f"sku={order['sku']}  quantity={order['quantity']}  unit price={order['unit_price']:.4f} {order['currency']}"
+    )
+    print(f"delivery note: {shown['delivery_note'] or 'none yet'}")
+    print(f"reconciled at: {shown['reconciled_at']}")
+    print(f"differences: {len(shown['discrepancies'])}")
+    for row in shown["discrepancies"]:
+        text = f"  text=\"{row['text']}\"" if row["text"] else ""
+        print(
+            f"  {row['type']}  sku={row['sku'] or '-'}{text}  expected={_amount(row['expected'], 4)}  "
+            f"found={_amount(row['found'], 4)}  per unit={_amount(row['unit_amount'], 4)}  "
+            f"amount={_amount(row['amount'], 2)}"
+        )
+    return 0
+
+
 def _request_id(text: str) -> int | None:
     found = quotes.REFERENCE.fullmatch(text)
     return int(found.group(1)) if found else None
@@ -1391,6 +1450,11 @@ def main(argv=None) -> int:
     reconcile_scan.add_argument("--recordings", default=None, help="recordings file for the document extraction")
     reconcile_scan.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     reconcile_scan.set_defaults(handler=cmd_reconcile_scan)
+    reconcile_list = reconcile_sub.add_parser("list", help="list every reconciliation with the counts by result and type")
+    reconcile_list.set_defaults(handler=cmd_reconcile_list)
+    reconcile_show = reconcile_sub.add_parser("show", help="show the result and each difference of one invoice")
+    reconcile_show.add_argument("reference", help="invoice reference like INV-0001")
+    reconcile_show.set_defaults(handler=cmd_reconcile_show)
     quotes_demo = sub.add_parser(
         "quotes-demo",
         help="run the sample quote timeline, each scan, clock, receive, tick, decide, approve and list step in its own process",
