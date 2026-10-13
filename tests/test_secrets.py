@@ -227,3 +227,35 @@ def test_phase_07_files_are_tracked_and_hold_no_keys(tmp_path):
     (email,) = world.emails()
     assert email.name.startswith("PO-0001-")
     assert not SECRET_PATTERNS.search(email.read_text(encoding="utf-8", errors="ignore"))
+
+
+def test_phase_08_files_are_tracked_and_hold_no_keys():
+    from purchase_cycle import reconciliation
+
+    tracked = set(_tracked())
+    fixed = [
+        "src/purchase_cycle/reconciliation.py",
+        "src/purchase_cycle/reconcile_match.py",
+        "src/purchase_cycle/evaluation/document_dataset.py",
+        "src/purchase_cycle/evaluation/document_eval.py",
+        "src/purchase_cycle/evaluation/reconcile_eval.py",
+        "evals/recordings/document_extraction.jsonl",
+        "evals/recordings/reconcile_demo.jsonl",
+        "evals/baselines/document_extraction.json",
+    ]
+    folders = (
+        ROOT / "evals" / "datasets" / "document_extraction",
+        ROOT / "evals" / "datasets" / "reconciliation_matching",
+        ROOT / "examples" / "invoices",
+    )
+    files = sorted(str(p.relative_to(ROOT).as_posix()) for folder in folders for p in folder.rglob("*") if p.is_file())
+    assert len([f for f in files if f.startswith("evals/datasets/reconciliation_matching/RM-")]) >= 40
+    assert len([f for f in files if f.startswith("examples/invoices/")]) == 15  # the orders and 14 documents
+    assert {Path(f).suffix for f in files if f.startswith("examples/invoices/documents/")} == {".txt", ".pdf", ".xlsx"}
+    for name in fixed + files:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
+    # A PDF or Excel file is compressed, so its decoded text is what the scan reads.
+    for name in files:
+        if name.startswith("examples/invoices/") and Path(name).suffix in (".pdf", ".xlsx"):
+            assert not SECRET_PATTERNS.search(reconciliation.document_text(ROOT / name)), name
