@@ -100,7 +100,7 @@ This file is the durable state: a new session resumes from here and from Git.
 - [x] 18. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
   Evidence: two rounds with Opus (`e48bdec..88ff632` and `88ff632..80bf1ff`), findings and fixes with commits in the tables of "Adversarial review"; regression tests added with each fix; the `npm run check` after all fixes is the fresh clone run of increment 16 at 6deb751 (979 passed, exit 0). F5 and F11 are left for the owner.
 - [x] 19. Results per criterion in the table below, master plan row 08 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
-  Evidence: Results per criterion, open items and candidate learnings below; master plan row 08 and README phase 08 line set to "built, delivered for review via PR"; PR: pending (opened by the coordinator).
+  Evidence: Results per criterion, open items and candidate learnings below; master plan row 08 and README phase 08 line set to "built, delivered for review via PR"; PR: https://github.com/mikelju/full-purchase-cycle-agents/pull/18 (opened by the coordinator).
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
