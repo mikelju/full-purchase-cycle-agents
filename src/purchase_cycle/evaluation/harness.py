@@ -386,8 +386,8 @@ UPLOAD_SUITES = tuple(
 )
 # `all` runs every suite with a baseline; the WhatsApp suite joined once its baseline was recorded (increment 16)
 # and `order_scenarios` once its baseline was recorded (increment 24).
-# `offer_extraction` joins once its baseline is recorded (phase 07, increment 12).
-ALL_SUITES = tuple(name for name in SUITES if name != "offer_extraction")
+# `offer_extraction` joined once its baseline was recorded (phase 07, increment 12).
+ALL_SUITES = SUITES
 
 
 def suite_names(suite, everything: tuple[str, ...] = ALL_SUITES) -> tuple[str, ...]:

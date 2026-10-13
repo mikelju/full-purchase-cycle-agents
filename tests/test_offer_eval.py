@@ -170,14 +170,14 @@ def test_graders_apply_the_half_cent_tolerance_and_the_applicable_fields():
     assert r["quantity_accuracy"] is None and r["unit_price_accuracy"] is None and r["offer_accuracy"] is True
 
 
-def test_eval_leaves_the_suite_out_of_all_until_its_baseline(monkeypatch):
+def test_eval_all_includes_the_suite_once_its_baseline_is_recorded(monkeypatch):
     ran = []
     monkeypatch.setattr(
         harness, "_suite", lambda name: argparse.Namespace(evaluate=lambda *a, **k: ran.append(name) or 0)
     )
     args = argparse.Namespace(suite="all", mode="replay", split="test", set_baseline=False, workers=1)
     assert harness.cmd_eval(args) == 0
-    assert "offer_extraction" not in ran
+    assert ran[-1] == "offer_extraction"
     ran.clear()
     args.suite = ["offer_extraction"]
     assert harness.cmd_eval(args) == 0

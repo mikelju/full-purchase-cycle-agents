@@ -64,7 +64,14 @@ This file is the durable state: a new session resumes from here and from Git.
   Evidence: 120 replies, 10 categories x 12, dev 30 / test 90, `.evidence/fase-07/offer-dataset.txt`; `tests/test_offer_dataset.py` 11 passed; clean-context second pass (sonnet subagent, blind export only): 2 disagreements (OFF-021, OFF-024, case size in the text did not match the plan divisor 12), both `label_fixed` by correcting the text, 118 agree, 0 pending.
 - [x] 11. Runner, graders, metrics, critical errors, report and gates, registered in `harness` (C12) - check: tests that force each gate to fail prove a non-zero exit of `purchase-cycle eval --suite offer_extraction`.
   Evidence: `src/purchase_cycle/evaluation/offer_eval.py` and `tests/test_offer_eval.py` (13 passed, with `tests/test_whatsapp_eval.py` still green); each gate forced to fail gives exit 1 (exact match, unit price, both McNemar regressions, no baseline), missing recordings exit 2, a below-threshold baseline exit 3. The suite is in `SUITES` (so in `eval-upload`) but out of `ALL_SUITES` until the baseline of increment 12; `purchase-cycle eval --suite offer_extraction` without recordings exits 2 and, once recorded without a baseline, exits 1.
-- [ ] 12. Instruction tuning on the development split (at most three rounds), then the live test split record and baseline with Claude Haiku 4.5, with the owner's key (C13, D6) - check: stored baseline with per-reply results and the live report saved as `.evidence/fase-07/offer-baseline-live.txt`, cost noted; a gate miss stops execution for the owner.
+- [x] 12. Instruction tuning on the development split (at most three rounds), then the live test split record and baseline with Claude Haiku 4.5, with the owner's key (C13, D6) - check: stored baseline with per-reply results and the live report saved as `.evidence/fase-07/offer-baseline-live.txt`, cost noted; a gate miss stops execution for the owner.
+  Evidence 2026-10-13: one live dev run (30 replies, round 0 with the increment 8 instructions) with Haiku 4.5, tracing off: reply exact match 96.7% [83.3, 99.4], unit price accuracy 100.0% [86.2, 100.0] (n=24), usability 100.0%, critical errors 0 of 30 (Wilson upper bound 11.4%); both gated targets met, so no tuning round was needed and `OFFER_EXTRACTION_INSTRUCTIONS` is unchanged and final.
+  The one dev failure (OFF-054, missing_price, wrong vat_included) is left as a known error rather than tuned on a single item; output in `.evidence/fase-07/offer-dev-r0.txt`.
+  One record run on the test split (90 replies) with the same instructions, exit 0: reply exact match 98.9% [94.0, 99.8] (89 of 90), unit price accuracy 100.0% [94.9, 100.0] (n=72), offer accuracy 100.0% [95.9, 100.0], quantity 100.0% [95.5, 100.0], currency and VAT 100.0% [94.9, 100.0], lead time 98.6% [92.7, 99.8] (n=74), usability 100.0% [95.9, 100.0], critical errors 0 of 90 (Wilson upper bound 4.1%, target 0 met).
+  The one test failure is OFF-052 (missing_price, wrong working_days), a field that does not reach a purchase order; both absolute gates stay at 95%.
+  Baseline with per-reply results in `evals/baselines/offer_extraction.json`, recordings (test split only, 90 answers) in `evals/recordings/offer_extraction.jsonl`, live report in `.evidence/fase-07/offer-baseline-live.txt`.
+  Cost: dev run 30 calls about 0.08 USD, test run 90 calls (146997 input and 17244 output tokens) about 0.23 USD at Haiku 4.5 prices, about 0.31 USD in total of the 5 USD ceiling (D6).
+  `offer_extraction` joined `ALL_SUITES` and `tests/test_whatsapp_eval.py` expects it last (DV-01); `npm run eval` replays it with PASS on both gates and the McNemar regression gate.
 
 ### Batch D - Evaluation `quote_decision`, demo and documentation
 - [ ] 13. At least 24 scenarios in `evals/datasets/quote_decision/` with the spec coverage, runner, deterministic grader, critical-error counter and gates (C14) - check: a test counts the coverage tags; one injection per critical error and a wrong expectation each prove a non-zero exit; replay report saved as `.evidence/fase-07/eval-quote-decision.txt`.
@@ -81,7 +88,7 @@ This file is the durable state: a new session resumes from here and from Git.
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
-| DV-01 | The phase 05 test `tests/test_whatsapp_eval.py` (suite order of `eval all`) will gain `offer_extraction` at the end of its expected list, because `ALL_SUITES` grows in increment 12 when its baseline is recorded; the behaviour of the earlier suites is unchanged | C1, C12 | Applies in increment 12 |
+| DV-01 | The phase 05 test `tests/test_whatsapp_eval.py` (suite order of `eval all`) will gain `offer_extraction` at the end of its expected list, because `ALL_SUITES` grows in increment 12 when its baseline is recorded; the behaviour of the earlier suites is unchanged | C1, C12 | Applied in increment 12 |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
