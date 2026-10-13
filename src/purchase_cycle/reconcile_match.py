@@ -60,6 +60,7 @@ def classify(order: dict, invoice_lines: list[dict], note_lines: list[dict] | No
     order: sku, quantity, unit_price. Lines: sku (None when unresolved), quantity, unit_price, line_total.
     note_lines is None while no delivery note exists: the result is then `awaiting_delivery_note`,
     the price, quantity-against-order and line rows are already returned, and the delivery check is not made.
+    A note that exists but has no line for the order SKU counts as delivered quantity 0.
     """
     invoice = _merge(invoice_lines)
     delivered = _merge(note_lines) if note_lines is not None else {}
@@ -90,8 +91,9 @@ def classify(order: dict, invoice_lines: list[dict], note_lines: list[dict] | No
         # When the invoice differs from both the order and the note, the larger difference is the one stored
         # (one quantity row per SKU, as the discrepancies key allows).
         references = [order["quantity"]]
-        if sku in delivered:
-            references.append(delivered[sku]["quantity"])
+        if note_lines is not None:
+            # A note without a line for the SKU counts as nothing delivered: the user checks before paying.
+            references.append(delivered[sku]["quantity"] if sku in delivered else 0)
         off_by = [ref for ref in references if abs(line["quantity"] - ref) > QUANTITY_TOLERANCE]
         expected = max(off_by, key=lambda ref: abs(line["quantity"] - ref)) if off_by else None
         if expected is not None:

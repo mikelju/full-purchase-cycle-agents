@@ -55,7 +55,7 @@ def test_a_price_just_over_the_tolerance_is_a_difference(price):
 
 @pytest.mark.parametrize("quantity, amount", [(12, 8.2), (8, -8.2)])
 def test_quantity_above_and_below_the_order(quantity, amount):
-    result, rows = rm.classify(ORDER, [_line(quantity=quantity)], [_note(quantity)])
+    result, rows = rm.classify(ORDER, [_line(quantity=quantity)], [_note(quantity=quantity)])
     assert result == rm.DISCREPANCIES
     assert [(r["type"], r["expected"], r["found"], r["amount"]) for r in rows] == [("quantity", 10.0, quantity, amount)]
 
@@ -71,8 +71,19 @@ def test_invoiced_above_delivered_is_a_difference_even_if_it_equals_the_order():
     assert [(r["type"], r["expected"]) for r in rows] == [("quantity", 9.0)]
 
 
-def test_a_note_without_the_sku_makes_no_delivery_check():
-    assert rm.classify(ORDER, [_line()], [_note(sku=None)]) == (rm.MATCHED, [])
+def test_a_note_without_a_line_for_the_sku_counts_as_nothing_delivered():
+    sku_b = {"sku": "GLV-NIT-M", "quantity": 5, "unit_price": 5.0}
+    result, rows = rm.classify(sku_b, [_line(), _line(sku="GLV-NIT-M", quantity=5, price=5.0)], [_note()])
+    assert result == rm.DISCREPANCIES
+    assert [(r["sku"], r["type"], r["expected"], r["found"], r["amount"]) for r in rows if r["sku"] == "GLV-NIT-M"] == [
+        ("GLV-NIT-M", "quantity", 0.0, 5.0, 25.0)
+    ]
+
+
+def test_a_note_with_only_an_unresolved_line_still_reports_the_missing_sku():
+    result, rows = rm.classify(ORDER, [_line()], [_note(sku=None)])
+    assert result == rm.DISCREPANCIES
+    assert [(r["type"], r["expected"], r["found"]) for r in rows] == [("quantity", 0.0, 10.0)]
 
 
 def test_extra_line_by_sku_and_by_unresolved_text():
@@ -92,14 +103,14 @@ def test_missing_line():
 
 
 def test_price_and_quantity_on_one_line_give_two_rows():
-    rows = rm.classify(ORDER, [_line(quantity=12, price=4.5)], [_note(12)])[1]
+    rows = rm.classify(ORDER, [_line(quantity=12, price=4.5)], [_note(quantity=12)])[1]
     assert _summary(rows) == [("GLV-NIT-XS", "price"), ("GLV-NIT-XS", "quantity")]
     assert [r["amount"] for r in rows if r["type"] == "price"] == [4.8]
 
 
 def test_several_types_in_one_invoice():
     lines = [_line(quantity=9, price=4.5), _line(sku="OTHER", quantity=1, price=1.0)]
-    rows = rm.classify(ORDER, lines, [_note(9)])[1]
+    rows = rm.classify(ORDER, lines, [_note(quantity=9)])[1]
     assert _summary(rows) == [("GLV-NIT-XS", "price"), ("GLV-NIT-XS", "quantity"), ("OTHER", "extra_line")]
 
 
