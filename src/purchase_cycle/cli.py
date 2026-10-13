@@ -1064,6 +1064,12 @@ def cmd_clarify_answer(args) -> int:
     return _resume(args, {"answer": text})
 
 
+def cmd_ui(args) -> int:
+    from purchase_cycle import ui
+
+    return ui.serve(args.mode, args.port)
+
+
 def cmd_clarify_close(args) -> int:
     return _resume(args, {"close": True})
 
@@ -1253,6 +1259,11 @@ def main(argv=None) -> int:
     routed.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
     routed.add_argument("--run-id", help="run id in the new thread ids (default: random)")
     routed.set_defaults(handler=cmd_route)
+
+    local_ui = sub.add_parser("ui", help="serve a local page to try the web form, email and WhatsApp orders by hand")
+    local_ui.add_argument("--mode", choices=("live", "replay"), default="live")
+    local_ui.add_argument("--port", type=int, default=8765)
+    local_ui.set_defaults(handler=cmd_ui)
 
     orders = sub.add_parser(
         "orders-demo", help="run the sample mixed inbox through the router with the recovery scenes"

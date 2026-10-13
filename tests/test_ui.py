@@ -1,0 +1,343 @@
+"""Change 006, C1 to C6: the local test page serves the catalog and runs sent orders through the router."""
+
+import email
+import json
+import socket
+import threading
+import urllib.error
+import urllib.request
+from email import policy
+from pathlib import Path
+
+import pytest
+
+from conftest import make_email
+from purchase_cycle import cli, config, db, router, ui
+from purchase_cycle.clarification import detect
+from purchase_cycle.email_order import read_email
+from purchase_cycle.llm import EMAIL_EXTRACTION, EMAIL_INTAKE, build_system_prompt, recording_key
+from purchase_cycle.whatsapp_order import phone_digits
+from test_clarification_graph import (
+    ANSWER_1,
+    DOUBT_FORM,
+    EMAIL_ANSWER,
+    EMAIL_BODY,
+    EMAIL_LINES,
+    EMAIL_QUESTION,
+    QUESTION_1,
+    QUESTION_2,
+    RESOLUTIONS_1,
+    SENDER,
+    _form_lines,
+    _record_form,
+    _record_round,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
+SAMPLES = ROOT / "examples" / "orders"
+
+
+@pytest.fixture
+def loopback_only(monkeypatch):
+    """No key and no outgoing connection except to this machine, where the test server listens."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("LANGSMITH_TRACING", "true")
+    real_connect = socket.socket.connect
+    attempts = []
+
+    def guard(sock, address, *args, **kwargs):
+        if address[0] != "127.0.0.1":
+            attempts.append(address)
+            raise OSError("network blocked by test")
+        return real_connect(sock, address, *args, **kwargs)
+
+    monkeypatch.setattr(socket.socket, "connect", guard)
+    return attempts
+
+
+@pytest.fixture
+def server(tmp_path, loopback_only):
+    httpd = ui.make_server("replay", port=0, root=tmp_path / "ui")
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    httpd.base = f"http://127.0.0.1:{httpd.server_port}"
+    httpd.root = tmp_path / "ui"
+    yield httpd
+    httpd.shutdown()
+    httpd.server_close()
+
+
+def call(server, method: str, path: str, body=None, raw: bytes | None = None):
+    data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
+    request = urllib.request.Request(server.base + path, data=data, method=method)
+    try:
+        with urllib.request.urlopen(request) as response:
+            return response.status, json.loads(response.read())
+    except urllib.error.HTTPError as error:
+        return error.code, json.loads(error.read())
+
+
+def sample_inputs() -> list[tuple[str, dict]]:
+    """The sample inbox as page payloads, in file name order, with the customer each item belongs to."""
+    conn = db.connect(":memory:")
+    db.seed(conn)
+    by_phone = {phone_digits(r["phone"]): r["code"] for r in conn.execute("SELECT code, phone FROM customers")}
+    by_email = {r["email"]: r["code"] for r in conn.execute("SELECT code, email FROM customers")}
+    conn.close()
+    items = []
+    for path in sorted(SAMPLES.iterdir()):
+        if path.is_dir():
+            continue
+        if path.suffix == ".eml":
+            msg = email.message_from_bytes(path.read_bytes(), policy=policy.default)
+            sender = email.utils.parseaddr(msg["From"])[1]
+            body = msg.get_body(("plain",)).get_content().strip()
+            items.append(
+                (path.name, {"channel": "email", "customer": by_email[sender], "subject": msg["Subject"], "body": body})
+            )
+            continue
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if "submission_id" in data:
+            items.append(
+                (path.name, {"channel": "web_form", "customer": data["customer_code"], "lines": data["lines"]})
+            )
+        else:
+            payload = {"channel": "whatsapp", "customer": by_phone[data["from"]]}
+            payload |= {"text": data["text"]["body"]} if data["type"] == "text" else {"type": data["type"]}
+            items.append((path.name, payload))
+    return items
+
+
+def test_paths_are_apart_from_the_business_database():
+    assert ui.UI_DIR == config.DATA_DIR / "ui"
+    assert ui.UI_DIR / "purchase_cycle.db" != config.default_db_path()
+
+
+def test_c1_binds_to_loopback_seeds_its_own_database_and_forces_tracing_off(tmp_path, loopback_only):
+    httpd = ui.make_server("replay", port=0, root=tmp_path / "ui")
+    try:
+        assert httpd.server_address[0] == "127.0.0.1"
+    finally:
+        httpd.server_close()
+    conn = db.connect(tmp_path / "ui" / "purchase_cycle.db")
+    try:
+        assert db.catalog_rows(conn)
+    finally:
+        conn.close()
+    assert (tmp_path / "ui" / "checkpoints.db").exists()
+    import os
+
+    assert os.environ["LANGSMITH_TRACING"] == "false"
+
+
+def test_c1_the_cli_command_defaults_to_live_on_port_8765(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(ui, "serve", lambda mode, port: seen.update(mode=mode, port=port) or 0)
+    assert cli.main(["ui"]) == 0
+    assert seen == {"mode": "live", "port": 8765}
+    assert cli.main(["ui", "--mode", "replay", "--port", "9001"]) == 0
+    assert seen == {"mode": "replay", "port": 9001}
+
+
+def test_c1_live_mode_is_not_forced_to_replay(tmp_path, monkeypatch):
+    monkeypatch.setattr(ui, "load_dotenv", lambda: None)
+    app = ui.UiApp("live", tmp_path / "ui")
+    assert app.info() == {"mode": "live"}
+    with pytest.raises(ValueError):
+        ui.UiApp("record", tmp_path / "other")
+
+
+def test_c2_catalog_and_customers_endpoints(server):
+    status, products = call(server, "GET", "/api/catalog")
+    assert status == 200 and len(products) > 20
+    assert set(products[0]) == {"sku", "name", "family", "sale_unit", "price_eur", "stock"}
+    assert all(isinstance(p["stock"], int) for p in products)
+    status, customers = call(server, "GET", "/api/customers")
+    assert status == 200
+    assert {"code", "name", "email", "phone"} <= set(customers[0])
+    assert customers[0]["email"].endswith("@example.com") and customers[0]["phone"].startswith("+34")
+
+
+def test_c3_each_channel_writes_its_own_input_and_returns_the_answer(server):
+    form = {"channel": "web_form", "customer": "CLI-001", "lines": [{"product": "nitrile gloves M", "quantity": 20}]}
+    status, entry = call(server, "POST", "/api/send", form)
+    assert status == 200
+    assert entry["route"] == router.WEB_FORM and entry["status"] == "stored" and entry["order_id"] == 1
+    assert entry["thread_id"].startswith("web_form-") and "stored order 1" in entry["outcome"]
+    assert entry["reply"]
+    status, entry = call(server, "POST", "/api/send", {"channel": "email", "customer": "CLI-002", "subject": "Order",
+                                                       "body": "Hello,\nPlease send:\n- 8 packs of cohesive bandage 7.5 cm\n- 2 units of lumbar support belt\nThanks,\nIker Zubiri"})  # fmt: skip
+    assert entry["route"] == router.EMAIL and entry["status"] == "stored" and entry["order_id"] == 2
+    assert "iker.cli-002@example.com" in entry["reply"]
+    status, entry = call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-003",
+                                                       "text": "hi, pls send 5 boxes of paper tape 2.5 cm and 10 boxes of spot plasters thx"})  # fmt: skip
+    assert entry["route"] == router.WHATSAPP_NEW and entry["status"] == "stored" and entry["order_id"] == 3
+    # One folder per send, each holding one input in the channel's format.
+    files = sorted(p.relative_to(server.root / "inbox").parts[1] for p in (server.root / "inbox").glob("*/*"))
+    assert files == ["email.eml", "web-form.json", "whatsapp.json"]
+    eml = next((server.root / "inbox").glob("*/email.eml")).read_bytes()
+    assert b"From: Iker Zubiri <iker.cli-002@example.com>" in eml
+    wa = json.loads(next((server.root / "inbox").glob("*/whatsapp.json")).read_text())
+    assert wa["from"] == "34600102202" and wa["type"] == "text"
+    assert len(call(server, "GET", "/api/conversations")[1]) == 3
+
+
+def test_c4_whatsapp_question_is_answered_with_a_new_message(server):
+    doubt = {"channel": "whatsapp", "customer": "CLI-004",
+             "text": "hi, pls send 20 boxes of nitrile gloves and 6 units of sharps container 5 litres thx"}  # fmt: skip
+    _, asked = call(server, "POST", "/api/send", doubt)
+    assert asked["status"] == "question" and asked["reply"] and asked["round"] == 1
+    conversations = call(server, "GET", "/api/conversations")[1]
+    assert conversations[0]["pending"] is True and conversations[0]["can_answer"] is False
+    status, error = call(server, "POST", "/api/answer", {"thread_id": asked["thread_id"], "text": "Size L please."})
+    assert status == 400 and "new message" in error["error"]
+    _, answered = call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-004", "text": "Size L please, all of them."})  # fmt: skip
+    assert answered["route"] == router.WHATSAPP_ANSWER and answered["thread_id"] == asked["thread_id"]
+    assert answered["status"] == "stored" and answered["order_id"] == 1
+    assert call(server, "GET", "/api/conversations")[1][0]["pending"] is False
+
+
+def _recorded_server(tmp_path, monkeypatch, loopback_only):
+    """A replay server whose recordings hold the doubt scenes of the phase 04 tests (web form and email)."""
+    root = tmp_path / "ui"
+    conn = db.connect(root / "purchase_cycle.db")
+    db.seed(conn)
+    catalog = db.catalog_rows(conn)
+    conn.close()
+
+    def record(sentence, answer, task):
+        return recorder(catalog, sentence, answer, task=task)
+
+    state = {}
+
+    def recorder(catalog, sentence, answer, case_id="TEST-1", task=None):
+        key = recording_key(build_system_prompt(catalog, task), sentence, task)
+        path = tmp_path / "recordings.jsonl"
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"key": key, "case_id": case_id, "sentence": sentence, "answer": answer}) + chr(10))
+        state["path"] = path
+        return path
+
+    _record_form(catalog, recorder)
+    doubts = detect(_form_lines(catalog), catalog, "web_form")
+    _record_round(catalog, recorder, doubts, QUESTION_1, ANSWER_1, RESOLUTIONS_1)
+    _record_round(catalog, recorder, doubts[2:], QUESTION_2)
+    sample = make_email(tmp_path / "doubt.eml", SENDER, "Order", EMAIL_BODY)
+    text = read_email(sample, conn_for(root))["text"]
+    recorder(catalog, text, {"is_order": True, "reason": "An order."}, task=EMAIL_INTAKE)
+    recorder(catalog, text, {"lines": EMAIL_LINES}, task=EMAIL_EXTRACTION)
+    resolutions = [{"line_id": 3, "action": "remove", "sku": None, "quantity": None}]
+    _record_round(catalog, recorder, detect(EMAIL_LINES, catalog, "email"), EMAIL_QUESTION, EMAIL_ANSWER, resolutions)
+    monkeypatch.setattr(ui, "RECORDINGS_PATH", state["path"])
+    httpd = ui.make_server("replay", port=0, root=root)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    httpd.base = f"http://127.0.0.1:{httpd.server_port}"
+    httpd.root = root
+    return httpd
+
+
+def conn_for(root):
+    return db.connect(root / "purchase_cycle.db")
+
+
+def test_c4_web_form_and_email_questions_are_answered_through_the_answer_endpoint(tmp_path, monkeypatch, loopback_only):
+    httpd = _recorded_server(tmp_path, monkeypatch, loopback_only)
+    try:
+        form = {"channel": "web_form", "customer": "CLI-002", "lines": DOUBT_FORM["lines"]}
+        _, asked = call(httpd, "POST", "/api/send", form)
+        assert asked["status"] == "question" and asked["reply"] == QUESTION_1
+        listed = call(httpd, "GET", "/api/conversations")[1]
+        assert listed[0]["pending"] is True and listed[0]["can_answer"] is True
+        status, again = call(httpd, "POST", "/api/answer", {"thread_id": asked["thread_id"], "text": ANSWER_1})
+        assert status == 200 and again["route"] == "answer" and again["thread_id"] == asked["thread_id"]
+        assert again["status"] == "question" and again["round"] == 2 and again["reply"] == QUESTION_2
+        listed = call(httpd, "GET", "/api/conversations")[1]
+        assert [e["pending"] for e in listed] == [False, True]  # only the last entry of a thread takes the answer
+        email = {"channel": "email", "customer": "CLI-002", "subject": "Order", "body": EMAIL_BODY}
+        _, asked = call(httpd, "POST", "/api/send", email)
+        assert asked["status"] == "question" and asked["reply"] == EMAIL_QUESTION
+        status, done = call(httpd, "POST", "/api/answer", {"thread_id": asked["thread_id"], "text": EMAIL_ANSWER})
+        assert status == 200 and done["status"] == "stored" and done["order_id"] == 1
+        assert "2 hospital beds" in done["reply"]
+        status, error = call(httpd, "POST", "/api/answer", {"thread_id": asked["thread_id"], "text": "again"})
+        assert status == 409 and "not pending" in error["error"]
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_c5_the_sample_texts_give_the_same_outcomes_as_route(server, tmp_path):
+    # `purchase-cycle route` on the sample folder, on a separate database, with the same recordings.
+    other = ui.UiApp("replay", tmp_path / "route")
+    expected = {r["item"]: cli._demo_outcome(r["route"], r["state"] or {}, r["error"])
+                for r in router.run_inbox(SAMPLES, other.graphs, other.db_path, "ref", tmp_path / "route" / "ref-outbox")}  # fmt: skip
+    got = {}
+    for name, payload in sample_inputs():
+        if name == "06-whatsapp-order-again.json":
+            continue  # a re-delivery of one message id; the page gives every send a new id
+        status, entry = call(server, "POST", "/api/send", payload)
+        assert status == 200, entry
+        got[name] = entry
+    assert [n for n, _ in sample_inputs() if n != "06-whatsapp-order-again.json"] == list(got)
+    for name, entry in got.items():
+        assert entry["outcome"] == expected[name], name
+    assert got["04-whatsapp-doubt.json"]["status"] == "question"
+    assert got["07-whatsapp-answer.json"]["route"] == router.WHATSAPP_ANSWER
+    assert got["07-whatsapp-answer.json"]["status"] == "stored"
+    assert got["05-whatsapp-photo.json"]["status"] == "rejected"
+    assert (
+        "only read text" in got["05-whatsapp-photo.json"]["reply"] or "text" in got["05-whatsapp-photo.json"]["reply"]
+    )
+    assert [e["status"] for e in got.values()].count("stored") == 4
+
+
+@pytest.mark.parametrize(
+    "payload, message",
+    [
+        ({"channel": "fax", "customer": "CLI-001", "text": "x"}, "unknown channel"),
+        ({"customer": "CLI-001", "text": "x"}, "unknown channel"),
+        ({"channel": "whatsapp", "customer": "NOPE", "text": "x"}, "unknown customer"),
+        ({"channel": "whatsapp", "text": "x"}, "choose a customer"),
+        ({"channel": "whatsapp", "customer": "CLI-001", "text": "   "}, "message text"),
+        ({"channel": "email", "customer": "CLI-001", "subject": "s", "body": ""}, "email body"),
+        ({"channel": "email", "customer": "CLI-001", "subject": "a\nb", "body": "x"}, "subject"),
+        ({"channel": "web_form", "customer": "CLI-001", "lines": []}, "at least one"),
+        ({"channel": "web_form", "customer": "CLI-001", "lines": [{"product": "", "quantity": 1}]}, "line 1"),
+        ({"channel": "web_form", "customer": "CLI-001", "lines": [{"product": "x", "quantity": 0}]}, "line 1"),
+        ({"channel": "web_form", "customer": "CLI-001", "lines": ["x"]}, "line 1"),
+    ],
+)
+def test_c6_malformed_sends_return_json_errors(server, payload, message):
+    status, body = call(server, "POST", "/api/send", payload)
+    assert status == 400 and message in body["error"]
+    assert not (server.root / "inbox").exists() or not any((server.root / "inbox").iterdir())
+
+
+def test_c6_malformed_requests_and_answers_return_json_errors(server):
+    assert call(server, "POST", "/api/send", raw=b"{not json")[0] == 400
+    assert call(server, "POST", "/api/send", raw=b"[1]")[0] == 400
+    assert call(server, "POST", "/api/send", raw=b"")[0] == 400
+    assert call(server, "POST", "/api/nothing", {"a": 1})[0] == 404
+    assert call(server, "GET", "/api/nothing")[0] == 404
+    status, body = call(server, "POST", "/api/answer", {"text": "x"})
+    assert status == 400 and "thread_id" in body["error"]
+    status, body = call(server, "POST", "/api/answer", {"thread_id": "web_form-x-y"})
+    assert status == 400 and "answer" in body["error"]
+    status, body = call(server, "POST", "/api/answer", {"thread_id": "web_form-x-y", "text": "x"})
+    assert status == 404 and "no clarification" in body["error"]
+
+
+def test_c6_a_failed_graph_run_shows_its_error_and_the_server_keeps_running(server):
+    # Free text that no recording covers: replay fails the run with MissingRecording.
+    status, entry = call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-001", "text": "send me a hundred crutches please"})  # fmt: skip
+    assert status == 200 and entry["status"] == "failed" and "MissingRecording" in entry["outcome"]
+    status, entry = call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-003",
+                                                       "text": "hi, pls send 5 boxes of paper tape 2.5 cm and 10 boxes of spot plasters thx"})  # fmt: skip
+    assert status == 200 and entry["status"] == "stored"
+
+
+def test_only_loopback_hosts_are_served(server):
+    request = urllib.request.Request(server.base + "/api/info", headers={"Host": "evil.example"})
+    with pytest.raises(urllib.error.HTTPError) as error:
+        urllib.request.urlopen(request)
+    assert error.value.code == 403
