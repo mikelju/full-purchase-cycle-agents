@@ -90,14 +90,17 @@ This file is the durable state: a new session resumes from here and from Git.
   Evidence: `tests/test_secrets.py::test_phase_08_files_are_tracked_and_hold_no_keys` lists the phase 08 modules, both recordings, the baseline, the `document_extraction` dataset, at least 40 `RM-NNN.json` cases and `examples/invoices` (15 files), asserts all are tracked and key-free, and scans the decoded text of the PDF and Excel samples; it passed at once because the files already existed (nothing to fail first); `grep` of `reconcile_demo.jsonl` for key and auth patterns: 0 matches.
 
 ### Batch E - Validation and closing
-- [ ] 16. `npm run check`, unchanged-behaviour evidence and fresh-clone run with the Anthropic and LangSmith variables unset and no `.env` (C1, C16) - check: `npm ci`, `uv sync` and `npm run check` in a fresh clone of the branch outside the repo; fourteen evaluations in replay with every gate PASS; phase 01 to 07 tests passing apart from the named suite-order, `eval-upload` and seed tests; `git diff --stat e48bdec -- evals/recordings evals/datasets evals/baselines` lists only added files; `orders-demo` and `quotes-demo` replay output equal to increment 1 once run ids and folder paths are masked; output saved as `.evidence/fase-08/fresh-clone-check.txt`, `recordings-diff-stat.txt` and the demo diffs.
-  Evidence:
+- [x] 16. `npm run check`, unchanged-behaviour evidence and fresh-clone run with the Anthropic and LangSmith variables unset and no `.env` (C1, C16) - check: `npm ci`, `uv sync` and `npm run check` in a fresh clone of the branch outside the repo; fourteen evaluations in replay with every gate PASS; phase 01 to 07 tests passing apart from the named suite-order, `eval-upload` and seed tests; `git diff --stat e48bdec -- evals/recordings evals/datasets evals/baselines` lists only added files; `orders-demo` and `quotes-demo` replay output equal to increment 1 once run ids and folder paths are masked; output saved as `.evidence/fase-08/fresh-clone-check.txt`, `recordings-diff-stat.txt` and the demo diffs.
+  Evidence: fresh clone of the branch at 6deb751 outside the repo, `npm ci`, `uv sync` and `npm run check` with the Anthropic and LangSmith variables unset and no `.env`: `All checks passed!`, 979 passed in 1122.56s, exit=0, fourteen evaluation tables and 28 gate lines PASS, none FAIL (`.evidence/fase-08/fresh-clone-check.txt`).
+  `git diff --stat e48bdec -- evals/recordings evals/datasets evals/baselines`: 108 files changed, all added, none modified or deleted (`recordings-diff-stat.txt`).
+  `orders-demo` and `quotes-demo` replay output after the phase (`orders-demo-after.txt`, `quotes-demo-after.txt`, both exit 0) equal to `orders-demo-before.txt` and `quotes-demo-before.txt` once run ids (including the run id inside the crash scene thread id), folder paths and timestamps are masked and the trailing `exit=` line is added to the after files (`demo-diff.txt`: both diffs empty).
+  The earlier-phase tests changed additively are DV-01 to DV-04.
 - [ ] 17. LangSmith trace and experiment (C15) - check: blocked by the trace quota until about 2026-11-05; recorded as pending and delivered with the catch-up change of earlier phases.
   Pending, not run:
-- [ ] 18. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
-  Evidence:
-- [ ] 19. Results per criterion in the table below, master plan row 08 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
-  Evidence:
+- [x] 18. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
+  Evidence: two rounds with Opus (`e48bdec..88ff632` and `88ff632..80bf1ff`), findings and fixes with commits in the tables of "Adversarial review"; regression tests added with each fix; the `npm run check` after all fixes is the fresh clone run of increment 16 at 6deb751 (979 passed, exit 0). F5 and F11 are left for the owner.
+- [x] 19. Results per criterion in the table below, master plan row 08 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+  Evidence: Results per criterion, open items and candidate learnings below; master plan row 08 and README phase 08 line set to "built, delivered for review via PR"; PR: pending (opened by the coordinator).
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
@@ -150,6 +153,35 @@ Pending items, limitations and what could not be checked, stated plainly.
 
 | Criterion | Result | Evidence |
 |---|---|---|
+| C1 | Met | Fresh clone at 6deb751 with the Anthropic and LangSmith variables unset and no `.env`: `npm ci`, `uv sync` and `npm run check` exit 0, 979 passed, fourteen evaluations in replay with 28 gate lines PASS (`.evidence/fase-08/fresh-clone-check.txt`) |
+| C2 | Met | `tests/test_seed.py` and `tests/test_reconciliation.py` (tables of the phase, seeding twice, other tables unchanged) (increment 3) |
+| C3 | Met | `tests/test_reconciliation.py` and `tests/test_reconcile_scan.py`: one call per document, the same stored lines from the text, PDF and Excel versions (the labelled facts reach the model from each format, F7), `extraction_failed` on a schema failure (increments 4 and 5, review round 1) |
+| C4 | Met | `tests/test_reconcile_scan.py`: linking by `PO-NNNN`, unknown or missing reference and different supplier stored as `unlinked` with their reason (increment 5) |
+| C5 | Met | `tests/test_reconcile_match.py` and `tests/test_reconcile_results.py`: an invoice equal to order and delivery note is `matched` with no `discrepancies` row (increments 6 and 7) |
+| C6 | Met | `tests/test_reconcile_match.py`: one test per type, price and quantity together, tolerance boundary; round 2 M4 fix for opposite deviations on repeated lines of one SKU (`dc833d5`) |
+| C7 | Met | `tests/test_reconcile_results.py` and `tests/test_reconcile_demo.py`: `awaiting_delivery_note` completed by the second scan on the same reconciliation (INV-0014 in the demo) |
+| C8 | Met | `tests/test_reconcile_results.py` and `tests/test_reconcile_scan.py`: no model call in matching, a second scan adds no row (content hash on LF-normalised bytes, `009ef9d`) |
+| C9 | Met | `tests/test_reconcile_show.py`: `list` and `show` output, steps in separate subprocesses; `list` also shows documents still extracted and not reconciled (`6f5161a`) |
+| C10 | Met, with DV-05 | `tests/test_document_dataset.py`: 120 documents in ten categories, fixed split, validation, same seed same plan; the 24 template-generated texts DOC-097 to DOC-120 rewritten by hand after review (G2, DV-05); `.evidence/fase-08/document-dataset.txt` |
+| C11 | Met | `tests/test_document_eval.py`: each gate forced to fail gives its non-zero exit; `npm run eval` replay report in the fresh clone check and `.evidence/fase-08/document-replay.txt` |
+| C12 | Met, with DV-05 | `evals/baselines/document_extraction.json` (test split of 90): exact match 97.8% [92.3, 99.4], unit price accuracy 97.7% [93.3, 99.2], 2 critical errors (DOC-060 and DOC-112, SKU joined with the wrapped description) against a target of 0; both 95% gates pass; the old baseline (98.9%, 100.0%, 1 critical) was replaced after the rewrite and the old-versus-new McNemar comparison found no significant drop (lost 1, gained 0, p=1.00); `document-baseline-live.txt` is the pre-DV-05 live record |
+| C13 | Met | `tests/test_reconcile_eval.py` and the `RM-NNN` case files: 57 of 57 cases, 0 critical errors, exit 1 on each injected failure; `.evidence/fase-08/reconcile-eval.txt`, `eval-reconciliation-matching.txt` |
+| C14 | Met, with DV-06 | `tests/test_reconcile_demo.py` (network blocked, one process per step): matched, one invoice per difference type, one awaiting completed by the second scan, unlinked documents; `.evidence/fase-08/reconcile-demo.txt`; recording `reconcile_demo.jsonl` redone in review round 1 (DV-06) |
+| C15 | Pending | Blocked by the LangSmith trace quota until about 2026-11-05; increment 17 not run; to be delivered with the catch-up change of earlier phases |
+| C16 | Met, with DV-01 to DV-04 | Fresh clone check: 979 passed, twelve earlier evaluations PASS; `recordings-diff-stat.txt` (108 files, all added); `demo-diff.txt` (`orders-demo` and `quotes-demo` equal once run ids, paths and timestamps are masked). The criterion says earlier-phase tests pass unchanged, but four tests were changed additively (a stub, the order of the `eval all` names), so it needs the owner's approval of DV-01 to DV-04 |
+| C17 | Met | `tests/test_secrets.py::test_phase_08_files_are_tracked_and_hold_no_keys` (modules, both recordings, baseline, dataset, 40 decoded rendered files, 15 sample documents); 0 key or auth matches in `reconcile_demo.jsonl` |
+| C18 | Met, with a limit | README sections of increment 14 (module, matching rules and tolerance, commands, demo, both evaluations, limits), corrected after review (G6, M1 to M3); the fresh clone ran `check` only, not a command by command walkthrough of the README |
+
+Open items and limitations:
+- C15 is pending: the LangSmith trace of a live `reconcile-demo` and the experiment of `document_extraction` wait for the trace quota to reset, around 2026-11-05, and are delivered with the catch-up change of earlier phases (also C13 of phases 02 and 03, C15 of phase 04, C17 of phase 05 and C16 of phase 07).
+- Owner decisions at the PR: DV-01 to DV-04 (earlier-phase tests changed additively against C16), DV-05 (24 rewritten dataset texts, baseline recomputed in replay, 18 test items re-recorded) and DV-06 (demo recordings redone).
+- Extraction baseline is 97.8% exact match and 97.7% unit price with 2 critical errors of 90 (DOC-060, DOC-112) against a target of 0; the critical-error target is not met and is reported as measured.
+- F5: the delivery check depends on the SKU being readable in the delivery note; left as codified by the spec (line 28 and Risks) for the owner to decide.
+- F9 and F10 (minor grader leniency) and G4 (a schema failure parks the document with no re-ask) are accepted and logged, not fixed.
+- `document-dev-r0.txt` predates the rewritten dev texts and `document-baseline-live.txt` is the pre-DV-05 record; neither was regenerated.
+- Phase 08 does not change stock or customer orders and sends no claim; claims and approval are phase 09.
+- Model cost of the phase: about 0.06 USD for the DV-05 re-record and about 0.08 to 0.10 USD for the demo record (DV-06), plus the tuning and baseline runs recorded in the increments, well under the 5 USD ceiling.
+- Evidence files in `.evidence/fase-08/` are not versioned.
 
 Spec ambiguities noticed while planning (the spec is not changed; each needs the owner or a deviation if it matters):
 - A1. The extracted fields of the spec do not include the supplier, yet `supplier_documents` stores a supplier code and C4 requires a different supplier to be `unlinked`. The plan adds a nullable `supplier_text` field (name or email as written) to the extraction schema and resolves it in code; if the owner prefers another source, this is a deviation.
@@ -160,3 +192,10 @@ Spec ambiguities noticed while planning (the spec is not changed; each needs the
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
+
+- Text files read with platform line endings change the content hash and the model text on Windows, and recordings keyed by that hash then miss; read text as LF and hash the normalised bytes. Evidence: finding F1 and the demo recording redone in `009ef9d` (DV-06).
+- A dataset generated from templates passes the automatic validation and still tests little; it was caught only in adversarial review, not by the validator. Rewrite by hand with distinct layouts and add a blind second pass. Evidence: finding G2 and DV-05 (24 texts DOC-097 to DOC-120).
+- A McNemar comparison against a baseline that was just overwritten is vacuous (lost 0, gained 0): keep the previous baseline and compare old against new. Evidence: DV-05, lost 1, gained 0, p=1.00 once the pre-DV-05 baseline from `88ff632` was used.
+- Substring validation lets a mutated quantity or an extra line written by name through; match tokens and numbers on boundaries and cut labelled names out first. Evidence: findings G3 and L1 (`1351052`).
+- Netting opposite deviations on repeated lines of one SKU hides a real difference; follow the largest deviation and sum only the lines in its direction. Evidence: finding M4 (`dc833d5`).
+The evidence for these is the review findings above; the lessons are consolidated when the phase closes.

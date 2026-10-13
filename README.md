@@ -8,7 +8,7 @@ Phase 04 (exceptions) integrated (merged via PR #6): both channels ask the custo
 Phase 05 (closing the orders module) integrated (merged via PR #9): a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
 Phase 06 (quote requests and wait) integrated (merged via PR #11): quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
 Phase 07 (quotes, decision) is built and delivered for review via PR: offer extraction with Claude Haiku 4.5, a fixed comparison rule, a human approval after a pause with saved state and an issued purchase order, with two new evaluations.
-Phase 08 (reconciliation, detection) is built on its branch: supplier invoices and delivery notes in text, PDF and Excel are read with Claude Haiku 4.5, linked to a purchase order, matched in plain code with a stated tolerance and stored with each difference, with two new evaluations; its LangSmith trace evidence is pending.
+Phase 08 (reconciliation, detection) is built and delivered for review via PR: supplier invoices and delivery notes in text, PDF and Excel are read with Claude Haiku 4.5, linked to a purchase order, matched in plain code with a stated tolerance and stored with each difference, with two new evaluations; its LangSmith trace evidence is pending.
 
 ![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
 
