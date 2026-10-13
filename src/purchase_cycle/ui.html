@@ -27,7 +27,7 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   .page { height: 100vh; display: flex; flex-direction: column; padding: 16px 20px 0; }
-  .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 1fr) minmax(0, 2fr) minmax(320px, 1.2fr); gap: 20px; }
+  .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 320px minmax(0, 1fr) minmax(460px, 1fr); gap: 20px; }
   .col { min-width: 0; height: 100%; overflow-y: auto; padding-bottom: 20px; display: flex; flex-direction: column; gap: 20px; }
   .col > .card { flex: none; }
   header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -47,6 +47,7 @@
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 18px 20px; }
   .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
   @media (max-width: 1100px) {
+    .order td.nm { max-width: none; width: auto; white-space: normal; }
     .page { height: auto; display: block; padding: 16px 12px 40px; }
     .cols { display: flex; flex-direction: column; }
     .col { height: auto; overflow-y: visible; padding-bottom: 0; }
@@ -76,7 +77,7 @@
   button.quiet { background: none; color: var(--muted); font-weight: 500; padding: 8px 10px; }
   button.quiet:hover:not(:disabled) { background: var(--neutral-bg); color: var(--text); }
   .actions { display: flex; justify-content: flex-end; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
-  .line { display: grid; grid-template-columns: 1fr 110px auto; gap: 10px; align-items: end; margin-bottom: 10px; }
+  .line { display: grid; grid-template-columns: minmax(0, 1fr) 72px auto; gap: 8px; align-items: end; margin-bottom: 10px; }
   .filter { width: 260px; max-width: 100%; }
   .scroll { max-height: 18rem; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
   table { border-collapse: collapse; width: 100%; }
@@ -96,15 +97,18 @@
   .entry .kv b { color: var(--muted); font-weight: 600; }
   .reply-label { margin: 10px 0 4px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
   .entry pre { white-space: pre-wrap; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--reply-bg); border: 1px solid var(--reply-border); font: inherit; }
-  .order { margin-top: 10px; overflow-x: auto; }
-  .order th, .order td { padding: 6px 8px; font-size: .88rem; }
-  .order td:first-child { white-space: nowrap; }
+  .order { margin-top: 10px; }
+  .order th, .order td { padding: 5px 6px; font-size: .82rem; }
+  .order th { letter-spacing: 0; }
+  .order td:first-child, .order td.num { white-space: nowrap; }
+  .order td.nm { max-width: 0; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .order td .tag.short { display: block; margin: 2px 0 0; text-align: center; white-space: nowrap; }
   .entry { min-width: 0; }
   .order table { border: 1px solid var(--border); border-radius: 8px; border-collapse: separate; border-spacing: 0; overflow: hidden; }
   .order th { position: static; }
   .order tr.short td { background: var(--warn-bg); color: var(--warn); }
   .order tfoot td { font-weight: 700; border-bottom: 0; border-top: 1px solid var(--border); }
-  .order .tag.short { background: var(--warn); color: var(--card); margin-left: 6px; }
+  .order .tag.short { background: var(--warn); color: var(--card); }
   .unmatched { margin: 6px 0 0; padding-left: 20px; font-size: .92rem; color: var(--warn); }
   .answer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 10px; border-radius: 8px; background: var(--accent-soft); }
   .answer input { flex: 1 1 200px; width: auto; }
@@ -336,13 +340,13 @@ function renderOrder(order) {
   for (const l of order.lines) {
     const tr = document.createElement("tr");
     if (l.short) tr.className = "short";
-    cell(tr, l.sku); cell(tr, l.name);
+    cell(tr, l.sku); cell(tr, l.name, "nm"); tr.children[1].title = l.name;
     cell(tr, String(l.quantity), "num"); cell(tr, l.unit_price.toFixed(2), "num");
     cell(tr, l.amount.toFixed(2), "num"); cell(tr, String(l.stock), "num");
     if (l.short) {
       const tag = document.createElement("span");
       tag.className = "tag short"; tag.textContent = "short of stock";
-      tr.children[1].appendChild(tag);
+      tr.children[5].appendChild(tag);
     }
     body.appendChild(tr);
   }
