@@ -197,3 +197,33 @@ def test_phase_06_files_are_tracked_and_hold_no_keys(tmp_path):
     assert {p.name.split("-")[2] for p in written} == {"request", "reminder"}
     for email in written:
         assert not SECRET_PATTERNS.search(email.read_text(encoding="utf-8", errors="ignore")), email.name
+
+
+def test_phase_07_files_are_tracked_and_hold_no_keys(tmp_path):
+    from test_quote_decision_graph import World
+
+    tracked = set(_tracked())
+    fixed = [
+        "src/purchase_cycle/quote_decision.py",
+        "evals/recordings/offer_extraction.jsonl",
+        "evals/recordings/quotes_demo.jsonl",
+        "evals/baselines/offer_extraction.json",
+    ]
+    folders = (
+        ROOT / "evals" / "datasets" / "offer_extraction",
+        ROOT / "evals" / "datasets" / "quote_decision",
+        ROOT / "examples" / "quotes",
+    )
+    files = sorted(str(p.relative_to(ROOT).as_posix()) for folder in folders for p in folder.rglob("*") if p.is_file())
+    assert len(files) >= 37 + 3 + 4  # the scenarios, the sample orders and replies, and the dataset files
+    assert "examples/quotes/replies-day-3/QR-0001-SUP-003.eml" in files
+    for name in fixed + files:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
+    # Purchase order emails are written at run time and never versioned: render one and scan it.
+    world = World(tmp_path)
+    assert world.run("decide") == 0
+    assert world.run("approve", "QR-0001") == 0
+    (email,) = world.emails()
+    assert email.name.startswith("PO-0001-")
+    assert not SECRET_PATTERNS.search(email.read_text(encoding="utf-8", errors="ignore"))

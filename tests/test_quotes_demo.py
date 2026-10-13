@@ -8,7 +8,9 @@ from pathlib import Path
 
 from test_orders_demo import SITECUSTOMIZE
 
-PHASE_06_OUTPUT = Path(__file__).parent / "golden" / "quotes_demo_phase06.txt"  # the output before phase 07, header left out
+PHASE_06_OUTPUT = (
+    Path(__file__).parent / "golden" / "quotes_demo_phase06.txt"
+)  # the output before phase 07, header left out
 
 
 def test_quotes_demo_ends_with_an_order_and_no_offers_listed_with_the_network_blocked(tmp_path):
