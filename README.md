@@ -404,7 +404,7 @@ The conversation list shows the route, the thread id, the outcome (stored order,
 Modes:
 
 - `--mode live` (default) calls Claude Haiku 4.5, needs the key in `.env` and understands free text; it costs a few cents per order.
-- `--mode replay` costs nothing and needs no key, but only understands the recorded sample texts of `examples/orders/`: send those texts to see the same outcomes as `purchase-cycle route examples/orders`.
+- `--mode replay` costs nothing and needs no key, but only understands the recorded sample texts of `examples/orders/`: send those texts to see the same outcomes as `purchase-cycle orders-demo` (its recordings `orders_demo.jsonl`).
 
 LangSmith tracing is always off, so the page spends no trace quota.
 

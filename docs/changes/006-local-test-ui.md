@@ -28,7 +28,7 @@ Delivery is the work branch `cambio-006-local-test-ui`, created from `main` afte
 | C2 | The page lists the catalog (SKU, name, family, sale unit, price and stock) with a text filter, and the seeded customers with the email and phone each channel uses to identify them | `tests/test_ui.py` (JSON endpoints); owner walkthrough |
 | C3 | Sending from the page writes one input in the channel's own format (web form JSON with catalog-assisted lines, `.eml` from the customer's email, WhatsApp message from the customer's phone) and runs it through `router.run_inbox`; the answer shows the route, the thread id, the outcome and the reply text the customer would get | `tests/test_ui.py` |
 | C4 | A clarification question shows on the page; for WhatsApp the answer is a new message from the same phone, as the router already resumes it, and for web form and email the answer resumes the thread as `clarify answer` does; the resumed order shows its outcome | `tests/test_ui.py` |
-| C5 | In replay, with no key and the network blocked, the sample texts of `examples/orders/` sent through the page give the same outcomes as `purchase-cycle route` on that folder: stored orders, the WhatsApp doubt paused and then stored with the recorded answer, and the photo message answered as text only | `tests/test_ui.py` |
+| C5 | In replay, with no key and the network blocked, the sample texts of `examples/orders/` sent through the page give the same outcomes as `purchase-cycle orders-demo` (its recordings `orders_demo.jsonl`) on that folder: stored orders, the WhatsApp doubt paused and then stored with the recorded answer, and the photo message answered as text only | `tests/test_ui.py` |
 | C6 | A malformed request (unknown channel or customer, empty text, missing answer) returns a JSON error that the page shows, never a traceback; a failed graph run shows its error and keeps the server running | `tests/test_ui.py` |
 | C7 | README section "Try the orders by hand": command, URL, live and replay modes with their cost, how to answer a question, how to start over, and the limits | README; followed step by step in item 4 |
 | C8 | Owner walkthrough in live mode: one order per channel, one clarification answered from the page, and the stored orders visible in the outcome | Owner sees it; notes in Delivery |
@@ -59,6 +59,7 @@ Review round 1 decisions: a POST with an `Origin` header other than `http://127.
 The server is a `ThreadingHTTPServer` with a 30 s handler timeout, so an idle pre-connect socket does not block the page; graph runs and log writes stay serialised by `UiApp.lock`, and reads tolerate a half-written log line.
 An `answer_rejected` entry counts as pending like `question`, and a WhatsApp thread shows its answer control only when it is the customer's latest pending clarification, as the router decides.
 A run parked by recovery shows as `under_review` (status only, no notice text).
+C5 wording changed by the owner on 2026-10-13 from `purchase-cycle route` to `purchase-cycle orders-demo`: `route` in replay has no recordings for the sample texts (review round 1).
 A 500 returns the exception class and a generic message; the detail goes to the server's stderr.
 The `outcome` of a failed run still carries the first line of the exception text (shown on the local page and kept in the log).
 

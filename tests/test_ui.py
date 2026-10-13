@@ -270,7 +270,7 @@ def test_c4_web_form_and_email_questions_are_answered_through_the_answer_endpoin
 
 
 def test_c5_the_sample_texts_give_the_same_outcomes_as_route(server, tmp_path):
-    # `purchase-cycle route` on the sample folder, on a separate database, with the same recordings.
+    # `purchase-cycle orders-demo` on the sample folder (run_inbox with its recordings), on a separate database.
     other = ui.UiApp("replay", tmp_path / "route")
     expected = {r["item"]: cli._demo_outcome(r["route"], r["state"] or {}, r["error"])
                 for r in router.run_inbox(SAMPLES, other.graphs, other.db_path, "ref", tmp_path / "route" / "ref-outbox")}  # fmt: skip
