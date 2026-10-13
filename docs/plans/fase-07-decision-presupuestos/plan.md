@@ -1,6 +1,6 @@
 # Phase 07 - Quotes, decision: plan and results
 
-Status: in execution
+Status: built, delivered for review via PR on 2026-10-13
 Spec: `spec.md` (approved 2026-10-13, frozen)
 Base: branch `fase-07-decision-presupuestos` from `main` at commit `723109c`.
 
@@ -90,8 +90,11 @@ This file is the durable state: a new session resumes from here and from Git.
   C17: the whole suite passes in the clone, so phase 01 to 06 tests pass, with the phase 06 demo test and the suite-order test changed as DV-01 and DV-02 record; `git diff --stat 723109c -- evals/recordings evals/datasets evals/baselines` lists 48 files, all added, none modified (`.evidence/fase-07/recordings-diff-stat.txt`); `orders-demo` in replay equals `orders-demo-before.txt` once the run id and folder path are masked (`.evidence/fase-07/orders-demo-diff.txt`); the earlier-phase test files changed since `723109c` are in `.evidence/fase-07/tests-diff-stat.txt` and each is covered by DV-01 or DV-02. The clone was deleted afterwards.
 - [ ] 18. LangSmith trace and experiment (C16) - check: blocked by the trace quota until about 2026-11-05; recorded as pending and delivered with the catch-up change of phases 02 to 05 (D8).
   Pending, not run: the trace quota is exhausted until about 2026-11-05; under D8 the catch-up change delivers it with phases 02 to 05, as in phases 05 and 06.
-- [ ] 19. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
-- [ ] 20. Results per criterion in the table below, master plan row 07 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+- [x] 19. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
+  Evidence: two review rounds with Opus (see "Adversarial review"); the round 1 fixes are in `5a65b70` (check 833 passed, `.evidence/fase-07/check-review-round1.txt`) and the round 2 fixes in `9d814e9` and `444f997`.
+  Final `npm run check` after the last fix: `.evidence/fase-07/check-final.txt`, 837 passed, exit 0.
+- [x] 20. Results per criterion in the table below, master plan row 07 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+  Evidence: results table filled for C1 to C19 (C16 pending, increment 18); master plan row 07 set to "built, delivered for review via PR"; README phase 07 status line aligned; open items, limitations and candidate learnings listed below; the branch is pushed and the PR to `main` (<PR>) is left for the owner to merge.
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
@@ -99,14 +102,59 @@ This file is the durable state: a new session resumes from here and from Git.
 | DV-01 | The phase 05 test `tests/test_whatsapp_eval.py` (suite order of `eval all`) will gain `offer_extraction` at the end of its expected list, because `ALL_SUITES` grows in increment 12 when its baseline is recorded, and then `quote_decision` at the very end in increment 13 when its scenarios are registered (`tests/test_offer_eval.py` then expects `offer_extraction` second to last, one line); the behaviour of the earlier suites is unchanged | C1, C12 | Applied in increments 12 and 13 |
 | DV-02 | Earlier-phase test files changed since `723109c`, all additive: `tests/test_web_form_eval.py` stubs `offer_extraction.upload_datasets` in the `eval-upload` test because the new suite joined `UPLOAD_SUITES` (3 lines); `tests/test_whatsapp_eval.py` is the suite-order test of DV-01 (2 lines); `tests/test_quotes_demo.py` is the named phase 06 demo test (C17); `tests/test_secrets.py` and `tests/test_seed.py` only gain new tests, no earlier line changed. The sample reply `examples/quotes/replies-day-3/QR-0001-SUP-003.eml` (phase 06 sample data, not a test) was changed to a partial offer of 8 of 12 boxes so that the demo has a full and a partial offer; the phase 06 demo block still prints as before (`tests/golden/quotes_demo_phase06.txt`) | C1, C15, C17 | Applied in increments 3, 14 and 16; awaiting owner review |
 | DV-03 | The lead-time tie-break counts calendar days from the simulated decision date stored at decide (`quote_offers.decided_at`), because the issue date is not known when the recommendation is shown and `approve` orders that shown recommendation; the spec Assumptions say "from the simulated issue date" | C4, C14 | Applied in increment 19, awaiting owner review |
+| DV-04 | The `offer_extraction` critical error (C12) is stricter than the spec definition "usable with a wrong unit price, quantity or currency": it also counts a usable reply with a wrong net price and a reply that must be unusable but is judged usable, since both would reach a purchase order; the measured figure is still 0 of 90 | C12 | Applied in increment 19 (review rounds 1 and 2), awaiting owner review |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | Opus | `723109c..eff7f9f` | correctness, security, evidence, scope | Correctness: 1 blocking (reject while the thread was paused at `issue` after a crash had completed the order), 4 important, 2 minor. Security: 0 critical or high; 2 medium reproduced (a reply re-read at extraction without a sender check; no size cap on the reply) and 2 catalogued as SEC-013 and SEC-014. Evidence: 2 important, 5 minor. Scope: 4 important, 3 minor | Fixed in `5a65b70`: resume only from the approval pause, lead time counted from the decision date, unrounded totals, guarded status refusal, reply sender and reference re-check, `MAX_EMAIL_TEXT` cap and no attachment parsing, scenarios QD-038 and QD-039 proven by mutation, `offer_eval` net-price critical error, per-category metrics, README fixes; SEC-013 and SEC-014 left open in `docs/security.md`. Check at `5a65b70`: 833 passed, exit 0 (`.evidence/fase-07/check-review-round1.txt`) |
+| 2 | Opus | `eff7f9f..5a65b70` | re-review of the round 1 fixes | 15 of 19 fixes confirmed; A4 (lead time anchor) and B1 (`offer_eval` critical errors) only partly fixed | Fixed in `9d814e9`: the stored `quote_offers.decided_at` anchors the tie-break, so `quotes list`, decide and approve agree; an expected-unusable reply made usable counts as a critical error; test for the A6 branch; SEC-014 wording; DV-03. Fixed in `444f997`: the seed schema test lists `decided_at`. Final re-review of `5a65b70..9d814e9` (Opus): no correctness defect; the seed test failure at `9d814e9` is fixed at `444f997`; the stricter C12 critical error definition is recorded as DV-04 and the README aligned; no third round |
+
+The remaining minor findings of both rounds are logged and not fixed: they change no criterion and no behaviour the spec freezes.
 
 ## Results
 Per criterion: command or path run, observed result and evidence reference.
 Pending items, limitations and what could not be checked, stated plainly.
 
+| Criterion | Result | Evidence |
+|---|---|---|
+| C1 | Met | Fresh clone at `ba0b4ec` with the Anthropic and LangSmith variables unset and no `.env`: `npm ci`, `uv sync` and `npm run check` exit 0, 816 passed, twelve evaluations in replay with 24 gate lines PASS (`.evidence/fase-07/fresh-clone-check.txt`, `fresh-clone-check-full.txt`); final check on the branch 837 passed (`check-final.txt`) |
+| C2 | Met | `tests/test_seed.py`: `test_seed_creates_empty_quote_offers_and_purchase_orders_tables`, `test_quote_requests_accept_the_decision_statuses_and_refuse_others`, `test_seed_twice_keeps_the_decision_tables_empty_and_the_other_rows` (increment 3; `decided_at` added in `444f997`) |
+| C3 | Met | `tests/test_quote_decision.py`: `test_one_call_per_replied_supplier_and_the_fields_are_stored`, `test_usability_and_net_price_come_from_code`, `test_a_schema_failing_answer_is_stored_as_extraction_failed_and_the_others_go_on`, `test_a_rerun_reads_the_stored_rows_and_calls_no_model` (increment 4); record and replay use the existing client, and the live baseline of increment 12 ran the task |
+| C4 | Met, with DV-03 | `tests/test_quote_decision.py`: one test per rule (`test_a_full_offer_beats_a_cheaper_partial_one`, `test_among_full_offers_the_lowest_total_wins`, `test_equal_totals_go_to_the_shorter_lead_time_in_calendar_days`, `test_equal_total_and_lead_time_go_to_the_lower_supplier_code`, `test_a_partial_offer_is_recommended_only_when_no_full_offer_is_usable`, `test_no_usable_offer_gives_no_recommendation_and_names_the_reasons`, `test_comparing_calls_no_model`); `tests/test_quote_decision_graph.py`: `test_the_lead_time_tie_break_counts_from_the_simulated_date_of_the_decision` (increments 5 and 19) |
+| C5 | Met | `tests/test_quote_decision_graph.py`: `test_decide_prints_the_offers_and_recommendation_and_pauses_in_approve`, `test_decide_lists_no_offers_requests_for_a_person_and_writes_no_order`, `test_a_second_decide_starts_nothing_and_calls_no_model` (increment 6) |
+| C6 | Met | `tests/test_quote_decision_graph.py`: `test_approve_issues_one_order_and_one_email_and_leaves_stock_and_orders_alone`, `test_choosing_a_partial_offer_orders_the_offered_quantity`, `test_approve_without_a_supplier_orders_the_recommendation_that_was_shown` (increments 7 and 19) |
+| C7 | Met | `tests/test_quote_decision_graph.py`: `test_a_refused_choice_changes_nothing_and_keeps_the_request_waiting`, `test_a_request_with_no_usable_offer_accepts_only_reject`, `test_a_different_supplier_is_refused_when_the_thread_stopped_inside_issue` (increments 7 and 19) |
+| C8 | Met | `tests/test_quote_decision_graph.py`: `test_reject_closes_the_request_with_no_order_and_no_email`, `test_commands_on_a_request_that_is_not_awaiting_approval_fail_with_a_message`, `test_approve_twice_leaves_one_order_and_one_email`, `test_reject_after_approve_and_approve_after_reject_are_refused`, `test_issuing_again_on_resumption_writes_no_second_row_or_file`, `test_reject_is_refused_when_the_thread_stopped_inside_issue` (increments 8 and 19) |
+| C9 | Met | `tests/test_quote_decision_graph.py`: `test_decide_and_approve_in_separate_processes_equal_one_process` (rows, outbox bytes, approve with the recordings file deleted) (increment 9) |
+| C10 | Met | `tests/test_quote_decision_graph.py`: `test_list_shows_every_status_the_recommended_supplier_and_the_order_number`, `test_list_shows_a_rejected_request`, `test_the_list_keeps_the_recommendation_shown_at_decide_when_the_clock_moves` (increments 9 and 19) |
+| C11 | Met | `tests/test_offer_dataset.py` (11 tests: ten categories of 12, 120 replies, same seed same plan, stratified split, validation, second-pass review); generator output in `.evidence/fase-07/offer-dataset.txt` (increment 10) |
+| C12 | Met | `tests/test_offer_eval.py`: each gate forced to fail gives exit 1, missing recordings 2, a below-threshold baseline 3; `npm run eval` replay PASS on both gates and the McNemar gate (`.evidence/fase-07/fresh-clone-check-full.txt`) (increments 11 and 12) |
+| C13 | Met | `evals/baselines/offer_extraction.json` and the live report `.evidence/fase-07/offer-baseline-live.txt`: test split of 90 replies, reply exact match 98.9% [94.0, 99.8], unit price accuracy 100.0% [94.9, 100.0], critical errors 0 of 90 (Wilson upper bound 4.1%); dev run in `offer-dev-r0.txt` (increment 12) |
+| C14 | Met | `tests/test_quote_decision_eval.py` (coverage minimums, one injection per critical kind with exit 1, a wrong expectation with exit 1); 39 scenarios `QD-001` to `QD-039` after review; replay report regenerated after the review in `.evidence/fase-07/eval-quote-decision.txt` (39 of 39, 100.0% [91.0, 100.0], 0 critical errors) |
+| C15 | Met | `tests/test_quotes_demo.py`: `test_quotes_demo_ends_with_an_order_and_no_offers_listed_with_the_network_blocked`, with the phase 06 block equal to `tests/golden/quotes_demo_phase06.txt`; output in `.evidence/fase-07/quotes-demo.txt`, live record in `quotes-demo-record.txt` (increment 14) |
+| C16 | Pending | Blocked by the LangSmith trace quota until about 2026-11-05 (D8); increment 18 not run; delivered with the catch-up change of phases 02 to 05 |
+| C17 | Met, with DV-01 and DV-02 | `.evidence/fase-07/orders-demo-diff.txt` (`orders-demo` equal to `orders-demo-before.txt` once run ids are masked), `recordings-diff-stat.txt` (48 files, all added, none modified), `tests-diff-stat.txt`, ten earlier evaluations PASS in the fresh-clone check (increment 17) |
+| C18 | Met | `tests/test_secrets.py`: `test_phase_07_files_are_tracked_and_hold_no_keys` (increment 16) |
+| C19 | Met | README sections of increment 15 followed in the fresh clone (`.evidence/fase-07/readme-walkthrough.txt`, no defect found); status comparison in `status-comparison.txt`; master plan row 07 and the README phase 07 line set to "built, delivered for review via PR" (increments 1, 15, 17 and 20) |
+
+Open items and limitations:
+- A crash between the compare commit and the checkpoint save leaves the request in `awaiting_approval` with no paused thread, and the command answers with a misleading "run quotes decide first" message; this predates the review and is not fixed.
+- `quotes approve` has no `--mode`, so a live demo resumption may not appear in LangSmith.
+- `quote_decision` calls the private functions `quotes._request` and `quotes._write_email`.
+- The tests of increments 6 to 8 were written together with the graph and were not seen failing first, a process deviation.
+- SEC-013 and SEC-014 (Medium) are open in `docs/security.md`; SEC-003, SEC-006, SEC-011 and SEC-012 still apply.
+- Local `data/` databases created before `9d814e9` lack `quote_offers.decided_at` and must be recreated by seeding a new file; there is no migration.
+- LangSmith evidence is pending until about 2026-11-05: C13 of phases 02 and 03, C15 of phase 04, C17 of phase 05 and C16 of this phase.
+- DV-01, DV-02, DV-03 and DV-04 await the owner's review in the PR.
+- Method tooling defects: the PostToolUse formatter hook breaks `.jsonl` files written with Write or Edit, and the Stop hook gate times out on the full suite (about 9 minutes).
+- Model cost of the phase: about 0.31 USD for the offer extraction baseline (dev and test runs) and about 0.006 USD for the `quotes-demo` live record, about 0.32 USD in total of the 5 USD ceiling.
+- Evidence files in `.evidence/fase-07/` are not versioned.
+
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
+
+- Anchor a time-dependent tie-break to a stored decision timestamp (`quote_offers.decided_at`), so that the list, the decision and the approval agree on the recommendation even when the simulated clock moves.
+- Resume a paused graph only from the interrupt node where it is expected to wait; a thread stopped elsewhere, for example inside `issue` after a crash, needs its own safe path and a test.
+- Isolate tests from the network, and stub the upload in the `eval-upload` test when a suite joins the upload list, so that evaluation upload code cannot reach a real LangSmith account.
+No verbatim session quote was recorded for these; they are inferred from the review findings and are consolidated when the phase closes.

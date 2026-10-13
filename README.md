@@ -7,7 +7,7 @@ Phase 03 (email orders) integrated (merged via PR #5): the email channel, from a
 Phase 04 (exceptions) integrated (merged via PR #6): both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
 Phase 05 (closing the orders module) integrated (merged via PR #9): a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
 Phase 06 (quote requests and wait) integrated (merged via PR #11): quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
-Phase 07 (quotes, decision) is in progress: offer extraction with Claude Haiku 4.5, a fixed comparison rule, a human approval after a pause with saved state and an issued purchase order, with two new evaluations.
+Phase 07 (quotes, decision) is built and delivered for review via PR: offer extraction with Claude Haiku 4.5, a fixed comparison rule, a human approval after a pause with saved state and an issued purchase order, with two new evaluations.
 
 ![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
 
@@ -588,7 +588,7 @@ It grades the final requests, the parked `quote_wait` failures and the outbox fi
 Scenario success is 100.0% (86.2% to 100.0%) with 0 critical errors; the gate is 100% success and 0 critical errors.
 
 `uv run purchase-cycle eval --suite offer_extraction` replays the 90 test replies of the offer extraction dataset (30 more are the development split used to tune the instructions) through the real extraction and usability code.
-Its deterministic graders give offer or decline, quantity, unit price (within half a cent), currency, VAT and lead time accuracy, usability accuracy (computed usability and reason), reply exact match and critical errors, with 95% Wilson intervals globally and per category; a critical error is a reply judged usable with a wrong unit price, quantity or currency, since it would reach a purchase order.
+Its deterministic graders give offer or decline, quantity, unit price (within half a cent), currency, VAT and lead time accuracy, usability accuracy (computed usability and reason), reply exact match and critical errors, with 95% Wilson intervals globally and per category; a critical error is a reply judged usable with a wrong unit price, quantity, currency or net price, or judged usable when it must be unusable, since it would reach a purchase order.
 The gates are reply exact match and unit price accuracy at least 95%, a McNemar regression test per reply against the stored baseline, and a critical error target of 0.
 The Claude Haiku 4.5 baseline on the 90 test replies (`evals/baselines/offer_extraction.json`, tuned on the development split only, with the instructions unchanged after the test run):
 
