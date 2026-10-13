@@ -373,6 +373,14 @@ A difference is stored with its type, SKU, expected and found values, the amount
 - `extra_line`: an invoice line whose SKU is not in the order, or whose text matches no catalog product.
 - `missing_line`: the order SKU is absent from the invoice.
 
+Three rules complete the list:
+
+- An invoice line of the order SKU with no stated price is a `price` difference with no found value and no amount, never a match.
+- Repeated lines of the same SKU are checked one by one.
+  The `price` row holds the lines outside the tolerance and follows the line with the largest deviation: its found price and unit deviation, and the amount of the off-tolerance lines that deviate in the same direction.
+  Opposite deviations never cancel each other out.
+- When the invoiced quantity differs from both the order and the delivery note, the larger difference is stored and the other reference is not kept, because there is one `quantity` row per SKU.
+
 The result is `matched` with no difference, `discrepancies` with at least one, and `awaiting_delivery_note` while no delivery note exists yet.
 A delivery note scanned later completes the same reconciliation to `matched` or `discrepancies` and never adds a second one.
 The order in which files are read does not change the result, and no model is called during matching.
@@ -387,7 +395,8 @@ uv run purchase-cycle reconcile show INV-0001
 ```
 
 `reconcile scan` reads the new files of a folder, in sorted order, and prints one line per file with its kind, state and result.
-`reconcile list` prints the counts by result and by difference type and one line per reconciliation.
+`reconcile list` prints the counts by result and by difference type, one line per reconciliation with its own count per difference type, and a "not reconciled" section with the documents that are unlinked, unreadable or still extracted, each with its stored reason.
+Delivery notes that are linked to an order but have no invoice yet are not listed.
 `reconcile show` prints the result, the order, the delivery note and each difference; an unknown reference exits 1 with a message.
 Every command accepts `--db` and `--checkpoints`; `scan` defaults to `--mode replay`.
 The state is in the database, so each command can run in its own process.
@@ -400,7 +409,7 @@ uv run purchase-cycle reconcile-demo
 
 `reconcile-demo` starts from a fresh database in `data/reconcile-demo/` (`--workdir <folder>` to change it), seeds the seven purchase orders of `examples/invoices/purchase_orders.json`, and runs each step as its own `purchase-cycle` process: `reconcile scan examples/invoices/documents`, `reconcile list`, a `reconcile show` per reconciliation, then `reconcile scan examples/invoices/later` with the delivery note that was held back, `reconcile list` and the `reconcile show` of the reconciliation that changed.
 The 15 sample documents are in the three formats and cover a matched invoice with its delivery note (`INV-0006`), a price difference (`INV-0007`), a quantity difference (`INV-0008`), an extra line (`INV-0009`), an extra and a missing line (`INV-0010`), an invoice without delivery note that the second scan completes to `matched` (`INV-0011`), an invoice (`INV-0014`) that still waits for its delivery note at the end, a document with an unknown order and one from the wrong supplier.
-It prints the extracted documents with their lines, the result of every invoice and the classified differences, and exits non-zero unless it ends with a matched invoice, every difference type, a completed reconciliation and an unlinked document.
+It prints the extracted documents with their lines, the result of every invoice and the classified differences, and exits non-zero unless it ends with a matched invoice, every difference type, a completed reconciliation, an unlinked document and exactly one invoice still awaiting its delivery note.
 By default (`--mode replay`) it reads the extraction answers from `evals/recordings/reconcile_demo.jsonl` and needs no key and no network; a test inside `npm run check` runs it with the network blocked.
 To record them again, set `ANTHROPIC_API_KEY` in `.env` and run `uv run purchase-cycle reconcile-demo --mode record` (15 Haiku 4.5 calls, a few cents); `--mode live` calls the model without saving.
 
@@ -562,8 +571,8 @@ The 39 scenarios of `evals/datasets/quote_decision/` are hand-built by `uv run p
 The 120 supplier documents in `evals/datasets/document_extraction/` were built with the same method as the earlier model datasets:
 
 1. A seeded planning script (`plan.jsonl`, seed 20261013) fixes, for ten categories of 12 documents (clean invoice, delivery note, price basis, several lines, other unit, VAT and totals, chatty text, reference forms, extra charge, messy layout), the kind, reference and lines each document must state.
-2. The texts in `texts/` were written by the coding agent in ASCII English and checked automatically; after a review, the texts of DOC-097 to DOC-120 (extra charge and messy layout) were rewritten one by one with distinct layouts, and the second pass and the test recordings of those documents were redone; a share is rendered as PDF (20) and Excel (20) files that are read back with every labelled fact.
-3. A blind second pass by a clean-context agent relabelled every document (`second_pass_review.jsonl`); all 120 agreed.
+2. The texts in `texts/` were written by the coding agent in ASCII English and checked automatically; after a review, the texts of DOC-097 to DOC-120 (extra charge and messy layout) were rewritten one by one with distinct layouts, and the test recordings of those documents were redone; a share is rendered as PDF (20) and Excel (20) files that are read back with every labelled fact.
+3. A blind second pass by a clean-context agent relabelled every document (`second_pass_review.jsonl`); after the rewrite it re-read the 24 rewritten documents, the review file covers all 120 and all 120 agree (16 rows changed).
 4. A fixed stratified split gives 30 development and 90 test documents; only the development split was used to check the instructions, and no tuning round was needed.
 5. There is no owner audit of the labels: the labels come from the planning script and the second pass.
 
@@ -581,7 +590,7 @@ The grader compares kind, purchase order reference, lines by SKU, quantity and u
 The two failing documents are DOC-060 (other unit), where the model dropped two lines and invented two descriptions in a pack-size conversion case, and DOC-112 (messy layout), where product names wrapped over several lines next to the SKU made the model write the SKU and the description as one product; both are critical errors, and the target of 0 is reported, not gated.
 Kind and reference were read correctly in all 90 documents (100.0%, 95.9% to 100.0%).
 About 90 documents give a wide interval, and the text writer and the evaluated model belong to the same family, so the figures may be optimistic.
-The baseline is `evals/baselines/document_extraction.json`, recorded live once on the test split.
+The baseline is `evals/baselines/document_extraction.json`, stored in mode replay: the 90 recorded test answers, of which 72 are the original live answers and 18 were re-recorded live after the texts DOC-097 to DOC-120 were rewritten (DV-05 in the phase 08 plan).
 
 ### Reconciliation matching cases
 
