@@ -381,7 +381,7 @@ Three rules complete the list:
   Opposite deviations never cancel each other out.
 - When the invoiced quantity differs from both the order and the delivery note, the larger difference is stored and the other reference is not kept, because there is one `quantity` row per SKU.
 - A delivery note that exists but has no line for the invoiced order SKU counts as delivered quantity 0, so the invoiced quantity is a `quantity` difference against the note and the user checks whether it was delivered before paying.
-  This also holds when the note has a line whose product could not be resolved to a SKU: that line is reported separately and the order SKU still shows the difference.
+  This also holds when the note's lines could not be resolved to a SKU: an unresolved note line is not matched to the order SKU and is not reported as a difference of its own.
 
 The result is `matched` with no difference, `discrepancies` with at least one, and `awaiting_delivery_note` while no delivery note exists yet.
 A delivery note scanned later completes the same reconciliation to `matched` or `discrepancies` and never adds a second one.
