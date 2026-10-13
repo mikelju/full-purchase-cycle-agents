@@ -37,7 +37,8 @@ Delivery is the work branch `cambio-006-local-test-ui`, created from `main` afte
 ## Plan
 - [x] 1. `tests/test_ui.py` first (failing), then `src/purchase_cycle/ui.py` (server, JSON endpoints, input writers, router call and resume) and the `ui` CLI command; C1 to C6.
   Evidence: `uv run pytest -q tests/test_ui.py` -> 23 passed (replay, no key, only loopback connections allowed); `ruff check` and `ruff format --check` clean.
-- [ ] 2. The page `src/purchase_cycle/ui.html`: catalog with filter, channel and customer pickers, one input form per channel, the conversation with outcomes and the answer box; C2 to C4.
+- [x] 2. The page `src/purchase_cycle/ui.html`: catalog with filter, channel and customer pickers, one input form per channel, the conversation with outcomes and the answer box; C2 to C4.
+  Evidence: `uv run pytest -q tests/test_ui.py` -> 25 passed (page served with its controls, no external URL; wheel built with `uv build --wheel` holds `purchase_cycle/ui.html`); script checked with `node --check`.
 - [ ] 3. README section and `.gitignore` for `data/ui/`; C7.
 - [ ] 4. Owner walkthrough in live mode; C8.
 - [ ] 5. Adversarial review, `npm run check`, push and PR to `main`; C9.

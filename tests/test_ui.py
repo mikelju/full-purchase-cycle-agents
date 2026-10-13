@@ -341,3 +341,32 @@ def test_only_loopback_hosts_are_served(server):
     with pytest.raises(urllib.error.HTTPError) as error:
         urllib.request.urlopen(request)
     assert error.value.code == 403
+
+
+def test_c2_the_server_serves_the_page_with_its_controls(server):
+    with urllib.request.urlopen(server.base + "/") as response:
+        assert response.status == 200 and response.headers["Content-Type"].startswith("text/html")
+        page = response.read().decode("utf-8")
+    for element in (
+        'id="filter"',
+        'id="channel"',
+        'id="customer"',
+        'id="conversations"',
+        '<datalist id="products">',
+        'id="subject"',
+        'id="text"',
+    ):
+        assert element in page  # fmt: skip
+    assert "cdn" not in page.lower() and "http://" not in page and "https://" not in page
+
+
+def test_the_page_is_part_of_the_package_build(tmp_path):
+    import subprocess
+    import zipfile
+
+    result = subprocess.run(
+        ["uv", "build", "--wheel", "--out-dir", str(tmp_path)], cwd=ROOT, capture_output=True, text=True, timeout=300
+    )
+    assert result.returncode == 0, result.stderr
+    with zipfile.ZipFile(next(tmp_path.glob("*.whl"))) as wheel:
+        assert "purchase_cycle/ui.html" in wheel.namelist()
