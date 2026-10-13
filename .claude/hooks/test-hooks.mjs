@@ -416,12 +416,33 @@ try {
   comprobar("con script format: sale bien", 0, ejecutar("format.mjs", conFormato, { tool_input: { file_path: editado } }).codigo);
   const marca = join(conFormato, "formateado.txt");
   comprobar("el formateador recibe la ruta editada", editado, existsSync(marca) ? readFileSync(marca, "utf8") : "sin marca");
-  comprobar("sin script format: no hace nada", 0, ejecutar("format.mjs", sinCheck, { tool_input: { file_path: editado } }).codigo);
-  comprobar("formateador en rojo: avisa al agente", 2, ejecutar("format.mjs", formatoRoto, { tool_input: { file_path: editado } }).codigo);
+  comprobar("sin script format: no hace nada", 0, ejecutar("format.mjs", sinCheck, { tool_input: { file_path: join(sinCheck, "a.md") } }).codigo);
+  comprobar("formateador en rojo: avisa al agente", 2, ejecutar("format.mjs", formatoRoto, { tool_input: { file_path: join(formatoRoto, "a.md") } }).codigo);
   rmSync(marca, { force: true });
   const peligrosa = join(conFormato, "a$(echo inyectado > pwned.txt).md");
   comprobar("ruta con metacaracteres: no se pasa al shell", 2, ejecutar("format.mjs", conFormato, { tool_input: { file_path: peligrosa } }).codigo);
   comprobar("ruta con metacaracteres: no ejecuta nada", false, existsSync(join(conFormato, "pwned.txt")) || existsSync(marca));
+  const fuera = mkdtempSync(join(tmpdir(), "sdd-fuera-"));
+  temporales.push(fuera);
+  comprobar("archivo fuera del proyecto: sale bien", 0,
+    ejecutar("format.mjs", conFormato, { tool_input: { file_path: join(fuera, "a.md") } }).codigo);
+  comprobar("archivo fuera del proyecto: no se formatea", false, existsSync(marca));
+
+  // Un formateador de Python aplicado a JSON deja comas finales: JSON invalido (cambio 009).
+  const jsonRoto = repoTemporal({ format: "node fmt.js" });
+  const jsonBueno = repoTemporal({ format: "node fmt.js" });
+  temporales.push(jsonRoto, jsonBueno);
+  writeFileSync(join(jsonRoto, "fmt.js"), "require('fs').writeFileSync(process.argv[2], '{\"a\": 1,}')");
+  writeFileSync(join(jsonBueno, "fmt.js"), "require('fs').writeFileSync(process.argv[2], '{\\n  \"a\": 1\\n}')");
+  const original = "{\"a\":1}";
+  writeFileSync(join(jsonRoto, "b.json"), original);
+  comprobar("JSON roto por el formateador: avisa al agente", 2,
+    ejecutar("format.mjs", jsonRoto, { tool_input: { file_path: join(jsonRoto, "b.json") } }).codigo);
+  comprobar("JSON roto por el formateador: se restaura lo editado", original, readFileSync(join(jsonRoto, "b.json"), "utf8"));
+  writeFileSync(join(jsonBueno, "b.json"), original);
+  comprobar("JSON valido y equivalente: sale bien", 0,
+    ejecutar("format.mjs", jsonBueno, { tool_input: { file_path: join(jsonBueno, "b.json") } }).codigo);
+  comprobar("JSON valido y equivalente: se conserva el formato", "{\n  \"a\": 1\n}", readFileSync(join(jsonBueno, "b.json"), "utf8"));
 
   const aporteFormato = conAporte({ format: "node -e \"process.exit(3)\"" },
     { formatear: "node -e \"require('fs').writeFileSync('aporte.txt', process.argv[1])\" {archivo}" });
