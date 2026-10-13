@@ -81,6 +81,10 @@ def add_eval_commands(sub) -> None:
 
     offer_dataset.add_commands(sub)
 
+    from purchase_cycle.evaluation import document_dataset
+
+    document_dataset.add_commands(sub)
+
     from purchase_cycle.evaluation.harness import add_run_commands
 
     add_run_commands(sub, MODES)
