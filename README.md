@@ -12,7 +12,13 @@ Phase 07 (quotes, decision) is built and delivered for review via PR: offer extr
 ![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
 
 The same animation as a video: [docs/assets/purchase-cycle-flow.mp4](docs/assets/purchase-cycle-flow.mp4).
+
 It is a conceptual flow: today the channels run as separate graphs and the quotes graph starts from its own command until the orchestrator of phase 10.
+
+![A shortfall becomes three supplier quote requests; the decision graph compares the offers, recommends the full one and waits for approval before issuing the purchase order](docs/assets/quotes-flow.gif)
+
+The quotes part as a video: [docs/assets/quotes-flow.mp4](docs/assets/quotes-flow.mp4).
+Like the one above, it is a conceptual flow, not the exact current behavior of the code.
 
 ## What it does
 
