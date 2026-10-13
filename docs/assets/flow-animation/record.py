@@ -1,16 +1,23 @@
-"""Deterministic frame capture of purchase-cycle-flow.html (virtual rAF, setTimeout and CSS animation clock)."""
+"""Deterministic frame capture of a flow page (virtual rAF, setTimeout and CSS animation clock).
+
+Usage: record.py [page.html]; the default page is purchase-cycle-flow.html.
+"""
 
 import pathlib
+import sys
 
 from playwright.sync_api import sync_playwright
 
 HERE = pathlib.Path(__file__).parent
-PAGE = (HERE / "purchase-cycle-flow.html").as_uri() + "#clean"
+NAME = sys.argv[1] if len(sys.argv) > 1 else "purchase-cycle-flow.html"
+PAGE = (HERE / NAME).as_uri() + "#clean"
 FPS = 15
 SUB = 4  # virtual 60 Hz rAF, capture every 4th tick
 STEP = 1000 / FPS / SUB
-FRAMES_DIR = HERE / "frames"
-FRAMES_DIR.mkdir(exist_ok=True)
+FRAMES_DIR = HERE / "frames" / pathlib.Path(NAME).stem
+FRAMES_DIR.mkdir(parents=True, exist_ok=True)
+for old in FRAMES_DIR.glob("f*.png"):
+    old.unlink()
 
 INIT = """
 (() => {
