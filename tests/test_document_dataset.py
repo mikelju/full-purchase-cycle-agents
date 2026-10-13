@@ -118,6 +118,23 @@ def test_validation_rejects_missing_facts_invented_skus_and_non_ascii(plan):
     assert any("id" in e for e in dd.validate_document(planned, {"id": "DOC-999", "body": good}))
 
 
+def test_validation_rejects_mutated_numbers_and_extra_lines_written_by_name(plan):
+    planned = next(p for p in plan if p["category"] == "clean_invoice" and p["lines"][0]["written_as"] == "sku")
+    line = planned["lines"][0]
+    good = good_body(planned)
+    quantity, price = str(line["quantity"]), f"{line['unit_price']:.2f}"
+    other = next(p for p in PRODUCTS if p.sku not in {x["sku"] for x in planned["lines"]})
+    bodies = (
+        good.replace(f"{line['sku']} {quantity} ", f"{line['sku']} {quantity}0 ", 1),
+        good.replace(f" {price} ", f" 1{price} ", 1),
+        good.replace(planned["number"], planned["number"] + "0", 1),
+        good + "\n" + other.name + " 1 1.00 1.00",
+    )
+    for body in bodies:
+        assert body != good
+        assert dd.validate_document(planned, {"id": planned["id"], "body": body}), body[:80]
+
+
 def test_delivery_notes_state_no_price(plan):
     planned = next(p for p in plan if p["kind"] == "delivery_note")
     body = good_body(planned) + "\nTotal 12.50 EUR"

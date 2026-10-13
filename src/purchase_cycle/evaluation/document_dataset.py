@@ -242,7 +242,13 @@ def build_plan(seed: int = SEED) -> list[dict]:
 
 
 def _has_number(body: str, value) -> bool:
-    return re.search(rf"(?<![\d.,]){value}(?!\d|[.,]\d)", body) is not None
+    return re.search(rf"(?<![\d.,]){re.escape(str(value))}(?!\d|[.,]\d)", body) is not None
+
+
+def _has_token(low: str, token: str, plural: bool = False) -> bool:
+    """The lower-case token stands alone: no letter, digit or hyphen touches it (a plural s is allowed on request)."""
+    ending = "(?:e?s)?" if plural else ""
+    return re.search(rf"(?<![a-z0-9-]){re.escape(token.lower())}{ending}(?![a-z0-9-])", low) is not None
 
 
 def validate_document(planned: dict, text: dict) -> list[str]:
@@ -269,7 +275,7 @@ def validate_document(planned: dict, text: dict) -> list[str]:
         ("supplier", planned["supplier_written"]),
         ("issue date", planned["issue_date"]),
     ):
-        if fact.lower() not in low:
+        if not _has_token(low, fact):
             errors.append(f"body must contain the {label} {fact!r}")
     if planned["reference_written"] not in body:
         errors.append(f"body must contain the order reference {planned['reference_written']!r}")
@@ -278,19 +284,28 @@ def validate_document(planned: dict, text: dict) -> list[str]:
             errors.append(f"body names another purchase order {match.group(0)!r}")
     wanted = {x["sku"] for x in planned["lines"]}
     for line in planned["lines"]:
-        written = line["sku"].lower() in low if line["written_as"] == "sku" else match_key(line["product"]) in key
+        written = (
+            _has_token(low, line["sku"]) if line["written_as"] == "sku" else _has_token(key, match_key(line["product"]))
+        )
         if not written:
             errors.append(f"body must contain the {line['written_as']} of {line['sku']}")
         if not _has_number(body, line["quantity"]):
             errors.append(f"body must contain the quantity {line['quantity']} of {line['sku']}")
-        if line["written_unit"] and line["written_unit"] not in low:
+        if line["written_unit"] and not _has_token(low, line["written_unit"], plural=True):
             errors.append(f"body must contain the unit {line['written_unit']!r} of {line['sku']}")
         for field in ("unit_price", "line_total"):
-            if line[field] is not None and f"{line[field]:.2f}" not in body:
+            if line[field] is not None and not _has_number(body, f"{line[field]:.2f}"):
                 errors.append(f"body must contain the {field} {line[field]:.2f} of {line['sku']}")
     for sku, pattern in SKU_PATTERNS.items():
         if sku not in wanted and pattern.search(low):
             errors.append(f"body names {sku}, which is not in the label")
+    wanted_names = [match_key(p.name) for p in PRODUCTS if p.sku in wanted]
+    for product in PRODUCTS:
+        name = match_key(product.name)
+        if product.sku in wanted or any(name in longer for longer in wanted_names):
+            continue  # a name inside the name of a labelled product is not another line
+        if _has_token(key, name):
+            errors.append(f"body names the product {product.sku}, which is not in the label")
     if invoice and "eur" not in low:
         errors.append("body does not name the currency EUR")
     if not invoice and (PRICE_PATTERN.search(body) or re.search(r"\beur\b|\bprice", low)):

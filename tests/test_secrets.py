@@ -256,6 +256,11 @@ def test_phase_08_files_are_tracked_and_hold_no_keys():
         assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
         assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
     # A PDF or Excel file is compressed, so its decoded text is what the scan reads.
+    decoded = 0
     for name in files:
-        if name.startswith("examples/invoices/") and Path(name).suffix in (".pdf", ".xlsx"):
+        if name.startswith(("examples/invoices/", "evals/datasets/document_extraction/files/")) and Path(
+            name
+        ).suffix in (".pdf", ".xlsx"):
+            decoded += 1
             assert not SECRET_PATTERNS.search(reconciliation.document_text(ROOT / name)), name
+    assert decoded >= 40 + 6, "the rendered dataset files and the sample PDF and Excel documents were not decoded"

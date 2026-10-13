@@ -102,7 +102,14 @@ def test_one_call_and_one_row_per_document_in_the_three_formats_with_the_same_li
 
 
 def test_the_model_receives_the_labelled_facts_read_from_each_of_the_three_formats(tmp_path):
-    facts = ["Invoice INV-77", "Order reference PO-0001", "Nitrile examination gloves, powder-free, size XS", "10", "4.10", "41.00"]
+    facts = [
+        "Invoice INV-77",
+        "Order reference PO-0001",
+        "Nitrile examination gloves, powder-free, size XS",
+        "10",
+        "4.10",
+        "41.00",
+    ]
     for path in _files(tmp_path):
         text = reconciliation.model_text(reconciliation.document_text(path))
         for fact in facts:
