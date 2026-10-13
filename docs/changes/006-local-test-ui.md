@@ -1,6 +1,6 @@
 # 006 - Local test page for the orders channels
 
-Status: in progress
+Status: delivered (PR to `main`, pending owner merge)
 
 ## Contract
 Goal and reason:
@@ -49,8 +49,10 @@ Delivery is the work branch `cambio-006-local-test-ui`, created from `main` afte
   Evidence: the 5 new `test_c10_*` tests failed first, then `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py` -> 152 passed; `ruff check` and `ruff format --check` clean; script checked with `node --check`. Replay server on port 8772 with a temporary data dir: sample 01 sent to `/api/send` stored, and `/api/conversations` returned the order block (2 lines, total 169.2).
 - [x] 5. Database view and stock shortfall check (tests first, then `ui.py` and `ui.html`); C11, C12.
   Evidence: the 7 new `test_c11_*` and `test_c12_*` tests failed first (7 failed, 39 deselected); then `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py tests/test_quote*.py` -> 288 passed; `ruff check` and `ruff format --check` clean (139 files); script checked with `node --check`. Replay server on port 8773 with a temporary data dir: sample 01 sent to `/api/send` stored with stock set to 3, `POST /api/quotes/scan` returned 2 shortfalls and started QR-0001 (3 emails) and QR-0002 (2 emails), a second scan said no new requests, `GET /api/database` returned 6 tables (1 order, 2 lines, 2 quote requests) and the outbox held the 5 `.eml` files; the server was stopped and port 8773 no longer listens.
-- [ ] 6. Owner walkthrough in live mode; C8.
-- [ ] 7. Adversarial review, `npm run check`, push and PR to `main`; C9.
+- [x] 6. Owner walkthrough in live mode; C8.
+  Evidence: owner decision 2026-10-13: walked through the page in live mode (one order per channel, clarification, order block, database view, shortfall check) and approved the three-column layout ("it is perfect").
+- [x] 7. Adversarial review, `npm run check`, push and PR to `main`; C9.
+  Evidence: review rounds 1-3 in the table above; check result and PR in Delivery.
 
 ## Decisions
 The page runs every input through `router.run_inbox`, so it exercises the same path as `purchase-cycle route` and gets idempotency, duplicate handling and WhatsApp resumption for free.
@@ -86,3 +88,28 @@ The request emails listed are those named `<reference>-request-*.eml` that also 
 | 3 | Claude Opus 5.5 subagent | `90aee16..8058388` | Security; Correctness | Medium: false "nothing new" message when extra demand sits behind a waiting request. Medium: missing test coverage (earlier closed request) and a tautological `checkpoints.db exists` assertion. Low/Medium: lines under a pending question listed as not recognised. Low: shortage warning per line, not per SKU. Low: order block frozen in the log. Low: stale `.eml` files of an older database listed. Low: shortfall headers. Not fixed (Low): SKU without a stock row (the seed always creates one); a partly failed scan leaves its emails off the page (they show in the Database view and the outbox) | Fixed in 0e930f6 |
 
 ## Delivery
+
+Result: the local test page `purchase-cycle ui` is delivered on branch `cambio-006-local-test-ui` with a PR to `main`, pending the owner's merge.
+PR: PR_PLACEHOLDER
+
+| ID | Status | Evidence |
+|---|---|---|
+| C1 | Met | `tests/test_ui.py` (loopback only, own database under `data/ui/`, tracing forced off) |
+| C2 | Met | `tests/test_ui.py` JSON endpoints; owner walkthrough |
+| C3 | Met | `tests/test_ui.py`; owner walkthrough, one order per channel in live mode |
+| C4 | Met | `tests/test_ui.py`; owner walkthrough, clarification answered from the page |
+| C5 | Met | `tests/test_ui.py` replay against `orders-demo` samples |
+| C6 | Met | `tests/test_ui.py` (JSON errors, 403 and 415 on POST checks, no traceback) |
+| C7 | Met | README section "Try the orders by hand" |
+| C8 | Met | Owner walkthrough 2026-10-13 in live mode; three-column layout approved |
+| C9 | Met | `npm run check` -> exit=0, 890 passed in 525 s, ruff clean, replay evaluations failures: 0 and no tracked file modified afterwards (output kept outside the repo) |
+| C10 | Met | `tests/test_ui.py` `test_c10_*`; owner walkthrough |
+| C11 | Met | `tests/test_ui.py` `test_c11_*`; owner walkthrough |
+| C12 | Met | `tests/test_ui.py` `test_c12_*`; owner walkthrough |
+
+Review: three adversarial rounds (table above), no Critical or High finding open.
+Open items:
+- Latent inconsistency: a SKU without a stock row (the seed always creates one) is not handled by the order block.
+- A partly failed scan leaves its request emails off the shortfall list; they show only in the outbox and the Database view.
+- A real WhatsApp connection (Meta Cloud API test number) is a later change.
+- The full quotes cycle on the page (supplier replies, decision, approval) is a later change.
