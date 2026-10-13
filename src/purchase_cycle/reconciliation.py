@@ -485,8 +485,8 @@ def list_results(conn: sqlite3.Connection) -> dict:
         {**dict(row), "file": Path(row["source_file"]).name}
         for row in conn.execute(
             "SELECT id, kind, number, status, reason, source_file FROM supplier_documents "
-            "WHERE status IN (?, ?) ORDER BY id",
-            (UNLINKED, EXTRACTION_FAILED),
+            "WHERE status IN (?, ?, ?) ORDER BY id",
+            (UNLINKED, EXTRACTION_FAILED, EXTRACTED),
         )
     ]
     by_type = {kind: 0 for kind in DISCREPANCY_TYPES}

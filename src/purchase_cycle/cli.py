@@ -238,7 +238,9 @@ def cmd_reconcile_list(args) -> int:
     if listing["unreconciled"]:
         print(f"not reconciled: {len(listing['unreconciled'])}")
         for item in listing["unreconciled"]:
-            print(f"  {item['file']}  {item['kind'] or 'unreadable'}  {item['status']} ({item['reason']})")
+            print(
+                f"  {item['file']}  {item['kind'] or 'unreadable'}  {item['status']} ({item['reason'] or 'not linked yet'})"
+            )
     return 0
 
 
