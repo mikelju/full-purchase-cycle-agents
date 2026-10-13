@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS quote_requests (
     sku TEXT NOT NULL REFERENCES products (sku),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     thread_id TEXT NOT NULL UNIQUE,
-    status TEXT NOT NULL CHECK (status IN ('waiting', 'ready_for_decision', 'no_offers')),
+    status TEXT NOT NULL CHECK (status IN ('waiting', 'ready_for_decision', 'no_offers', 'awaiting_approval', 'ordered', 'rejected')),
     created_at TEXT NOT NULL,
     reminder_at TEXT NOT NULL,
     deadline TEXT NOT NULL
@@ -103,6 +103,37 @@ CREATE TABLE IF NOT EXISTS quote_request_suppliers (
     replied_at TEXT,
     reply_file TEXT,
     PRIMARY KEY (request_id, supplier_code)
+);
+CREATE TABLE IF NOT EXISTS quote_offers (
+    request_id INTEGER NOT NULL REFERENCES quote_requests (id),
+    supplier_code TEXT NOT NULL REFERENCES suppliers (code),
+    offers INTEGER CHECK (offers IN (0, 1)),
+    quantity INTEGER,
+    unit_price REAL,
+    currency TEXT,
+    vat_included INTEGER CHECK (vat_included IN (0, 1)),
+    vat_rate REAL,
+    lead_time_days INTEGER,
+    working_days INTEGER CHECK (working_days IN (0, 1)),
+    price_text TEXT,
+    net_unit_price REAL,
+    usable INTEGER NOT NULL CHECK (usable IN (0, 1)),
+    reason TEXT,
+    reply_file TEXT,
+    PRIMARY KEY (request_id, supplier_code)
+);
+CREATE TABLE IF NOT EXISTS purchase_orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    request_id INTEGER NOT NULL UNIQUE REFERENCES quote_requests (id),
+    supplier_code TEXT NOT NULL REFERENCES suppliers (code),
+    sku TEXT NOT NULL REFERENCES products (sku),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price REAL NOT NULL,
+    currency TEXT NOT NULL,
+    total REAL NOT NULL,
+    expected_delivery TEXT NOT NULL,
+    issued_at TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('issued'))
 );
 """
 
