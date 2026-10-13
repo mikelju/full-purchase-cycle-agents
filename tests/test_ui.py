@@ -553,3 +553,115 @@ def test_c10_old_log_lines_without_the_new_fields_still_read_back(server):
     with urllib.request.urlopen(server.base + "/") as response:
         page = response.read().decode("utf-8")
     assert "entry.order" in page and "entry.unmatched" in page and "short of stock" in page
+
+
+# C11 and C12: the database view and the stock shortfall check ----------------------------------------------------------
+
+DATABASE_TABLES = ["orders", "order_lines", "stock", "quote_requests", "quote_offers", "purchase_orders"]
+
+
+def _dump(server) -> list[str]:
+    conn = db.connect(server.app.db_path)
+    try:
+        return list(conn.iterdump())
+    finally:
+        conn.close()
+
+
+def _short_order(server, quantity: int = 20, stock: int = 3) -> dict:
+    """Store a web form order for gloves whose quantity exceeds the stock; returns the conversation entry."""
+    conn = db.connect(server.app.db_path)
+    conn.execute("UPDATE stock SET on_hand = ?", (stock,))
+    conn.commit()
+    conn.close()
+    form = {
+        "channel": "web_form",
+        "customer": "CLI-001",
+        "lines": [{"product": "nitrile gloves M", "quantity": quantity}],
+    }
+    entry = call(server, "POST", "/api/send", form)[1]
+    assert entry["status"] == "stored"
+    return entry
+
+
+def test_c11_database_view_returns_the_six_tables_and_never_writes(server):
+    entry = _short_order(server)
+    before = _dump(server)
+    status, data = call(server, "GET", "/api/database")
+    assert status == 200
+    assert [t["name"] for t in data["tables"]] == DATABASE_TABLES
+    tables = {t["name"]: t for t in data["tables"]}
+    assert tables["orders"]["rows"][0]["id"] == entry["order_id"]
+    assert tables["order_lines"]["columns"] == ["id", "order_id", "sku", "quantity"]
+    assert tables["order_lines"]["rows"][0]["quantity"] == 20
+    assert tables["stock"]["rows"] and all(row["on_hand"] == 3 for row in tables["stock"]["rows"])
+    assert tables["quote_requests"]["rows"] == [] and tables["quote_offers"]["rows"] == []
+    assert tables["purchase_orders"]["rows"] == []
+    assert _dump(server) == before  # reading changed nothing
+
+
+def test_c11_database_view_is_get_only_and_the_page_has_it(server):
+    assert call(server, "POST", "/api/database", {})[0] == 404
+    with urllib.request.urlopen(server.base + "/") as response:
+        page = response.read().decode("utf-8")
+    assert "/api/database" in page and "Database" in page
+
+
+def test_c12_scan_starts_a_request_for_a_shortfall_and_writes_the_supplier_emails(server):
+    _short_order(server, quantity=20, stock=3)
+    status, result = call(server, "POST", "/api/quotes/scan", {})
+    assert status == 200
+    [short] = result["shortfalls"]
+    assert set(short) == {"sku", "demand", "on_hand", "requested", "shortfall"}
+    assert (short["demand"], short["on_hand"], short["requested"], short["shortfall"]) == (20, 3, 0, 17)
+    [started] = result["started"]
+    assert started["sku"] == short["sku"] and started["quantity"] == 17 and started["reference"] == "QR-0001"
+    assert started["emails"], "one request email per supplier of the family"
+    for mail in started["emails"]:
+        assert (server.app.outbox / mail["file"]).exists()
+        assert mail["file"].startswith("QR-0001-request-") and mail["to"] and "QR-0001" in mail["subject"]
+    assert sorted(p.name for p in server.app.outbox.glob("QR-0001-request-*.eml")) == sorted(
+        m["file"] for m in started["emails"]
+    )
+    rows = {t["name"]: t["rows"] for t in call(server, "GET", "/api/database")[1]["tables"]}
+    assert [r["sku"] for r in rows["quote_requests"]] == [short["sku"]]
+    assert (server.app.root / "checkpoints.db").exists()
+
+
+def test_c12_a_second_scan_with_nothing_new_says_so(server):
+    _short_order(server)
+    first = call(server, "POST", "/api/quotes/scan", {})[1]
+    files = sorted(p.name for p in server.app.outbox.iterdir())
+    again = call(server, "POST", "/api/quotes/scan", {})[1]
+    assert again["started"] == [] and again["shortfalls"] == []
+    assert "no new" in again["message"].lower() and first["message"] != again["message"]
+    assert sorted(p.name for p in server.app.outbox.iterdir()) == files  # no email repeated
+
+
+def test_c12_scan_with_no_shortfall_starts_nothing(server):
+    result = call(server, "POST", "/api/quotes/scan", {})[1]  # no orders at all
+    assert result["started"] == [] and result["shortfalls"] == []
+    entry = call(server, "POST", "/api/send", {"channel": "web_form", "customer": "CLI-001", "lines": [{"product": "nitrile gloves M", "quantity": 1}]})[1]  # fmt: skip
+    assert entry["status"] == "stored"  # the seeded stock covers one unit
+    result = call(server, "POST", "/api/quotes/scan", {})[1]
+    assert result["started"] == [] and "no new" in result["message"].lower()
+    assert not server.app.outbox.exists() or not list(server.app.outbox.glob("QR-*"))
+
+
+def test_c12_scan_never_calls_the_model_and_keeps_the_origin_checks(server, loopback_only):
+    _short_order(server)
+    server.app.graphs = {}  # an order graph, and so a model client, would fail on this
+    status, result = call(server, "POST", "/api/quotes/scan", {})
+    assert status == 200 and len(result["started"]) == 1
+    assert loopback_only == []  # no outgoing connection was tried
+    request = urllib.request.Request(server.base + "/api/quotes/scan", data=b"{}", method="POST", headers={"Content-Type": "application/json", "Origin": "http://evil.example"})  # fmt: skip
+    with pytest.raises(urllib.error.HTTPError) as refused:
+        urllib.request.urlopen(request)
+    assert refused.value.code == 403
+    assert call(server, "GET", "/api/quotes/scan")[0] == 404
+
+
+def test_c12_the_page_has_the_button(server):
+    with urllib.request.urlopen(server.base + "/") as response:
+        page = response.read().decode("utf-8")
+    assert "Check stock shortfalls" in page and "/api/quotes/scan" in page

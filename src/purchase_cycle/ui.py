@@ -14,6 +14,7 @@ import threading
 import time
 import uuid
 from datetime import UTC, datetime
+from email import message_from_bytes, policy
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate, make_msgid
 from http import HTTPStatus
@@ -23,7 +24,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import cli, config, db, router, studio
+from purchase_cycle import cli, config, db, quotes, router, studio
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import build_email_order_graph
 from purchase_cycle.graph import sqlite_checkpointer
@@ -47,6 +48,7 @@ RECORDINGS_PATH = studio.RECORDINGS_PATH  # the sample inbox answers of every ta
 HTML_PATH = Path(__file__).with_name("ui.html")
 UI_MODES = ("live", "replay")
 CHANNELS = ("web_form", "email", "whatsapp")
+DATABASE_TABLES = ("orders", "order_lines", "stock", "quote_requests", "quote_offers", "purchase_orders")
 HOST = "127.0.0.1"
 MAX_BODY = 100_000  # bytes of one request
 MAX_TEXT = 4000  # characters of one email body, WhatsApp text or answer
@@ -159,6 +161,19 @@ class UiApp:
         if not found:
             raise BadRequest(f"unknown customer '{code}'")
         return found[0]
+
+    def database(self) -> dict:
+        """The tables of the page's own database, read only: column names and every row."""
+        conn = db.connect(self.db_path)
+        try:
+            tables = []
+            for name in DATABASE_TABLES:
+                cursor = conn.execute(f"SELECT * FROM {name} ORDER BY rowid")  # names come from the constant above
+                columns = [column[0] for column in cursor.description]
+                tables.append({"name": name, "columns": columns, "rows": [dict(row) for row in cursor]})
+            return {"tables": tables}
+        finally:
+            conn.close()
 
     def conversations(self) -> list[dict]:
         """Every logged entry, oldest first; `pending` marks the last entry of a thread still waiting for an answer."""
@@ -282,6 +297,38 @@ class UiApp:
                 channel, customer, sent, result["route"], result["thread_id"], result["state"], result["error"]
             )
             return self._log(entry)
+
+    def scan_quotes(self, payload: dict) -> dict:
+        """Run `quotes.scan` on the page's database: report the shortfalls and the requests (and emails) it started."""
+        with self.lock:
+            conn = db.connect(self.db_path)
+            try:
+                found = [
+                    {
+                        "sku": short["sku"],
+                        "demand": short["demand"],
+                        "on_hand": short["on_hand"],
+                        "requested": short["demand"] - short["on_hand"] - short["shortfall"],
+                        "shortfall": short["shortfall"],
+                    }
+                    for short in quotes.shortfalls(conn)
+                ]
+            finally:
+                conn.close()
+            started = quotes.scan(self.db_path, self.checkpointer, self.outbox)  # no model call
+        for request in started:
+            request["emails"] = [self._email_summary(path) for path in sorted(self.outbox.glob(f"{request['reference']}-request-*.eml"))]  # fmt: skip
+        message = (
+            f"{len(started)} quote request(s) started"
+            if started
+            else "No new quote requests: no SKU is short of stock beyond what was already requested."
+        )
+        return {"shortfalls": found, "started": started, "message": message}
+
+    @staticmethod
+    def _email_summary(path: Path) -> dict:
+        message = message_from_bytes(path.read_bytes(), policy=policy.default)
+        return {"file": path.name, "to": str(message["To"]), "subject": str(message["Subject"])}
 
     def _write_web_form(self, folder: Path, send_id: str, customer: dict, payload: dict) -> str:
         lines = payload.get("lines")
@@ -439,6 +486,7 @@ class Handler(BaseHTTPRequestHandler):
                 "/api/catalog": self.app.catalog,
                 "/api/customers": self.app.customers,
                 "/api/conversations": self.app.conversations,
+                "/api/database": self.app.database,
             }
             if path in routes:
                 return self._json(HTTPStatus.OK, routes[path]())
@@ -456,7 +504,11 @@ class Handler(BaseHTTPRequestHandler):
             if content_type != "application/json":
                 return self._error(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "send the body as application/json")
             path = self.path.split("?", 1)[0]
-            actions = {"/api/send": self.app.send, "/api/answer": self.app.answer}
+            actions = {
+                "/api/send": self.app.send,
+                "/api/answer": self.app.answer,
+                "/api/quotes/scan": self.app.scan_quotes,
+            }
             if path not in actions:
                 return self._error(HTTPStatus.NOT_FOUND, f"nothing at {path}")
             try:

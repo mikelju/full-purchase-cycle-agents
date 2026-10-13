@@ -99,6 +99,9 @@
   .unmatched { margin: 6px 0 0; padding-left: 20px; font-size: .92rem; color: var(--warn); }
   .answer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 10px; border-radius: 8px; background: var(--accent-soft); }
   .answer input { flex: 1 1 200px; width: auto; }
+  .block { margin-top: 20px; }
+  .db-table { margin-bottom: 14px; }
+  .db-table h3 { font-size: .9rem; margin: 0 0 6px; }
   .empty { padding: 28px 12px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 10px; }
 </style>
 </head>
@@ -162,6 +165,24 @@
   <div id="conversations"></div>
 </section>
 </div>
+
+<section class="card block">
+  <div class="card-head">
+    <h2>Stock shortfalls</h2>
+    <button type="button" id="scan" class="primary">Check stock shortfalls</button>
+  </div>
+  <p class="hint">Starts one quote request per SKU whose stored orders exceed its stock; the request emails go to the outbox. No model call.</p>
+  <div id="scan-result"></div>
+</section>
+
+<section class="card block">
+  <div class="card-head">
+    <h2>Database</h2>
+    <button type="button" id="refresh-db" class="secondary">Refresh</button>
+  </div>
+  <p class="hint">Read only: the page's own database, <span class="mono">data/ui/purchase_cycle.db</span>.</p>
+  <div id="database"></div>
+</section>
 </div>
 
 <script>
@@ -394,6 +415,59 @@ function renderConversations(entries) {
   }
 }
 
+function table(columns, rows) {
+  const wrap = document.createElement("div");
+  wrap.className = "scroll";
+  const t = document.createElement("table");
+  const hr = document.createElement("tr");
+  for (const name of columns) { const th = document.createElement("th"); th.textContent = name; hr.appendChild(th); }
+  const head = document.createElement("thead"); head.appendChild(hr); t.appendChild(head);
+  const body = document.createElement("tbody");
+  for (const row of rows) {
+    const tr = document.createElement("tr");
+    for (const name of columns) cell(tr, row[name] === null ? "" : String(row[name]));
+    body.appendChild(tr);
+  }
+  t.appendChild(body); wrap.appendChild(t);
+  return wrap;
+}
+
+async function loadDatabase() {
+  const root = $("database");
+  root.textContent = "";
+  for (const t of (await api("/api/database")).tables) {
+    const div = document.createElement("div");
+    div.className = "db-table";
+    const h = document.createElement("h3");
+    h.textContent = t.name + " (" + t.rows.length + ")";
+    div.appendChild(h);
+    if (t.rows.length) div.appendChild(table(t.columns, t.rows));
+    else line(div, "", "No rows.", "hint");
+    root.appendChild(div);
+  }
+}
+
+async function scan() {
+  showError("");
+  $("scan").disabled = true;
+  try {
+    const result = await api("/api/quotes/scan", {});
+    const root = $("scan-result");
+    root.textContent = "";
+    line(root, "", result.message, "reply-label");
+    if (result.shortfalls.length) {
+      const cols = ["sku", "demand", "on_hand", "requested", "shortfall"];
+      root.appendChild(table(cols, result.shortfalls));
+    }
+    for (const request of result.started) {
+      line(root, request.reference, request.sku + " x " + request.quantity);
+      for (const mail of request.emails) line(root, "", mail.file + " to " + mail.to + " - " + mail.subject, "mono meta");
+    }
+    await loadDatabase();
+  } catch (error) { showError(error.message); }
+  $("scan").disabled = false;
+}
+
 async function loadConversations() { renderConversations(await api("/api/conversations")); }
 
 async function start() {
@@ -421,6 +495,7 @@ async function start() {
     addLine();
     showChannel();
     await loadConversations();
+    await loadDatabase();
   } catch (error) { showError(error.message); }
 }
 
@@ -428,6 +503,8 @@ $("channel").onchange = showChannel;
 $("customer").onchange = showChannel;
 $("add-line").onclick = addLine;
 $("send").onclick = send;
+$("scan").onclick = scan;
+$("refresh-db").onclick = () => loadDatabase().catch((error) => showError(error.message));
 start();
 </script>
 </body>
