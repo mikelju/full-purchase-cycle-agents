@@ -734,7 +734,7 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - Suppliers are simulated by email files; nothing is sent or received over a network.
 - Offers come from simulated reply files; no currency conversion, minimum order quantity, shipping cost or payment terms are modelled, and an offer in another currency is shown as unusable.
 - No order is split between suppliers. A partial order leaves the rest of the shortfall without a new request, because phase 06 nets every earlier request out of the shortfall whatever its status; the same holds for `rejected` and `no_offers` requests, so there is no automatic re-quote after a rejection or a request with no offers, and the person has to handle them.
-- Stock and customer orders are not updated when a purchase order is issued; the delivery note of phase 08 brings the goods in.
+- Stock and customer orders are not updated when a purchase order is issued; phase 08 matches delivery notes to purchase orders but does not change stock either, so receiving the goods stays out of scope.
 - Working days ignore holidays, as the simulated clock does.
 - A database made by phase 06 code needs a new seeded file because the status check of `quote_requests` is wider and SQLite cannot change it in place.
 - The text writer and the evaluated model belong to the same family, so the `offer_extraction` figures may be optimistic, and a price per pack read as a price per sale unit is the most costly extraction error, which is why it has its own category and counts as a critical error.
