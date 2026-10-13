@@ -40,4 +40,4 @@ Two existing format tests passed a path from another temporary repo; they now us
 ## Delivery
 C1: new hook tests pass; with the fixed hook, the scratch `plugin.json` and `relevo.test.ts` give exit 0 and `plugin.json` stays byte-identical, while the `origin/main` hook on the same copy produces the reported `SyntaxError` at line 13 column 9.
 C2: new hook tests pass; real ruff on an in-project copy of `plugin.json` now prints the restore notice, exits 2 and leaves the file byte-identical.
-C3: see the PR description for the `npm run check` result.
+C3: `npm run check` on this branch exited 0 on 2026-10-13 (hook suite, ruff, pytest and the replay eval with 0 failures), after `npm ci` in the fresh worktree.
