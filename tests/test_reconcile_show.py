@@ -65,6 +65,27 @@ def test_list_prints_each_invoice_and_the_counts_by_type(tmp_path, capsys):
     assert "discrepancies=1" in out and "matched=0" in out and "awaiting_delivery_note=0" in out
 
 
+def test_list_prints_the_counts_by_type_of_each_invoice(tmp_path, capsys):
+    world = _world(tmp_path)
+    assert world.run() == 0
+    capsys.readouterr()
+    assert cli.main(_command(world, "list")) == 0
+    line = next(row for row in capsys.readouterr().out.splitlines() if "INV-0001" in row)
+    assert "price=1 quantity=0 extra_line=1 missing_line=0" in line
+
+
+def test_list_names_the_documents_that_were_not_reconciled(tmp_path, capsys):
+    world = World(tmp_path, answers=({**INVOICE, "po_reference": "PO-0099"}, {**NOTE, "lines": "nope"}))
+    assert world.run() == 0
+    capsys.readouterr()
+    assert cli.main(_command(world, "list")) == 0
+    out = capsys.readouterr().out
+    assert "reconciliations: 0" in out and "not reconciled: 2" in out
+    assert (
+        "a-invoice.txt  invoice  unlinked (unknown_order)" in out and "b-note.txt  unreadable  extraction_failed" in out
+    )
+
+
 def test_list_of_an_empty_database_prints_zero(tmp_path, capsys):
     world = _world(tmp_path)
     assert cli.main(_command(world, "list")) == 0

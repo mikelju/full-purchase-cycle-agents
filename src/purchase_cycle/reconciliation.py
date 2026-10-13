@@ -460,6 +460,26 @@ def list_results(conn: sqlite3.Connection) -> dict:
             "FROM reconciliations r JOIN purchase_orders o ON o.id = r.purchase_order_id ORDER BY r.invoice_id"
         )
     ]
+    for row in rows:
+        row["by_type"] = {kind: 0 for kind in DISCREPANCY_TYPES}
+        row["by_type"].update(
+            {
+                found["type"]: found["n"]
+                for found in conn.execute(
+                    "SELECT d.type, COUNT(*) AS n FROM discrepancies d JOIN reconciliations r "
+                    "ON r.id = d.reconciliation_id WHERE r.invoice_id = ? GROUP BY d.type",
+                    (row["invoice_id"],),
+                )
+            }
+        )
+    unreconciled = [
+        {**dict(row), "file": Path(row["source_file"]).name}
+        for row in conn.execute(
+            "SELECT id, kind, number, status, reason, source_file FROM supplier_documents "
+            "WHERE status IN (?, ?) ORDER BY id",
+            (UNLINKED, EXTRACTION_FAILED),
+        )
+    ]
     by_type = {kind: 0 for kind in DISCREPANCY_TYPES}
     by_type.update(
         {row["type"]: row["n"] for row in conn.execute("SELECT type, COUNT(*) AS n FROM discrepancies GROUP BY type")}
@@ -468,6 +488,7 @@ def list_results(conn: sqlite3.Connection) -> dict:
         "rows": rows,
         "by_result": {result: sum(r["result"] == result for r in rows) for result in RESULTS},
         "by_type": by_type,
+        "unreconciled": unreconciled,
     }
 
 

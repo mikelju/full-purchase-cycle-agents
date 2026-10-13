@@ -230,10 +230,15 @@ def cmd_reconcile_list(args) -> int:
     print(f"reconciliations: {len(listing['rows'])}  {counts}")
     print("differences by type: " + "  ".join(f"{name}={n}" for name, n in listing["by_type"].items()))
     for row in listing["rows"]:
+        types = " ".join(f"{name}={n}" for name, n in row["by_type"].items())
         print(
             f"  {reconciliation.invoice_reference(row['invoice_id'])}  {reconciliation.order_reference(row['order_id'])}"
-            f"  supplier={row['supplier_code']}  {row['result']}  differences={row['differences']}"
+            f"  supplier={row['supplier_code']}  {row['result']}  differences={row['differences']} ({types})"
         )
+    if listing["unreconciled"]:
+        print(f"not reconciled: {len(listing['unreconciled'])}")
+        for item in listing["unreconciled"]:
+            print(f"  {item['file']}  {item['kind'] or 'unreadable'}  {item['status']} ({item['reason']})")
     return 0
 
 
