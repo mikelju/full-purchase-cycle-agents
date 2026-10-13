@@ -11,7 +11,8 @@ Everything stays simulated: the page writes the same inputs the channels already
 The owner decided on 2026-10-13 that this is a standalone change, not a phase, and that a real WhatsApp connection (Meta Cloud API with its free test number) is a later step.
 Out of scope:
 The graphs, prompts, recordings, datasets, evaluations and baselines.
-The quotes module and any later module; a real WhatsApp, email or web connection; authentication, deployment or access from another machine.
+The quotes module beyond starting quote requests (C12) and any later module; a real WhatsApp, email or web connection; authentication, deployment or access from another machine.
+Supplier replies, quote decision and approval on the page (a later change).
 Sample buttons, styling beyond a plain usable page, and a mobile layout.
 Constraints / decisions that need the owner:
 - No new dependency: the server uses the Python standard library (`http.server`) and the page is one HTML file with plain JavaScript, no CDN.
@@ -34,6 +35,8 @@ Delivery is the work branch `cambio-006-local-test-ui`, created from `main` afte
 | C8 | Owner walkthrough in live mode: one order per channel, one clarification answered from the page, and the stored orders visible in the outcome | Owner sees it; notes in Delivery |
 | C9 | `npm run check` exits 0 and the replay evaluations are unchanged | Command output |
 | C10 | Each conversation with a stored order shows an "Order" block: per line SKU, name, quantity, unit price (current catalog price), line amount and current stock, with a visible warning when the quantity exceeds the stock, and the order total; lines not recognised or removed in the clarification are listed too. Information only: no business logic changes | tests/test_ui.py |
+| C11 | The page has a read-only "Database" view of its own database `data/ui/purchase_cycle.db`: orders, order lines, stock, quote requests, quote offers and purchase orders, refreshed on demand; it never writes | `tests/test_ui.py` |
+| C12 | A "Check stock shortfalls" button runs the existing `quotes.scan` on the page's database, checkpoints and outbox under `data/ui/`, and shows each shortfall (SKU, units asked, stock, already requested, shortfall) and the quote requests it started with their supplier request emails in the outbox; a second press with nothing new says so; no model call and no change to the quotes graph | `tests/test_ui.py` |
 
 ## Plan
 - [x] 1. `tests/test_ui.py` first (failing), then `src/purchase_cycle/ui.py` (server, JSON endpoints, input writers, router call and resume) and the `ui` CLI command; C1 to C6.
@@ -44,8 +47,9 @@ Delivery is the work branch `cambio-006-local-test-ui`, created from `main` afte
   Evidence: README section "Try the orders by hand" added; `data/` is already ignored (`git check-ignore -v data/ui/x` -> .gitignore:13). Real server on port 8766 in replay: the WhatsApp doubt sample asked its question, the answer message resumed it and stored order 1; an unknown channel returned a JSON error. `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py` -> 138 passed; `npm run --silent eval` -> failures: 0, no file changed.
 - [x] 4. Order block on each conversation (tests first, then `ui.py` and `ui.html`); C10.
   Evidence: the 5 new `test_c10_*` tests failed first, then `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py` -> 152 passed; `ruff check` and `ruff format --check` clean; script checked with `node --check`. Replay server on port 8772 with a temporary data dir: sample 01 sent to `/api/send` stored, and `/api/conversations` returned the order block (2 lines, total 169.2).
-- [ ] 5. Owner walkthrough in live mode; C8.
-- [ ] 6. Adversarial review, `npm run check`, push and PR to `main`; C9.
+- [ ] 5. Database view and stock shortfall check (tests first, then `ui.py` and `ui.html`); C11, C12.
+- [ ] 6. Owner walkthrough in live mode; C8.
+- [ ] 7. Adversarial review, `npm run check`, push and PR to `main`; C9.
 
 ## Decisions
 The page runs every input through `router.run_inbox`, so it exercises the same path as `purchase-cycle route` and gets idempotency, duplicate handling and WhatsApp resumption for free.
@@ -66,6 +70,7 @@ C5 wording changed by the owner on 2026-10-13 from `purchase-cycle route` to `pu
 A 500 returns the exception class and a generic message; the detail goes to the server's stderr.
 The `outcome` of a failed run still carries the first line of the exception text (shown on the local page and kept in the log).
 The owner added C10 on 2026-10-13 after the first walkthrough; stock is not checked or reserved when an order is stored, so the stock shown is the current `stock.on_hand` and the warning is informative only; the graph steps path was offered and not chosen.
+The owner added C11 and C12 on 2026-10-13: a read-only database view and a button that runs `quotes scan`; the full quotes cycle on the page was offered and left for a later change; stock is still not reserved when an order is stored.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
