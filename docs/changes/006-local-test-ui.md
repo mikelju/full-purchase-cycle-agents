@@ -90,7 +90,7 @@ The request emails listed are those named `<reference>-request-*.eml` that also 
 ## Delivery
 
 Result: the local test page `purchase-cycle ui` is delivered on branch `cambio-006-local-test-ui` with a PR to `main`, pending the owner's merge.
-PR: PR_PLACEHOLDER
+PR: https://github.com/mikelju/full-purchase-cycle-agents/pull/16
 
 | ID | Status | Evidence |
 |---|---|---|
