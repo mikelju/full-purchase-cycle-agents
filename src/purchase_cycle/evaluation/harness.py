@@ -387,7 +387,15 @@ SUITES = (
 UPLOAD_SUITES = tuple(
     name
     for name in SUITES
-    if name not in ("channel_routing", "failure_recovery", "order_scenarios", "quote_wait", "quote_decision", "reconciliation_matching")
+    if name
+    not in (
+        "channel_routing",
+        "failure_recovery",
+        "order_scenarios",
+        "quote_wait",
+        "quote_decision",
+        "reconciliation_matching",
+    )
 )
 # `all` runs every suite with a baseline; the WhatsApp suite joined once its baseline was recorded (increment 16)
 # and `order_scenarios` once its baseline was recorded (increment 24).

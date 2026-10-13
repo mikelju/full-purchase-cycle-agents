@@ -139,7 +139,7 @@ def delivered(sku, quantity) -> dict:
     return ln(sku, quantity)
 
 
-I, N = "a-invoice.txt", "b-note.txt"
+INV, N = "a-invoice.txt", "b-note.txt"
 LINKED = ("linked", None)
 
 
@@ -150,12 +150,12 @@ def case(o, files, scans=None, recs=None, docs=None, progress=None, restart=Fals
 
 def pair(o, invoice_lines, note_lines, recs, **kw):
     """An invoice and its delivery note scanned together."""
-    return case(o, {I: inv(o, invoice_lines), N: note(o, note_lines)}, recs={I: recs}, **kw)
+    return case(o, {INV: inv(o, invoice_lines), N: note(o, note_lines)}, recs={INV: recs}, **kw)
 
 
 def only(o, invoice_lines, recs, **kw):
     """An invoice with no delivery note yet."""
-    return case(o, {I: inv(o, invoice_lines)}, recs={I: recs}, **kw)
+    return case(o, {INV: inv(o, invoice_lines)}, recs={INV: recs}, **kw)
 
 
 MATCHED = ("matched", [])
@@ -217,37 +217,37 @@ CASES = [
     only(OA, [ln(XS, 12, 4.10)], ("awaiting_delivery_note", [(XS, "quantity", 8.20)])),
     only(OA, [ln(XS, 10, 4.10), ln(S, 2, 3.50)], ("awaiting_delivery_note", [(S, "extra_line", 7.00)])),
     # the delivery note arrives in a second scan and updates the same reconciliation
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)])}, scans=[[I], [N]],
-         recs={I: MATCHED}, progress=[{I: "awaiting_delivery_note"}, {I: "matched"}]),  # fmt: skip
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.50)]), N: note(OA, [delivered(XS, 10)])}, scans=[[I], [N]],
-         recs={I: ("discrepancies", [(XS, "price", 4.00)])},
-         progress=[{I: "awaiting_delivery_note"}, {I: "discrepancies"}]),  # fmt: skip
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 8)])}, scans=[[I], [N]],
-         recs={I: ("discrepancies", [(XS, "quantity", 8.20)])},
-         progress=[{I: "awaiting_delivery_note"}, {I: "discrepancies"}]),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)])}, scans=[[INV], [N]],
+         recs={INV: MATCHED}, progress=[{INV: "awaiting_delivery_note"}, {INV: "matched"}]),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.50)]), N: note(OA, [delivered(XS, 10)])}, scans=[[INV], [N]],
+         recs={INV: ("discrepancies", [(XS, "price", 4.00)])},
+         progress=[{INV: "awaiting_delivery_note"}, {INV: "discrepancies"}]),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 8)])}, scans=[[INV], [N]],
+         recs={INV: ("discrepancies", [(XS, "quantity", 8.20)])},
+         progress=[{INV: "awaiting_delivery_note"}, {INV: "discrepancies"}]),  # fmt: skip
     # unknown order
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)], po="PO-0099")}, docs={I: ("unlinked", "unknown_order")}),
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)], po="PO-0042")},
-         recs={I: ("awaiting_delivery_note", [])}, docs={N: ("unlinked", "unknown_order")}),  # fmt: skip
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)], po="PO-0007"), N: note(OA, [delivered(XS, 10)], po="PO-0007")},
-         docs={I: ("unlinked", "unknown_order"), N: ("unlinked", "unknown_order")}),  # fmt: skip
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)], po=None)}, docs={I: ("unlinked", "no_reference")}),
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)], po="PO-0099")}, docs={INV: ("unlinked", "unknown_order")}),
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)], po="PO-0042")},
+         recs={INV: ("awaiting_delivery_note", [])}, docs={N: ("unlinked", "unknown_order")}),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)], po="PO-0007"), N: note(OA, [delivered(XS, 10)], po="PO-0007")},
+         docs={INV: ("unlinked", "unknown_order"), N: ("unlinked", "unknown_order")}),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)], po=None)}, docs={INV: ("unlinked", "no_reference")}),
     # wrong supplier
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)], supplier="SUP-002")}, docs={I: ("unlinked", "supplier_mismatch")}),
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)], supplier="SUP-003")},
-         recs={I: ("awaiting_delivery_note", [])}, docs={N: ("unlinked", "supplier_mismatch")}),  # fmt: skip
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)], supplier="Unknown Company Ltd")},
-         docs={I: ("unlinked", "supplier_mismatch")}),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)], supplier="SUP-002")}, docs={INV: ("unlinked", "supplier_mismatch")}),
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)], supplier="SUP-003")},
+         recs={INV: ("awaiting_delivery_note", [])}, docs={N: ("unlinked", "supplier_mismatch")}),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)], supplier="Unknown Company Ltd")},
+         docs={INV: ("unlinked", "supplier_mismatch")}),  # fmt: skip
     # a duplicate scan: the same documents again add nothing and call no model
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)])}, scans=[[I, N], [], []],
-         recs={I: MATCHED}),  # fmt: skip
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.50)]), N: note(OA, [delivered(XS, 10)])}, scans=[[I, N], [], []],
-         recs={I: ("discrepancies", [(XS, "price", 4.00)])}),  # fmt: skip
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)]),
-              "c-copy.txt": inv(OA, [ln(XS, 10, 4.10)])}, recs={I: MATCHED}),  # fmt: skip
-    case(OA, {I: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)]),
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)])}, scans=[[INV, N], [], []],
+         recs={INV: MATCHED}),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.50)]), N: note(OA, [delivered(XS, 10)])}, scans=[[INV, N], [], []],
+         recs={INV: ("discrepancies", [(XS, "price", 4.00)])}),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)]),
+              "c-copy.txt": inv(OA, [ln(XS, 10, 4.10)])}, recs={INV: MATCHED}),  # fmt: skip
+    case(OA, {INV: inv(OA, [ln(XS, 10, 4.10)]), N: note(OA, [delivered(XS, 10)]),
               "c-second.txt": inv(OA, [ln(XS, 10, 4.10)], number="INV-78")},
-         recs={I: MATCHED}, docs={"c-second.txt": ("unlinked", "duplicate")}),  # fmt: skip
+         recs={INV: MATCHED}, docs={"c-second.txt": ("unlinked", "duplicate")}),  # fmt: skip
     # a restart between the scan and the show: `list` and `show` run in a new process
     pair(OA, [ln(XS, 10, 4.10)], [delivered(XS, 10)], MATCHED, restart=True),
     pair(OA, [ln(XS, 10, 4.50)], [delivered(XS, 10)], ("discrepancies", [(XS, "price", 4.00)]), restart=True),
@@ -291,7 +291,7 @@ def derive_tags(item: dict) -> list[str]:
         for sku in {d[0] for d in rec["discrepancies"]}:
             if {"price", "quantity"} <= {d[1] for d in rec["discrepancies"] if d[0] == sku}:
                 tags.add("price_and_quantity_one_line")
-    for name, (sku, kind, amount) in rows:
+    for name, (sku, kind, _amount) in rows:
         found = sum(
             line["quantity"]
             for line in item["documents"][name]["answer"]["lines"]
