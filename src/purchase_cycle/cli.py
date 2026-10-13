@@ -611,17 +611,19 @@ def cmd_reconcile_demo(args) -> int:
     finally:
         conn.close()
     completed = [i for i in waiting if final.get(i) in ("matched", "discrepancies")]
+    still_waiting = [i for i, r in final.items() if r == "awaiting_delivery_note"]
     print()
     print("summary:")
     print(f"results: {', '.join(f'{reconciliation.invoice_reference(i)}={r}' for i, r in final.items())}")
     print(f"difference types: {', '.join(sorted(types)) or 'none'}")
     print(f"awaiting a delivery note after the first scan, completed by the second: {len(completed)} of {len(waiting)}")
+    print(f"still awaiting a delivery note at the end: {len(still_waiting)}")
     print(f"unlinked documents: {', '.join(sorted(unlinked)) or 'none'}")
     if (
         "matched" not in final.values()
         or types != set(reconciliation.DISCREPANCY_TYPES)
-        or not waiting
-        or len(completed) != len(waiting)
+        or not completed
+        or len(still_waiting) != 1
         or not unlinked
     ):
         print("Error: the demo did not end with every outcome", file=sys.stderr)

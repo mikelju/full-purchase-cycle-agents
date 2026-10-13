@@ -2,9 +2,12 @@
 
 import json
 import os
+import shutil
 import sqlite3
 import subprocess
 import sys
+
+import pytest
 
 from purchase_cycle import config
 from test_orders_demo import SITECUSTOMIZE
@@ -49,18 +52,30 @@ def test_reconcile_demo_ends_with_every_outcome_with_the_network_blocked(tmp_pat
         orders = conn.execute("SELECT COUNT(*) FROM purchase_orders").fetchone()[0]
     finally:
         conn.close()
-    assert orders == 6
-    assert count == 6 == len(results)  # one reconciliation per linked invoice, none added by the second scan
+    assert orders == 7
+    assert count == 7 == len(results)  # one reconciliation per linked invoice, none added by the second scan
     assert "matched" in results
-    assert "awaiting_delivery_note" not in results  # the second scan completed it
+    assert results.count("awaiting_delivery_note") == 1  # C14: the demo ends with one invoice still waiting
     assert kinds == {"price", "quantity", "extra_line", "missing_line"}
     assert unlinked == ["supplier_mismatch", "unknown_order"]
     assert late is not None and late[0] == "matched" and late[1].endswith("dn-006-thermometers.pdf")
     assert "result=awaiting_delivery_note" in out  # it was shown awaiting before the second scan
+    assert "still awaiting a delivery note at the end: 1" in out
     assert out.count("result=matched") >= 3
     assert "unlinked (unknown_order)" in out and "unlinked (supplier_mismatch)" in out
     for kind in ("price", "quantity", "extra_line", "missing_line"):
         assert f"  {kind}  sku=" in out
+
+
+@pytest.mark.parametrize("ending", [b"\n", b"\r\n"], ids=["lf", "crlf"])
+def test_the_demo_replays_whatever_the_line_endings_of_the_sample_text_files(tmp_path, ending):
+    examples = tmp_path / "examples"
+    shutil.copytree(config.ROOT / "examples" / "invoices", examples)
+    for path in examples.rglob("*.txt"):
+        path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", ending))
+    run, _, _ = _run_demo(tmp_path, "--examples", str(examples))
+    assert run.returncode == 0, run.stdout + run.stderr
+    assert "still awaiting a delivery note at the end: 1" in run.stdout
 
 
 def test_the_recordings_hold_one_row_per_sample_document():
@@ -68,4 +83,4 @@ def test_the_recordings_hold_one_row_per_sample_document():
         json.loads(line)
         for line in (config.EVALS_DIR / "recordings" / "reconcile_demo.jsonl").read_text(encoding="utf-8").splitlines()
     ]
-    assert len(rows) == 14
+    assert len(rows) == 15

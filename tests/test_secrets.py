@@ -250,7 +250,7 @@ def test_phase_08_files_are_tracked_and_hold_no_keys():
     )
     files = sorted(str(p.relative_to(ROOT).as_posix()) for folder in folders for p in folder.rglob("*") if p.is_file())
     assert len([f for f in files if f.startswith("evals/datasets/reconciliation_matching/RM-")]) >= 40
-    assert len([f for f in files if f.startswith("examples/invoices/")]) == 15  # the orders and 14 documents
+    assert len([f for f in files if f.startswith("examples/invoices/")]) == 16  # the orders and 15 documents
     assert {Path(f).suffix for f in files if f.startswith("examples/invoices/documents/")} == {".txt", ".pdf", ".xlsx"}
     for name in fixed + files:
         assert name in tracked, f"{name} is not versioned, so the secret scan skips it"

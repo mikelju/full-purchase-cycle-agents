@@ -398,11 +398,11 @@ The state is in the database, so each command can run in its own process.
 uv run purchase-cycle reconcile-demo
 ```
 
-`reconcile-demo` starts from a fresh database in `data/reconcile-demo/` (`--workdir <folder>` to change it), seeds the six purchase orders of `examples/invoices/purchase_orders.json`, and runs each step as its own `purchase-cycle` process: `reconcile scan examples/invoices/documents`, `reconcile list`, a `reconcile show` per reconciliation, then `reconcile scan examples/invoices/later` with the delivery note that was held back, `reconcile list` and the `reconcile show` of the reconciliation that changed.
-The 14 sample documents are in the three formats and cover a matched invoice with its delivery note (`INV-0006`), a price difference (`INV-0007`), a quantity difference (`INV-0008`), an extra line (`INV-0009`), an extra and a missing line (`INV-0010`), an invoice without delivery note that the second scan completes to `matched` (`INV-0011`), a document with an unknown order and one from the wrong supplier.
+`reconcile-demo` starts from a fresh database in `data/reconcile-demo/` (`--workdir <folder>` to change it), seeds the seven purchase orders of `examples/invoices/purchase_orders.json`, and runs each step as its own `purchase-cycle` process: `reconcile scan examples/invoices/documents`, `reconcile list`, a `reconcile show` per reconciliation, then `reconcile scan examples/invoices/later` with the delivery note that was held back, `reconcile list` and the `reconcile show` of the reconciliation that changed.
+The 15 sample documents are in the three formats and cover a matched invoice with its delivery note (`INV-0006`), a price difference (`INV-0007`), a quantity difference (`INV-0008`), an extra line (`INV-0009`), an extra and a missing line (`INV-0010`), an invoice without delivery note that the second scan completes to `matched` (`INV-0011`), an invoice (`INV-0014`) that still waits for its delivery note at the end, a document with an unknown order and one from the wrong supplier.
 It prints the extracted documents with their lines, the result of every invoice and the classified differences, and exits non-zero unless it ends with a matched invoice, every difference type, a completed reconciliation and an unlinked document.
 By default (`--mode replay`) it reads the extraction answers from `evals/recordings/reconcile_demo.jsonl` and needs no key and no network; a test inside `npm run check` runs it with the network blocked.
-To record them again, set `ANTHROPIC_API_KEY` in `.env` and run `uv run purchase-cycle reconcile-demo --mode record` (14 Haiku 4.5 calls, a few cents); `--mode live` calls the model without saving.
+To record them again, set `ANTHROPIC_API_KEY` in `.env` and run `uv run purchase-cycle reconcile-demo --mode record` (15 Haiku 4.5 calls, a few cents); `--mode live` calls the model without saving.
 
 ## Watch the graphs in LangGraph Studio
 

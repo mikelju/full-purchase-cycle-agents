@@ -39,8 +39,17 @@ class DocumentRejected(ValueError):
     """The document cannot be read or fails a deterministic check; the message names the reason."""
 
 
+def _file_bytes(path: Path | str) -> bytes:
+    """The file content; a text file has its line endings normalised to LF so a checkout setting never changes the hash or the text."""
+    path = Path(path)
+    data = path.read_bytes()
+    if path.suffix.lower() == ".txt":
+        data = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return data
+
+
 def content_hash(path: Path | str) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    return hashlib.sha256(_file_bytes(path)).hexdigest()
 
 
 def thread_id(digest: str) -> str:
@@ -53,7 +62,7 @@ def document_text(path: Path | str) -> str:
     suffix = path.suffix.lower()
     if suffix not in SUFFIXES:
         raise DocumentRejected(f"the file type '{suffix}' is not supported")
-    data = path.read_bytes()
+    data = _file_bytes(path)
     try:
         if suffix == ".txt":
             text = data.decode("utf-8")

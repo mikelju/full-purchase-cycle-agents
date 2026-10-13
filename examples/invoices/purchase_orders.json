@@ -40,5 +40,12 @@
     "quantity": 20,
     "unit_price": 7.0,
     "expected_delivery": "2026-10-25"
+  },
+  {
+    "supplier": "SUP-001",
+    "sku": "BND-ELA-10",
+    "quantity": 80,
+    "unit_price": 2.5,
+    "expected_delivery": "2026-10-26"
   }
 ]
