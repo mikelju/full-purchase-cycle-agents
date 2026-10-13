@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import config, db, quotes, router, sim_clock
+from purchase_cycle import config, db, quote_decision, quotes, router, sim_clock
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import build_email_order_graph
@@ -20,6 +20,7 @@ from purchase_cycle.llm import (
     EMAIL_EXTRACTION,
     EMAIL_INTAKE,
     MATCHING,
+    OFFER_EXTRACTION,
     WHATSAPP_EXTRACTION,
     WHATSAPP_INTAKE,
     InvalidExtraction,
@@ -126,6 +127,87 @@ def cmd_quotes_tick(args) -> int:
     print(f"simulated time: {sim_clock.text(now)}  waiting requests: {len(results)}")
     for result in results:
         print(f"  {result['reference']}  reminders={result['reminders']}  status={result['status']}")
+    return 0
+
+
+def _print_decision(item: dict) -> None:
+    print(f"  {item['reference']}  sku={item['sku']}  quantity={item['quantity']}  status={item['status']}")
+    for offer in item["offers"]:
+        if offer["usable"]:
+            lead = f"{offer['lead_time_days']} {'working' if offer['working_days'] else 'calendar'} days"
+            print(
+                f"    {offer['supplier_code']}  usable  quantity={offer['quantity']}  "
+                f"net unit price={offer['net_unit_price']:.4f}  lead time={lead}"
+            )
+        else:
+            print(f"    {offer['supplier_code']}  unusable ({offer['reason']})")
+    found = item["recommendation"]
+    print(f"    recommended: {found['supplier'] or 'none'}")
+    print(f"    reason: {found['reason']}")
+
+
+def cmd_quotes_decide(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+    finally:
+        conn.close()
+    # The prompt holds the request and the reply, not the catalog, since the product is known.
+    client = ModelClient(args.mode, [], args.recordings, task=OFFER_EXTRACTION)
+    try:
+        result = quote_decision.decide(args.db, sqlite_checkpointer(args.checkpoints), client)
+    except (MissingRecording, InvalidModelOutput) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    saved = client.save_recordings()
+    print(f"mode={args.mode}  decisions started: {len(result['decided'])}")
+    for item in result["decided"]:
+        _print_decision(item)
+    if result["no_offers"]:
+        print(f"waiting for a person (no offers, no order): {', '.join(result['no_offers'])}")
+    _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return 0
+
+
+def _request_id(text: str) -> int | None:
+    found = quotes.REFERENCE.fullmatch(text)
+    return int(found.group(1)) if found else None
+
+
+def cmd_quotes_approve(args) -> int:
+    request_id = _request_id(args.reference)
+    if request_id is None:
+        print(f"Error: '{args.reference}' is not a quote request reference like QR-0001", file=sys.stderr)
+        return 1
+    try:
+        done = quote_decision.approve_request(
+            args.db, sqlite_checkpointer(args.checkpoints), args.outbox, request_id, args.supplier
+        )
+    except quote_decision.DecisionRefused as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    order = done["order"]
+    print(
+        f"{done['reference']} ordered  {done['number']}  supplier={order['supplier_code']}  sku={order['sku']}  "
+        f"quantity={order['quantity']}  unit price={order['unit_price']:.4f} {order['currency']}  "
+        f"total={order['total']:.2f}  expected delivery={order['expected_delivery']}  outbox={args.outbox}"
+    )
+    return 0
+
+
+def cmd_quotes_reject(args) -> int:
+    request_id = _request_id(args.reference)
+    if request_id is None:
+        print(f"Error: '{args.reference}' is not a quote request reference like QR-0001", file=sys.stderr)
+        return 1
+    try:
+        done = quote_decision.reject_request(args.db, sqlite_checkpointer(args.checkpoints), request_id)
+    except quote_decision.DecisionRefused as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    print(f"{done['reference']} rejected  no purchase order")
     return 0
 
 
@@ -1197,8 +1279,20 @@ def main(argv=None) -> int:
     quotes_sub.add_parser("list", help="list every quote request and its suppliers").set_defaults(
         handler=cmd_quotes_list
     )
-    for command in (scan, tick):
+    decide = quotes_sub.add_parser("decide", help="extract and compare the offers of every request ready for decision")
+    decide.add_argument("--mode", choices=config.MODES, default="replay")
+    decide.add_argument("--recordings", default=None, help="recordings file for the offer extraction")
+    decide.set_defaults(handler=cmd_quotes_decide)
+    approve = quotes_sub.add_parser("approve", help="approve the recommended offer, or another with --supplier")
+    approve.add_argument("reference", help="quote request reference, such as QR-0001")
+    approve.add_argument("--supplier", help="issue the order from this supplier's usable offer instead")
+    approve.set_defaults(handler=cmd_quotes_approve)
+    reject = quotes_sub.add_parser("reject", help="close a request awaiting approval with no purchase order")
+    reject.add_argument("reference", help="quote request reference, such as QR-0001")
+    reject.set_defaults(handler=cmd_quotes_reject)
+    for command in (scan, tick, decide, approve, reject):
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    for command in (scan, tick, approve):
         command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")
     quotes_demo = sub.add_parser(
         "quotes-demo", help="run the sample quote timeline, each scan, clock, receive and tick step in its own process"

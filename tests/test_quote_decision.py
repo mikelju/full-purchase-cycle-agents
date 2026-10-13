@@ -39,7 +39,7 @@ def _setup(tmp_path, bodies):
     db.seed(conn)
     conn.execute(
         "INSERT INTO quote_requests (id, sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
-        "VALUES (1, ?, 12, 'quote-QR-0001', 'ready_for_decision', 't', 't', 't')",
+        "VALUES (1, ?, 12, 'quote-QR-0001', 'ready_for_decision', '2026-10-12 09:00:00', '2026-10-15 09:00:00', '2026-10-17 09:00:00')",
         (SKU,),
     )
     for supplier, body in zip(SUPPLIERS, bodies, strict=True):

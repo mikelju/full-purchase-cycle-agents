@@ -3,8 +3,12 @@
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import TypedDict
 
-from purchase_cycle import db, email_order, llm, quotes, sim_clock
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command, interrupt
+
+from purchase_cycle import config, db, email_order, llm, quotes, sim_clock
 
 CURRENCY = "EUR"
 CHANNEL = "quotes"
@@ -211,3 +215,273 @@ def compare_offers(offers: list[dict], requested: int, start: datetime) -> dict:
         "total": best["total"],
         "reason": f"Recommended {best['supplier']}: {text}. Compared: {compared}.",
     }
+
+
+AWAITING = "awaiting_approval"
+ORDERED = "ordered"
+REJECTED = "rejected"
+APPROVE, CHOOSE, REJECT = "approve", "choose", "reject"
+
+ORDER_SUBJECT = "Purchase order {number} - quote request {reference}"
+ORDER_TEXT = """Dear {name},
+
+Thank you for your offer for quote request {reference}.
+Please find our purchase order {number} below.
+
+  SKU: {sku}
+  Product: {product}
+  Sale unit: {sale_unit}
+  Quantity: {quantity}
+  Unit price: {unit_price:.4f} {currency}
+  Total: {total:.2f} {currency}
+  Expected delivery: {expected_delivery}
+
+Please confirm receipt of this order.
+
+Kind regards,
+Purchasing department
+"""
+
+
+class DecisionRefused(Exception):
+    """A command that the request cannot take now; nothing was changed."""
+
+
+class DecisionState(TypedDict, total=False):
+    request_id: int
+    recommendation: dict
+    action: str
+    supplier: str
+
+
+def decision_thread_id(request_id: int) -> str:
+    return f"decision-{quotes.reference(request_id)}"
+
+
+def _decision_config(request_id: int) -> dict:
+    return {"configurable": {"thread_id": decision_thread_id(request_id)}}
+
+
+def po_number(order_id: int) -> str:
+    return f"PO-{order_id:04d}"
+
+
+def recommendation(conn: sqlite3.Connection, request_id: int) -> dict:
+    """The recommendation over the stored offers, anchored on the request creation time so it never moves."""
+    request = request_row(conn, request_id)
+    start = datetime.strptime(request["created_at"], sim_clock.FORMAT)
+    return compare_offers(stored_offers(conn, request_id), request["quantity"], start)
+
+
+def _set_status(conn: sqlite3.Connection, request_id: int, status: str, expected: str) -> None:
+    with conn:
+        conn.execute("UPDATE quote_requests SET status = ? WHERE id = ? AND status = ?", (status, request_id, expected))
+
+
+def issue_order(conn: sqlite3.Connection, outbox: Path | str, request_id: int, supplier: str) -> dict:
+    """Write the purchase order and its email once; a re-run reads the row back and writes nothing new."""
+    request = request_row(conn, request_id)
+    order = conn.execute("SELECT * FROM purchase_orders WHERE request_id = ?", (request_id,)).fetchone()
+    if order is None:
+        offer = next(o for o in stored_offers(conn, request_id) if o["supplier_code"] == supplier)
+        now = sim_clock.now(conn)
+        entry = _entry(offer, request["quantity"], now)
+        delivery = sim_clock.add_days(now, offer["lead_time_days"], bool(offer["working_days"]))
+        with conn:
+            conn.execute(
+                "INSERT OR IGNORE INTO purchase_orders (request_id, supplier_code, sku, quantity, unit_price, "
+                "currency, total, expected_delivery, issued_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'issued')",
+                (
+                    request_id,
+                    supplier,
+                    request["sku"],
+                    entry["quantity"],
+                    offer["net_unit_price"],
+                    CURRENCY,
+                    entry["total"],
+                    delivery.strftime("%Y-%m-%d"),
+                    now.strftime(sim_clock.FORMAT),
+                ),
+            )
+        order = conn.execute("SELECT * FROM purchase_orders WHERE request_id = ?", (request_id,)).fetchone()
+    number = po_number(order["id"])
+    row = conn.execute("SELECT name, email FROM suppliers WHERE code = ?", (order["supplier_code"],)).fetchone()
+    ref = quotes.reference(request_id)
+    body = ORDER_TEXT.format(
+        name=row["name"],
+        reference=ref,
+        number=number,
+        sku=order["sku"],
+        product=request["product"],
+        sale_unit=request["sale_unit"],
+        quantity=order["quantity"],
+        unit_price=order["unit_price"],
+        currency=order["currency"],
+        total=order["total"],
+        expected_delivery=order["expected_delivery"],
+    )
+    quotes._write_email(
+        Path(outbox),
+        f"{number}-{order['supplier_code']}",
+        row["email"],
+        ORDER_SUBJECT.format(number=number, reference=ref),
+        body,
+        order["issued_at"],
+    )
+    _set_status(conn, request_id, ORDERED, AWAITING)
+    return {**dict(order), "number": number}
+
+
+def build_quote_decision_graph(
+    db_path: Path | str, client: llm.ModelClient | None = None, outbox: Path | str | None = None, checkpointer=None
+):
+    def extract(state: DecisionState) -> DecisionState:
+        extract_offers(db_path, state["request_id"], client)
+        return {}
+
+    def compare(state: DecisionState) -> DecisionState:
+        conn = db.connect(db_path)
+        try:
+            found = recommendation(conn, state["request_id"])
+            _set_status(conn, state["request_id"], AWAITING, "ready_for_decision")
+        finally:
+            conn.close()
+        return {"recommendation": found}
+
+    def approve(state: DecisionState) -> DecisionState:
+        # Resumed with {"action": "approve" | "choose" | "reject", "supplier": code}; the commands check the
+        # request and the offer first, so only an accepted answer reaches the thread.
+        found = state["recommendation"]
+        answer = interrupt(
+            {
+                "reference": quotes.reference(state["request_id"]),
+                "recommended": found["supplier"],
+                "reason": found["reason"],
+            }
+        )
+        return {"action": answer["action"], "supplier": answer.get("supplier")}
+
+    def issue(state: DecisionState) -> DecisionState:
+        conn = db.connect(db_path)
+        try:
+            issue_order(conn, outbox or config.SUPPLIER_OUTBOX_DIR, state["request_id"], state["supplier"])
+        finally:
+            conn.close()
+        return {}
+
+    def close(state: DecisionState) -> DecisionState:
+        conn = db.connect(db_path)
+        try:
+            _set_status(conn, state["request_id"], REJECTED, AWAITING)
+        finally:
+            conn.close()
+        return {}
+
+    builder = StateGraph(DecisionState)
+    builder.add_node("extract", extract, retry_policy=llm.MODEL_RETRY)
+    builder.add_node("compare", compare)
+    builder.add_node("approve", approve)
+    builder.add_node("issue", issue)
+    builder.add_node("close", close)
+    builder.add_edge(START, "extract")
+    builder.add_edge("extract", "compare")
+    builder.add_edge("compare", "approve")
+    builder.add_conditional_edges(
+        "approve", lambda s: "close" if s["action"] == REJECT else "issue", ["issue", "close"]
+    )
+    builder.add_edge("issue", END)
+    builder.add_edge("close", END)
+    return builder.compile(checkpointer=checkpointer, name="quote_decision")
+
+
+def decide(db_path: Path | str, checkpointer, client: llm.ModelClient, outbox: Path | str | None = None) -> dict:
+    """Start the decision of every `ready_for_decision` request; each runs to its pause in `approve`.
+
+    Returns the decisions started and the references of the `no_offers` requests, which wait for a person.
+    """
+    graph = build_quote_decision_graph(db_path, client, outbox, checkpointer)
+    conn = db.connect(db_path)
+    decided = []
+    try:
+        query = "SELECT id FROM quote_requests WHERE status = 'ready_for_decision' ORDER BY id"
+        for (request_id,) in conn.execute(query).fetchall():
+            run = _decision_config(request_id)
+            state = graph.get_state(run)
+            if not state.values:
+                graph.invoke({"request_id": request_id}, run)
+            elif state.next:  # a run that stopped before its pause goes on from its checkpoint
+                graph.invoke(None, run)
+            request = request_row(conn, request_id)
+            decided.append(
+                {
+                    "reference": quotes.reference(request_id),
+                    "sku": request["sku"],
+                    "quantity": request["quantity"],
+                    "status": request_row(conn, request_id)["status"],
+                    "offers": stored_offers(conn, request_id),
+                    "recommendation": recommendation(conn, request_id),
+                }
+            )
+        waiting = [
+            quotes.reference(r[0])
+            for r in conn.execute("SELECT id FROM quote_requests WHERE status = 'no_offers' ORDER BY id")
+        ]
+    finally:
+        conn.close()
+    return {"decided": decided, "no_offers": waiting}
+
+
+def _check_awaiting(conn: sqlite3.Connection, request_id: int) -> None:
+    ref = quotes.reference(request_id)
+    row = conn.execute("SELECT status FROM quote_requests WHERE id = ?", (request_id,)).fetchone()
+    if row is None:
+        raise DecisionRefused(f"unknown quote request {ref}")
+    if row["status"] != AWAITING:
+        raise DecisionRefused(f"request {ref} is {row['status']}, not {AWAITING}")
+
+
+def _resume(db_path: Path | str, checkpointer, outbox, request_id: int, answer: dict) -> None:
+    graph = build_quote_decision_graph(db_path, None, outbox, checkpointer)
+    graph.invoke(Command(resume=answer), _decision_config(request_id))
+
+
+def approve_request(
+    db_path: Path | str, checkpointer, outbox: Path | str, request_id: int, supplier: str | None = None
+) -> dict:
+    """Approve the recommendation, or the usable offer of `supplier`; refused commands change nothing."""
+    ref = quotes.reference(request_id)
+    conn = db.connect(db_path)
+    try:
+        _check_awaiting(conn, request_id)
+        if supplier is None:
+            chosen = recommendation(conn, request_id)["supplier"]
+            if chosen is None:
+                raise DecisionRefused(f"request {ref} has no usable offer; only reject is accepted")
+        else:
+            chosen = supplier
+            offer = next((o for o in stored_offers(conn, request_id) if o["supplier_code"] == chosen), None)
+            if offer is None:
+                raise DecisionRefused(f"supplier {chosen} made no offer for {ref}")
+            if not offer["usable"]:
+                raise DecisionRefused(f"the offer of {chosen} for {ref} is not usable ({offer['reason']})")
+    finally:
+        conn.close()
+    action = APPROVE if supplier is None else CHOOSE
+    _resume(db_path, checkpointer, outbox, request_id, {"action": action, "supplier": chosen})
+    conn = db.connect(db_path)
+    try:
+        order = conn.execute("SELECT * FROM purchase_orders WHERE request_id = ?", (request_id,)).fetchone()
+        return {"reference": ref, "supplier": chosen, "order": dict(order), "number": po_number(order["id"])}
+    finally:
+        conn.close()
+
+
+def reject_request(db_path: Path | str, checkpointer, request_id: int) -> dict:
+    """Close an awaiting request as `rejected`, with no purchase order and no email."""
+    conn = db.connect(db_path)
+    try:
+        _check_awaiting(conn, request_id)
+    finally:
+        conn.close()
+    _resume(db_path, checkpointer, None, request_id, {"action": REJECT})
+    return {"reference": quotes.reference(request_id), "status": REJECTED}
