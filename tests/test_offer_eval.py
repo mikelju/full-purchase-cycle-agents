@@ -210,3 +210,13 @@ def test_per_category_report_lists_offer_vat_and_lead_time_accuracy(suite, capsy
     out = capsys.readouterr().out.split("per category:")[1]
     for metric in ("offer_accuracy", "vat_accuracy", "lead_time_accuracy"):
         assert metric in out
+
+
+@pytest.mark.parametrize(("case_id", "invented"), [("OFF-082", {"vat_rate": 21.0}), ("OFF-095", {"lead_time_days": 2})])
+def test_a_reply_that_must_be_unusable_but_the_model_makes_usable_is_a_critical_error(case_id, invented):
+    case = next(c for c in od.load_dataset() if c["id"] == case_id)
+    assert not case["expected_usable"]
+    refused = offer_eval.grade(case, perfect(case))
+    assert not refused["usable"] and not refused["critical_errors"]
+    made_usable = offer_eval.grade(case, {**perfect(case), **invented})
+    assert made_usable["usable"] and made_usable["critical_errors"]

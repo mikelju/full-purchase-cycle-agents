@@ -91,7 +91,7 @@ def _store(conn: sqlite3.Connection, request_id: int, supplier: str, reply_file:
         conn.execute(
             "INSERT INTO quote_offers (request_id, supplier_code, offers, quantity, unit_price, currency, "
             "vat_included, vat_rate, lead_time_days, working_days, price_text, net_unit_price, usable, reason, "
-            "reply_file) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "reply_file, decided_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 request_id,
                 supplier,
@@ -108,6 +108,7 @@ def _store(conn: sqlite3.Connection, request_id: int, supplier: str, reply_file:
                 int(usable),
                 reason,
                 reply_file,
+                sim_clock.now(conn).strftime(sim_clock.FORMAT),
             ),
         )
 
@@ -291,9 +292,11 @@ def po_number(order_id: int) -> str:
 
 
 def recommendation(conn: sqlite3.Connection, request_id: int) -> dict:
-    """The recommendation over the stored offers; lead times count from the simulated clock now."""
+    """The recommendation over the stored offers; lead times count from the simulated date they were decided."""
     request = request_row(conn, request_id)
-    return compare_offers(stored_offers(conn, request_id), request["quantity"], sim_clock.now(conn))
+    offers = stored_offers(conn, request_id)
+    start = min((datetime.strptime(o["decided_at"], sim_clock.FORMAT) for o in offers), default=sim_clock.now(conn))
+    return compare_offers(offers, request["quantity"], start)
 
 
 def _set_status(conn: sqlite3.Connection, request_id: int, status: str, expected: str) -> None:

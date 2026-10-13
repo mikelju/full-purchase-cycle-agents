@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS quote_offers (
     usable INTEGER NOT NULL CHECK (usable IN (0, 1)),
     reason TEXT,
     reply_file TEXT,
+    decided_at TEXT NOT NULL,
     PRIMARY KEY (request_id, supplier_code)
 );
 CREATE TABLE IF NOT EXISTS purchase_orders (

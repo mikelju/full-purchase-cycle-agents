@@ -394,3 +394,26 @@ def test_a_status_update_that_matches_no_row_is_refused(world):
         quote_decision._set_status(conn, 1, "ordered", "awaiting_approval")  # the request is ready_for_decision
     assert conn.execute("SELECT status FROM quote_requests WHERE id = 1").fetchone()[0] == "ready_for_decision"
     quote_decision._set_status(conn, 1, "ready_for_decision", "ready_for_decision")  # already there: no error
+
+
+def test_the_list_keeps_the_recommendation_shown_at_decide_when_the_clock_moves(tmp_path, capsys):
+    full = {**GOOD, "unit_price": 4.0, "lead_time_days": 3, "working_days": True}
+    calendar = {**GOOD, "unit_price": 4.0, "lead_time_days": 4, "working_days": False}
+    world = World(tmp_path, answers=[full, calendar, None])
+    world.run("decide")
+    assert "recommended: SUP-001" in capsys.readouterr().out  # decided on Monday
+    sim_clock.advance(world.conn, days=4)
+    assert cli.main(["--db", str(world.db_path), "quotes", "list"]) == 0
+    assert "recommended=SUP-001" in capsys.readouterr().out
+    assert world.run("approve", "QR-0001") == 0
+    assert [o["supplier_code"] for o in world.orders()] == ["SUP-001"]
+    assert cli.main(["--db", str(world.db_path), "quotes", "list"]) == 0
+    assert "recommended=SUP-001  order=PO-0001" in capsys.readouterr().out
+
+
+def test_a_status_update_that_finds_the_target_status_already_set_is_not_an_error(world):
+    conn = db.connect(world.db_path)
+    conn.execute("UPDATE quote_requests SET status = 'ordered' WHERE id = 1")
+    conn.commit()
+    quote_decision._set_status(conn, 1, "ordered", "awaiting_approval")  # no row matches, the target is there
+    assert conn.execute("SELECT status FROM quote_requests WHERE id = 1").fetchone()[0] == "ordered"

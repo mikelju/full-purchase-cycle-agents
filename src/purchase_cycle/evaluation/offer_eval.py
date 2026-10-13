@@ -84,8 +84,10 @@ def grade(case: dict, fields: dict | None, error: str | None = None) -> dict:
         else None,
         "usability_accuracy": usable == case["expected_usable"] and reason == case["expected_reason"],
         "exact_match": all(ok.values()),
-        # A usable reply with a wrong price, quantity, currency or net price would reach a purchase order.
-        "critical_errors": usable and (not (ok["unit_price"] and ok["quantity"] and ok["currency"]) or net_wrong),
+        # A usable reply with a wrong price, quantity, currency or net price would reach a purchase order,
+        # and so would a reply that must be unusable (missing VAT rate, no lead time) that the model made usable.
+        "critical_errors": usable
+        and (not case["expected_usable"] or not (ok["unit_price"] and ok["quantity"] and ok["currency"]) or net_wrong),
     }
     r["wrong_fields"] = [f for f in od.GRADED if not ok[f]]
     return r
