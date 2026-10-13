@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import config, db, quote_decision, quotes, router, sim_clock
+from purchase_cycle import config, db, quote_decision, quotes, reconciliation, router, sim_clock
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import build_email_order_graph
@@ -21,6 +21,7 @@ from purchase_cycle.llm import (
     EMAIL_INTAKE,
     MATCHING,
     OFFER_EXTRACTION,
+    SUPPLIER_DOCUMENT_EXTRACTION,
     WHATSAPP_EXTRACTION,
     WHATSAPP_INTAKE,
     InvalidExtraction,
@@ -167,6 +168,44 @@ def cmd_quotes_decide(args) -> int:
     if result["no_offers"]:
         print(f"waiting for a person (no offers, no order): {', '.join(result['no_offers'])}")
     _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return 0
+
+
+def _document_line(item: dict) -> str:
+    what = item["kind"] or "unreadable"
+    if item["kind"] == "invoice":
+        what = f"invoice {reconciliation.invoice_reference(item['id'])}"
+    elif item["kind"] == "delivery_note":
+        what = f"delivery note {item['number'] or ''}".strip()
+    state = item["status"] + (f" ({item['reason']})" if item["status"] in ("unlinked", "extraction_failed") else "")
+    result = f"  result={item['result']}" if item["result"] else ""
+    return f"  {item['file']}  {what}  {state}{result}"
+
+
+def cmd_reconcile_scan(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+    finally:
+        conn.close()
+    folder = Path(args.folder)
+    if not folder.is_dir():
+        print(f"Error: {args.folder} is not a folder", file=sys.stderr)
+        return 1
+    client = ModelClient(args.mode, [], args.recordings, task=SUPPLIER_DOCUMENT_EXTRACTION)
+    try:
+        results = reconciliation.scan(args.db, sqlite_checkpointer(args.checkpoints), folder, client)
+    except (MissingRecording, InvalidModelOutput) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    saved = client.save_recordings()
+    print(f"mode={args.mode}  documents in the folder: {len(results)}  new: {sum(r['new'] for r in results)}")
+    for item in results:
+        print(_document_line(item))
+    if client.calls:
+        _print_usage(client)
     if saved:
         print(f"recordings saved: {saved}")
     return 0
@@ -1342,6 +1381,16 @@ def main(argv=None) -> int:
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     for command in (scan, tick, approve):
         command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")
+    reconcile_parser = sub.add_parser(
+        "reconcile", help="read supplier invoices and delivery notes and match them with the purchase orders"
+    )
+    reconcile_sub = reconcile_parser.add_subparsers(dest="reconcile_command", required=True)
+    reconcile_scan = reconcile_sub.add_parser("scan", help="process every new document of a folder")
+    reconcile_scan.add_argument("folder", help="folder of .txt, text .pdf and .xlsx supplier documents")
+    reconcile_scan.add_argument("--mode", choices=config.MODES, default="replay")
+    reconcile_scan.add_argument("--recordings", default=None, help="recordings file for the document extraction")
+    reconcile_scan.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    reconcile_scan.set_defaults(handler=cmd_reconcile_scan)
     quotes_demo = sub.add_parser(
         "quotes-demo",
         help="run the sample quote timeline, each scan, clock, receive, tick, decide, approve and list step in its own process",

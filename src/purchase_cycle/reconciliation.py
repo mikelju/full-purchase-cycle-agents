@@ -7,8 +7,11 @@ import hashlib
 import re
 import sqlite3
 from pathlib import Path
+from typing import TypedDict
 
-from purchase_cycle import db, email_order, llm, sim_clock, web_form
+from langgraph.graph import END, START, StateGraph
+
+from purchase_cycle import db, email_order, llm, reconcile_match, sim_clock, web_form
 
 CHANNEL = "reconcile"
 STEP = "document_extraction"
@@ -26,6 +29,7 @@ UNKNOWN_ORDER = "unknown_order"
 SUPPLIER_MISMATCH = "supplier_mismatch"
 DUPLICATE = "duplicate"
 
+DISCREPANCY_COLUMNS = ("sku", "type", "expected", "found", "unit_amount", "amount")
 DOCUMENT_TEXT = "Supplier document:\n{text}"
 PO_REFERENCE = re.compile(r"\bPO\s*-?\s*0*(\d+)\b", re.IGNORECASE)
 
@@ -209,3 +213,222 @@ def link_document(conn: sqlite3.Connection, doc_id: int) -> dict:
     if twin:
         return _set_link(conn, doc_id, UNLINKED, DUPLICATE, supplier=order["supplier_code"])
     return _set_link(conn, doc_id, LINKED, None, order["id"], order["supplier_code"])
+
+
+def invoice_reference(invoice_id: int) -> str:
+    return f"INV-{invoice_id:04d}"
+
+
+def _lines(conn: sqlite3.Connection, doc_id: int) -> list[dict]:
+    rows = conn.execute(
+        "SELECT sku, quantity, unit_price, line_total FROM document_lines WHERE document_id = ? ORDER BY line_no",
+        (doc_id,),
+    )
+    return [dict(row) for row in rows]
+
+
+def _stored_result(conn: sqlite3.Connection, invoice_id: int) -> tuple[dict | None, list[tuple]]:
+    current = conn.execute("SELECT * FROM reconciliations WHERE invoice_id = ?", (invoice_id,)).fetchone()
+    if current is None:
+        return None, []
+    rows = conn.execute(
+        "SELECT sku, type, expected, found, unit_amount, amount FROM discrepancies WHERE reconciliation_id = ?",
+        (current["id"],),
+    )
+    return dict(current), sorted((tuple(r) for r in rows), key=repr)
+
+
+def plan_invoice(conn: sqlite3.Connection, invoice_id: int) -> dict | None:
+    """The result and rows the matching gives one linked invoice, or None when nothing would change."""
+    invoice = conn.execute("SELECT * FROM supplier_documents WHERE id = ?", (invoice_id,)).fetchone()
+    if invoice is None or invoice["kind"] != "invoice" or invoice["status"] != LINKED:
+        return None
+    order = dict(conn.execute("SELECT * FROM purchase_orders WHERE id = ?", (invoice["purchase_order_id"],)).fetchone())
+    note = conn.execute(
+        "SELECT id FROM supplier_documents WHERE purchase_order_id = ? AND kind = 'delivery_note' AND status = ? "
+        "ORDER BY id LIMIT 1",
+        (order["id"], LINKED),
+    ).fetchone()
+    note_id = note["id"] if note else None
+    result, found = reconcile_match.classify(order, _lines(conn, invoice_id), _lines(conn, note_id) if note else None)
+    new_rows = sorted((tuple(row[c] for c in DISCREPANCY_COLUMNS) for row in found), key=repr)
+    current, old_rows = _stored_result(conn, invoice_id)
+    if current and (current["result"], current["delivery_note_id"]) == (result, note_id) and old_rows == new_rows:
+        return None
+    return {
+        "invoice_id": invoice_id,
+        "order_id": order["id"],
+        "note_id": note_id,
+        "result": result,
+        "rows": [list(row) for row in new_rows],
+    }
+
+
+def store_plan(conn: sqlite3.Connection, plan: dict) -> int:
+    """Write a plan in one transaction: the reconciliation of the invoice is inserted or updated, never doubled."""
+    with conn:
+        current = conn.execute("SELECT id FROM reconciliations WHERE invoice_id = ?", (plan["invoice_id"],)).fetchone()
+        if current is None:
+            cursor = conn.execute(
+                "INSERT INTO reconciliations (invoice_id, purchase_order_id, delivery_note_id, result, reconciled_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (plan["invoice_id"], plan["order_id"], plan["note_id"], plan["result"], _now(conn)),
+            )
+            reconciliation_id = cursor.lastrowid
+        else:
+            reconciliation_id = current["id"]
+            conn.execute(
+                "UPDATE reconciliations SET delivery_note_id = ?, result = ?, reconciled_at = ? WHERE id = ?",
+                (plan["note_id"], plan["result"], _now(conn), reconciliation_id),
+            )
+            conn.execute("DELETE FROM discrepancies WHERE reconciliation_id = ?", (reconciliation_id,))
+        for row in plan["rows"]:
+            conn.execute(
+                "INSERT INTO discrepancies (reconciliation_id, sku, type, expected, found, unit_amount, amount) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (reconciliation_id, *row),
+            )
+    return reconciliation_id
+
+
+def reconcile_invoice(conn: sqlite3.Connection, invoice_id: int) -> bool:
+    """Match one linked invoice with its order and delivery note; True when a row was written.
+
+    A delivery note that arrives later updates the same row; unchanged inputs write nothing.
+    """
+    plan = plan_invoice(conn, invoice_id)
+    if plan is None:
+        return False
+    store_plan(conn, plan)
+    return True
+
+
+def reconcile_pending(conn: sqlite3.Connection) -> list[int]:
+    """Run the matching for every linked invoice, in id order; return the invoice ids whose result was written."""
+    ids = [
+        r[0]
+        for r in conn.execute(
+            "SELECT id FROM supplier_documents WHERE kind = 'invoice' AND status = ? ORDER BY id", (LINKED,)
+        )
+    ]
+    return [invoice_id for invoice_id in ids if reconcile_invoice(conn, invoice_id)]
+
+
+class ReconcileState(TypedDict, total=False):
+    path: str
+    digest: str
+    doc_id: int
+    status: str
+    plans: list
+
+
+def _invoices_to_match(conn: sqlite3.Connection, doc: dict) -> list[int]:
+    if doc["status"] != LINKED:
+        return []
+    if doc["kind"] == "invoice":
+        return [doc["id"]]
+    rows = conn.execute(
+        "SELECT id FROM supplier_documents WHERE purchase_order_id = ? AND kind = 'invoice' AND status = ? ORDER BY id",
+        (doc["purchase_order_id"], LINKED),
+    )
+    return [row["id"] for row in rows]
+
+
+def build_reconcile_graph(client: llm.ModelClient, db_path: Path | str, checkpointer=None):
+    """One run per document: read, extract, link, match, store. No pause and no interrupt."""
+
+    def read(state: ReconcileState) -> ReconcileState:
+        return {"digest": content_hash(state["path"])}
+
+    def extract(state: ReconcileState) -> ReconcileState:
+        conn = db.connect(db_path)
+        try:
+            doc = extract_document(conn, client, state["path"])
+        finally:
+            conn.close()
+        return {"doc_id": doc["id"], "status": doc["status"]}
+
+    def link(state: ReconcileState) -> ReconcileState:
+        conn = db.connect(db_path)
+        try:
+            doc = link_document(conn, state["doc_id"])
+        finally:
+            conn.close()
+        return {"status": doc["status"]}
+
+    def match(state: ReconcileState) -> ReconcileState:
+        conn = db.connect(db_path)
+        try:
+            doc = dict(conn.execute("SELECT * FROM supplier_documents WHERE id = ?", (state["doc_id"],)).fetchone())
+            plans = [plan_invoice(conn, invoice_id) for invoice_id in _invoices_to_match(conn, doc)]
+        finally:
+            conn.close()
+        return {"plans": [plan for plan in plans if plan is not None]}
+
+    def store(state: ReconcileState) -> ReconcileState:
+        conn = db.connect(db_path)
+        try:
+            for plan in state.get("plans", []):
+                store_plan(conn, plan)
+        finally:
+            conn.close()
+        return {}
+
+    builder = StateGraph(ReconcileState)
+    builder.add_node("read", read)
+    builder.add_node("extract", extract, retry_policy=llm.MODEL_RETRY)
+    builder.add_node("link", link)
+    builder.add_node("match", match)
+    builder.add_node("store", store)
+    builder.add_edge(START, "read")
+    for before, after in (("read", "extract"), ("extract", "link"), ("link", "match"), ("match", "store")):
+        builder.add_edge(before, after)
+    builder.add_edge("store", END)
+    return builder.compile(checkpointer=checkpointer, name="reconcile")
+
+
+def folder_files(folder: Path | str) -> list[Path]:
+    return sorted(p for p in Path(folder).iterdir() if p.is_file() and p.suffix.lower() in SUFFIXES)
+
+
+def scan(db_path: Path | str, checkpointer, folder: Path | str, client: llm.ModelClient) -> list[dict]:
+    """Process every new document of the folder, in sorted order; a stored content hash is skipped.
+
+    After the folder, the matching runs for every linked invoice, so a document that was stored by an
+    interrupted run is still reconciled. Returns one dict per file: its state after this scan.
+    """
+    graph = build_reconcile_graph(client, db_path, checkpointer)
+    results = []
+    conn = db.connect(db_path)
+    try:
+        for path in folder_files(folder):
+            digest = content_hash(path)
+            new = stored_document(conn, digest) is None
+            if new:
+                graph.invoke({"path": str(path)}, {"configurable": {"thread_id": f"reconcile-{digest[:12]}"}})
+            doc = stored_document(conn, digest)
+            results.append({"file": path.name, "new": new, **_summary(doc)})
+        reconcile_pending(conn)
+        for item in results:
+            item["result"] = _result_of(conn, item["id"], item["kind"])
+    finally:
+        conn.close()
+    return results
+
+
+def _summary(doc: dict) -> dict:
+    return {
+        "id": doc["id"],
+        "kind": doc["kind"],
+        "number": doc["number"],
+        "status": doc["status"],
+        "reason": doc["reason"],
+        "order_id": doc["purchase_order_id"],
+    }
+
+
+def _result_of(conn: sqlite3.Connection, doc_id: int, kind: str | None) -> str | None:
+    if kind != "invoice":
+        return None
+    row = conn.execute("SELECT result FROM reconciliations WHERE invoice_id = ?", (doc_id,)).fetchone()
+    return row["result"] if row else None
