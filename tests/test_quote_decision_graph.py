@@ -1,5 +1,8 @@
 """C5 to C8: the decision graph and the decide, approve and reject commands on a temporary database."""
 
+import sqlite3
+import subprocess
+import sys
 from email import message_from_bytes
 
 import pytest
@@ -236,3 +239,81 @@ def test_a_transient_model_error_is_retried_by_the_extract_node(tmp_path, monkey
     monkeypatch.setattr(quote_decision, "extract_offers", transient)
     assert world.run("decide") == 0
     assert len(attempts) == 2 and world.status() == "awaiting_approval"
+
+
+def _final(world):
+    conn = sqlite3.connect(world.db_path)
+    conn.row_factory = sqlite3.Row
+    rows = {
+        "quote_requests": [dict(r) for r in conn.execute("SELECT * FROM quote_requests ORDER BY id")],
+        "purchase_orders": [dict(r) for r in conn.execute("SELECT * FROM purchase_orders ORDER BY id")],
+        "quote_offers": [
+            {k: v for k, v in dict(r).items() if k != "reply_file"}
+            for r in conn.execute("SELECT * FROM quote_offers ORDER BY request_id, supplier_code")
+        ],
+    }
+    files = {p.name: p.read_bytes() for p in world.emails()}
+    return rows, files
+
+
+def test_decide_and_approve_in_separate_processes_equal_one_process(tmp_path):
+    single = World(tmp_path / "single")
+    assert single.run("decide") == 0
+    assert single.run("approve", "QR-0001", "--supplier", "SUP-002") == 0
+    separate = World(tmp_path / "separate")
+    recorded = separate.recordings.read_bytes()
+    steps = [
+        ["decide", "--recordings", str(separate.recordings)],
+        ["approve", "QR-0001", "--supplier", "SUP-002", "--outbox", str(separate.outbox)],
+    ]
+    for step in steps:
+        if step[0] == "approve":
+            separate.recordings.unlink()  # resuming must not read a recording, that is, call no model
+        run = subprocess.run(
+            [sys.executable, "-m", "purchase_cycle.cli", "--db", str(separate.db_path), "quotes", *step]
+            + ["--checkpoints", str(separate.checkpoints)],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        assert run.returncode == 0, run.stderr
+    assert not separate.recordings.exists() and recorded
+    rows, files = _final(separate)
+    assert len(rows["purchase_orders"]) == 1 and len(files) == 1
+    assert (rows, files) == _final(single)
+
+
+def test_list_shows_every_status_the_recommended_supplier_and_the_order_number(tmp_path, capsys):
+    world = World(tmp_path)
+    world.conn.execute(
+        "INSERT INTO quote_requests (id, sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
+        "VALUES (2, 'GLV-NIT-S', 5, 'quote-QR-0002', 'no_offers', '2026-10-12 09:00:00', '2026-10-15 09:00:00', "
+        "'2026-10-17 09:00:00')"
+    )
+    world.conn.commit()
+    world.run("decide")
+    capsys.readouterr()
+    assert cli.main(["--db", str(world.db_path), "quotes", "list"]) == 0
+    first, second = capsys.readouterr().out.splitlines()[1:]
+    assert "QR-0001" in first and "status=awaiting_approval" in first
+    assert first.endswith("recommended=SUP-001  order=-")
+    assert "status=no_offers" in second and "recommended" not in second
+    world.run("approve", "QR-0001")
+    capsys.readouterr()
+    cli.main(["--db", str(world.db_path), "quotes", "list"])
+    assert (
+        capsys.readouterr()
+        .out.splitlines()[1]
+        .endswith(
+            "status=ordered  replied=SUP-001,SUP-002  pending=SUP-003  next reminder=-  deadline=2026-10-17 09:00  recommended=SUP-001  order=PO-0001"
+        )
+    )
+
+
+def test_list_shows_a_rejected_request(world, capsys):
+    world.run("decide")
+    world.run("reject", "QR-0001")
+    capsys.readouterr()
+    cli.main(["--db", str(world.db_path), "quotes", "list"])
+    line = capsys.readouterr().out.splitlines()[1]
+    assert "status=rejected" in line and line.endswith("recommended=SUP-001  order=-")

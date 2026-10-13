@@ -211,11 +211,27 @@ def cmd_quotes_reject(args) -> int:
     return 0
 
 
+def _decision_columns(row: dict) -> str:
+    """The decision columns appear once a request has offers, so earlier output stays as it was."""
+    if row["recommended"] is None and row["order"] is None:
+        return ""
+    return f"  recommended={row['recommended'] or '-'}  order={row['order'] or '-'}"
+
+
 def cmd_quotes_list(args) -> int:
     conn = db.connect(args.db)
     try:
         db.seed(conn)
         rows = quotes.list_requests(conn)
+        for row in rows:
+            request_id = int(row["reference"].removeprefix("QR-"))
+            row["recommended"] = (
+                quote_decision.recommendation(conn, request_id)["supplier"]
+                if (conn.execute("SELECT 1 FROM quote_offers WHERE request_id = ?", (request_id,)).fetchone())
+                else None
+            )
+            order = conn.execute("SELECT id FROM purchase_orders WHERE request_id = ?", (request_id,)).fetchone()
+            row["order"] = quote_decision.po_number(order[0]) if order else None
     finally:
         conn.close()
     if not rows:
@@ -227,7 +243,7 @@ def cmd_quotes_list(args) -> int:
         print(
             f"  {row['reference']}  sku={row['sku']}  quantity={row['quantity']}  status={row['status']}  "
             f"replied={','.join(row['replied']) or '-'}  pending={','.join(row['pending']) or '-'}  "
-            f"next reminder={reminder}  deadline={row['deadline'][:16]}"
+            f"next reminder={reminder}  deadline={row['deadline'][:16]}{_decision_columns(row)}"
         )
     return 0
 
