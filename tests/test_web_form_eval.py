@@ -161,5 +161,8 @@ def test_upload_command_uploads_every_suite_and_keeps_the_worst_exit(monkeypatch
     for name in ("detection", "answers"):
         upload = lambda name=name: uploaded.append(f"clarification_{name}") or 0  # noqa: E731
         monkeypatch.setattr(getattr(clarification_eval, name), "upload_datasets", upload)
+    from purchase_cycle.evaluation import offer_eval
+
+    monkeypatch.setattr(offer_eval, "upload_datasets", lambda: uploaded.append("offer_extraction") or 0)
     assert main(["eval-upload"]) == 1
     assert uploaded == list(harness.UPLOAD_SUITES)

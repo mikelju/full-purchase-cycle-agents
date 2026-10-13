@@ -1,0 +1,63 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "orders": [
+      {
+        "currency": "EUR",
+        "expected_delivery": "2026-10-19",
+        "number": "PO-0001",
+        "quantity": 9,
+        "supplier": "SUP-003",
+        "total": 45.0,
+        "unit_price": 5.0
+      }
+    ],
+    "outbox": [
+      "PO-0001-SUP-003.eml"
+    ],
+    "recommended": "SUP-003",
+    "rule": "partial_only",
+    "status": "ordered"
+  },
+  "id": "QD-014",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "replies": [
+    {
+      "answer": {
+        "currency": "EUR",
+        "lead_time_days": 5,
+        "offers": true,
+        "price_text": "5 EUR per box",
+        "quantity": 9,
+        "unit_price": 5.0,
+        "vat_included": false,
+        "vat_rate": null,
+        "working_days": true
+      },
+      "body": "We offer 9 boxes at 5 EUR per box, delivered in 5 working days.",
+      "supplier": "SUP-003"
+    }
+  ],
+  "request": {
+    "quantity": 12,
+    "sku": "GLV-NIT-XS",
+    "status": "ready_for_decision"
+  },
+  "steps": [
+    {
+      "exit": 0,
+      "op": "decide"
+    },
+    {
+      "exit": 0,
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "partial_only",
+    "approve"
+  ]
+}

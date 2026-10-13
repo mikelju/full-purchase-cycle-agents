@@ -2,11 +2,12 @@
 
 Portfolio project that demonstrates multi-agent orchestration with [LangGraph](https://github.com/langchain-ai/langgraph) (Python) over the full purchase cycle of a fictional company.
 Status: phase 01 (foundations) built: shared database, model client, persistent graph state, tracing and the evaluation harness.
-Phase 02 (web form orders) built: the first order channel, from a form submission to a stored order and a reply.
-Phase 03 (email orders) built: the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
-Phase 04 (exceptions) built and merged (PR #6): both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
-Phase 05 (closing the orders module) built: a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
-Phase 06 (quote requests and wait) in progress: quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
+Phase 02 (web form orders) integrated (merged via PR #4): the first order channel, from a form submission to a stored order and a reply.
+Phase 03 (email orders) integrated (merged via PR #5): the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
+Phase 04 (exceptions) integrated (merged via PR #6): both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
+Phase 05 (closing the orders module) integrated (merged via PR #9): a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
+Phase 06 (quote requests and wait) integrated (merged via PR #11): quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
+Phase 07 (quotes, decision) is built and delivered for review via PR: offer extraction with Claude Haiku 4.5, a fixed comparison rule, a human approval after a pause with saved state and an issued purchase order, with two new evaluations.
 
 ![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
 
@@ -239,7 +240,7 @@ Demand per SKU is the sum of the order lines of orders with status `received`; t
 `quotes scan` starts one quote request `QR-NNNN` per SKU with a positive shortfall and no request already waiting, for that shortfall, so a scan with no new orders starts nothing; it writes one request email per supplier of the product family to the supplier outbox (`data/supplier_outbox/`).
 Three fictional suppliers live in `src/purchase_cycle/suppliers.py`; every product has at least two.
 Each request is a LangGraph thread `quote-QR-NNNN` with the nodes `send`, `wait` and `close`, saved in the checkpoint file, so the wait survives the end of the process.
-A supplier reply is an `.eml` file whose subject names the request reference and whose sender is a supplier of that request; it only marks the supplier as replied, and offers are not read.
+A supplier reply is an `.eml` file whose subject names the request reference and whose sender is a supplier of that request; receiving it only marks the supplier as replied, and the offer is read later by `quotes decide`.
 The wait schedule: one reminder on day 3 to the suppliers that have not replied, and a deadline on day 5.
 A request closes as `ready_for_decision` when every supplier replied, or at the deadline with at least one reply; with no reply it closes as `no_offers` and is parked in `failures` with step `quote_wait`.
 
@@ -271,13 +272,59 @@ Every command takes `--db <path>` before the command name; `scan`, `receive` and
 Running `scan` or `tick` twice at the same simulated time writes nothing new.
 A `scan` also finishes the request emails of a request whose send failed partway, for example on a full disk, without writing any email twice.
 
+### Decide and order
+
+Phase 07 adds the decision step to the quotes module (`src/purchase_cycle/quote_decision.py`): it reads the replies of a request that is `ready_for_decision`, compares the offers, waits for a person and issues one purchase order.
+Each request has its own LangGraph thread `decision-QR-NNNN`, separate from the wait thread, with the nodes `extract`, `compare`, `approve`, `issue` and `close` and the same SQLite checkpoint file.
+
+- `extract` makes one call per replied supplier to Claude Haiku 4.5 (task `offer_extraction`, through the same client as the order channels, in live, record and replay modes). The prompt holds the request SKU, product name, sale unit and quantity and the reply body; the model returns whether the reply offers or declines, the quantity offered in sale units, the unit price per sale unit (converted from a price per pack or per piece), the currency, whether the price includes VAT and the VAT rate, the lead time and whether it counts working days, and the price text as written. Each offer is stored in `quote_offers`. A re-run reads the stored offers back and calls the model only for replies with no row.
+- Usability is computed in code, never by the model. An offer is usable when it offers, with a positive quantity, a positive price, currency EUR, a lead time and a net price that can be computed (a price with VAT included needs the stated rate). Any other offer is stored as unusable with one reason: `declined`, `no_price`, `currency`, `no_lead_time`, `vat_rate_missing` or `extraction_failed`. An answer that does not fit the schema is stored as `extraction_failed` and parks one `failures` row (`needs_review`, step `offer_extraction`); the other replies go on.
+- `compare` is deterministic and calls no model (the comparison rule below).
+- `approve` pauses with a LangGraph `interrupt` until a person answers. The request is `awaiting_approval` and the state stays in the checkpoint file, so the pause survives the end of the process.
+- `issue` writes the purchase order and its email; `close` closes a rejected request. Both are idempotent: a unique purchase order per request and keyed outbox file names prevent duplicates when the graph resumes.
+
+#### The comparison rule
+
+- Unusable offers are left out of the recommendation and shown with their reason.
+- Offers that cover the full requested quantity come first; among them the lowest total wins, where the total is the net unit price (before VAT) times the requested quantity.
+- A tie goes to the shorter lead time in calendar days from the decision date, then to the lower supplier code. Working days count Monday to Friday with no holidays and weeks count as 7 days.
+- A partial offer is recommended only when no usable offer covers the full quantity; among partial offers the same order applies, with the total over the offered quantity.
+- No order is split between suppliers. The recommendation carries a reason text from a fixed template that names the deciding rule and the compared totals.
+
+#### Decision commands
+
+```
+uv run purchase-cycle quotes decide
+uv run purchase-cycle quotes approve QR-0001
+uv run purchase-cycle quotes approve QR-0001 --supplier SUP-003
+uv run purchase-cycle quotes reject QR-0001
+```
+
+- `quotes decide` starts the decision of every `ready_for_decision` request that has none yet and prints, per request, the offers with their usability, the recommended supplier and its reason; each request ends `awaiting_approval`. It then lists every `no_offers` request as waiting for a person, with no purchase order and no new request. A second `decide` starts nothing and calls no model. `--mode live|record|replay` (default replay) and `--recordings <file>` select how the extraction answers.
+- `quotes approve QR-NNNN` approves the recommendation; with `--supplier SUP-NNN` it issues the order from that supplier's usable offer instead, full or partial. A supplier with no offer for the request or with an unusable offer is refused with a reason and the request stays waiting. A request with no usable offer accepts only `reject`.
+- `quotes reject QR-NNNN` closes the request as `rejected` with no purchase order and no email.
+- Any command on a request that is not `awaiting_approval`, including a second `approve`, fails with a message and changes nothing.
+- `quotes list` also shows the new statuses `awaiting_approval`, `ordered` and `rejected`, the recommended supplier and the purchase order number.
+
+`decide`, `approve` and `reject` take `--checkpoints`, `approve` also takes `--outbox`, and all take `--db` before the command name.
+
+#### The purchase order
+
+An approval writes one row in `purchase_orders` and moves the request to `ordered`.
+The order has the number `PO-NNNN` (from the table id), the request, the supplier, the SKU, the quantity (the requested quantity for a full offer, the offered quantity for a partial one), the unit price before VAT, the currency, the total, the expected delivery date and the status `issued`.
+The issue time comes from the simulated clock and the expected delivery date is the issue date plus the lead time, with working days counted Monday to Friday.
+It also writes one email `PO-NNNN-<supplier code>.eml` in the supplier outbox from a fixed English template, with the order number and request reference in the subject and the SKU, product name, sale unit, quantity, unit price, currency, total and expected delivery in the body; nothing is sent.
+Stock and customer orders are not changed: phase 08 brings the delivery note.
+
+A local database made by phase 06 code has the old status check on `quote_requests`, which SQLite cannot widen in place, and `seed` keeps an existing file as it was: seed a new database file instead (`--db <new file>`, or delete the old database file and its checkpoint file).
+
 ### Run the quotes demo
 
 ```
 uv run purchase-cycle quotes-demo
 ```
 
-`quotes-demo` stores the two sample orders of `examples/quotes/orders.json` as `received` in a fresh database, checkpoints and supplier outbox in `data/quotes-demo/` (`--workdir <folder>` to change it), then runs eight steps, each one as its own `purchase-cycle` process:
+`quotes-demo` stores the two sample orders of `examples/quotes/orders.json` as `received` in a fresh database, checkpoints and supplier outbox in `data/quotes-demo/` (`--workdir <folder>` to change it), then runs eleven steps, each one as its own `purchase-cycle` process:
 
 1. `quotes scan` on day 0 starts `QR-0001` (12 units of `GLV-NIT-XS`, three suppliers) and `QR-0002` (4 units of `GLV-SURG-NEO-6.5`, two suppliers) and writes five request emails.
 2. `clock advance --days 1`.
@@ -287,8 +334,14 @@ uv run purchase-cycle quotes-demo
 6. `quotes receive examples/quotes/replies-day-3`: `SUP-003` replies to `QR-0001` after its reminder.
 7. `clock advance --days 2`.
 8. `quotes tick` on day 5 closes `QR-0001` as `ready_for_decision` and `QR-0002` as `no_offers`.
+9. `quotes decide` extracts the two offers of `QR-0001` (`SUP-002` offers all 12 boxes at 4.10 EUR in 5 working days, `SUP-003` only 8 boxes at 3.95 EUR in 7 working days), recommends `SUP-002` because it is the only offer that covers the full quantity, and leaves the request `awaiting_approval`; `QR-0002` is listed as waiting for a person.
+10. `quotes approve QR-0001` stands for the operator: it issues `PO-0001` to `SUP-002` and writes `PO-0001-SUP-002.eml`.
+11. `quotes list` shows `QR-0001` as `ordered` with its order and `QR-0002` as `no_offers`.
 
-The demo prints, per step, the simulated time, the requests started, the emails written, the replies received and the status of every request, then a summary; it needs no key and no network.
+The demo prints, per step, the simulated time, the requests started, the emails written, the replies received and the status of every request, then a summary after the wait steps (as in phase 06) and a decision summary; the decision steps also print the offers, the recommendation and its reason, and the order.
+By default (`--mode replay`) it reads the offer extraction answers from `evals/recordings/quotes_demo.jsonl` and needs no key and no network.
+To record them again, set `ANTHROPIC_API_KEY` in `.env` and run `uv run purchase-cycle quotes-demo --mode record` (two Haiku 4.5 calls, a fraction of a cent); `--mode live` calls the model without saving.
+
 
 ## Watch the graphs in LangGraph Studio
 
@@ -337,7 +390,7 @@ Limits:
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and the ten evaluations in replay mode.
+Runs the method's hook tests, ruff, pytest and the twelve evaluations in replay mode.
 
 ## The golden dataset
 
@@ -429,6 +482,20 @@ Three more datasets are hand-built and versioned with the code:
 - `evals/datasets/quote_wait/` holds 24 scripted quote timelines of orders, scans, clock advances, supplier replies and ticks, each with the hand-written expected final requests, `failures` rows and outbox file names: at least 3 each for all replied, some replied, none replied, a late reply, a duplicate reply, a re-run scan, a repeated tick and a process restart.
   They are built by `uv run python -m purchase_cycle.evaluation.quote_wait_eval` from the D5 schedule.
 
+### Offer extraction dataset
+
+The 120 supplier replies in `evals/datasets/offer_extraction/` were built with the same method as the earlier model datasets:
+
+1. A seeded planning script (`plan.jsonl`) fixes, for ten categories of 12 replies (plain full offer, price per pack or per piece, partial quantity, decline, missing price, other currency, VAT, lead time in weeks or working days, several price tiers, chatty replies with unrelated numbers), the real catalog SKU, the quantity and the hand-written expected fields, usability and reason; re-running it with the same seed gives the same plan.
+2. The reply texts in `texts/` were written by the coding agent in ASCII English and checked automatically.
+3. A blind second pass by a clean-context agent relabelled every reply (`second_pass_review.jsonl`); two disagreements were fixed by correcting the text and 118 agreed.
+4. A fixed stratified split gives 30 development and 90 test replies; only the development split was used to tune the instructions.
+5. There is no owner audit of the labels (owner decision D11): the labels come from the planning script and the second pass.
+
+The steps run as `uv run purchase-cycle offer-dataset plan`, `check`, `build`, `blind` (writes the replies and label rules for the blind annotator) and `review` (compares the annotator's readings with the labels).
+
+The 39 scenarios of `evals/datasets/quote_decision/` are hand-built by `uv run python -m purchase_cycle.evaluation.quote_decision_eval`, which rewrites them from the scenario definitions in that module.
+
 ## Run the evaluation
 
 ```
@@ -436,7 +503,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the ten evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
+`npm run eval` replays the twelve evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:
@@ -520,7 +587,26 @@ The two deterministic suites have no split and no baseline.
 It grades the final requests, the parked `quote_wait` failures and the outbox file names, and counts eight critical errors from a snapshot before and after each step: a second open request for a SKU, a request without shortfall, a wrong quantity, a reminder after a reply, a repeated reminder, an email after the close, a request still waiting after its deadline and a lost or duplicated thread.
 Scenario success is 100.0% (86.2% to 100.0%) with 0 critical errors; the gate is 100% success and 0 critical errors.
 
-`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the six dataset evaluations once; `--suite <name>` uploads one; `channel_routing`, `failure_recovery`, `order_scenarios` and `quote_wait` are not uploaded).
+`uv run purchase-cycle eval --suite offer_extraction` replays the 90 test replies of the offer extraction dataset (30 more are the development split used to tune the instructions) through the real extraction and usability code.
+Its deterministic graders give offer or decline, quantity, unit price (within half a cent), currency, VAT and lead time accuracy, usability accuracy (computed usability and reason), reply exact match and critical errors, with 95% Wilson intervals globally and per category; a critical error is a reply judged usable with a wrong unit price, quantity, currency or net price, or judged usable when it must be unusable, since it would reach a purchase order.
+The gates are reply exact match and unit price accuracy at least 95%, a McNemar regression test per reply against the stored baseline, and a critical error target of 0.
+The Claude Haiku 4.5 baseline on the 90 test replies (`evals/baselines/offer_extraction.json`, tuned on the development split only, with the instructions unchanged after the test run):
+
+| Metric | Value | 95% interval | Threshold |
+|---|---|---|---|
+| Reply exact match (90 replies) | 98.9% | 94.0% to 99.8% | at least 95% |
+| Unit price accuracy (72 priced replies) | 100.0% | 94.9% to 100.0% | at least 95% |
+| Usability accuracy (90 replies) | 100.0% | 95.9% to 100.0% | reported |
+| Critical errors (90 replies) | 0 | upper bound 4.1% | target 0, met |
+
+The one failing reply is a missing-price reply with a wrong working-days flag, which does not change its usability.
+About 90 replies give a wide interval at reply level and about 9 per category, so the per-category figures are indicative only.
+`uv run purchase-cycle eval --suite quote_decision` runs the 39 hand-built scenarios of `evals/datasets/quote_decision/` through the same functions as the CLI on a temporary database, with the extracted offers given by a test double so no model is called.
+They cover a single full offer, a cheaper partial offer against a full one, ties decided by lead time and by supplier code, only partial offers, no usable offer, approve, choose another offer, a refused choice, reject, approve twice and a process restart between decide and approve; each tag has at least three scenarios.
+The grader reads the database, the outbox, `failures` and the printed recommendation, and counts seven critical errors against an oracle apart from the module: more than one order for a request, an order for a rejected, `no_offers` or unapproved request, an order from an unusable offer, an order that differs from the chosen offer, a recommendation that differs from the rule, a request status that does not match its order, and a model call on a re-run or a resumption.
+Scenario success is 100.0% (91.0% to 100.0%, 39 of 39) with 0 critical errors; the gate is 100% success and 0 critical errors.
+
+`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the seven dataset evaluations once; `--suite <name>` uploads one; `offer_extraction` is uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait` and `quote_decision` are not).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
 Recordings in `evals/recordings/` are tied to the exact prompt and model: changing either needs a new recording and a new comparison against the baseline.
 
@@ -551,7 +637,13 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - In `order_scenarios` the customer answers are scripted before any question is seen, so they cannot react to an odd question, and thirty scenarios give a wide interval.
 - The LangSmith trace of a live `orders-demo` run and the experiment of `whatsapp_order_extraction` are pending until the LangSmith trace quota resets, around 2026-11-05.
 - Suppliers are simulated by email files; nothing is sent or received over a network.
-- The quotes module reads no offer content; prices and delivery times are read in phase 07.
+- Offers come from simulated reply files; no currency conversion, minimum order quantity, shipping cost or payment terms are modelled, and an offer in another currency is shown as unusable.
+- No order is split between suppliers. A partial order leaves the rest of the shortfall without a new request, because phase 06 nets every earlier request out of the shortfall whatever its status; the same holds for `rejected` and `no_offers` requests, so there is no automatic re-quote after a rejection or a request with no offers, and the person has to handle them.
+- Stock and customer orders are not updated when a purchase order is issued; the delivery note of phase 08 brings the goods in.
+- Working days ignore holidays, as the simulated clock does.
+- A database made by phase 06 code needs a new seeded file because the status check of `quote_requests` is wider and SQLite cannot change it in place.
+- The text writer and the evaluated model belong to the same family, so the `offer_extraction` figures may be optimistic, and a price per pack read as a price per sale unit is the most costly extraction error, which is why it has its own category and counts as a critical error.
+- The LangSmith trace of a live `quotes-demo` decision and the experiment of `offer_extraction` are pending until the LangSmith trace quota resets, around 2026-11-05.
 - Stock is not reserved or decremented, so demand is the sum of stored `received` orders.
 - The simulated clock has no business days, holidays or time zones, and nothing ticks by itself: an operator or the demo runs `quotes tick`.
 - A supplier reply is accepted on the subject reference and the sender address in the file; there is no sender authentication, as in the email channel.

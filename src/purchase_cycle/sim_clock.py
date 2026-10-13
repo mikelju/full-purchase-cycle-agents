@@ -27,3 +27,15 @@ def advance(conn: sqlite3.Connection, days: int = 0, hours: int = 0) -> datetime
 
 def text(moment: datetime) -> str:
     return moment.strftime("%Y-%m-%d %H:%M")
+
+
+def add_days(moment: datetime, days: int, working: bool = False) -> datetime:
+    """Add days to a moment; working days count Monday to Friday with no holidays, calendar days all seven."""
+    if not working:
+        return moment + timedelta(days=days)
+    left = days
+    while left > 0:
+        moment += timedelta(days=1)
+        if moment.weekday() < 5:
+            left -= 1
+    return moment

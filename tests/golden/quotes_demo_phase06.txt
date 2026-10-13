@@ -1,0 +1,88 @@
+sample orders stored as received: 2
+  CLI-001  channel=web_form  lines=GLV-NIT-XS x 12
+  CLI-002  channel=email  lines=GLV-SURG-NEO-6.5 x 40, GLV-LTX-L x 10
+
+== step 1: purchase-cycle quotes scan  (own process, exit code 0)
+simulated time: 2026-10-12 09:00
+requests started: QR-0001, QR-0002
+emails written: 5
+  QR-0001-request-SUP-001.eml
+  QR-0001-request-SUP-002.eml
+  QR-0001-request-SUP-003.eml
+  QR-0002-request-SUP-001.eml
+  QR-0002-request-SUP-002.eml
+replies received: none
+requests:
+  QR-0001  sku=GLV-NIT-XS  quantity=12  status=waiting  replied=-  reminded=-
+  QR-0002  sku=GLV-SURG-NEO-6.5  quantity=4  status=waiting  replied=-  reminded=-
+
+== step 2: purchase-cycle clock advance --days 1  (own process, exit code 0)
+simulated time: 2026-10-13 09:00
+requests started: none
+emails written: none
+replies received: none
+requests:
+  QR-0001  sku=GLV-NIT-XS  quantity=12  status=waiting  replied=-  reminded=-
+  QR-0002  sku=GLV-SURG-NEO-6.5  quantity=4  status=waiting  replied=-  reminded=-
+
+== step 3: purchase-cycle quotes receive  (own process, exit code 0)
+simulated time: 2026-10-13 09:00
+requests started: none
+emails written: none
+replies received: QR-0001 from SUP-002
+requests:
+  QR-0001  sku=GLV-NIT-XS  quantity=12  status=waiting  replied=SUP-002  reminded=-
+  QR-0002  sku=GLV-SURG-NEO-6.5  quantity=4  status=waiting  replied=-  reminded=-
+
+== step 4: purchase-cycle clock advance --days 2  (own process, exit code 0)
+simulated time: 2026-10-15 09:00
+requests started: none
+emails written: none
+replies received: none
+requests:
+  QR-0001  sku=GLV-NIT-XS  quantity=12  status=waiting  replied=SUP-002  reminded=-
+  QR-0002  sku=GLV-SURG-NEO-6.5  quantity=4  status=waiting  replied=-  reminded=-
+
+== step 5: purchase-cycle quotes tick  (own process, exit code 0)
+simulated time: 2026-10-15 09:00
+requests started: none
+emails written: 4
+  QR-0001-reminder-SUP-001.eml
+  QR-0001-reminder-SUP-003.eml
+  QR-0002-reminder-SUP-001.eml
+  QR-0002-reminder-SUP-002.eml
+replies received: none
+requests:
+  QR-0001  sku=GLV-NIT-XS  quantity=12  status=waiting  replied=SUP-002  reminded=SUP-001,SUP-003
+  QR-0002  sku=GLV-SURG-NEO-6.5  quantity=4  status=waiting  replied=-  reminded=SUP-001,SUP-002
+
+== step 6: purchase-cycle quotes receive  (own process, exit code 0)
+simulated time: 2026-10-15 09:00
+requests started: none
+emails written: none
+replies received: QR-0001 from SUP-003
+requests:
+  QR-0001  sku=GLV-NIT-XS  quantity=12  status=waiting  replied=SUP-002,SUP-003  reminded=SUP-001,SUP-003
+  QR-0002  sku=GLV-SURG-NEO-6.5  quantity=4  status=waiting  replied=-  reminded=SUP-001,SUP-002
+
+== step 7: purchase-cycle clock advance --days 2  (own process, exit code 0)
+simulated time: 2026-10-17 09:00
+requests started: none
+emails written: none
+replies received: none
+requests:
+  QR-0001  sku=GLV-NIT-XS  quantity=12  status=waiting  replied=SUP-002,SUP-003  reminded=SUP-001,SUP-003
+  QR-0002  sku=GLV-SURG-NEO-6.5  quantity=4  status=waiting  replied=-  reminded=SUP-001,SUP-002
+
+== step 8: purchase-cycle quotes tick  (own process, exit code 0)
+simulated time: 2026-10-17 09:00
+requests started: none
+emails written: none
+replies received: none
+requests:
+  QR-0001  sku=GLV-NIT-XS  quantity=12  status=ready_for_decision  replied=SUP-002,SUP-003  reminded=SUP-001,SUP-003
+  QR-0002  sku=GLV-SURG-NEO-6.5  quantity=4  status=no_offers  replied=-  reminded=SUP-001,SUP-002
+
+summary:
+ready_for_decision after a reminder: QR-0001
+no_offers, parked in failures for review: QR-0002

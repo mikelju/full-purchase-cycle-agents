@@ -1,6 +1,9 @@
 """C2: schema, seed volume and idempotence."""
 
+import sqlite3
 from collections import Counter
+
+import pytest
 
 from purchase_cycle import db
 from purchase_cycle.catalog import PRODUCTS
@@ -134,3 +137,69 @@ def test_seed_twice_gives_the_same_supplier_rows_and_keeps_the_existing_tables(t
     skus = [r[0] for r in conn.execute("SELECT sku FROM products")]
     assert stock == {p.sku: (i * 37) % 250 for i, p in enumerate(PRODUCTS)}
     assert sorted(skus) == sorted(p.sku for p in PRODUCTS)
+
+
+def test_seed_creates_empty_quote_offers_and_purchase_orders_tables(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    counts = db.seed(conn)
+    offers = [r["name"] for r in conn.execute("PRAGMA table_info(quote_offers)")]
+    assert offers == [
+        "request_id",
+        "supplier_code",
+        "offers",
+        "quantity",
+        "unit_price",
+        "currency",
+        "vat_included",
+        "vat_rate",
+        "lead_time_days",
+        "working_days",
+        "price_text",
+        "net_unit_price",
+        "usable",
+        "reason",
+        "reply_file",
+        "decided_at",
+    ]
+    orders = [r["name"] for r in conn.execute("PRAGMA table_info(purchase_orders)")]
+    assert orders == [
+        "id",
+        "request_id",
+        "supplier_code",
+        "sku",
+        "quantity",
+        "unit_price",
+        "currency",
+        "total",
+        "expected_delivery",
+        "issued_at",
+        "status",
+    ]
+    assert conn.execute("SELECT COUNT(*) FROM quote_offers").fetchone()[0] == 0
+    assert conn.execute("SELECT COUNT(*) FROM purchase_orders").fetchone()[0] == 0
+    assert set(counts) == {"customers", "products", "stock", "orders", "order_lines"}
+
+
+def test_quote_requests_accept_the_decision_statuses_and_refuse_others(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    skus = [r[0] for r in conn.execute("SELECT sku FROM products LIMIT 7")]
+    insert = (
+        "INSERT INTO quote_requests (sku, quantity, thread_id, status, created_at, reminder_at, deadline)"
+        " VALUES (?, 5, ?, ?, 't', 't', 't')"
+    )
+    statuses = ["waiting", "ready_for_decision", "no_offers", "awaiting_approval", "ordered", "rejected"]
+    for sku, status in zip(skus[:6], statuses, strict=True):
+        conn.execute(insert, (sku, f"th-{status}", status))
+    assert conn.execute("SELECT COUNT(*) FROM quote_requests").fetchone()[0] == 6
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(insert, (skus[6], "th-closed", "closed"))
+
+
+def test_seed_twice_keeps_the_decision_tables_empty_and_the_other_rows(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    tables = ("customers", "products", "stock", "suppliers", "supplier_families", "quote_offers", "purchase_orders")
+    first = {t: _rows(conn, t) for t in tables}
+    db.seed(conn)
+    assert {t: _rows(conn, t) for t in tables} == first

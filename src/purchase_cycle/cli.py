@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import config, db, quotes, router, sim_clock
+from purchase_cycle import config, db, quote_decision, quotes, router, sim_clock
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import build_email_order_graph
@@ -20,6 +20,7 @@ from purchase_cycle.llm import (
     EMAIL_EXTRACTION,
     EMAIL_INTAKE,
     MATCHING,
+    OFFER_EXTRACTION,
     WHATSAPP_EXTRACTION,
     WHATSAPP_INTAKE,
     InvalidExtraction,
@@ -40,6 +41,7 @@ DEMO_ORDERS = config.ROOT / "examples" / "orders"
 ORDERS_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "orders_demo.jsonl"  # one file for every task
 ORDERS_DEMO_WORKDIR = config.DATA_DIR / "orders-demo"
 DEMO_QUOTES = config.ROOT / "examples" / "quotes"
+QUOTES_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "quotes_demo.jsonl"  # the offer extraction of the demo
 QUOTES_DEMO_WORKDIR = config.DATA_DIR / "quotes-demo"
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
 EXCEPTIONS_RECORDINGS = {
@@ -129,11 +131,108 @@ def cmd_quotes_tick(args) -> int:
     return 0
 
 
+def _print_decision(item: dict) -> None:
+    print(f"  {item['reference']}  sku={item['sku']}  quantity={item['quantity']}  status={item['status']}")
+    for offer in item["offers"]:
+        if offer["usable"]:
+            lead = f"{offer['lead_time_days']} {'working' if offer['working_days'] else 'calendar'} days"
+            print(
+                f"    {offer['supplier_code']}  usable  quantity={offer['quantity']}  "
+                f"net unit price={offer['net_unit_price']:.4f}  lead time={lead}"
+            )
+        else:
+            print(f"    {offer['supplier_code']}  unusable ({offer['reason']})")
+    found = item["recommendation"]
+    print(f"    recommended: {found['supplier'] or 'none'}")
+    print(f"    reason: {found['reason']}")
+
+
+def cmd_quotes_decide(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+    finally:
+        conn.close()
+    # The prompt holds the request and the reply, not the catalog, since the product is known.
+    client = ModelClient(args.mode, [], args.recordings, task=OFFER_EXTRACTION)
+    try:
+        result = quote_decision.decide(args.db, sqlite_checkpointer(args.checkpoints), client)
+    except (MissingRecording, InvalidModelOutput) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    saved = client.save_recordings()
+    print(f"mode={args.mode}  decisions started: {len(result['decided'])}")
+    for item in result["decided"]:
+        _print_decision(item)
+    if result["no_offers"]:
+        print(f"waiting for a person (no offers, no order): {', '.join(result['no_offers'])}")
+    _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return 0
+
+
+def _request_id(text: str) -> int | None:
+    found = quotes.REFERENCE.fullmatch(text)
+    return int(found.group(1)) if found else None
+
+
+def cmd_quotes_approve(args) -> int:
+    request_id = _request_id(args.reference)
+    if request_id is None:
+        print(f"Error: '{args.reference}' is not a quote request reference like QR-0001", file=sys.stderr)
+        return 1
+    try:
+        done = quote_decision.approve_request(
+            args.db, sqlite_checkpointer(args.checkpoints), args.outbox, request_id, args.supplier
+        )
+    except quote_decision.DecisionRefused as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    order = done["order"]
+    print(
+        f"{done['reference']} ordered  {done['number']}  supplier={order['supplier_code']}  sku={order['sku']}  "
+        f"quantity={order['quantity']}  unit price={order['unit_price']:.4f} {order['currency']}  "
+        f"total={order['total']:.2f}  expected delivery={order['expected_delivery']}  outbox={args.outbox}"
+    )
+    return 0
+
+
+def cmd_quotes_reject(args) -> int:
+    request_id = _request_id(args.reference)
+    if request_id is None:
+        print(f"Error: '{args.reference}' is not a quote request reference like QR-0001", file=sys.stderr)
+        return 1
+    try:
+        done = quote_decision.reject_request(args.db, sqlite_checkpointer(args.checkpoints), request_id)
+    except quote_decision.DecisionRefused as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    print(f"{done['reference']} rejected  no purchase order")
+    return 0
+
+
+def _decision_columns(row: dict) -> str:
+    """The decision columns appear once a request has offers, so earlier output stays as it was."""
+    if row["recommended"] is None and row["order"] is None:
+        return ""
+    return f"  recommended={row['recommended'] or '-'}  order={row['order'] or '-'}"
+
+
 def cmd_quotes_list(args) -> int:
     conn = db.connect(args.db)
     try:
         db.seed(conn)
         rows = quotes.list_requests(conn)
+        for row in rows:
+            request_id = _request_id(row["reference"])
+            row["recommended"] = (
+                quote_decision.recommendation(conn, request_id)["supplier"]
+                if (conn.execute("SELECT 1 FROM quote_offers WHERE request_id = ?", (request_id,)).fetchone())
+                else None
+            )
+            order = conn.execute("SELECT id FROM purchase_orders WHERE request_id = ?", (request_id,)).fetchone()
+            row["order"] = quote_decision.po_number(order[0]) if order else None
     finally:
         conn.close()
     if not rows:
@@ -145,7 +244,7 @@ def cmd_quotes_list(args) -> int:
         print(
             f"  {row['reference']}  sku={row['sku']}  quantity={row['quantity']}  status={row['status']}  "
             f"replied={','.join(row['replied']) or '-'}  pending={','.join(row['pending']) or '-'}  "
-            f"next reminder={reminder}  deadline={row['deadline'][:16]}"
+            f"next reminder={reminder}  deadline={row['deadline'][:16]}{_decision_columns(row)}"
         )
     return 0
 
@@ -169,7 +268,7 @@ def _quotes_state(files: dict) -> dict:
 
 
 def cmd_quotes_demo(args) -> int:
-    """The sample orders and supplier replies through scan, clock, receive and tick, each step in its own process."""
+    """The sample orders and replies through scan, clock, receive, tick, decide and approve, each step in its own process."""
     import subprocess
 
     examples, workdir = Path(args.examples), Path(args.workdir)
@@ -213,6 +312,21 @@ def cmd_quotes_demo(args) -> int:
         ["clock", "advance", "--days", "2"],
         ["quotes", "tick", *paths, *outbox],
     ]
+    waiting_steps = len(steps)
+    steps += [  # the decision: the offers are extracted and compared, then the operator approves the recommendation
+        [
+            "quotes",
+            "decide",
+            "--mode",
+            args.mode,
+            "--recordings",
+            str(QUOTES_DEMO_RECORDINGS),
+            "--checkpoints",
+            str(files["checkpoints"]),
+        ],
+        ["quotes", "approve", "QR-0001", *paths, *outbox],
+        ["quotes", "list"],
+    ]
     before = _quotes_state(files)
     for n, step in enumerate(steps, start=1):
         run = subprocess.run(
@@ -244,21 +358,37 @@ def cmd_quotes_demo(args) -> int:
                 f"replied={','.join(row['replied']) or '-'}  "
                 f"reminded={','.join(after['reminded'].get(row['reference'], [])) or '-'}"
             )
+        if n > waiting_steps:
+            print("step output:")
+            for line in run.stdout.splitlines():
+                print(f"  {line}")
+        if n == waiting_steps:
+            ready = [
+                r["reference"]
+                for r in after["requests"]
+                if r["status"] == "ready_for_decision" and r["reference"] in after["reminded"]
+            ]
+            no_offers = [r["reference"] for r in after["requests"] if r["status"] == "no_offers"]
+            print()
+            print("summary:")
+            print(f"ready_for_decision after a reminder: {', '.join(ready) or 'none'}")
+            print(f"no_offers, parked in failures for review: {', '.join(no_offers) or 'none'}")
+            if not ready or not no_offers:
+                print(
+                    "Error: the demo did not end with a request ready after a reminder and one with no offers",
+                    file=sys.stderr,
+                )
+                return 1
         before = after
-    ready = [
-        r["reference"]
-        for r in before["requests"]
-        if r["status"] == "ready_for_decision" and r["reference"] in before["reminded"]
-    ]
-    no_offers = [r["reference"] for r in before["requests"] if r["status"] == "no_offers"]
+    ordered = [r["reference"] for r in before["requests"] if r["status"] == "ordered"]
+    waiting = [r["reference"] for r in before["requests"] if r["status"] == "no_offers"]
+    orders = [name for name in before["outbox"] if name.startswith("PO-")]
     print()
-    print("summary:")
-    print(f"ready_for_decision after a reminder: {', '.join(ready) or 'none'}")
-    print(f"no_offers, parked in failures for review: {', '.join(no_offers) or 'none'}")
-    if not ready or not no_offers:
-        print(
-            "Error: the demo did not end with a request ready after a reminder and one with no offers", file=sys.stderr
-        )
+    print("decision summary:")
+    print(f"ordered: {', '.join(ordered) or 'none'}  purchase order emails: {', '.join(orders) or 'none'}")
+    print(f"no_offers, listed for a person: {', '.join(waiting) or 'none'}")
+    if len(ordered) != 1 or len(waiting) != 1:
+        print("Error: the demo did not end with one ordered request and one listed for a person", file=sys.stderr)
         return 1
     return 0
 
@@ -1197,15 +1327,31 @@ def main(argv=None) -> int:
     quotes_sub.add_parser("list", help="list every quote request and its suppliers").set_defaults(
         handler=cmd_quotes_list
     )
-    for command in (scan, tick):
+    decide = quotes_sub.add_parser("decide", help="extract and compare the offers of every request ready for decision")
+    decide.add_argument("--mode", choices=config.MODES, default="replay")
+    decide.add_argument("--recordings", default=None, help="recordings file for the offer extraction")
+    decide.set_defaults(handler=cmd_quotes_decide)
+    approve = quotes_sub.add_parser("approve", help="approve the recommended offer, or another with --supplier")
+    approve.add_argument("reference", help="quote request reference, such as QR-0001")
+    approve.add_argument("--supplier", help="issue the order from this supplier's usable offer instead")
+    approve.set_defaults(handler=cmd_quotes_approve)
+    reject = quotes_sub.add_parser("reject", help="close a request awaiting approval with no purchase order")
+    reject.add_argument("reference", help="quote request reference, such as QR-0001")
+    reject.set_defaults(handler=cmd_quotes_reject)
+    for command in (scan, tick, decide, approve, reject):
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    for command in (scan, tick, approve):
         command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")
     quotes_demo = sub.add_parser(
-        "quotes-demo", help="run the sample quote timeline, each scan, clock, receive and tick step in its own process"
+        "quotes-demo",
+        help="run the sample quote timeline, each scan, clock, receive, tick, decide, approve and list step in its own process",
     )
     quotes_demo.add_argument("--examples", default=str(DEMO_QUOTES), help="folder of sample orders and replies")
     quotes_demo.add_argument(
         "--workdir", default=str(QUOTES_DEMO_WORKDIR), help="folder for the demo database, checkpoints and outbox"
+    )
+    quotes_demo.add_argument(
+        "--mode", choices=config.MODES, default="replay", help="offer extraction mode; record needs ANTHROPIC_API_KEY"
     )
     quotes_demo.set_defaults(handler=cmd_quotes_demo)
 

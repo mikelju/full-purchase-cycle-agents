@@ -1,0 +1,70 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "orders": [],
+    "outbox": [],
+    "recommended": null,
+    "rule": "none",
+    "status": "rejected"
+  },
+  "id": "QD-016",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "replies": [
+    {
+      "answer": {
+        "currency": null,
+        "lead_time_days": null,
+        "offers": false,
+        "price_text": null,
+        "quantity": null,
+        "unit_price": null,
+        "vat_included": false,
+        "vat_rate": null,
+        "working_days": null
+      },
+      "body": "Thank you for the request. We cannot supply this item at the moment.",
+      "supplier": "SUP-001"
+    },
+    {
+      "answer": {
+        "currency": null,
+        "lead_time_days": null,
+        "offers": false,
+        "price_text": null,
+        "quantity": null,
+        "unit_price": null,
+        "vat_included": false,
+        "vat_rate": null,
+        "working_days": null
+      },
+      "body": "Thank you for the request. We cannot supply this item at the moment.",
+      "supplier": "SUP-002"
+    }
+  ],
+  "request": {
+    "quantity": 12,
+    "sku": "GLV-NIT-XS",
+    "status": "ready_for_decision"
+  },
+  "steps": [
+    {
+      "exit": 0,
+      "op": "decide"
+    },
+    {
+      "exit": 1,
+      "op": "approve"
+    },
+    {
+      "exit": 0,
+      "op": "reject"
+    }
+  ],
+  "tags": [
+    "no_usable_offer",
+    "reject"
+  ]
+}

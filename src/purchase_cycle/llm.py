@@ -2,7 +2,7 @@
 
 Each task (phase 01 order line extraction, phase 02 web form matching, phase 03
 email intake and email order extraction, phase 04 clarification question and answer, phase 05 WhatsApp intake
-and WhatsApp order extraction) has its own prompt, tool, answer schema and recordings file. The model answers through
+and WhatsApp order extraction, phase 07 supplier offer extraction) has its own prompt, tool, answer schema and recordings file. The model answers through
 one forced tool call. Its arguments are validated
 by Pydantic in every mode, so a recorded answer goes through the same checks
 as a live one.
@@ -30,6 +30,8 @@ from purchase_cycle.config import (
     MAX_TOKENS,
     MODEL_ID,
     MODES,
+    OFFER_EXTRACTION_MAX_TOKENS,
+    OFFER_EXTRACTION_RECORDINGS_PATH,
     RECORDINGS_PATH,
     WHATSAPP_EXTRACTION_RECORDINGS_PATH,
     WHATSAPP_INTAKE_RECORDINGS_PATH,
@@ -240,6 +242,40 @@ class ClarificationResolutions(BaseModel):
     resolutions: list[LineResolution] = Field(description="One resolution per doubtful line")
 
 
+OFFER_EXTRACTION_INSTRUCTIONS = """You read one supplier reply to a quote request of a medical supplies distributor and extract the offer it makes.
+
+The user message gives the request (SKU, product name, sale unit and requested quantity) and the supplier reply body.
+Return one record:
+- offers: true when the supplier offers to supply the product, false when it declines or says it cannot supply it.
+- quantity: how many sale units the supplier offers; the requested quantity unless the reply offers fewer or more. Convert packs, boxes or pieces into the sale unit of the product. Null when it declines.
+- unit_price: the price of one sale unit as a number, converted from a price per pack, per box or per piece when the reply quotes it that way. When the reply gives price tiers, use the tier that applies to the quantity offered. Null when the reply gives no price.
+- currency: the three-letter code of the price currency, such as EUR or USD. Null when no price is given.
+- vat_included: true when the reply says the price includes VAT, false when it says the price is before VAT or does not mention VAT.
+- vat_rate: the VAT percentage when the reply states it, such as 21 for 21%, otherwise null.
+- lead_time_days: the delivery time as a number of days; convert weeks into days. Null when the reply gives none.
+- working_days: true when the lead time is counted in working or business days, false when it is in calendar days or weeks.
+- price_text: the price exactly as written in the reply, or null when there is no price.
+Ignore reference numbers, phone numbers, dates and other numbers that are not the quantity, price, VAT or lead time.
+Never invent a value the reply does not state.
+"""
+
+
+class OfferExtraction(BaseModel):
+    """Structured answer of the supplier offer extraction node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    offers: bool = Field(strict=True, description="True when the supplier offers the product, false when it declines")
+    quantity: int | None = Field(strict=True, description="Quantity offered in sale units, null when declining")
+    unit_price: float | None = Field(description="Price per sale unit as written, null when no price is given")
+    currency: str | None = Field(description="Three-letter currency code, null when no price is given")
+    vat_included: bool | None = Field(strict=True, description="True when the price includes VAT")
+    vat_rate: float | None = Field(description="VAT percentage when stated, otherwise null")
+    lead_time_days: int | None = Field(strict=True, description="Delivery time in days, null when not given")
+    working_days: bool | None = Field(strict=True, description="True when the lead time counts working days")
+    price_text: str | None = Field(description="The price exactly as written in the reply")
+
+
 @dataclass(frozen=True)
 class Task:
     """What the model is asked to do and where its recorded answers live."""
@@ -320,6 +356,15 @@ CLARIFICATION_ANSWER = Task(
     ClarificationResolutions,
     CLARIFICATION_ANSWER_RECORDINGS_PATH,
     CLARIFICATION_MAX_TOKENS,
+)
+OFFER_EXTRACTION = Task(
+    "offer_extraction",
+    OFFER_EXTRACTION_INSTRUCTIONS,
+    "record_supplier_offer",
+    "Record the offer made in the supplier reply.",
+    OfferExtraction,
+    OFFER_EXTRACTION_RECORDINGS_PATH,
+    OFFER_EXTRACTION_MAX_TOKENS,
 )
 
 

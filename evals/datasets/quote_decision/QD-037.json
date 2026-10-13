@@ -1,0 +1,36 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "orders": [],
+    "outbox": [],
+    "recommended": null,
+    "rule": null,
+    "status": "no_offers"
+  },
+  "id": "QD-037",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "replies": [],
+  "request": {
+    "quantity": 12,
+    "sku": "GLV-NIT-XS",
+    "status": "no_offers"
+  },
+  "steps": [
+    {
+      "exit": 0,
+      "new_process": true,
+      "op": "decide"
+    },
+    {
+      "exit": 1,
+      "op": "reject"
+    }
+  ],
+  "tags": [
+    "restart",
+    "no_offers_request"
+  ]
+}
