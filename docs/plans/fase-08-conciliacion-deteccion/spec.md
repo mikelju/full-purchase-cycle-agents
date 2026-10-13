@@ -1,7 +1,7 @@
 # Phase 08 - Reconciliation, detection: specification
 
-Status: draft
-Approved by the owner: pending
+Status: approved
+Approved by the owner: 2026-10-13 (Lavish decision page, recommended option for D1 to D11)
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
@@ -14,7 +14,7 @@ It shows the master plan capability "structured evaluation" on a three-way match
 Drafting a claim, human approval and the orchestrator are phases 09 and 10 and stay out.
 
 ## Scope
-Each decision id points to "Open decisions"; the scope is written for the recommended option of each.
+Each decision id points to "Owner decisions".
 In:
 - Supplier documents (D2): simulated files in an inbox folder, `.txt`, text-based `.pdf` and `.xlsx`, one document per file, read with the attachment readers of `email_order.py` (`pdf_text`, `xlsx_text`); the file name carries nothing, the content states whether it is an invoice or a delivery note.
 - Document extraction (D1, D3): a new model task `supplier_document_extraction` through the existing client in live, record and replay modes with Claude Haiku 4.5, one call per document.
@@ -117,53 +117,18 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 - The tolerance is a fixed number, not learned per supplier.
 
 ## Open decisions
-Questions the owner must resolve before approval; empty on approval.
-The recommended option is marked; the scope and criteria above are written for it.
+None; all were resolved on approval.
 
-### D1 - Who reads the documents
-- A (recommended): Claude Haiku 4.5 extracts lines from text, PDF and Excel, as in phases 03 and 07. Trade-off: shows the model on real layouts and fits the existing client, but needs a dataset and a baseline.
-- B: documents are structured JSON, no model. Trade-off: cheap and fast, but no extraction challenge and a weaker showcase.
-- C: a rule-based parser for fixed templates per supplier. Trade-off: deterministic, but brittle and hides the agent value.
-
-### D2 - Where the documents come from
-- A (recommended): files in an inbox folder, read with the phase 03 readers. Trade-off: minimal, reproducible, no email plumbing.
-- B: `.eml` messages with the document as an attachment. Trade-off: closer to reality, but adds parsing already proven in phase 03 and bigger fixtures.
-
-### D3 - Delivery note: separate document or field
-- A (recommended): a separate document of its own kind, extracted by the same task. Trade-off: true three-way match and one extraction path, a bit more dataset.
-- B: delivery quantity entered as a field by the warehouse through a CLI command. Trade-off: no extraction for it, but a manual step and a less realistic flow.
-- C: skip the delivery note and match the invoice against the order only. Trade-off: smallest scope, but not the three-way match of the master plan row.
-
-### D4 - Partial deliveries and several invoices per order
-- A (recommended): out of scope; one invoice and one delivery note per order, a second one is stored as `unlinked` with reason `duplicate`. Trade-off: keeps the matching exact and small.
-- B: sum several delivery notes and invoices per order. Trade-off: realistic, but adds states and many more cases.
-
-### D5 - Line with price and quantity differences
-- A (recommended): one `discrepancies` row per type, so a line can have two. Trade-off: simple for phase 09 to claim each.
-- B: one row per line with a list of types. Trade-off: fewer rows, harder to count and grade.
-
-### D6 - Tolerances
-- A (recommended): price 0.01 EUR per unit absolute, quantity 0, both constants in code. Trade-off: strict and easy to explain.
-- B: price 1% relative, quantity 0. Trade-off: closer to business practice, but hides small real overcharges on cheap items.
-- C: configurable per supplier. Trade-off: flexible, but new configuration nobody asked for.
-
-### D7 - Graph shape
-- A (recommended): one subgraph `reconcile` with no pause, since claim approval belongs to phase 09. Trade-off: minimal.
-- B: add an interrupt for a person to confirm each result. Trade-off: more human-in-the-loop, but duplicates phase 09.
-
-### D8 - Demo and commands
-- A (recommended): `reconcile scan`, `list`, `show` and `reconcile-demo` over versioned sample documents, each step in its own process. Trade-off: follows `quotes-demo`.
-- B: only a demo command. Trade-off: less to build, less to explore.
-
-### D9 - Evaluations
-- A (recommended): `document_extraction` in replay plus a deterministic `reconciliation_matching` with at least 40 cases. Trade-off: mirrors phases 05 and 07, two new gates.
-- B: only the matching evaluation, extraction covered by unit tests. Trade-off: cheaper, but no extraction metrics for the CV.
-
-### D10 - Dataset size and owner audit
-- A (recommended): at least 100 documents, 25% development and 75% test, no owner audit, as in phase 07. Trade-off: no owner time; labels follow from the planning script plus a clean-context review.
-- B: 100 documents plus an owner audit of 20 documents as a new criterion. Trade-off: about 10 minutes of owner time.
-- C: 60 documents. Trade-off: cheaper, intervals too wide per category.
-
-### D11 - Cost ceiling
-- A (recommended): 5 USD for the phase, as in phases 06 and 07.
-- B: 3 USD. Trade-off: enough for the expected cost, with less margin for retuning.
+## Owner decisions (2026-10-13)
+The owner chose the recommended option A for every decision on the Lavish decision page and approved the spec on 2026-10-13.
+- D1 - Who reads the documents: option A, Claude Haiku 4.5 extracts lines from text, PDF and Excel, as in phases 03 and 07.
+- D2 - Where the documents come from: option A, files in an inbox folder, read with the phase 03 readers.
+- D3 - Delivery note: separate document or field: option A, a separate document of its own kind, extracted by the same task.
+- D4 - Partial deliveries and several invoices per order: option A, out of scope; one invoice and one delivery note per order, a second one is stored as `unlinked` with reason `duplicate`.
+- D5 - Line with price and quantity differences: option A, one `discrepancies` row per type, so a line can have two.
+- D6 - Tolerances: option A, price 0.01 EUR per unit absolute, quantity 0, both constants in code.
+- D7 - Graph shape: option A, one subgraph `reconcile` with no pause, since claim approval belongs to phase 09.
+- D8 - Demo and commands: option A, `reconcile scan`, `list`, `show` and `reconcile-demo` over versioned sample documents, each step in its own process.
+- D9 - Evaluations: option A, `document_extraction` in replay plus a deterministic `reconciliation_matching` with at least 40 cases.
+- D10 - Dataset size and owner audit: option A, at least 100 documents, 25% development and 75% test, no owner audit, as in phase 07.
+- D11 - Cost ceiling: option A, 5 USD for the phase, as in phases 06 and 07.
