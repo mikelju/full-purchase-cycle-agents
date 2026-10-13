@@ -2,11 +2,11 @@
 
 Portfolio project that demonstrates multi-agent orchestration with [LangGraph](https://github.com/langchain-ai/langgraph) (Python) over the full purchase cycle of a fictional company.
 Status: phase 01 (foundations) built: shared database, model client, persistent graph state, tracing and the evaluation harness.
-Phase 02 (web form orders) built: the first order channel, from a form submission to a stored order and a reply.
-Phase 03 (email orders) built: the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
-Phase 04 (exceptions) built and merged (PR #6): both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
-Phase 05 (closing the orders module) built: a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
-Phase 06 (quote requests and wait) in progress: quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
+Phase 02 (web form orders) integrated (merged via PR #4): the first order channel, from a form submission to a stored order and a reply.
+Phase 03 (email orders) integrated (merged via PR #5): the email channel, from an `.eml` file with its body and PDF or Excel attachments to a stored order and a reply.
+Phase 04 (exceptions) integrated (merged via PR #6): both channels ask the customer about ambiguous products, unknown products and doubtful quantities, pause with their state saved and resume when the answer arrives; its LangSmith trace evidence is pending.
+Phase 05 (closing the orders module) integrated (merged via PR #9): a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
+Phase 06 (quote requests and wait) integrated (merged via PR #11): quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
 
 ![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
 

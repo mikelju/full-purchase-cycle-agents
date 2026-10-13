@@ -38,7 +38,8 @@ Each increment leaves the product working and covers concrete criteria.
 This file is the durable state: a new session resumes from here and from Git.
 
 ### Batch A - Statuses, baseline, schema and offer extraction
-- [ ] 1. Stale statuses (D10, C19) - check: README status lines for phases 02, 03 and 05 say integrated with their PR as the master plan does, phase 06 integrated (merged via PR #11) in both files, master plan row 07 `in progress`; a reading comparison saved in the plan evidence.
+- [x] 1. Stale statuses (D10, C19) - check: README status lines for phases 02, 03 and 05 say integrated with their PR as the master plan does, phase 06 integrated (merged via PR #11) in both files, master plan row 07 `in progress`; a reading comparison saved in the plan evidence.
+  Evidence: README lines 5 to 9 and master plan rows 06 and 07 edited; reading comparison in `.evidence/fase-07/status-comparison.txt` (phase 04 line also aligned to the same wording).
 - [ ] 2. Unchanged-behaviour baseline before any code change (C17) - check: `orders-demo` and `quotes-demo` replay output saved as `.evidence/fase-07/orders-demo-before.txt` and `quotes-demo-before.txt`, and `npm run eval` output as `eval-before.txt`, all from commit `723109c` code.
 - [ ] 3. `quote_offers` and `purchase_orders` tables and the wider `quote_requests` status check (C2) - check: new tests in `tests/test_seed.py` fail first, then pass: tables exist and are empty, the three new statuses are accepted, seeding twice gives the same rows, the other tables and rows unchanged.
 - [ ] 4. `OFFER_EXTRACTION` task, instructions and schema, usability and net price in code, and `quote_offers` storage (C3) - check: new `tests/test_quote_decision.py` cases with hand-written recordings: one call per replied supplier, fields stored, each unusable reason, a schema-failing answer stored as `extraction_failed` with its `failures` row while the other replies are still extracted.
