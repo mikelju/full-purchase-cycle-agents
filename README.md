@@ -8,6 +8,11 @@ Phase 04 (exceptions) built and merged (PR #6): both channels ask the customer a
 Phase 05 (closing the orders module) built: a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
 Phase 06 (quote requests and wait) in progress: quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
 
+![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
+
+The same animation as a video: [docs/assets/purchase-cycle-flow.mp4](docs/assets/purchase-cycle-flow.mp4).
+It is a conceptual flow: today the channels run as separate graphs and the quotes graph starts from its own command until the orchestrator of phase 10.
+
 ## What it does
 
 | Module | Flow | Capabilities shown |
