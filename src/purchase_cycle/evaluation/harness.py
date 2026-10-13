@@ -379,6 +379,7 @@ SUITES = (
     "quote_wait",
     "offer_extraction",
     "quote_decision",
+    "document_extraction",
 )
 # The deterministic phase 05 suites run locally only, so `eval-upload` leaves them out; `order_scenarios` stays out
 # of `eval-upload` too (phase 05, increment 24).
@@ -391,7 +392,21 @@ UPLOAD_SUITES = tuple(
 # and `order_scenarios` once its baseline was recorded (increment 24).
 # `offer_extraction` joined once its baseline was recorded (phase 07, increment 12); `quote_decision` is
 # deterministic and local, so it joined with its scenarios (increment 13).
-ALL_SUITES = SUITES
+# `document_extraction` (phase 08) stays out of `all` until its baseline is recorded (increment 11).
+ALL_SUITES = (
+    "order_line_extraction",
+    "web_form_matching",
+    "email_order_extraction",
+    "clarification_detection",
+    "clarification_answers",
+    "whatsapp_order_extraction",
+    "channel_routing",
+    "failure_recovery",
+    "order_scenarios",
+    "quote_wait",
+    "offer_extraction",
+    "quote_decision",
+)
 
 
 def suite_names(suite, everything: tuple[str, ...] = ALL_SUITES) -> tuple[str, ...]:
@@ -417,6 +432,10 @@ def _suite(name: str):
         from purchase_cycle.evaluation import offer_eval
 
         return offer_eval
+    if name == "document_extraction":
+        from purchase_cycle.evaluation import document_eval
+
+        return document_eval
     if name == "channel_routing":
         from purchase_cycle.evaluation import routing_eval
 
