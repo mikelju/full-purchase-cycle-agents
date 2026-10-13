@@ -33,6 +33,7 @@ Delivery is the work branch `cambio-006-local-test-ui`, created from `main` afte
 | C7 | README section "Try the orders by hand": command, URL, live and replay modes with their cost, how to answer a question, how to start over, and the limits | README; followed step by step in item 4 |
 | C8 | Owner walkthrough in live mode: one order per channel, one clarification answered from the page, and the stored orders visible in the outcome | Owner sees it; notes in Delivery |
 | C9 | `npm run check` exits 0 and the replay evaluations are unchanged | Command output |
+| C10 | Each conversation with a stored order shows an "Order" block: per line SKU, name, quantity, unit price (current catalog price), line amount and current stock, with a visible warning when the quantity exceeds the stock, and the order total; lines not recognised or removed in the clarification are listed too. Information only: no business logic changes | tests/test_ui.py |
 
 ## Plan
 - [x] 1. `tests/test_ui.py` first (failing), then `src/purchase_cycle/ui.py` (server, JSON endpoints, input writers, router call and resume) and the `ui` CLI command; C1 to C6.
@@ -41,8 +42,9 @@ Delivery is the work branch `cambio-006-local-test-ui`, created from `main` afte
   Evidence: `uv run pytest -q tests/test_ui.py` -> 25 passed (page served with its controls, no external URL; wheel built with `uv build --wheel` holds `purchase_cycle/ui.html`); script checked with `node --check`.
 - [x] 3. README section and `.gitignore` for `data/ui/`; C7.
   Evidence: README section "Try the orders by hand" added; `data/` is already ignored (`git check-ignore -v data/ui/x` -> .gitignore:13). Real server on port 8766 in replay: the WhatsApp doubt sample asked its question, the answer message resumed it and stored order 1; an unknown channel returned a JSON error. `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py` -> 138 passed; `npm run --silent eval` -> failures: 0, no file changed.
-- [ ] 4. Owner walkthrough in live mode; C8.
-- [ ] 5. Adversarial review, `npm run check`, push and PR to `main`; C9.
+- [ ] 4. Order block on each conversation (tests first, then `ui.py` and `ui.html`); C10.
+- [ ] 5. Owner walkthrough in live mode; C8.
+- [ ] 6. Adversarial review, `npm run check`, push and PR to `main`; C9.
 
 ## Decisions
 The page runs every input through `router.run_inbox`, so it exercises the same path as `purchase-cycle route` and gets idempotency, duplicate handling and WhatsApp resumption for free.
@@ -62,6 +64,7 @@ A run parked by recovery shows as `under_review` (status only, no notice text).
 C5 wording changed by the owner on 2026-10-13 from `purchase-cycle route` to `purchase-cycle orders-demo`: `route` in replay has no recordings for the sample texts (review round 1).
 A 500 returns the exception class and a generic message; the detail goes to the server's stderr.
 The `outcome` of a failed run still carries the first line of the exception text (shown on the local page and kept in the log).
+The owner added C10 on 2026-10-13 after the first walkthrough; stock is not checked or reserved when an order is stored, so the stock shown is the current `stock.on_hand` and the warning is informative only; the graph steps path was offered and not chosen.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
