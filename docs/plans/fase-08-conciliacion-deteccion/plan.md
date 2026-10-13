@@ -137,10 +137,10 @@ Round 2 findings and fixes:
 
 | Finding | Summary | Fix | Commit |
 |---|---|---|---|
-| M4 | Over- and under-priced repeated lines of one SKU netted out (4.60 and 3.60 against 4.10 gave a 0.00 row) | The price row follows the line with the largest deviation and sums only the lines deviating in its direction; regression tests added | M4 commit |
-| L1 | A catalog name inside a labelled product name hid an extra line written by name | Labelled names are cut out of the text before other catalog names are searched; mutation test added; the 120 documents still validate | L1 commit |
-| L4 | `reconcile list` hid documents still extracted and could print no reason | The section also lists extracted documents; the README says linked delivery notes without an invoice are not listed | L4 commit |
-| M1, M2, M3, L2, L3 | Documentation: how the demo recordings were redone (DV-06), the McNemar claim of DV-05 now backed by the old-versus-new comparison, README rules and wording, second-pass wording, stale dev evidence | Plan and README edited | docs commit |
+| M4 | Over- and under-priced repeated lines of one SKU netted out (4.60 and 3.60 against 4.10 gave a 0.00 row) | The price row follows the line with the largest deviation and sums only the lines deviating in its direction; regression tests added | dc833d5 |
+| L1 | A catalog name inside a labelled product name hid an extra line written by name | Labelled names are cut out of the text before other catalog names are searched; mutation test added; the 120 documents still validate | 1351052 |
+| L4 | `reconcile list` hid documents still extracted and could print no reason | The section also lists extracted documents; the README says linked delivery notes without an invoice are not listed | 6f5161a |
+| M1, M2, M3, L2, L3 | Documentation: how the demo recordings were redone (DV-06), the McNemar claim of DV-05 now backed by the old-versus-new comparison, README rules and wording, second-pass wording, stale dev evidence | Plan and README edited | ee32b66 |
 
 `document-baseline-live.txt` is the pre-DV-05 live record and was not regenerated; `document-replay.txt` shows the current baseline.
 
