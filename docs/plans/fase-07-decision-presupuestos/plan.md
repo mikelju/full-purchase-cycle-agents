@@ -94,7 +94,7 @@ This file is the durable state: a new session resumes from here and from Git.
   Evidence: two review rounds with Opus (see "Adversarial review"); the round 1 fixes are in `5a65b70` (check 833 passed, `.evidence/fase-07/check-review-round1.txt`) and the round 2 fixes in `9d814e9` and `444f997`.
   Final `npm run check` after the last fix: `.evidence/fase-07/check-final.txt`, 837 passed, exit 0.
 - [x] 20. Results per criterion in the table below, master plan row 07 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
-  Evidence: results table filled for C1 to C19 (C16 pending, increment 18); master plan row 07 set to "built, delivered for review via PR"; README phase 07 status line aligned; open items, limitations and candidate learnings listed below; the branch is pushed and the PR to `main` (<PR>) is left for the owner to merge.
+  Evidence: results table filled for C1 to C19 (C16 pending, increment 18); master plan row 07 set to "built, delivered for review via PR"; README phase 07 status line aligned; open items, limitations and candidate learnings listed below; the branch is pushed and the PR to `main` (https://github.com/mikelju/full-purchase-cycle-agents/pull/13) is left for the owner to merge.
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
