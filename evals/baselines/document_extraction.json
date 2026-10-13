@@ -1,0 +1,3584 @@
+{
+ "dataset_version": "1.0",
+ "documents": {
+  "DOC-001": {
+   "category": "clean_invoice",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-003": {
+   "category": "clean_invoice",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-004": {
+   "category": "clean_invoice",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-005": {
+   "category": "clean_invoice",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-007": {
+   "category": "clean_invoice",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-008": {
+   "category": "clean_invoice",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-010": {
+   "category": "clean_invoice",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-011": {
+   "category": "clean_invoice",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-012": {
+   "category": "clean_invoice",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-013": {
+   "category": "delivery_note",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-014": {
+   "category": "delivery_note",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-015": {
+   "category": "delivery_note",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-016": {
+   "category": "delivery_note",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-017": {
+   "category": "delivery_note",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-018": {
+   "category": "delivery_note",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-021": {
+   "category": "delivery_note",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-022": {
+   "category": "delivery_note",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-023": {
+   "category": "delivery_note",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-025": {
+   "category": "price_basis",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-026": {
+   "category": "price_basis",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-028": {
+   "category": "price_basis",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-029": {
+   "category": "price_basis",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-030": {
+   "category": "price_basis",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-032": {
+   "category": "price_basis",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-033": {
+   "category": "price_basis",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-035": {
+   "category": "price_basis",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-036": {
+   "category": "price_basis",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-037": {
+   "category": "several_lines",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-039": {
+   "category": "several_lines",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     5,
+     5
+    ],
+    "line_recall": [
+     5,
+     5
+    ],
+    "quantity_accuracy": [
+     5,
+     5
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-040": {
+   "category": "several_lines",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     6,
+     6
+    ],
+    "line_recall": [
+     6,
+     6
+    ],
+    "quantity_accuracy": [
+     6,
+     6
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     6,
+     6
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-041": {
+   "category": "several_lines",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-042": {
+   "category": "several_lines",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     4,
+     4
+    ],
+    "line_recall": [
+     4,
+     4
+    ],
+    "quantity_accuracy": [
+     4,
+     4
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-043": {
+   "category": "several_lines",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     5,
+     5
+    ],
+    "line_recall": [
+     5,
+     5
+    ],
+    "quantity_accuracy": [
+     5,
+     5
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     5,
+     5
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-045": {
+   "category": "several_lines",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-046": {
+   "category": "several_lines",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     4,
+     4
+    ],
+    "line_recall": [
+     4,
+     4
+    ],
+    "quantity_accuracy": [
+     4,
+     4
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     4,
+     4
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-047": {
+   "category": "several_lines",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     5,
+     5
+    ],
+    "line_recall": [
+     5,
+     5
+    ],
+    "quantity_accuracy": [
+     5,
+     5
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     5,
+     5
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-049": {
+   "category": "other_unit",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-050": {
+   "category": "other_unit",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-052": {
+   "category": "other_unit",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-053": {
+   "category": "other_unit",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-055": {
+   "category": "other_unit",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-056": {
+   "category": "other_unit",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-058": {
+   "category": "other_unit",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-059": {
+   "category": "other_unit",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-060": {
+   "category": "other_unit",
+   "counts": {
+    "critical_errors": [
+     1,
+     1
+    ],
+    "exact_match": [
+     0,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     0,
+     2
+    ],
+    "line_recall": [
+     0,
+     2
+    ],
+    "quantity_accuracy": [
+     0,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": [
+    "missing DRS-ISL-5x7",
+    "missing RAZOR-DISP",
+    "invented 'Adhesive island dressing 5 x 7.2 cm - 8 pack'",
+    "invented 'Disposable razors, twin blade - 40 pack'"
+   ]
+  },
+  "DOC-061": {
+   "category": "vat_totals",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-062": {
+   "category": "vat_totals",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-063": {
+   "category": "vat_totals",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-064": {
+   "category": "vat_totals",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-066": {
+   "category": "vat_totals",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-067": {
+   "category": "vat_totals",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-068": {
+   "category": "vat_totals",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-070": {
+   "category": "vat_totals",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-071": {
+   "category": "vat_totals",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-073": {
+   "category": "chatty",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-074": {
+   "category": "chatty",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-076": {
+   "category": "chatty",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-077": {
+   "category": "chatty",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-078": {
+   "category": "chatty",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-079": {
+   "category": "chatty",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-081": {
+   "category": "chatty",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-082": {
+   "category": "chatty",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-084": {
+   "category": "chatty",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-086": {
+   "category": "reference_forms",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-087": {
+   "category": "reference_forms",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-088": {
+   "category": "reference_forms",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-090": {
+   "category": "reference_forms",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-091": {
+   "category": "reference_forms",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-092": {
+   "category": "reference_forms",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-093": {
+   "category": "reference_forms",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-095": {
+   "category": "reference_forms",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-096": {
+   "category": "reference_forms",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-097": {
+   "category": "extra_charge",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-098": {
+   "category": "extra_charge",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-099": {
+   "category": "extra_charge",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-100": {
+   "category": "extra_charge",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-102": {
+   "category": "extra_charge",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-103": {
+   "category": "extra_charge",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-105": {
+   "category": "extra_charge",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-106": {
+   "category": "extra_charge",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     1,
+     1
+    ],
+    "line_recall": [
+     1,
+     1
+    ],
+    "quantity_accuracy": [
+     1,
+     1
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     1,
+     1
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-107": {
+   "category": "extra_charge",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-109": {
+   "category": "messy_layout",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-111": {
+   "category": "messy_layout",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-112": {
+   "category": "messy_layout",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-114": {
+   "category": "messy_layout",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-115": {
+   "category": "messy_layout",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-116": {
+   "category": "messy_layout",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-117": {
+   "category": "messy_layout",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     0,
+     0
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-118": {
+   "category": "messy_layout",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     3,
+     3
+    ],
+    "line_recall": [
+     3,
+     3
+    ],
+    "quantity_accuracy": [
+     3,
+     3
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     3,
+     3
+    ]
+   },
+   "error": null,
+   "problems": []
+  },
+  "DOC-119": {
+   "category": "messy_layout",
+   "counts": {
+    "critical_errors": [
+     0,
+     1
+    ],
+    "exact_match": [
+     1,
+     1
+    ],
+    "kind_accuracy": [
+     1,
+     1
+    ],
+    "line_precision": [
+     2,
+     2
+    ],
+    "line_recall": [
+     2,
+     2
+    ],
+    "quantity_accuracy": [
+     2,
+     2
+    ],
+    "reference_accuracy": [
+     1,
+     1
+    ],
+    "unit_price_accuracy": [
+     2,
+     2
+    ]
+   },
+   "error": null,
+   "problems": []
+  }
+ },
+ "measured_at": "2026-10-13",
+ "metrics": {
+  "critical_errors": {
+   "high": 0.06028408311753451,
+   "hits": 1,
+   "low": 0.0019640841009183445,
+   "n": 90,
+   "value": 0.011111111111111112
+  },
+  "exact_match": {
+   "high": 0.9980359158990818,
+   "hits": 89,
+   "low": 0.9397159168824657,
+   "n": 90,
+   "value": 0.9888888888888889
+  },
+  "kind_accuracy": {
+   "high": 1.0,
+   "hits": 90,
+   "low": 0.9590643744356734,
+   "n": 90,
+   "value": 1.0
+  },
+  "line_precision": {
+   "high": 0.9969645183694775,
+   "hits": 179,
+   "low": 0.9606128624263497,
+   "n": 181,
+   "value": 0.988950276243094
+  },
+  "line_recall": {
+   "high": 0.9969645183694775,
+   "hits": 179,
+   "low": 0.9606128624263497,
+   "n": 181,
+   "value": 0.988950276243094
+  },
+  "quantity_accuracy": {
+   "high": 0.9969645183694775,
+   "hits": 179,
+   "low": 0.9606128624263497,
+   "n": 181,
+   "value": 0.988950276243094
+  },
+  "reference_accuracy": {
+   "high": 1.0,
+   "hits": 90,
+   "low": 0.9590643744356734,
+   "n": 90,
+   "value": 1.0
+  },
+  "unit_price_accuracy": {
+   "high": 1.0,
+   "hits": 128,
+   "low": 0.9708630437264916,
+   "n": 128,
+   "value": 1.0
+  }
+ },
+ "mode": "record",
+ "model": "claude-haiku-4-5",
+ "split": "test",
+ "threshold": 0.95,
+ "threshold_rule": "95% if document exact match and unit price accuracy reach 95% on the test split; otherwise the owner decides (deviation)"
+}

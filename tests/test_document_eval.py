@@ -245,16 +245,16 @@ def test_delivery_notes_have_no_price_to_grade():
     assert r["counts"]["exact_match"] == [1, 1] and r["counts"]["unit_price_accuracy"] == [0, 0]
 
 
-def test_eval_all_leaves_the_suite_out_until_its_baseline_is_recorded(monkeypatch):
+def test_eval_all_runs_the_suite_last_once_its_baseline_is_recorded(monkeypatch):
     assert "document_extraction" in harness.SUITES and "document_extraction" in harness.UPLOAD_SUITES
-    assert "document_extraction" not in harness.ALL_SUITES
+    assert harness.ALL_SUITES[-1] == "document_extraction"
     ran = []
     monkeypatch.setattr(
         harness, "_suite", lambda name: argparse.Namespace(evaluate=lambda *a, **k: ran.append(name) or 0)
     )
     args = argparse.Namespace(suite="all", mode="replay", split="test", set_baseline=False, workers=1)
     assert harness.cmd_eval(args) == 0
-    assert "document_extraction" not in ran
+    assert ran[-1] == "document_extraction" and ran.count("document_extraction") == 1
     ran.clear()
     args.suite = ["document_extraction"]
     assert harness.cmd_eval(args) == 0

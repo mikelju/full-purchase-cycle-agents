@@ -402,7 +402,7 @@ UPLOAD_SUITES = tuple(
 # `offer_extraction` joined once its baseline was recorded (phase 07, increment 12); `quote_decision` is
 # deterministic and local, so it joined with its scenarios (increment 13).
 # `reconciliation_matching` (phase 08) is deterministic and local, so it joined with its cases (increment 12).
-# `document_extraction` (phase 08) stays out of `all` until its baseline is recorded (increment 11).
+# `document_extraction` (phase 08) joined once its baseline was recorded (increment 11).
 ALL_SUITES = (
     "order_line_extraction",
     "web_form_matching",
@@ -417,6 +417,7 @@ ALL_SUITES = (
     "offer_extraction",
     "quote_decision",
     "reconciliation_matching",
+    "document_extraction",
 )
 
 
