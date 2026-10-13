@@ -13,3 +13,4 @@ __pycache__/
 data/
 .langgraph_api/
 .claude/relevo/
+docs/assets/flow-animation/frames/
