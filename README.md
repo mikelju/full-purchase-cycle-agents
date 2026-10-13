@@ -562,7 +562,7 @@ The 39 scenarios of `evals/datasets/quote_decision/` are hand-built by `uv run p
 The 120 supplier documents in `evals/datasets/document_extraction/` were built with the same method as the earlier model datasets:
 
 1. A seeded planning script (`plan.jsonl`, seed 20261013) fixes, for ten categories of 12 documents (clean invoice, delivery note, price basis, several lines, other unit, VAT and totals, chatty text, reference forms, extra charge, messy layout), the kind, reference and lines each document must state.
-2. The texts in `texts/` were written by the coding agent in ASCII English and checked automatically; a share is rendered as PDF (20) and Excel (20) files that are read back with every labelled fact.
+2. The texts in `texts/` were written by the coding agent in ASCII English and checked automatically; after a review, the texts of DOC-097 to DOC-120 (extra charge and messy layout) were rewritten one by one with distinct layouts, and the second pass and the test recordings of those documents were redone; a share is rendered as PDF (20) and Excel (20) files that are read back with every labelled fact.
 3. A blind second pass by a clean-context agent relabelled every document (`second_pass_review.jsonl`); all 120 agreed.
 4. A fixed stratified split gives 30 development and 90 test documents; only the development split was used to check the instructions, and no tuning round was needed.
 5. There is no owner audit of the labels: the labels come from the planning script and the second pass.
@@ -573,12 +573,12 @@ The grader compares kind, purchase order reference, lines by SKU, quantity and u
 
 | Metric | Value | 95% interval | Threshold |
 |---|---|---|---|
-| Document exact match (90 documents) | 98.9% | 94.0% to 99.8% | at least 95% |
-| Unit price accuracy (128 priced lines) | 100.0% | 97.1% to 100.0% | at least 95% |
-| Line recall, precision and quantity (181 lines) | 98.9% | 96.1% to 99.7% | reported |
-| Critical errors (90 documents) | 1 | 1.1% (0.2% to 6.0%) | target 0, not met |
+| Document exact match (90 documents) | 97.8% | 92.3% to 99.4% | at least 95% |
+| Unit price accuracy (128 priced lines) | 97.7% | 93.3% to 99.2% | at least 95% |
+| Line recall, precision and quantity (181 lines) | 97.2% | 93.7% to 98.8% | reported |
+| Critical errors (90 documents) | 2 | 2.2% (0.6% to 7.7%) | target 0, not met |
 
-The one failing document is DOC-060 (other unit): the model dropped two lines and invented two descriptions in a pack-size conversion case, and it is the one critical error; the target of 0 is reported, not gated.
+The two failing documents are DOC-060 (other unit), where the model dropped two lines and invented two descriptions in a pack-size conversion case, and DOC-112 (messy layout), where product names wrapped over several lines next to the SKU made the model write the SKU and the description as one product; both are critical errors, and the target of 0 is reported, not gated.
 Kind and reference were read correctly in all 90 documents (100.0%, 95.9% to 100.0%).
 About 90 documents give a wide interval, and the text writer and the evaluated model belong to the same family, so the figures may be optimistic.
 The baseline is `evals/baselines/document_extraction.json`, recorded live once on the test split.
@@ -747,7 +747,7 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - No credit notes, payment terms, tax rules, freight allocation or multi-currency handling; an invoice that states VAT separately is read net.
 - Differences are only detected and stored; no claim and no approval exist until phase 09.
 - The tolerance (0.01 EUR per unit, quantity 0) is a fixed number, not learned per supplier.
-- In `document_extraction`, 1 of 90 test documents (DOC-060, other unit) is a critical error against a target of 0, and the writer and the evaluated model belong to the same family, so the figures may be optimistic.
+- In `document_extraction`, 2 of 90 test documents (DOC-060, other unit, and DOC-112, messy layout) are critical errors against a target of 0, and the writer and the evaluated model belong to the same family, so the figures may be optimistic.
 - The sample documents of the demo list the SKU only: in a first recording a description column made the model join it to the SKU, which left the line unresolved, so the reading of free descriptions relies on the catalog matching of phase 02.
 - The LangSmith trace of a live `reconcile-demo` run and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
 

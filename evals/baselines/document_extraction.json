@@ -3247,11 +3247,11 @@
    "category": "messy_layout",
    "counts": {
     "critical_errors": [
-     0,
+     1,
      1
     ],
     "exact_match": [
-     1,
+     0,
      1
     ],
     "kind_accuracy": [
@@ -3259,15 +3259,15 @@
      1
     ],
     "line_precision": [
-     3,
+     0,
      3
     ],
     "line_recall": [
-     3,
+     0,
      3
     ],
     "quantity_accuracy": [
-     3,
+     0,
      3
     ],
     "reference_accuracy": [
@@ -3275,12 +3275,19 @@
      1
     ],
     "unit_price_accuracy": [
-     3,
+     0,
      3
     ]
    },
    "error": null,
-   "problems": []
+   "problems": [
+    "missing BND-TUB-C",
+    "missing PLST-BLUE",
+    "missing TONGUE-ST",
+    "invented 'BND-TUB-C Tubular bandage size C, 10 m'",
+    "invented 'PLST-BLUE Blue detectable plasters for food handlers'",
+    "invented 'TONGUE-ST Sterile wooden tongue depressors, individually wrapped'"
+   ]
   },
   "DOC-114": {
    "category": "messy_layout",
@@ -3520,18 +3527,18 @@
  "measured_at": "2026-10-13",
  "metrics": {
   "critical_errors": {
-   "high": 0.06028408311753451,
-   "hits": 1,
-   "low": 0.0019640841009183445,
+   "high": 0.07744526688625372,
+   "hits": 2,
+   "low": 0.006115441986325208,
    "n": 90,
-   "value": 0.011111111111111112
+   "value": 0.022222222222222223
   },
   "exact_match": {
-   "high": 0.9980359158990818,
-   "hits": 89,
-   "low": 0.9397159168824657,
+   "high": 0.9938845580136748,
+   "hits": 88,
+   "low": 0.9225547331137463,
    "n": 90,
-   "value": 0.9888888888888889
+   "value": 0.9777777777777777
   },
   "kind_accuracy": {
    "high": 1.0,
@@ -3541,25 +3548,25 @@
    "value": 1.0
   },
   "line_precision": {
-   "high": 0.9969645183694775,
-   "hits": 179,
-   "low": 0.9606128624263497,
+   "high": 0.9881440632188209,
+   "hits": 176,
+   "low": 0.9369730673805375,
    "n": 181,
-   "value": 0.988950276243094
+   "value": 0.9723756906077348
   },
   "line_recall": {
-   "high": 0.9969645183694775,
-   "hits": 179,
-   "low": 0.9606128624263497,
+   "high": 0.9881440632188209,
+   "hits": 176,
+   "low": 0.9369730673805375,
    "n": 181,
-   "value": 0.988950276243094
+   "value": 0.9723756906077348
   },
   "quantity_accuracy": {
-   "high": 0.9969645183694775,
-   "hits": 179,
-   "low": 0.9606128624263497,
+   "high": 0.9881440632188209,
+   "hits": 176,
+   "low": 0.9369730673805375,
    "n": 181,
-   "value": 0.988950276243094
+   "value": 0.9723756906077348
   },
   "reference_accuracy": {
    "high": 1.0,
@@ -3569,14 +3576,14 @@
    "value": 1.0
   },
   "unit_price_accuracy": {
-   "high": 1.0,
-   "hits": 128,
-   "low": 0.9708630437264916,
+   "high": 0.9919975836032445,
+   "hits": 125,
+   "low": 0.9333562549485678,
    "n": 128,
-   "value": 1.0
+   "value": 0.9765625
   }
  },
- "mode": "record",
+ "mode": "replay",
  "model": "claude-haiku-4-5",
  "split": "test",
  "threshold": 0.95,
