@@ -1,0 +1,8 @@
+DELIVERY NOTE AL-3005
+Issued by: Distribuciones Sanitarias del Norte S.A.
+Contact: ventas@dissanorte.example.com
+Date: 2026-10-24
+Your order: PO-0005
+
+SKU | Qty delivered
+SAL-500 | 60

@@ -44,6 +44,9 @@ ORDERS_DEMO_WORKDIR = config.DATA_DIR / "orders-demo"
 DEMO_QUOTES = config.ROOT / "examples" / "quotes"
 QUOTES_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "quotes_demo.jsonl"  # the offer extraction of the demo
 QUOTES_DEMO_WORKDIR = config.DATA_DIR / "quotes-demo"
+DEMO_INVOICES = config.ROOT / "examples" / "invoices"
+RECONCILE_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "reconcile_demo.jsonl"  # the document extraction
+RECONCILE_DEMO_WORKDIR = config.DATA_DIR / "reconcile-demo"
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
 EXCEPTIONS_RECORDINGS = {
     MATCHING.name: config.CLARIFICATION_DETECTION_MATCHING_RECORDINGS_PATH,
@@ -489,6 +492,134 @@ def cmd_quotes_demo(args) -> int:
     print(f"no_offers, listed for a person: {', '.join(waiting) or 'none'}")
     if len(ordered) != 1 or len(waiting) != 1:
         print("Error: the demo did not end with one ordered request and one listed for a person", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _print_extracted(files: dict, shown: set) -> None:
+    """The documents stored since the last scan with their extracted fields and lines."""
+    conn = db.connect(files["db"])
+    try:
+        print("extracted documents:")
+        for doc in [dict(r) for r in conn.execute("SELECT * FROM supplier_documents ORDER BY id")]:
+            if doc["id"] in shown:
+                continue
+            shown.add(doc["id"])
+            print(
+                f"  {Path(doc['source_file']).name}  {doc['kind'] or 'unreadable'} {doc['number'] or '-'}  "
+                f"po={doc['po_reference'] or '-'}  date={doc['issue_date'] or '-'}  {doc['currency'] or '-'}  "
+                f"status={doc['status']}"
+            )
+            lines = conn.execute("SELECT * FROM document_lines WHERE document_id = ? ORDER BY line_no", (doc["id"],))
+            for line in lines:
+                print(
+                    f"    line {line['line_no']}: {line['product_text']}  sku={line['sku'] or '-'}  "
+                    f"quantity={line['quantity']:g}  unit price={_amount(line['unit_price'], 2)}"
+                )
+    finally:
+        conn.close()
+
+
+def _reconciliations(files: dict) -> dict:
+    conn = db.connect(files["db"])
+    try:
+        rows = conn.execute("SELECT invoice_id, result FROM reconciliations ORDER BY invoice_id")
+        return {row["invoice_id"]: row["result"] for row in rows}
+    finally:
+        conn.close()
+
+
+def cmd_reconcile_demo(args) -> int:
+    """The sample invoices and delivery notes through scan, list, show and a later scan, each step in its own process."""
+    import subprocess
+
+    examples, workdir = Path(args.examples), Path(args.workdir)
+    if workdir.resolve() == config.DATA_DIR.resolve():
+        print(f"Error: --workdir {args.workdir} is the data folder; pick another folder", file=sys.stderr)
+        return 1
+    files = {"db": workdir / "business.db", "checkpoints": workdir / "checkpoints.sqlite"}
+    workdir.mkdir(parents=True, exist_ok=True)
+    for path in files.values():
+        path.unlink(missing_ok=True)
+    conn = db.connect(files["db"])
+    try:
+        db.seed(conn)
+        seeded = reconciliation.seed_demo_orders(conn, examples / "purchase_orders.json")
+    finally:
+        conn.close()
+    print(f"reconcile-demo  mode={args.mode}  examples={args.examples}  workdir={args.workdir}")
+    print(f"purchase orders seeded from purchase_orders.json: {seeded}")
+    scan = [
+        "--mode",
+        args.mode,
+        "--recordings",
+        str(RECONCILE_DEMO_RECORDINGS),
+        "--checkpoints",
+        str(files["checkpoints"]),
+    ]
+    shown_documents: set = set()
+    shown_results: dict = {}
+    number = 0
+
+    def step(*command) -> bool:
+        nonlocal number
+        number += 1
+        run = subprocess.run(
+            [sys.executable, "-m", "purchase_cycle.cli", "--db", str(files["db"]), *command],
+            capture_output=True,
+            text=True,
+        )
+        print()
+        print(f"== step {number}: purchase-cycle {' '.join(command[:2])}  (own process, exit code {run.returncode})")
+        if run.returncode != 0:
+            print(f"Error: step {number} failed: {run.stderr.strip()}", file=sys.stderr)
+            return False
+        for line in run.stdout.splitlines():
+            print(f"  {line}")
+        return True
+
+    def scan_and_show(folder: Path) -> bool:
+        if not step("reconcile", "scan", str(folder), *scan):
+            return False
+        print()
+        _print_extracted(files, shown_documents)
+        if not step("reconcile", "list"):
+            return False
+        for invoice_id, result in _reconciliations(files).items():
+            if shown_results.get(invoice_id) == result:
+                continue  # an unchanged reconciliation was shown by an earlier step
+            if not step("reconcile", "show", reconciliation.invoice_reference(invoice_id)):
+                return False
+            shown_results[invoice_id] = result
+        return True
+
+    if not scan_and_show(examples / "documents"):
+        return 1
+    waiting = [i for i, r in _reconciliations(files).items() if r == "awaiting_delivery_note"]
+    if not scan_and_show(examples / "later"):
+        return 1
+    final = _reconciliations(files)
+    conn = db.connect(files["db"])
+    try:
+        types = {r[0] for r in conn.execute("SELECT DISTINCT type FROM discrepancies")}
+        unlinked = [r[0] for r in conn.execute("SELECT reason FROM supplier_documents WHERE status = 'unlinked'")]
+    finally:
+        conn.close()
+    completed = [i for i in waiting if final.get(i) in ("matched", "discrepancies")]
+    print()
+    print("summary:")
+    print(f"results: {', '.join(f'{reconciliation.invoice_reference(i)}={r}' for i, r in final.items())}")
+    print(f"difference types: {', '.join(sorted(types)) or 'none'}")
+    print(f"awaiting a delivery note after the first scan, completed by the second: {len(completed)} of {len(waiting)}")
+    print(f"unlinked documents: {', '.join(sorted(unlinked)) or 'none'}")
+    if (
+        "matched" not in final.values()
+        or types != set(reconciliation.DISCREPANCY_TYPES)
+        or not waiting
+        or len(completed) != len(waiting)
+        or not unlinked
+    ):
+        print("Error: the demo did not end with every outcome", file=sys.stderr)
         return 1
     return 0
 
@@ -1471,6 +1602,22 @@ def main(argv=None) -> int:
         "--mode", choices=config.MODES, default="replay", help="offer extraction mode; record needs ANTHROPIC_API_KEY"
     )
     quotes_demo.set_defaults(handler=cmd_quotes_demo)
+
+    reconcile_demo = sub.add_parser(
+        "reconcile-demo",
+        help="run the sample invoices and delivery notes, each scan, list and show step in its own process",
+    )
+    reconcile_demo.add_argument("--examples", default=str(DEMO_INVOICES), help="folder of sample documents and orders")
+    reconcile_demo.add_argument(
+        "--workdir", default=str(RECONCILE_DEMO_WORKDIR), help="folder for the demo database and checkpoints"
+    )
+    reconcile_demo.add_argument(
+        "--mode",
+        choices=config.MODES,
+        default="replay",
+        help="document extraction mode; record needs ANTHROPIC_API_KEY",
+    )
+    reconcile_demo.set_defaults(handler=cmd_reconcile_demo)
 
     from purchase_cycle.evaluation.cli import add_eval_commands
 

@@ -4,6 +4,7 @@ The model only reads a document; everything after the extraction is plain code.
 """
 
 import hashlib
+import json
 import re
 import sqlite3
 from pathlib import Path
@@ -494,3 +495,33 @@ def show_result(conn: sqlite3.Connection, invoice_id: int) -> dict | None:
         "delivery_note": None if note is None else (note["number"] or "-"),
         "discrepancies": [dict(row) for row in rows],
     }
+
+
+def seed_demo_orders(conn: sqlite3.Connection, path: Path | str) -> int:
+    """Insert the purchase orders of the demo file, each with the ordered quote request it requires; returns the count."""
+    orders = json.loads(Path(path).read_text(encoding="utf-8"))
+    now = _now(conn)
+    with conn:
+        for n, order in enumerate(orders, start=1):
+            conn.execute(
+                "INSERT INTO quote_requests (id, sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
+                "VALUES (?, ?, ?, ?, 'ordered', ?, ?, ?)",
+                (n, order["sku"], order["quantity"], f"demo-quote-{n}", now, now, now),
+            )
+            conn.execute(
+                "INSERT INTO purchase_orders (id, request_id, supplier_code, sku, quantity, unit_price, currency, "
+                "total, expected_delivery, issued_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'issued')",
+                (
+                    n,
+                    n,
+                    order["supplier"],
+                    order["sku"],
+                    order["quantity"],
+                    order["unit_price"],
+                    CURRENCY,
+                    round(order["quantity"] * order["unit_price"], 2),
+                    order["expected_delivery"],
+                    now,
+                ),
+            )
+    return len(orders)
