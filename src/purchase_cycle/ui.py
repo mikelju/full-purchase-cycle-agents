@@ -9,6 +9,7 @@ LangSmith tracing is forced off in both modes.
 """
 
 import json
+import sys
 import threading
 import time
 import uuid
@@ -414,7 +415,11 @@ def make_server(mode: str, port: int = 8765, root: Path | str = UI_DIR) -> HTTPS
 
 
 def serve(mode: str, port: int) -> int:
-    server = make_server(mode, port)
+    try:
+        server = make_server(mode, port)
+    except OSError as error:
+        print(f"Error: cannot listen on {HOST}:{port}: {error}; try another --port", file=sys.stderr)
+        return 1
     url = f"http://{HOST}:{server.server_port}/"
     print(f"mode={mode}  page={url}  data={server.app.root}")
     print("LangSmith tracing is off. Press Ctrl+C to stop.")
