@@ -65,5 +65,7 @@ The `outcome` of a failed run still carries the first line of the exception text
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | Claude Opus 5.5 subagents | `origin/main..0f7da4a` | Security; Correctness (two independent runs) | Important: no Origin or Content-Type check on POST (CWE-352); rejected answer hid the answer control (C4); WhatsApp answer control shown when the router would start a new order (C4); single-threaded server with no timeout; `route` on `examples/orders` fails in replay, so C5 and the README name the wrong command. Minor: truncated log line gives 500; parked run shown as failed; raw exception text in 500s (CWE-209); `data/ui/` growth; port out of range; checkpointer never closed | Fixed in 441faf5 (SEC-012 widened for `data/ui/` growth); C5 wording pending the owner |
+| 2 | Claude Opus 5.5 subagent | `441faf5` | Security; Correctness | Medium: thread parked after a transient error shown as failed. Low: race in `conversations()` could give 500; app closed under an in-flight run and leaked on bind failure; rejected-answer test forced an impossible state. No Critical or High | Fixed in 2c521d2 |
 
 ## Delivery
