@@ -24,6 +24,8 @@ CLARIFICATION_DETECTION_INTAKE_RECORDINGS_PATH = EVALS_DIR / "recordings" / "cla
 CLARIFICATION_DETECTION_EXTRACTION_RECORDINGS_PATH = (
     EVALS_DIR / "recordings" / "clarification_detection_email_extraction.jsonl"
 )
+OFFER_EXTRACTION_RECORDINGS_PATH = EVALS_DIR / "recordings" / "offer_extraction.jsonl"
+OFFER_EXTRACTION_MAX_TOKENS = 512  # one offer per supplier reply
 CLARIFICATION_MAX_TOKENS = 1024  # a question or a resolution list covers every doubtful line of an order
 
 MODES = ("live", "record", "replay")
