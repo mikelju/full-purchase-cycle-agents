@@ -159,6 +159,7 @@ def test_seed_creates_empty_quote_offers_and_purchase_orders_tables(tmp_path):
         "usable",
         "reason",
         "reply_file",
+        "decided_at",
     ]
     orders = [r["name"] for r in conn.execute("PRAGMA table_info(purchase_orders)")]
     assert orders == [
