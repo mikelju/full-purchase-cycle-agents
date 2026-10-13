@@ -380,6 +380,8 @@ Three rules complete the list:
   The `price` row holds the lines outside the tolerance and follows the line with the largest deviation: its found price and unit deviation, and the amount of the off-tolerance lines that deviate in the same direction.
   Opposite deviations never cancel each other out.
 - When the invoiced quantity differs from both the order and the delivery note, the larger difference is stored and the other reference is not kept, because there is one `quantity` row per SKU.
+- A delivery note that exists but has no line for the invoiced order SKU counts as delivered quantity 0, so the invoiced quantity is a `quantity` difference against the note and the user checks whether it was delivered before paying.
+  This also holds when the note has a line whose product could not be resolved to a SKU: that line is reported separately and the order SKU still shows the difference.
 
 The result is `matched` with no difference, `discrepancies` with at least one, and `awaiting_delivery_note` while no delivery note exists yet.
 A delivery note scanned later completes the same reconciliation to `matched` or `discrepancies` and never adds a second one.
@@ -594,11 +596,11 @@ The baseline is `evals/baselines/document_extraction.json`, stored in mode repla
 
 ### Reconciliation matching cases
 
-`uv run purchase-cycle eval --suite reconciliation_matching` runs the 57 hand-built cases `RM-001` to `RM-057` of `evals/datasets/reconciliation_matching/` through the same functions as the CLI on a temporary database.
+`uv run purchase-cycle eval --suite reconciliation_matching` runs the 58 hand-built cases `RM-001` to `RM-058` of `evals/datasets/reconciliation_matching/` through the same functions as the CLI on a temporary database.
 The documents are given as already extracted answers by a test double that fails the test if it is called during matching, so no model is called and there is no split or baseline.
 The cases cover a perfect match, a price under and over the tolerance, a quantity above and below the order, an invoice above the delivery with the order met, an extra line, a missing line, price and quantity on one line, several types, no delivery note yet, an unknown order, a wrong supplier, a duplicate scan and a restart between scan and show, at least three cases each.
 The grader reads the database and the printed output and counts six critical errors against an oracle apart from the module: a difference not reported, a difference invented, a wrong type, two reconciliations for one invoice, a reconciliation for an unlinked document and a model call during matching.
-Case success is 100.0% (93.7% to 100.0%, 57 of 57) with 0 critical errors; the gate is 100% success and 0 critical errors.
+Case success is 100.0% (93.8% to 100.0%, 58 of 58) with 0 critical errors; the gate is 100% success and 0 critical errors.
 
 ## Run the evaluation
 
