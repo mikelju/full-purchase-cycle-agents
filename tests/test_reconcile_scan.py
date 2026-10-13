@@ -156,3 +156,20 @@ def test_a_missing_recording_exits_1_with_a_message(tmp_path, capsys):
     world.recordings.unlink()
     assert world.run() == 1
     assert "No recording" in capsys.readouterr().err
+
+
+def test_a_document_left_extracted_by_a_crash_is_linked_and_reconciled_without_a_new_call(tmp_path):
+    world = World(tmp_path)
+    conn = db.connect(world.db)
+    try:
+        for path in world.paths:  # the run stopped between extract and link
+            reconciliation.extract_document(conn, world.client, path)
+        assert {r[0] for r in conn.execute("SELECT status FROM supplier_documents")} == {"extracted"}
+    finally:
+        conn.close()
+    client = llm.ModelClient("replay", [], tmp_path / "missing.jsonl", task=llm.SUPPLIER_DOCUMENT_EXTRACTION)
+    results = reconciliation.scan(world.db, sqlite_checkpointer(world.checkpoints), world.folder, client)
+    assert client.calls == 0
+    assert [item["status"] for item in results] == ["linked", "linked"]
+    assert [item["result"] for item in results] == ["matched", None]
+    assert world.rows()[1] == [("matched",)]

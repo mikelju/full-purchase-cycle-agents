@@ -408,6 +408,8 @@ def scan(db_path: Path | str, checkpointer, folder: Path | str, client: llm.Mode
             if new:
                 graph.invoke({"path": str(path)}, {"configurable": {"thread_id": f"reconcile-{digest[:12]}"}})
             doc = stored_document(conn, digest)
+            if doc["status"] == EXTRACTED:  # an interrupted run stopped before linking: finish it, no new call
+                doc = link_document(conn, doc["id"])
             results.append({"file": path.name, "new": new, **_summary(doc)})
         reconcile_pending(conn)
         for item in results:
