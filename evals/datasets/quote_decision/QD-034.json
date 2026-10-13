@@ -1,0 +1,78 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 1,
+    "orders": [
+      {
+        "currency": "EUR",
+        "expected_delivery": "2026-10-19",
+        "number": "PO-0001",
+        "quantity": 12,
+        "supplier": "SUP-002",
+        "total": 51.6,
+        "unit_price": 4.3
+      }
+    ],
+    "outbox": [
+      "PO-0001-SUP-002.eml"
+    ],
+    "recommended": "SUP-002",
+    "rule": "only_usable_offer",
+    "status": "ordered"
+  },
+  "id": "QD-034",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "replies": [
+    {
+      "answer": {
+        "currency": "EUR",
+        "lead_time_days": 5,
+        "offers": true,
+        "price_text": "4.3 EUR per box",
+        "quantity": "twelve",
+        "unit_price": 4.3,
+        "vat_included": false,
+        "vat_rate": null,
+        "working_days": true
+      },
+      "body": "Sure, twelve for about four euros.",
+      "supplier": "SUP-001"
+    },
+    {
+      "answer": {
+        "currency": "EUR",
+        "lead_time_days": 5,
+        "offers": true,
+        "price_text": "4.3 EUR per box",
+        "quantity": 12,
+        "unit_price": 4.3,
+        "vat_included": false,
+        "vat_rate": null,
+        "working_days": true
+      },
+      "body": "We offer 12 boxes at 4.3 EUR per box, delivered in 5 working days.",
+      "supplier": "SUP-002"
+    }
+  ],
+  "request": {
+    "quantity": 12,
+    "sku": "GLV-NIT-XS",
+    "status": "ready_for_decision"
+  },
+  "steps": [
+    {
+      "exit": 0,
+      "op": "decide"
+    },
+    {
+      "exit": 0,
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "single_full",
+    "approve"
+  ]
+}
