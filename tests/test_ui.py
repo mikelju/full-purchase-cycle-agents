@@ -375,26 +375,30 @@ def test_the_page_is_part_of_the_package_build(tmp_path):
         assert "purchase_cycle/ui.html" in wheel.namelist()
 
 
-def _rewrite_status(root, status):
-    log = root / "conversations.jsonl"
-    entries = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
-    entries[-1]["status"] = status
-    log.write_text("".join(json.dumps(e) + "\n" for e in entries), encoding="utf-8")
+def test_review_a_rejected_answer_leaves_the_thread_answerable(tmp_path, monkeypatch, loopback_only):
+    httpd = _recorded_server(tmp_path, monkeypatch, loopback_only)
+    try:
+        form = {"channel": "web_form", "customer": "CLI-002", "lines": DOUBT_FORM["lines"]}
+        _, asked = call(httpd, "POST", "/api/send", form)
+        status, rejected = call(httpd, "POST", "/api/answer", {"thread_id": asked["thread_id"], "text": "unrecorded"})
+        assert status == 200 and rejected["status"] == "answer_rejected"
+        last = call(httpd, "GET", "/api/conversations")[1][-1]
+        assert last["pending"] is True and last["can_answer"] is True
+        status, again = call(httpd, "POST", "/api/answer", {"thread_id": asked["thread_id"], "text": ANSWER_1})
+        assert status == 200 and again["status"] == "question" and again["round"] == 2
+        assert again["reply"] == QUESTION_2
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+        httpd.app.close()
 
 
-def test_review_a_rejected_answer_leaves_the_thread_answerable(server):
+def test_review_a_whatsapp_rejected_answer_stays_pending(server):
     doubt = "hi, pls send 20 boxes of nitrile gloves and 6 units of sharps container 5 litres thx"
-    _, asked = call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-004", "text": doubt})
-    assert asked["status"] == "question"
-    _rewrite_status(server.root, "answer_rejected")
+    call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-004", "text": doubt})
+    _, second = call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-004", "text": "unrecorded"})
     last = call(server, "GET", "/api/conversations")[1][-1]
-    assert last["pending"] is True and last["can_answer"] is False
-    conn = db.connect(server.root / "purchase_cycle.db")
-    with conn:
-        conn.execute("UPDATE clarifications SET channel = 'email' WHERE thread_id = ?", (asked["thread_id"],))
-    conn.close()
-    last = call(server, "GET", "/api/conversations")[1][-1]
-    assert last["pending"] is True and last["can_answer"] is True
+    assert second["status"] == "answer_rejected" and last["pending"] is True
 
 
 def test_review_a_whatsapp_thread_takes_a_message_only_when_it_is_the_latest_pending_one(server):
@@ -447,13 +451,15 @@ def test_review_a_truncated_log_line_is_skipped(server):
     assert call(server, "GET", "/api/conversations") == (200, [])
 
 
-def test_review_a_parked_run_shows_as_under_review():
-    from purchase_cycle.recovery import NeedsReview
-
-    app = object.__new__(ui.UiApp)
+def test_review_a_parked_run_shows_as_under_review(server):
+    app = server.app
     customer = {"code": "CLI-001", "name": "Clinic"}
-    entry = app._entry("email", customer, "x", router.Route(router.EMAIL), "email-1", {}, NeedsReview("twice"))
-    assert entry["status"] == "under_review"
+    route = router.Route(router.EMAIL)
+    assert app._entry("email", customer, "x", route, "email-1", {}, TimeoutError("late"))["status"] == "failed"
+    conn = db.connect(app.db_path)  # recovery parks the thread, then re-raises the original transient error
+    db.park_failure(conn, "email-1", "email", "x", "extract", "TimeoutError: late")
+    conn.close()
+    assert app._entry("email", customer, "x", route, "email-1", {}, TimeoutError("late"))["status"] == "under_review"
 
 
 def test_review_errors_show_the_class_not_the_text(server, monkeypatch):

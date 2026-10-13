@@ -38,7 +38,6 @@ from purchase_cycle.llm import (
     InvalidModelOutput,
     MissingRecording,
 )
-from purchase_cycle.recovery import NeedsReview
 from purchase_cycle.studio import StudioModelClient
 from purchase_cycle.web_form import build_web_form_graph
 from purchase_cycle.whatsapp_order import build_whatsapp_order_graph, phone_digits
@@ -189,7 +188,8 @@ class UiApp:
             row = pending.get(entry.get("thread_id"))
             entry["pending"] = bool(row) and last[entry["thread_id"]] == i and entry.get("status") in PENDING_STATUSES
             if entry["pending"] and row["channel"] == "whatsapp":
-                entry["pending"] = latest[row["customer_code"]]["thread_id"] == row["thread_id"]
+                newest = latest[row["customer_code"]]  # None when answered between the two reads
+                entry["pending"] = newest is not None and newest["thread_id"] == row["thread_id"]
             entry["can_answer"] = entry["pending"] and row["channel"] != "whatsapp"
         return entries
 
@@ -204,7 +204,11 @@ class UiApp:
     def _entry(self, channel: str, customer: dict, sent: str, routed, thread_id, state, error) -> dict:
         state = state or {}
         paused = state.get("__interrupt__")
-        if isinstance(error, NeedsReview):
+        if (
+            error is not None
+            and thread_id
+            and self._query("SELECT 1 FROM failures WHERE thread_id = ? AND status = 'needs_review'", (thread_id,))
+        ):  # recovery parks a thread for NeedsReview and for a transient error on its last attempt
             status = "under_review"
         elif error is not None:
             status = "failed"
@@ -450,7 +454,11 @@ def make_server(mode: str, port: int = 8765, root: Path | str = UI_DIR) -> Threa
     """The server bound to 127.0.0.1 on `port` (0 picks a free one), with its app ready; `serve_forever` runs it."""
     app = UiApp(mode, root)
     handler = type("BoundHandler", (Handler,), {"app": app})
-    server = ThreadingHTTPServer((HOST, port), handler)
+    try:
+        server = ThreadingHTTPServer((HOST, port), handler)
+    except OSError:
+        app.close()
+        raise
     server.daemon_threads = True
     server.app = app
     return server
@@ -474,5 +482,6 @@ def serve(mode: str, port: int) -> int:
         print()
     finally:
         server.server_close()
-        server.app.close()
+        with server.app.lock:  # let an in-flight graph run finish its checkpoint
+            server.app.close()
     return 0
