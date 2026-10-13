@@ -1,0 +1,87 @@
+{
+  "dataset_version": "1.0",
+  "documents": {
+    "a-invoice.txt": {
+      "answer": {
+        "currency": "EUR",
+        "issue_date": "2026-10-20",
+        "kind": "invoice",
+        "lines": [
+          {
+            "line_total": 87.75,
+            "product": "Nitrile examination gloves, powder-free, size S",
+            "quantity": 25,
+            "unit_price": 3.51
+          }
+        ],
+        "number": "INV-77",
+        "po_reference": "PO-0001",
+        "supplier_text": "Distribuciones Sanitarias del Norte S.A."
+      },
+      "text": "Invoice INV-77\nOrder reference PO-0001  Supplier Distribuciones Sanitarias del Norte S.A.\nNitrile examination gloves, powder-free, size S  25  3.51\n"
+    },
+    "b-note.txt": {
+      "answer": {
+        "currency": null,
+        "issue_date": "2026-10-21",
+        "kind": "delivery_note",
+        "lines": [
+          {
+            "line_total": null,
+            "product": "Nitrile examination gloves, powder-free, size S",
+            "quantity": 25,
+            "unit_price": null
+          }
+        ],
+        "number": "DN-5",
+        "po_reference": "PO-0001",
+        "supplier_text": "Distribuciones Sanitarias del Norte S.A."
+      },
+      "text": "Delivery Note DN-5\nOrder reference PO-0001  Supplier Distribuciones Sanitarias del Norte S.A.\nNitrile examination gloves, powder-free, size S  25\n"
+    }
+  },
+  "expected": {
+    "documents": {
+      "a-invoice.txt": [
+        "linked",
+        null
+      ],
+      "b-note.txt": [
+        "linked",
+        null
+      ]
+    },
+    "model_calls": 2,
+    "progress": [
+      {
+        "a-invoice.txt": "matched"
+      }
+    ],
+    "reconciliations": {
+      "a-invoice.txt": {
+        "discrepancies": [],
+        "result": "matched"
+      }
+    }
+  },
+  "id": "RM-008",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock; one issued purchase order PO-0001"
+  },
+  "order": {
+    "quantity": 25,
+    "sku": "GLV-NIT-S",
+    "supplier": "SUP-002",
+    "unit_price": 3.5
+  },
+  "restart": false,
+  "scans": [
+    [
+      "a-invoice.txt",
+      "b-note.txt"
+    ]
+  ],
+  "tags": [
+    "price_under_tolerance"
+  ]
+}

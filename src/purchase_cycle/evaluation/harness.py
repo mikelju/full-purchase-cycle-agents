@@ -380,18 +380,20 @@ SUITES = (
     "offer_extraction",
     "quote_decision",
     "document_extraction",
+    "reconciliation_matching",
 )
 # The deterministic phase 05 suites run locally only, so `eval-upload` leaves them out; `order_scenarios` stays out
 # of `eval-upload` too (phase 05, increment 24).
 UPLOAD_SUITES = tuple(
     name
     for name in SUITES
-    if name not in ("channel_routing", "failure_recovery", "order_scenarios", "quote_wait", "quote_decision")
+    if name not in ("channel_routing", "failure_recovery", "order_scenarios", "quote_wait", "quote_decision", "reconciliation_matching")
 )
 # `all` runs every suite with a baseline; the WhatsApp suite joined once its baseline was recorded (increment 16)
 # and `order_scenarios` once its baseline was recorded (increment 24).
 # `offer_extraction` joined once its baseline was recorded (phase 07, increment 12); `quote_decision` is
 # deterministic and local, so it joined with its scenarios (increment 13).
+# `reconciliation_matching` (phase 08) is deterministic and local, so it joined with its cases (increment 12).
 # `document_extraction` (phase 08) stays out of `all` until its baseline is recorded (increment 11).
 ALL_SUITES = (
     "order_line_extraction",
@@ -406,6 +408,7 @@ ALL_SUITES = (
     "quote_wait",
     "offer_extraction",
     "quote_decision",
+    "reconciliation_matching",
 )
 
 
@@ -436,6 +439,10 @@ def _suite(name: str):
         from purchase_cycle.evaluation import document_eval
 
         return document_eval
+    if name == "reconciliation_matching":
+        from purchase_cycle.evaluation import reconcile_eval
+
+        return reconcile_eval
     if name == "channel_routing":
         from purchase_cycle.evaluation import routing_eval
 

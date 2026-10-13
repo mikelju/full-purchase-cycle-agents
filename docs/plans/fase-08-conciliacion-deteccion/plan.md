@@ -97,6 +97,8 @@ This file is the durable state: a new session resumes from here and from Git.
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
 | DV-01 | `tests/test_web_form_eval.py::test_upload_command_uploads_every_suite_and_keeps_the_worst_exit` gains a stub for `document_eval.upload_datasets`, since `document_extraction` joins `UPLOAD_SUITES` (increment 10); the assertion `uploaded == list(harness.UPLOAD_SUITES)` is unchanged. | none (test only) | applied |
+| DV-02 | `tests/test_offer_eval.py::test_eval_all_includes_the_suite_once_its_baseline_is_recorded` asserts `ran[-3:]` with `reconciliation_matching` last, since the suite joins `ALL_SUITES` last (increment 12); `offer_extraction` and `quote_decision` keep their order. | none (test only) | applied |
+| DV-03 | `tests/test_whatsapp_eval.py::test_eval_all_runs_the_whatsapp_suite_after_its_baseline` gains `reconciliation_matching` as the last name of the `eval all` order; the other names and their order are unchanged. | none (test only) | applied |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |

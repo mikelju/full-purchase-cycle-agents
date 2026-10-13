@@ -1,0 +1,82 @@
+{
+  "dataset_version": "1.0",
+  "documents": {
+    "a-invoice.txt": {
+      "answer": {
+        "currency": "EUR",
+        "issue_date": "2026-10-20",
+        "kind": "invoice",
+        "lines": [
+          {
+            "line_total": 41.0,
+            "product": "Nitrile examination gloves, powder-free, size XS",
+            "quantity": 10,
+            "unit_price": 4.1
+          }
+        ],
+        "number": "INV-77",
+        "po_reference": "PO-0007",
+        "supplier_text": "Suministros Medicos Iberia S.L."
+      },
+      "text": "Invoice INV-77\nOrder reference PO-0007  Supplier Suministros Medicos Iberia S.L.\nNitrile examination gloves, powder-free, size XS  10  4.10\n"
+    },
+    "b-note.txt": {
+      "answer": {
+        "currency": null,
+        "issue_date": "2026-10-21",
+        "kind": "delivery_note",
+        "lines": [
+          {
+            "line_total": null,
+            "product": "Nitrile examination gloves, powder-free, size XS",
+            "quantity": 10,
+            "unit_price": null
+          }
+        ],
+        "number": "DN-5",
+        "po_reference": "PO-0007",
+        "supplier_text": "Suministros Medicos Iberia S.L."
+      },
+      "text": "Delivery Note DN-5\nOrder reference PO-0007  Supplier Suministros Medicos Iberia S.L.\nNitrile examination gloves, powder-free, size XS  10\n"
+    }
+  },
+  "expected": {
+    "documents": {
+      "a-invoice.txt": [
+        "unlinked",
+        "unknown_order"
+      ],
+      "b-note.txt": [
+        "unlinked",
+        "unknown_order"
+      ]
+    },
+    "model_calls": 2,
+    "progress": [
+      {
+        "a-invoice.txt": null
+      }
+    ],
+    "reconciliations": {}
+  },
+  "id": "RM-045",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock; one issued purchase order PO-0001"
+  },
+  "order": {
+    "quantity": 10,
+    "sku": "GLV-NIT-XS",
+    "supplier": "SUP-001",
+    "unit_price": 4.1
+  },
+  "restart": false,
+  "scans": [
+    [
+      "a-invoice.txt",
+      "b-note.txt"
+    ]
+  ],
+  "tags": [
+    "unknown_order"
+  ]
+}

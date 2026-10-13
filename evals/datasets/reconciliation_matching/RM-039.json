@@ -1,0 +1,76 @@
+{
+  "dataset_version": "1.0",
+  "documents": {
+    "a-invoice.txt": {
+      "answer": {
+        "currency": "EUR",
+        "issue_date": "2026-10-20",
+        "kind": "invoice",
+        "lines": [
+          {
+            "line_total": 41.0,
+            "product": "Nitrile examination gloves, powder-free, size XS",
+            "quantity": 10,
+            "unit_price": 4.1
+          },
+          {
+            "line_total": 7.0,
+            "product": "Nitrile examination gloves, powder-free, size S",
+            "quantity": 2,
+            "unit_price": 3.5
+          }
+        ],
+        "number": "INV-77",
+        "po_reference": "PO-0001",
+        "supplier_text": "Suministros Medicos Iberia S.L."
+      },
+      "text": "Invoice INV-77\nOrder reference PO-0001  Supplier Suministros Medicos Iberia S.L.\nNitrile examination gloves, powder-free, size XS  10  4.10\nNitrile examination gloves, powder-free, size S  2  3.50\n"
+    }
+  },
+  "expected": {
+    "documents": {
+      "a-invoice.txt": [
+        "linked",
+        null
+      ]
+    },
+    "model_calls": 1,
+    "progress": [
+      {
+        "a-invoice.txt": "awaiting_delivery_note"
+      }
+    ],
+    "reconciliations": {
+      "a-invoice.txt": {
+        "discrepancies": [
+          [
+            "GLV-NIT-S",
+            "extra_line",
+            7.0
+          ]
+        ],
+        "result": "awaiting_delivery_note"
+      }
+    }
+  },
+  "id": "RM-039",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock; one issued purchase order PO-0001"
+  },
+  "order": {
+    "quantity": 10,
+    "sku": "GLV-NIT-XS",
+    "supplier": "SUP-001",
+    "unit_price": 4.1
+  },
+  "restart": false,
+  "scans": [
+    [
+      "a-invoice.txt"
+    ]
+  ],
+  "tags": [
+    "extra_line",
+    "no_delivery_note"
+  ]
+}
