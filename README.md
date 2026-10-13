@@ -8,6 +8,7 @@ Phase 04 (exceptions) integrated (merged via PR #6): both channels ask the custo
 Phase 05 (closing the orders module) integrated (merged via PR #9): a simulated WhatsApp channel, a deterministic router over a mixed inbox, idempotent storage, retries, re-asks, parked failures and crash recovery, with four new evaluations; its LangSmith trace evidence is pending.
 Phase 06 (quote requests and wait) integrated (merged via PR #11): quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
 Phase 07 (quotes, decision) is built and delivered for review via PR: offer extraction with Claude Haiku 4.5, a fixed comparison rule, a human approval after a pause with saved state and an issued purchase order, with two new evaluations.
+Phase 08 (reconciliation, detection) is built on its branch: supplier invoices and delivery notes in text, PDF and Excel are read with Claude Haiku 4.5, linked to a purchase order, matched in plain code with a stated tolerance and stored with each difference, with two new evaluations; its LangSmith trace evidence is pending.
 
 ![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
 
@@ -349,6 +350,60 @@ By default (`--mode replay`) it reads the offer extraction answers from `evals/r
 To record them again, set `ANTHROPIC_API_KEY` in `.env` and run `uv run purchase-cycle quotes-demo --mode record` (two Haiku 4.5 calls, a fraction of a cent); `--mode live` calls the model without saving.
 
 
+## Reconcile supplier invoices
+
+The reconciliation module (`src/purchase_cycle/reconciliation.py` and `src/purchase_cycle/reconcile_match.py`) reads the invoices and delivery notes that suppliers send after a purchase order and compares them with that order.
+Only the reading is done by the model: Claude Haiku 4.5 extracts the kind, number, purchase order reference, date, currency, supplier and lines of one document from its text (`.txt`, text `.pdf` and `.xlsx`; the file name is never sent).
+Everything after the extraction is plain code: linking, matching and storage.
+
+A document is linked to the purchase order named by its `PO-NNNN` reference.
+It is stored as `unlinked` with a reason when the reference is missing (`no_reference`), names an unknown order (`unknown_order`), comes from another supplier than the order has (`supplier_mismatch`) or repeats an invoice or delivery note already linked to that order (`duplicate`).
+A document the model cannot read is stored as `extraction_failed` and parked in `failures`, and the scan goes on with the next file.
+Each file is identified by the SHA-256 of its content, so scanning the same folder twice reads and stores nothing new and calls no model.
+
+### Matching rules and tolerance
+
+The reconciliation belongs to an invoice, is named `INV-NNNN` after the invoice document and compares it with the order and, when it exists, the delivery note of the same order.
+Prices are compared before VAT in EUR.
+The price tolerance is 0.01 EUR per unit and the quantity tolerance is 0.
+A difference is stored with its type, SKU, expected and found values, the amount per unit and the total amount:
+
+- `price`: the invoice unit price differs from the order price by more than the tolerance.
+- `quantity`: the invoiced quantity differs from the ordered quantity or, if there is a delivery note, from the delivered quantity.
+- `extra_line`: an invoice line whose SKU is not in the order, or whose text matches no catalog product.
+- `missing_line`: the order SKU is absent from the invoice.
+
+The result is `matched` with no difference, `discrepancies` with at least one, and `awaiting_delivery_note` while no delivery note exists yet.
+A delivery note scanned later completes the same reconciliation to `matched` or `discrepancies` and never adds a second one.
+The order in which files are read does not change the result, and no model is called during matching.
+Differences are only detected and stored: there is no claim and no approval until phase 09.
+
+### Reconcile commands
+
+```
+uv run purchase-cycle reconcile scan FOLDER [--mode replay|record|live] [--recordings FILE]
+uv run purchase-cycle reconcile list
+uv run purchase-cycle reconcile show INV-0001
+```
+
+`reconcile scan` reads the new files of a folder, in sorted order, and prints one line per file with its kind, state and result.
+`reconcile list` prints the counts by result and by difference type and one line per reconciliation.
+`reconcile show` prints the result, the order, the delivery note and each difference; an unknown reference exits 1 with a message.
+Every command accepts `--db` and `--checkpoints`; `scan` defaults to `--mode replay`.
+The state is in the database, so each command can run in its own process.
+
+### Run the reconcile demo
+
+```
+uv run purchase-cycle reconcile-demo
+```
+
+`reconcile-demo` starts from a fresh database in `data/reconcile-demo/` (`--workdir <folder>` to change it), seeds the six purchase orders of `examples/invoices/purchase_orders.json`, and runs each step as its own `purchase-cycle` process: `reconcile scan examples/invoices/documents`, `reconcile list`, a `reconcile show` per reconciliation, then `reconcile scan examples/invoices/later` with the delivery note that was held back, `reconcile list` and the `reconcile show` of the reconciliation that changed.
+The 14 sample documents are in the three formats and cover a matched invoice with its delivery note (`INV-0006`), a price difference (`INV-0007`), a quantity difference (`INV-0008`), an extra line (`INV-0009`), an extra and a missing line (`INV-0010`), an invoice without delivery note that the second scan completes to `matched` (`INV-0011`), a document with an unknown order and one from the wrong supplier.
+It prints the extracted documents with their lines, the result of every invoice and the classified differences, and exits non-zero unless it ends with a matched invoice, every difference type, a completed reconciliation and an unlinked document.
+By default (`--mode replay`) it reads the extraction answers from `evals/recordings/reconcile_demo.jsonl` and needs no key and no network; a test inside `npm run check` runs it with the network blocked.
+To record them again, set `ANTHROPIC_API_KEY` in `.env` and run `uv run purchase-cycle reconcile-demo --mode record` (14 Haiku 4.5 calls, a few cents); `--mode live` calls the model without saving.
+
 ## Watch the graphs in LangGraph Studio
 
 ```
@@ -396,7 +451,7 @@ Limits:
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and the twelve evaluations in replay mode.
+Runs the method's hook tests, ruff, pytest and the fourteen evaluations in replay mode.
 
 ## The golden dataset
 
@@ -502,6 +557,40 @@ The steps run as `uv run purchase-cycle offer-dataset plan`, `check`, `build`, `
 
 The 39 scenarios of `evals/datasets/quote_decision/` are hand-built by `uv run python -m purchase_cycle.evaluation.quote_decision_eval`, which rewrites them from the scenario definitions in that module.
 
+### Document extraction dataset
+
+The 120 supplier documents in `evals/datasets/document_extraction/` were built with the same method as the earlier model datasets:
+
+1. A seeded planning script (`plan.jsonl`, seed 20261013) fixes, for ten categories of 12 documents (clean invoice, delivery note, price basis, several lines, other unit, VAT and totals, chatty text, reference forms, extra charge, messy layout), the kind, reference and lines each document must state.
+2. The texts in `texts/` were written by the coding agent in ASCII English and checked automatically; a share is rendered as PDF (20) and Excel (20) files that are read back with every labelled fact.
+3. A blind second pass by a clean-context agent relabelled every document (`second_pass_review.jsonl`); all 120 agreed.
+4. A fixed stratified split gives 30 development and 90 test documents; only the development split was used to check the instructions, and no tuning round was needed.
+5. There is no owner audit of the labels: the labels come from the planning script and the second pass.
+
+The steps run as `uv run purchase-cycle document-dataset plan`, `check`, `build`, `blind` and `review`.
+`uv run purchase-cycle eval --suite document_extraction` replays the 90 test documents.
+The grader compares kind, purchase order reference, lines by SKU, quantity and unit price, and counts a critical error when a document has a missing line, an invented line, a wrong quantity or a wrong unit price.
+
+| Metric | Value | 95% interval | Threshold |
+|---|---|---|---|
+| Document exact match (90 documents) | 98.9% | 94.0% to 99.8% | at least 95% |
+| Unit price accuracy (128 priced lines) | 100.0% | 97.1% to 100.0% | at least 95% |
+| Line recall, precision and quantity (181 lines) | 98.9% | 96.1% to 99.7% | reported |
+| Critical errors (90 documents) | 1 | 1.1% (0.2% to 6.0%) | target 0, not met |
+
+The one failing document is DOC-060 (other unit): the model dropped two lines and invented two descriptions in a pack-size conversion case, and it is the one critical error; the target of 0 is reported, not gated.
+Kind and reference were read correctly in all 90 documents (100.0%, 95.9% to 100.0%).
+About 90 documents give a wide interval, and the text writer and the evaluated model belong to the same family, so the figures may be optimistic.
+The baseline is `evals/baselines/document_extraction.json`, recorded live once on the test split.
+
+### Reconciliation matching cases
+
+`uv run purchase-cycle eval --suite reconciliation_matching` runs the 57 hand-built cases `RM-001` to `RM-057` of `evals/datasets/reconciliation_matching/` through the same functions as the CLI on a temporary database.
+The documents are given as already extracted answers by a test double that fails the test if it is called during matching, so no model is called and there is no split or baseline.
+The cases cover a perfect match, a price under and over the tolerance, a quantity above and below the order, an invoice above the delivery with the order met, an extra line, a missing line, price and quantity on one line, several types, no delivery note yet, an unknown order, a wrong supplier, a duplicate scan and a restart between scan and show, at least three cases each.
+The grader reads the database and the printed output and counts six critical errors against an oracle apart from the module: a difference not reported, a difference invented, a wrong type, two reconciliations for one invoice, a reconciliation for an unlinked document and a model call during matching.
+Case success is 100.0% (93.7% to 100.0%, 57 of 57) with 0 critical errors; the gate is 100% success and 0 critical errors.
+
 ## Run the evaluation
 
 ```
@@ -509,7 +598,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the twelve evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
+`npm run eval` replays the fourteen evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:
@@ -653,6 +742,14 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - Stock is not reserved or decremented, so demand is the sum of stored `received` orders.
 - The simulated clock has no business days, holidays or time zones, and nothing ticks by itself: an operator or the demo runs `quotes tick`.
 - A supplier reply is accepted on the subject reference and the sender address in the file; there is no sender authentication, as in the email channel.
+- Supplier documents come from simulated files; nothing is received or sent over a network, and no scanned or image PDF is read.
+- One invoice and one delivery note per order, and one product line per order: partial deliveries and split invoices are not matched.
+- No credit notes, payment terms, tax rules, freight allocation or multi-currency handling; an invoice that states VAT separately is read net.
+- Differences are only detected and stored; no claim and no approval exist until phase 09.
+- The tolerance (0.01 EUR per unit, quantity 0) is a fixed number, not learned per supplier.
+- In `document_extraction`, 1 of 90 test documents (DOC-060, other unit) is a critical error against a target of 0, and the writer and the evaluated model belong to the same family, so the figures may be optimistic.
+- The sample documents of the demo list the SKU only: in a first recording a description column made the model join it to the SKU, which left the line unresolved, so the reading of free descriptions relies on the catalog matching of phase 02.
+- The LangSmith trace of a live `reconcile-demo` run and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
 
 ## License
 
