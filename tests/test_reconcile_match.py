@@ -152,3 +152,16 @@ def test_matching_imports_no_model_client():
             imported |= {node.module or ""} | {alias.name for alias in node.names}
     assert not any("llm" in name or "anthropic" in name for name in imported)
     assert not hasattr(rm, "llm")
+
+
+def test_opposite_price_deviations_on_repeated_lines_never_net_out():
+    lines = [_line(quantity=5, price=4.60), _line(quantity=5, price=3.60)]
+    result, rows = rm.classify(ORDER, lines, [_note()])
+    assert result == rm.DISCREPANCIES
+    assert [(r["type"], r["found"], r["unit_amount"], r["amount"]) for r in rows] == [("price", 4.6, 0.5, 2.5)]
+
+
+def test_a_smaller_opposite_deviation_does_not_flip_the_sign():
+    lines = [_line(quantity=5, price=4.60), _line(quantity=5, price=4.00)]
+    rows = rm.classify(ORDER, lines, [_note()])[1]
+    assert [(r["found"], r["unit_amount"], r["amount"]) for r in rows] == [(4.6, 0.5, 2.5)]

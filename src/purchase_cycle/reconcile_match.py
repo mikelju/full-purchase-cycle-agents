@@ -82,9 +82,11 @@ def classify(order: dict, invoice_lines: list[dict], note_lines: list[dict] | No
             if any(price is None for _, price in off):
                 rows.append(_row(sku, PRICE, order["unit_price"], None, None, None))  # no price stated: not a match
             else:
-                amount = sum((price - order["unit_price"]) * quantity for quantity, price in off)
-                unit = amount / sum(quantity for quantity, _ in off)
-                rows.append(_row(sku, PRICE, order["unit_price"], order["unit_price"] + unit, unit, amount))
+                # Opposite deviations never net out: the row follows the largest deviation and its sign.
+                devs = [(price - order["unit_price"], quantity, price) for quantity, price in off]
+                unit, _, found = max(devs, key=lambda d: abs(d[0]))
+                amount = sum(dev * quantity for dev, quantity, _ in devs if (dev > 0) == (unit > 0))
+                rows.append(_row(sku, PRICE, order["unit_price"], found, unit, amount))
         # When the invoice differs from both the order and the note, the larger difference is the one stored
         # (one quantity row per SKU, as the discrepancies key allows).
         references = [order["quantity"]]
