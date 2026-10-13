@@ -476,7 +476,9 @@ def show_result(conn: sqlite3.Connection, invoice_id: int) -> dict | None:
     invoice = conn.execute("SELECT number FROM supplier_documents WHERE id = ?", (invoice_id,)).fetchone()
     note = None
     if current["delivery_note_id"] is not None:
-        note = conn.execute("SELECT number FROM supplier_documents WHERE id = ?", (current["delivery_note_id"],)).fetchone()
+        note = conn.execute(
+            "SELECT number FROM supplier_documents WHERE id = ?", (current["delivery_note_id"],)
+        ).fetchone()
     order = conn.execute("SELECT * FROM purchase_orders WHERE id = ?", (current["purchase_order_id"],)).fetchone()
     rows = conn.execute(
         "SELECT sku, type, expected, found, unit_amount, amount, text FROM discrepancies "

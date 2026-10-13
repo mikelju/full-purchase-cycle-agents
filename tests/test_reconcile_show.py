@@ -32,7 +32,14 @@ def test_show_prints_result_order_and_each_discrepancy_with_type_sku_and_amounts
     assert cli.main(_command(world, "show", "INV-0001")) == 0
     out = capsys.readouterr().out
     assert "INV-0001" in out and "discrepancies" in out and "PO-0001" in out
-    assert "price" in out and "GLV-NIT-XS" in out and "4.1000" in out and "4.5000" in out and "0.4000" in out and "amount=4.00" in out
+    assert (
+        "price" in out
+        and "GLV-NIT-XS" in out
+        and "4.1000" in out
+        and "4.5000" in out
+        and "0.4000" in out
+        and "amount=4.00" in out
+    )
     assert "extra_line" in out and "Mystery widget 3000" in out and "amount=6.00" in out
 
 
@@ -86,8 +93,16 @@ def test_scan_list_and_show_in_separate_processes_print_what_one_process_prints(
     split = _world(tmp_path / "split")
     base = [sys.executable, "-m", "purchase_cycle.cli", "--db", str(split.db)]
     scan = subprocess.run(
-        [*base, "reconcile", "scan", str(split.folder), "--checkpoints", str(split.checkpoints), "--recordings",
-         str(split.recordings)],
+        [
+            *base,
+            "reconcile",
+            "scan",
+            str(split.folder),
+            "--checkpoints",
+            str(split.checkpoints),
+            "--recordings",
+            str(split.recordings),
+        ],
         capture_output=True,
         text=True,
     )

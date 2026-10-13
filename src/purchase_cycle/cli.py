@@ -252,7 +252,9 @@ def cmd_reconcile_show(args) -> int:
         print(f"Error: no reconciliation for {args.reference}", file=sys.stderr)
         return 1
     order = shown["order"]
-    print(f"{reconciliation.invoice_reference(invoice_id)}  invoice {shown['invoice_number'] or '-'}  result={shown['result']}")
+    print(
+        f"{reconciliation.invoice_reference(invoice_id)}  invoice {shown['invoice_number'] or '-'}  result={shown['result']}"
+    )
     print(
         f"purchase order: {reconciliation.order_reference(order['id'])}  supplier={order['supplier_code']}  "
         f"sku={order['sku']}  quantity={order['quantity']}  unit price={order['unit_price']:.4f} {order['currency']}"
@@ -261,7 +263,7 @@ def cmd_reconcile_show(args) -> int:
     print(f"reconciled at: {shown['reconciled_at']}")
     print(f"differences: {len(shown['discrepancies'])}")
     for row in shown["discrepancies"]:
-        text = f"  text=\"{row['text']}\"" if row["text"] else ""
+        text = f'  text="{row["text"]}"' if row["text"] else ""
         print(
             f"  {row['type']}  sku={row['sku'] or '-'}{text}  expected={_amount(row['expected'], 4)}  "
             f"found={_amount(row['found'], 4)}  per unit={_amount(row['unit_amount'], 4)}  "
@@ -1450,7 +1452,9 @@ def main(argv=None) -> int:
     reconcile_scan.add_argument("--recordings", default=None, help="recordings file for the document extraction")
     reconcile_scan.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     reconcile_scan.set_defaults(handler=cmd_reconcile_scan)
-    reconcile_list = reconcile_sub.add_parser("list", help="list every reconciliation with the counts by result and type")
+    reconcile_list = reconcile_sub.add_parser(
+        "list", help="list every reconciliation with the counts by result and type"
+    )
     reconcile_list.set_defaults(handler=cmd_reconcile_list)
     reconcile_show = reconcile_sub.add_parser("show", help="show the result and each difference of one invoice")
     reconcile_show.add_argument("reference", help="invoice reference like INV-0001")
