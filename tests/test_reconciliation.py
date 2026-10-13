@@ -101,6 +101,14 @@ def test_one_call_and_one_row_per_document_in_the_three_formats_with_the_same_li
     assert len({doc["content_hash"] for doc in stored}) == 3
 
 
+def test_the_model_receives_the_labelled_facts_read_from_each_of_the_three_formats(tmp_path):
+    facts = ["Invoice INV-77", "Order reference PO-0001", "Nitrile examination gloves, powder-free, size XS", "10", "4.10", "41.00"]
+    for path in _files(tmp_path):
+        text = reconciliation.model_text(reconciliation.document_text(path))
+        for fact in facts:
+            assert fact in text, f"{path.suffix}: {fact!r} is missing from the text the model receives"
+
+
 def test_a_stored_file_is_not_read_again(tmp_path, conn):
     path = _files(tmp_path)[0]
     client = _client(tmp_path, [path], [ANSWER])
