@@ -62,7 +62,8 @@ This file is the durable state: a new session resumes from here and from Git.
 ### Batch C - Evaluation `offer_extraction`
 - [x] 10. Seeded planning script and at least 100 replies in the ten categories with labels, fixed stratified split, automatic validation and a clean-context second-pass review (C11) - check: tests over the dataset and plan files count categories and minimums and re-run the plan with the same seed; generator output saved as `.evidence/fase-07/offer-dataset.txt`.
   Evidence: 120 replies, 10 categories x 12, dev 30 / test 90, `.evidence/fase-07/offer-dataset.txt`; `tests/test_offer_dataset.py` 11 passed; clean-context second pass (sonnet subagent, blind export only): 2 disagreements (OFF-021, OFF-024, case size in the text did not match the plan divisor 12), both `label_fixed` by correcting the text, 118 agree, 0 pending.
-- [ ] 11. Runner, graders, metrics, critical errors, report and gates, registered in `harness` (C12) - check: tests that force each gate to fail prove a non-zero exit of `purchase-cycle eval --suite offer_extraction`.
+- [x] 11. Runner, graders, metrics, critical errors, report and gates, registered in `harness` (C12) - check: tests that force each gate to fail prove a non-zero exit of `purchase-cycle eval --suite offer_extraction`.
+  Evidence: `src/purchase_cycle/evaluation/offer_eval.py` and `tests/test_offer_eval.py` (13 passed, with `tests/test_whatsapp_eval.py` still green); each gate forced to fail gives exit 1 (exact match, unit price, both McNemar regressions, no baseline), missing recordings exit 2, a below-threshold baseline exit 3. The suite is in `SUITES` (so in `eval-upload`) but out of `ALL_SUITES` until the baseline of increment 12; `purchase-cycle eval --suite offer_extraction` without recordings exits 2 and, once recorded without a baseline, exits 1.
 - [ ] 12. Instruction tuning on the development split (at most three rounds), then the live test split record and baseline with Claude Haiku 4.5, with the owner's key (C13, D6) - check: stored baseline with per-reply results and the live report saved as `.evidence/fase-07/offer-baseline-live.txt`, cost noted; a gate miss stops execution for the owner.
 
 ### Batch D - Evaluation `quote_decision`, demo and documentation
@@ -80,6 +81,7 @@ This file is the durable state: a new session resumes from here and from Git.
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
+| DV-01 | The phase 05 test `tests/test_whatsapp_eval.py` (suite order of `eval all`) will gain `offer_extraction` at the end of its expected list, because `ALL_SUITES` grows in increment 12 when its baseline is recorded; the behaviour of the earlier suites is unchanged | C1, C12 | Applies in increment 12 |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
