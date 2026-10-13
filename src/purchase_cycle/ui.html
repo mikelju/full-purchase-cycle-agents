@@ -5,39 +5,121 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Orders test page</title>
 <style>
-  body { font-family: sans-serif; margin: 1rem 2rem; max-width: 70rem; }
-  h1 { margin-bottom: 0; }
-  fieldset { margin: 1rem 0; }
+  :root {
+    --bg: #f6f7f9; --card: #fff; --border: #e2e5ea; --text: #1f2933; --muted: #697586;
+    --accent: #2563a8; --accent-hover: #1d4f87; --accent-soft: #e8f0fa; --on-accent: #fff;
+    --zebra: #f9fafb; --hover: #eef3f9; --input: #fff;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 2px 8px rgba(16,24,40,.04);
+    --reply-bg: #eef5ff; --reply-border: #bcd3f2; --err-bg: #fdecec; --err: #b42318;
+    --ok-bg: #e3f5ea; --ok: #176639; --warn-bg: #fff3d6; --warn: #8a5a00;
+    --info-bg: #e5eefb; --info: #1d4f87; --neutral-bg: #eceff3; --neutral: #4b5563;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171c; --card: #1c2026; --border: #2d333b; --text: #e6e9ee; --muted: #9aa5b4;
+      --accent: #5b9be0; --accent-hover: #7bb0ea; --accent-soft: #22324a; --on-accent: #0d1722;
+      --zebra: #20252c; --hover: #263243; --input: #14171c; --shadow: 0 1px 2px rgba(0,0,0,.4);
+      --reply-bg: #1e2b3d; --reply-border: #35547d; --err-bg: #3a1f1f; --err: #ff9b92;
+      --ok-bg: #173324; --ok: #7ad8a0; --warn-bg: #3b2f12; --warn: #f0c36a;
+      --info-bg: #1f2e45; --info: #8dbcf0; --neutral-bg: #2a3038; --neutral: #b3bcc9;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 24px 20px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; }
+  h1 { font-size: 1.5rem; margin: 0; font-weight: 650; }
+  h2 { font-size: 1.05rem; margin: 0; font-weight: 650; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; line-height: 1.5; white-space: nowrap; }
+  .pill:empty { display: none; }
+  .pill.live { background: var(--warn-bg); color: var(--warn); }
+  .pill.replay { background: var(--ok-bg); color: var(--ok); }
+  .s-stored { background: var(--ok-bg); color: var(--ok); }
+  .s-question, .s-answer_rejected { background: var(--info-bg); color: var(--info); }
+  .s-under_review { background: var(--warn-bg); color: var(--warn); }
+  .s-failed, .s-rejected { background: var(--err-bg); color: var(--err); }
+  .s-duplicate, .s-not_order, .s-no_line { background: var(--neutral-bg); color: var(--neutral); }
+  .error { margin: 0 0 16px; padding: 10px 14px; border-radius: 8px; background: var(--err-bg); color: var(--err); font-weight: 600; }
+  .error:empty { display: none; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 18px 20px; }
+  .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .page { padding: 16px 12px 40px; } }
+  label { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); }
+  label > input, label > select, label > textarea { margin-top: 4px; font-weight: 400; color: var(--text); }
+  label.check { display: flex; align-items: center; gap: 8px; font-size: .95rem; font-weight: 400; color: var(--text); }
+  label.check > input { margin-top: 0; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--input); color: var(--text); font: inherit; }
+  textarea { resize: vertical; }
+  input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  .field { margin-bottom: 12px; }
+  .hint { color: var(--muted); font-size: .85rem; margin: 0 0 12px; min-height: 1.3em; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem; color: var(--muted); }
+  button { font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: var(--on-accent); }
+  button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+  button.secondary { background: var(--card); color: var(--accent); border-color: var(--accent); }
+  button.secondary:hover:not(:disabled) { background: var(--accent-soft); }
+  button.quiet { background: none; color: var(--muted); font-weight: 500; padding: 8px 10px; }
+  button.quiet:hover:not(:disabled) { background: var(--neutral-bg); color: var(--text); }
+  .actions { display: flex; justify-content: flex-end; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .line { display: grid; grid-template-columns: 1fr 110px auto; gap: 10px; align-items: end; margin-bottom: 10px; }
+  .filter { width: 260px; max-width: 100%; }
+  .scroll { max-height: 18rem; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
   table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #bbb; padding: 0.2rem 0.5rem; text-align: left; }
-  td.num { text-align: right; }
-  .scroll { max-height: 18rem; overflow: auto; }
-  textarea, input[type=text] { width: 100%; box-sizing: border-box; }
-  .entry { border: 1px solid #888; margin: 0.6rem 0; padding: 0.5rem; }
-  .entry pre { white-space: pre-wrap; margin: 0.3rem 0; background: #f4f4f4; padding: 0.4rem; }
-  .error { color: #a00; font-weight: bold; }
-  .hint { color: #555; }
+  th, td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { position: sticky; top: 0; background: var(--card); z-index: 1; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); box-shadow: 0 1px 0 var(--border); }
+  tbody tr:nth-child(even) { background: var(--zebra); }
+  tbody tr:hover { background: var(--hover); }
+  tbody tr:last-child td { border-bottom: 0; }
+  th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .entry { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; background: var(--card); }
+  .entry-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .tag { padding: 1px 8px; border-radius: 6px; background: var(--neutral-bg); color: var(--neutral); font-size: .78rem; font-weight: 600; }
+  .entry-head .who { font-weight: 600; }
+  .entry-head .pill { margin-left: auto; }
+  .entry .meta { margin: 2px 0; }
+  .entry .kv { margin: 2px 0; font-size: .92rem; }
+  .entry .kv b { color: var(--muted); font-weight: 600; }
+  .reply-label { margin: 10px 0 4px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
+  .entry pre { white-space: pre-wrap; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--reply-bg); border: 1px solid var(--reply-border); font: inherit; }
+  .answer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 10px; border-radius: 8px; background: var(--accent-soft); }
+  .answer input { flex: 1 1 200px; width: auto; }
+  .empty { padding: 28px 12px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 10px; }
 </style>
 </head>
 <body>
-<h1>Orders test page</h1>
-<p class="hint" id="mode"></p>
+<div class="page">
+<header>
+  <h1>Orders test page</h1>
+  <span class="pill" id="mode"></span>
+</header>
 <p class="error" id="error"></p>
 
-<fieldset>
-  <legend>Catalog</legend>
-  <label>Filter <input type="text" id="filter" placeholder="SKU, name or family"></label>
+<section class="card">
+  <div class="card-head">
+    <h2>Catalog</h2>
+    <input type="text" id="filter" class="filter" placeholder="Filter by SKU, name or family" aria-label="Filter the catalog">
+  </div>
   <div class="scroll">
     <table>
-      <thead><tr><th>SKU</th><th>Name</th><th>Family</th><th>Sale unit</th><th>Price EUR</th><th>Stock</th></tr></thead>
+      <thead><tr><th>SKU</th><th>Name</th><th>Family</th><th>Unit</th><th class="num">Price (EUR)</th><th class="num">Stock</th></tr></thead>
       <tbody id="catalog"></tbody>
     </table>
   </div>
-</fieldset>
+</section>
 
-<fieldset>
-  <legend>Send an order</legend>
-  <p>
+<div class="grid">
+<section class="card">
+  <div class="card-head"><h2>Send an order</h2></div>
+  <div class="row">
     <label>Channel
       <select id="channel">
         <option value="web_form">Web form</option>
@@ -46,32 +128,34 @@
       </select>
     </label>
     <label>Customer <select id="customer"></select></label>
-    <span class="hint" id="identity"></span>
-  </p>
+  </div>
+  <p class="hint" id="identity"></p>
 
   <div id="form-web_form">
     <div id="lines"></div>
-    <button type="button" id="add-line">Add line</button>
+    <button type="button" id="add-line" class="secondary">Add line</button>
     <datalist id="products"></datalist>
   </div>
 
   <div id="form-email" hidden>
-    <p><label>Subject <input type="text" id="subject"></label></p>
-    <p><label>Body <textarea id="body" rows="6"></textarea></label></p>
+    <div class="field"><label>Subject <input type="text" id="subject"></label></div>
+    <div class="field"><label>Body <textarea id="body" rows="6"></textarea></label></div>
   </div>
 
   <div id="form-whatsapp" hidden>
-    <p><label>Message <textarea id="text" rows="4"></textarea></label></p>
-    <p><label><input type="checkbox" id="photo"> Send a photo instead of text</label></p>
+    <div class="field"><label>Message <textarea id="text" rows="4"></textarea></label></div>
+    <div class="field"><label class="check"><input type="checkbox" id="photo"> Send a photo instead of text</label></div>
   </div>
 
-  <p><button type="button" id="send">Send</button></p>
-</fieldset>
+  <div class="actions"><button type="button" id="send" class="primary">Send</button></div>
+</section>
 
-<fieldset>
-  <legend>Conversations</legend>
+<section class="card">
+  <div class="card-head"><h2>Conversations</h2></div>
   <div id="conversations"></div>
-</fieldset>
+</section>
+</div>
+</div>
 
 <script>
 "use strict";
@@ -116,16 +200,20 @@ function renderCatalog(products) {
 
 function addLine() {
   const row = document.createElement("div");
+  row.className = "line";
   const product = document.createElement("input");
   product.type = "text"; product.className = "product"; product.placeholder = "Product";
   product.setAttribute("list", "products");
+  const productLabel = document.createElement("label");
+  productLabel.append("Product", product);
   const quantity = document.createElement("input");
   quantity.type = "number"; quantity.className = "quantity"; quantity.min = "1"; quantity.value = "1";
-  quantity.style.width = "6rem";
+  const quantityLabel = document.createElement("label");
+  quantityLabel.append("Quantity", quantity);
   const remove = document.createElement("button");
-  remove.type = "button"; remove.textContent = "Remove";
+  remove.type = "button"; remove.textContent = "Remove"; remove.className = "quiet";
   remove.onclick = () => row.remove();
-  row.append(product, " ", quantity, " ", remove);
+  row.append(productLabel, quantityLabel, remove);
   $("lines").appendChild(row);
 }
 
@@ -155,13 +243,13 @@ function payload() {
 
 async function send() {
   showError("");
-  $("send").disabled = true;
+  $("send").disabled = true; $("send").textContent = "Sending...";
   try {
     await api("/api/send", payload());
     if ($("channel").value === "whatsapp") { $("text").value = ""; }
     await loadConversations();
   } catch (error) { showError(error.message); }
-  $("send").disabled = false;
+  $("send").disabled = false; $("send").textContent = "Send";
 }
 
 async function answer(entry, box, button) {
@@ -182,48 +270,73 @@ function answerWhatsApp(entry, box) {
   $("text").focus();
 }
 
-function line(parent, label, value) {
+function line(parent, label, value, className) {
   if (value === null || value === undefined || value === "") return;
   const p = document.createElement("div");
-  p.textContent = label + ": " + value;
+  p.className = className || "kv";
+  if (label) { const b = document.createElement("b"); b.textContent = label + ": "; p.appendChild(b); }
+  p.append(String(value));
   parent.appendChild(p);
 }
 
 function renderConversations(entries) {
   const root = $("conversations");
   root.textContent = "";
-  if (!entries.length) { root.textContent = "Nothing sent yet."; return; }
+  if (!entries.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty"; empty.textContent = "Nothing sent yet.";
+    root.appendChild(empty);
+    return;
+  }
   for (const entry of [...entries].reverse()) {
     const div = document.createElement("div");
     div.className = "entry";
-    const title = document.createElement("strong");
-    title.textContent = entry.at + "  " + entry.channel + "  " + entry.customer + " " + entry.customer_name;
-    div.appendChild(title);
+    const head = document.createElement("div");
+    head.className = "entry-head";
+    const tag = document.createElement("span");
+    tag.className = "tag"; tag.textContent = entry.channel;
+    const who = document.createElement("span");
+    who.className = "who"; who.textContent = entry.customer + " " + entry.customer_name;
+    const when = document.createElement("span");
+    when.className = "mono"; when.textContent = entry.at;
+    head.append(tag, who, when);
+    if (entry.status) {
+      const pill = document.createElement("span");
+      pill.className = "pill s-" + entry.status; pill.textContent = entry.status;
+      head.appendChild(pill);
+    }
+    div.appendChild(head);
     line(div, "Sent", entry.sent);
-    line(div, "Route", entry.route + (entry.reason ? " (" + entry.reason + ")" : ""));
-    line(div, "Thread", entry.thread_id);
+    line(div, "Route", entry.route + (entry.reason ? " (" + entry.reason + ")" : ""), "mono meta");
+    line(div, "Thread", entry.thread_id, "mono meta");
     line(div, "Outcome", entry.outcome);
     line(div, "Order", entry.order_id);
     if (entry.reply) {
       const asking = entry.status === "question" || entry.status === "answer_rejected";
       const label = asking ? "Question to the customer" : "Reply to the customer";
-      line(div, label, "");
+      line(div, "", label, "reply-label");
       const pre = document.createElement("pre");
       pre.textContent = entry.reply;
       div.appendChild(pre);
     }
     if (entry.pending && entry.can_answer) {
+      const wrap = document.createElement("div");
+      wrap.className = "answer";
       const box = document.createElement("input");
       box.type = "text"; box.placeholder = "The customer's answer";
       const button = document.createElement("button");
-      button.type = "button"; button.textContent = "Answer";
+      button.type = "button"; button.textContent = "Answer"; button.className = "primary";
       button.onclick = () => answer(entry, box, button);
-      div.append(box, button);
+      wrap.append(box, button);
+      div.appendChild(wrap);
     } else if (entry.pending) {
+      const wrap = document.createElement("div");
+      wrap.className = "answer";
       const button = document.createElement("button");
-      button.type = "button"; button.textContent = "Answer with a WhatsApp message";
+      button.type = "button"; button.textContent = "Answer with a WhatsApp message"; button.className = "secondary";
       button.onclick = () => answerWhatsApp(entry);
-      div.appendChild(button);
+      wrap.appendChild(button);
+      div.appendChild(wrap);
     }
     root.appendChild(div);
   }
@@ -234,8 +347,10 @@ async function loadConversations() { renderConversations(await api("/api/convers
 async function start() {
   try {
     const info = await api("/api/info");
-    $("mode").textContent = "Mode: " + info.mode + (info.mode === "replay"
-      ? " (only the recorded sample texts are understood)" : " (the model answers; it costs a few cents per order)");
+    $("mode").className = "pill " + (info.mode === "replay" ? "replay" : "live");
+    $("mode").textContent = info.mode === "replay" ? "Replay - only the recorded sample texts are understood"
+      : "Live - costs a few cents per order";
+    $("mode").title = "Mode: " + info.mode;
     const products = await api("/api/catalog");
     renderCatalog(products);
     $("filter").oninput = () => renderCatalog(products);
