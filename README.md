@@ -390,6 +390,52 @@ Limits:
 - Each sample can be stored only once per Studio database: running it again returns the order already stored.
   To replay a sample from scratch, stop the server and delete `data/studio/` and `.langgraph_api/`; the database is seeded again on next use (move your inbox files out first).
 
+## Try the orders by hand
+
+```
+uv run purchase-cycle ui
+```
+
+Open `http://127.0.0.1:8765/` (`--port N` picks another port).
+The page lists the catalog with stock and a text filter, and the seeded customers with the email and phone each channel uses to identify them.
+Pick a channel and a customer, write the order and press Send:
+
+- Web form: one line per product and quantity; the product box suggests names from the catalog.
+- Email: a subject and a body, sent from the customer's email.
+- WhatsApp: a text, sent from the customer's phone; the photo box sends an image message, which is answered as text only.
+
+The page uses three columns on a wide screen, each scrolling on its own: the new order on the left, the catalog, stock shortfalls and database in the centre, the conversations on the right; on a narrow screen they stack in one column.
+A stored order shows as an order block in its conversation, with its lines, amounts, stock and the lines short of stock.
+The Database card shows the page's own tables (orders, order lines, stock, quote requests, quote offers, purchase orders), read only, with a Refresh button.
+The "Check stock shortfalls" button starts one quote request per short SKU and puts the request emails in the outbox; it makes no model call.
+A SKU whose earlier request is still waiting for supplier replies does not get a new one.
+Supplier replies, the decision and the approval are not on the page.
+
+Each send writes one input in the channel's own format under `data/ui/inbox/` and runs it through the router, as `purchase-cycle route` does.
+The conversation list shows the route, the thread id, the outcome (stored order, question, not an order, rejected) and the reply the customer would get.
+
+Modes:
+
+- `--mode live` (default) calls Claude Haiku 4.5, needs the key in `.env` and understands free text; it costs a few cents per order.
+- `--mode replay` costs nothing and needs no key, but only understands the recorded sample texts of `examples/orders/`: send those texts to see the same outcomes as `purchase-cycle orders-demo` (its recordings `orders_demo.jsonl`).
+
+LangSmith tracing is always off, so the page spends no trace quota.
+
+When the system asks a question, it shows in the conversation.
+For a web form or email order, write the answer in the box under the question and press Answer; the paused order resumes and shows its outcome.
+For WhatsApp, the answer is a new message from the same customer: use the button under the question, write the text and send it.
+
+To start over, stop the server and delete the `data/ui/` folder; the next start seeds it again.
+The page uses its own database, checkpoints and outbox under `data/ui/`, never the business database.
+
+Limits:
+
+- It is a local simulation: nothing is sent to a real WhatsApp, email or web channel, and the server accepts connections from this machine only.
+- One request runs at a time; a live order waits for the model.
+- Every send gets a new message id, so the page cannot re-deliver a message (the duplicate case of `examples/orders/06-whatsapp-order-again.json`).
+- Email has no attachments and WhatsApp no media beyond the photo box.
+- The conversation list is kept in `data/ui/conversations.jsonl`.
+
 ## Run the tests
 
 ```
