@@ -203,3 +203,139 @@ def test_seed_twice_keeps_the_decision_tables_empty_and_the_other_rows(tmp_path)
     first = {t: _rows(conn, t) for t in tables}
     db.seed(conn)
     assert {t: _rows(conn, t) for t in tables} == first
+
+
+RECONCILIATION_TABLES = ("supplier_documents", "document_lines", "reconciliations", "discrepancies")
+OLD_TABLES = ("customers", "products", "stock", "suppliers", "supplier_families", "quote_offers", "purchase_orders")
+
+
+def _document(conn, number="INV-X", content_hash="h1", status="extracted", kind="invoice"):
+    conn.execute(
+        "INSERT INTO supplier_documents (kind, number, po_reference, supplier_text, purchase_order_id, supplier_code, issue_date, "
+        "currency, source_file, content_hash, status, reason, created_at) "
+        "VALUES (?, ?, NULL, NULL, NULL, NULL, NULL, 'EUR', 'f.txt', ?, ?, NULL, 't')",
+        (kind, number, content_hash, status),
+    )
+
+
+def test_seed_creates_empty_reconciliation_tables(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    counts = db.seed(conn)
+    assert [r["name"] for r in conn.execute("PRAGMA table_info(supplier_documents)")] == [
+        "id",
+        "kind",
+        "number",
+        "po_reference",
+        "supplier_text",
+        "purchase_order_id",
+        "supplier_code",
+        "issue_date",
+        "currency",
+        "source_file",
+        "content_hash",
+        "status",
+        "reason",
+        "created_at",
+    ]
+    assert [r["name"] for r in conn.execute("PRAGMA table_info(document_lines)")] == [
+        "document_id",
+        "line_no",
+        "sku",
+        "product_text",
+        "quantity",
+        "unit_price",
+        "line_total",
+    ]
+    assert [r["name"] for r in conn.execute("PRAGMA table_info(reconciliations)")] == [
+        "id",
+        "invoice_id",
+        "purchase_order_id",
+        "delivery_note_id",
+        "result",
+        "reconciled_at",
+    ]
+    assert [r["name"] for r in conn.execute("PRAGMA table_info(discrepancies)")] == [
+        "id",
+        "reconciliation_id",
+        "sku",
+        "type",
+        "expected",
+        "found",
+        "unit_amount",
+        "amount",
+    ]
+    for table in RECONCILIATION_TABLES:
+        assert conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0
+    assert set(counts) == {"customers", "products", "stock", "orders", "order_lines"}
+
+
+def test_seed_twice_keeps_the_reconciliation_tables_and_the_other_rows(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    tables = OLD_TABLES + RECONCILIATION_TABLES
+    first = {t: _rows(conn, t) for t in tables}
+    db.seed(conn)
+    assert {t: _rows(conn, t) for t in tables} == first
+
+
+def test_a_phase_07_database_gains_the_reconciliation_tables_without_losing_rows(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    for table in reversed(RECONCILIATION_TABLES):
+        conn.execute(f"DROP TABLE {table}")
+    conn.execute(
+        "INSERT INTO quote_requests (sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
+        "VALUES ((SELECT sku FROM products LIMIT 1), 5, 'th', 'ordered', 't', 't', 't')"
+    )
+    conn.commit()
+    before = {t: _rows(conn, t) for t in OLD_TABLES + ("quote_requests",)}
+    db.seed(conn)
+    assert {t: _rows(conn, t) for t in OLD_TABLES + ("quote_requests",)} == before
+    for table in RECONCILIATION_TABLES:
+        assert conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0
+
+
+def test_document_status_kind_result_and_type_checks_reject_unknown_values(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    for status in ("extracted", "linked", "unlinked", "extraction_failed"):
+        _document(conn, number=status, content_hash=status, status=status)
+    with pytest.raises(sqlite3.IntegrityError):
+        _document(conn, number="bad", content_hash="bad", status="done")
+    with pytest.raises(sqlite3.IntegrityError):
+        _document(conn, number="bad", content_hash="bad2", kind="receipt")
+    invoice = conn.execute("SELECT id FROM supplier_documents LIMIT 1").fetchone()[0]
+    sku = conn.execute("SELECT sku FROM products LIMIT 1").fetchone()[0]
+    conn.execute(
+        "INSERT INTO quote_requests (sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
+        "VALUES (?, 5, 'th', 'ordered', 't', 't', 't')",
+        (sku,),
+    )
+    conn.execute(
+        "INSERT INTO purchase_orders (request_id, supplier_code, sku, quantity, unit_price, currency, total, "
+        "expected_delivery, issued_at, status) VALUES (1, (SELECT code FROM suppliers LIMIT 1), ?, 5, 1.0, 'EUR', "
+        "5.0, 't', 't', 'issued')",
+        (sku,),
+    )
+    insert = "INSERT INTO reconciliations (invoice_id, purchase_order_id, result, reconciled_at) VALUES (?, 1, ?, 't')"
+    for i, result in enumerate(("matched", "discrepancies", "awaiting_delivery_note")):
+        conn.execute(insert, (invoice + i, result))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(insert, (invoice + 3, "unlinked"))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(insert, (invoice, "matched"))  # one reconciliation per invoice
+    add = "INSERT INTO discrepancies (reconciliation_id, sku, type, expected, found, unit_amount, amount) VALUES (1, ?, ?, 1, 2, 1, 1)"
+    for kind in ("price", "quantity", "extra_line", "missing_line"):
+        conn.execute(add, (sku, kind))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(add, (sku, "other"))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(add, (sku, "price"))  # unique on reconciliation, sku and type
+
+
+def test_the_content_hash_is_unique(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    _document(conn, number="A", content_hash="same")
+    with pytest.raises(sqlite3.IntegrityError):
+        _document(conn, number="B", content_hash="same")

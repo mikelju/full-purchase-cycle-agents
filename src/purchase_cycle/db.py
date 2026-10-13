@@ -136,6 +136,51 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
     issued_at TEXT NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('issued'))
 );
+CREATE TABLE IF NOT EXISTS supplier_documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT CHECK (kind IN ('invoice', 'delivery_note')),
+    number TEXT,
+    po_reference TEXT,
+    supplier_text TEXT,
+    purchase_order_id INTEGER REFERENCES purchase_orders (id),
+    supplier_code TEXT REFERENCES suppliers (code),
+    issue_date TEXT,
+    currency TEXT,
+    source_file TEXT NOT NULL,
+    content_hash TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL CHECK (status IN ('extracted', 'linked', 'unlinked', 'extraction_failed')),
+    reason TEXT,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS document_lines (
+    document_id INTEGER NOT NULL REFERENCES supplier_documents (id),
+    line_no INTEGER NOT NULL,
+    sku TEXT,
+    product_text TEXT NOT NULL,
+    quantity REAL NOT NULL,
+    unit_price REAL,
+    line_total REAL,
+    PRIMARY KEY (document_id, line_no)
+);
+CREATE TABLE IF NOT EXISTS reconciliations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_id INTEGER NOT NULL UNIQUE REFERENCES supplier_documents (id),
+    purchase_order_id INTEGER NOT NULL REFERENCES purchase_orders (id),
+    delivery_note_id INTEGER REFERENCES supplier_documents (id),
+    result TEXT NOT NULL CHECK (result IN ('matched', 'discrepancies', 'awaiting_delivery_note')),
+    reconciled_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS discrepancies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reconciliation_id INTEGER NOT NULL REFERENCES reconciliations (id),
+    sku TEXT,
+    type TEXT NOT NULL CHECK (type IN ('price', 'quantity', 'extra_line', 'missing_line')),
+    expected REAL,
+    found REAL,
+    unit_amount REAL,
+    amount REAL,
+    UNIQUE (reconciliation_id, sku, type)
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")
