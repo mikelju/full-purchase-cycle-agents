@@ -5,10 +5,16 @@ from datetime import datetime
 
 import pytest
 
-from purchase_cycle import db, llm, quote_decision
+from conftest import make_email
+from purchase_cycle import db, email_order, llm, quote_decision
 
 SKU = "GLV-NIT-XS"
 SUPPLIERS = ["SUP-001", "SUP-002", "SUP-003"]
+SENDERS = {
+    "SUP-001": "ofertas@suministros-iberia.example.com",
+    "SUP-002": "ventas@dissanorte.example.com",
+    "SUP-003": "comercial@clinicolevante.example.com",
+}
 GOOD = {
     "offers": True,
     "quantity": 12,
@@ -22,10 +28,10 @@ GOOD = {
 }
 
 
-def _reply(tmp_path, supplier, body):
+def _reply(tmp_path, supplier, body, sender=None):
     path = tmp_path / f"QR-0001-{supplier}.eml"
     path.write_text(
-        f"From: ventas@{supplier.lower()}.example.com\nTo: purchasing@distributor.example.com\n"
+        f"From: {sender or SENDERS[supplier]}\nTo: purchasing@distributor.example.com\n"
         f"Subject: Re: Quote request QR-0001 - {SKU}\n\n{body}\n",
         encoding="utf-8",
     )
@@ -246,11 +252,79 @@ def test_no_usable_offer_gives_no_recommendation_and_names_the_reasons():
     assert _pick([])["supplier"] is None
 
 
-def test_comparing_calls_no_model(tmp_path):
-    client = _client_without_calls(tmp_path)
+def test_comparing_calls_no_model(tmp_path, monkeypatch):
+    bodies = ["A reply.", None, None]
+    db_path, conn = _setup(tmp_path, bodies)
+    quote_decision.extract_offers(db_path, 1, _client(tmp_path, bodies, [GOOD, None, None]))
+
+    def forbidden(self, *args, **kwargs):
+        raise AssertionError("the comparison called the model")
+
+    monkeypatch.setattr(llm.ModelClient, "extract", forbidden)
     _pick([_offer("SUP-001"), _offer("SUP-002", net=3.0)])
+    assert quote_decision.recommendation(conn, 1)["supplier"] == "SUP-001"
+
+
+def test_totals_are_compared_unrounded_and_rounded_only_for_display():
+    # 3 x 1.0003 = 3.0009 and 3 x 1.0001 = 3.0003 both display as 3.00, but the second is lower.
+    result = _pick([_offer("SUP-001", net=1.0003), _offer("SUP-002", net=1.0001)], quantity=3)
+    assert (result["supplier"], result["rule"], result["total"]) == ("SUP-002", "lowest_total", 3.0)
+    assert "SUP-002 EUR 3.00" in result["reason"] and "SUP-001 EUR 3.00" in result["reason"]
+
+
+def test_the_lead_time_is_counted_from_the_given_decision_date():
+    offers = [_offer("SUP-001", lead=3, working=True), _offer("SUP-002", lead=4)]
+    assert quote_decision.compare_offers(offers, 12, START)["supplier"] == "SUP-001"  # Monday: 3 vs 4 days
+    friday = datetime(2026, 10, 16, 9, 0)  # Friday: 3 working days are 5 calendar days
+    result = quote_decision.compare_offers(offers, 12, friday)
+    assert result["supplier"] == "SUP-002" and "SUP-001 EUR 48.00 (full, 5 days)" in result["reason"]
+
+
+def test_a_reply_file_replaced_by_one_from_another_sender_is_not_extracted(tmp_path):
+    bodies = ["We offer 12 boxes at 4.10 EUR, 5 working days.", None, None]
+    db_path, conn = _setup(tmp_path, bodies)
+    _reply(tmp_path, "SUP-001", bodies[0], sender="attacker@evil.example.com")
+    client = _client(tmp_path, bodies, [GOOD, None, None])
+    quote_decision.extract_offers(db_path, 1, client)
+    row = _offers(conn)["SUP-001"]
     assert client.calls == 0
+    assert (row["usable"], row["reason"], row["unit_price"]) == (0, "extraction_failed", None)
+    assert "not the supplier" in db.get_failure(conn, "offer-QR-0001-SUP-001")["error"]
 
 
-def _client_without_calls(tmp_path):
-    return llm.ModelClient("replay", [], recordings_path=tmp_path / "none.jsonl", task=llm.OFFER_EXTRACTION)
+def test_a_reply_file_for_another_request_is_not_extracted(tmp_path):
+    bodies = ["We offer 12 boxes at 4.10 EUR, 5 working days.", None, None]
+    db_path, conn = _setup(tmp_path, bodies)
+    path = _reply(tmp_path, "SUP-001", bodies[0])
+    path.write_text(path.read_text(encoding="utf-8").replace("QR-0001", "QR-0002"), encoding="utf-8")
+    client = _client(tmp_path, bodies, [GOOD, None, None])
+    quote_decision.extract_offers(db_path, 1, client)
+    assert client.calls == 0 and _offers(conn)["SUP-001"]["reason"] == "extraction_failed"
+
+
+def test_a_reply_body_over_the_email_limit_is_unusable_and_calls_no_model(tmp_path):
+    bodies = ["We offer 12 boxes. " + "x" * email_order.MAX_EMAIL_TEXT, None, None]
+    db_path, conn = _setup(tmp_path, bodies)
+    client = _client(tmp_path, ["short", None, None], [GOOD, None, None])
+    quote_decision.extract_offers(db_path, 1, client)
+    row = _offers(conn)["SUP-001"]
+    assert client.calls == 0 and (row["usable"], row["reason"]) == (0, "extraction_failed")
+    assert "characters" in db.get_failure(conn, "offer-QR-0001-SUP-001")["error"]
+
+
+def test_attachments_of_a_reply_are_not_parsed(tmp_path):
+    bodies = ["We offer 12 boxes at 4.10 EUR, 5 working days.", None, None]
+    db_path, conn = _setup(tmp_path, bodies)
+    path = _reply(tmp_path, "SUP-001", bodies[0])
+    make_email(
+        path,
+        SENDERS["SUP-001"],
+        subject=f"Re: Quote request QR-0001 - {SKU}",
+        body=bodies[0],
+        attachments=[("offer.pdf", b"this is not a pdf", "application/pdf")],
+    )
+    with pytest.raises(email_order.EmailRejected):  # the full parser would read the attachment and fail
+        email_order.parse_email(path.read_bytes())
+    client = _client(tmp_path, bodies, [GOOD, None, None])
+    quote_decision.extract_offers(db_path, 1, client)
+    assert client.calls == 1 and _offers(conn)["SUP-001"]["usable"] == 1

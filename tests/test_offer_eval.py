@@ -191,3 +191,22 @@ def test_eval_upload_includes_the_offer_suite(monkeypatch):
     )
     assert harness.cmd_upload(argparse.Namespace(suite="all")) == 0
     assert "offer_extraction" in uploaded
+
+
+def test_critical_error_also_fires_when_the_vat_misread_moves_the_net_price():
+    case = next(c for c in od.load_dataset() if c["id"] == "OFF-074")
+    assert case["expected"]["vat_included"] and case["expected_net_price"] is not None
+    assert not offer_eval.grade(case, perfect(case))["critical_errors"]
+    misread = offer_eval.grade(case, {**perfect(case), "vat_included": False, "vat_rate": None})
+    assert misread["usable"] and misread["unit_price_accuracy"] is True and misread["critical_errors"]
+    near = {**perfect(case), "unit_price": case["expected"]["unit_price"] + 0.004}
+    assert not offer_eval.grade(case, near)["critical_errors"]
+
+
+def test_per_category_report_lists_offer_vat_and_lead_time_accuracy(suite, capsys):
+    _set_baseline(suite)
+    capsys.readouterr()
+    suite()
+    out = capsys.readouterr().out.split("per category:")[1]
+    for metric in ("offer_accuracy", "vat_accuracy", "lead_time_accuracy"):
+        assert metric in out

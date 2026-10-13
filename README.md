@@ -287,7 +287,7 @@ Each request has its own LangGraph thread `decision-QR-NNNN`, separate from the 
 
 - Unusable offers are left out of the recommendation and shown with their reason.
 - Offers that cover the full requested quantity come first; among them the lowest total wins, where the total is the net unit price (before VAT) times the requested quantity.
-- A tie goes to the shorter lead time in calendar days, then to the lower supplier code. Working days count Monday to Friday with no holidays and weeks count as 7 days.
+- A tie goes to the shorter lead time in calendar days from the decision date, then to the lower supplier code. Working days count Monday to Friday with no holidays and weeks count as 7 days.
 - A partial offer is recommended only when no usable offer covers the full quantity; among partial offers the same order applies, with the total over the offered quantity.
 - No order is split between suppliers. The recommendation carries a reason text from a fixed template that names the deciding rule and the compared totals.
 
@@ -492,6 +492,10 @@ The 120 supplier replies in `evals/datasets/offer_extraction/` were built with t
 4. A fixed stratified split gives 30 development and 90 test replies; only the development split was used to tune the instructions.
 5. There is no owner audit of the labels (owner decision D11): the labels come from the planning script and the second pass.
 
+The steps run as `uv run purchase-cycle offer-dataset plan`, `check`, `build`, `blind` (writes the replies and label rules for the blind annotator) and `review` (compares the annotator's readings with the labels).
+
+The 39 scenarios of `evals/datasets/quote_decision/` are hand-built by `uv run python -m purchase_cycle.evaluation.quote_decision_eval`, which rewrites them from the scenario definitions in that module.
+
 ## Run the evaluation
 
 ```
@@ -597,12 +601,12 @@ The Claude Haiku 4.5 baseline on the 90 test replies (`evals/baselines/offer_ext
 
 The one failing reply is a missing-price reply with a wrong working-days flag, which does not change its usability.
 About 90 replies give a wide interval at reply level and about 9 per category, so the per-category figures are indicative only.
-`uv run purchase-cycle eval --suite quote_decision` runs the 37 hand-built scenarios of `evals/datasets/quote_decision/` through the same functions as the CLI on a temporary database, with the extracted offers given by a test double so no model is called.
+`uv run purchase-cycle eval --suite quote_decision` runs the 39 hand-built scenarios of `evals/datasets/quote_decision/` through the same functions as the CLI on a temporary database, with the extracted offers given by a test double so no model is called.
 They cover a single full offer, a cheaper partial offer against a full one, ties decided by lead time and by supplier code, only partial offers, no usable offer, approve, choose another offer, a refused choice, reject, approve twice and a process restart between decide and approve; each tag has at least three scenarios.
 The grader reads the database, the outbox, `failures` and the printed recommendation, and counts seven critical errors against an oracle apart from the module: more than one order for a request, an order for a rejected, `no_offers` or unapproved request, an order from an unusable offer, an order that differs from the chosen offer, a recommendation that differs from the rule, a request status that does not match its order, and a model call on a re-run or a resumption.
-Scenario success is 100.0% (90.6% to 100.0%, 37 of 37) with 0 critical errors; the gate is 100% success and 0 critical errors.
+Scenario success is 100.0% (91.0% to 100.0%, 39 of 39) with 0 critical errors; the gate is 100% success and 0 critical errors.
 
-`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the six dataset evaluations once; `--suite <name>` uploads one; `offer_extraction` is uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait` and `quote_decision` are not).
+`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the seven dataset evaluations once; `--suite <name>` uploads one; `offer_extraction` is uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait` and `quote_decision` are not).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
 Recordings in `evals/recordings/` are tied to the exact prompt and model: changing either needs a new recording and a new comparison against the baseline.
 

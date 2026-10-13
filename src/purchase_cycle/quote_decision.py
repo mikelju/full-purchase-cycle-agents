@@ -1,4 +1,9 @@
-"""Quotes module, decision step: extract one offer per supplier reply, check it and store it."""
+"""Quotes module, decision step.
+
+Extract one offer per supplier reply, check it and store it; compare the usable offers by the fixed rule and pause
+the request for a person; then issue one purchase order and its email on approval, or close the request on reject.
+A decision thread is one LangGraph run per request: extract, compare, approve (the pause), then issue or close.
+"""
 
 import sqlite3
 from datetime import datetime
@@ -112,6 +117,24 @@ def stored_offers(conn: sqlite3.Connection, request_id: int) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def reply_body(conn: sqlite3.Connection, request_id: int, supplier: str, reply_file: str) -> str:
+    """The body of a reply file after the sender and reference check; attachments are never parsed.
+
+    The file is checked again here because it may have changed since `quotes receive` accepted it.
+    """
+    message, sender = email_order._parse_message(Path(reply_file).read_bytes())
+    row = conn.execute("SELECT email FROM suppliers WHERE code = ?", (supplier,)).fetchone()
+    if row is None or sender.lower() != row["email"].lower():
+        raise email_order.EmailRejected(f"the sender {sender} is not the supplier {supplier}")
+    found = quotes.REFERENCE.search(email_order._subject(message))
+    if not found or int(found.group(1)) != request_id:
+        raise email_order.EmailRejected(f"the subject does not name {quotes.reference(request_id)}")
+    body = email_order._body(message, email_order._attachment_parts(message))
+    if len(body) > email_order.MAX_EMAIL_TEXT:
+        raise email_order._too_long()
+    return body
+
+
 def extract_offers(db_path: Path | str, request_id: int, client: llm.ModelClient) -> list[dict]:
     """Store one offer per replied supplier of a request and return every stored offer.
 
@@ -132,7 +155,7 @@ def extract_offers(db_path: Path | str, request_id: int, client: llm.ModelClient
             if supplier in done:
                 continue
             try:
-                body = email_order.parse_email(Path(reply_file).read_bytes())["body"]
+                body = reply_body(conn, request_id, supplier, reply_file)
                 text = model_text(request, body)
                 fields = client.extract(text, case_id=offer_thread_id(request_id, supplier)).model_dump()
             except (OSError, email_order.EmailRejected, llm.InvalidModelOutput) as error:
@@ -166,6 +189,7 @@ def _entry(offer: dict, requested: int, start: datetime) -> dict:
         "supplier": offer["supplier_code"],
         "full": full,
         "quantity": quantity,
+        "exact": offer["net_unit_price"] * quantity,  # compared as it is; the rounded total is for display
         "total": round(offer["net_unit_price"] * quantity, 2),
         "lead": lead_days(offer, start),
     }
@@ -190,7 +214,7 @@ def compare_offers(offers: list[dict], requested: int, start: datetime) -> dict:
         return {"supplier": None, "rule": "none", "quantity": None, "total": None, "reason": f"No usable offer: {why}."}
     entries = sorted(
         (_entry(o, requested, start) for o in usable),
-        key=lambda e: (not e["full"], e["total"], e["lead"], e["supplier"]),
+        key=lambda e: (not e["full"], e["exact"], e["lead"], e["supplier"]),
     )
     best = entries[0]
     if len(entries) == 1:
@@ -199,7 +223,7 @@ def compare_offers(offers: list[dict], requested: int, start: datetime) -> dict:
         second = entries[1]
         if best["full"] != second["full"]:
             rule, text = "full_quantity", "it is the only offer that covers the full quantity"
-        elif best["total"] != second["total"]:
+        elif best["exact"] != second["exact"]:
             rule, text = "lowest_total", "it has the lowest total"
         elif best["lead"] != second["lead"]:
             rule, text = "shortest_lead_time", "totals are equal and it has the shortest lead time"
@@ -267,15 +291,22 @@ def po_number(order_id: int) -> str:
 
 
 def recommendation(conn: sqlite3.Connection, request_id: int) -> dict:
-    """The recommendation over the stored offers, anchored on the request creation time so it never moves."""
+    """The recommendation over the stored offers; lead times count from the simulated clock now."""
     request = request_row(conn, request_id)
-    start = datetime.strptime(request["created_at"], sim_clock.FORMAT)
-    return compare_offers(stored_offers(conn, request_id), request["quantity"], start)
+    return compare_offers(stored_offers(conn, request_id), request["quantity"], sim_clock.now(conn))
 
 
 def _set_status(conn: sqlite3.Connection, request_id: int, status: str, expected: str) -> None:
+    """Move the request from `expected` to `status`; a re-run that finds it already moved is not an error."""
     with conn:
-        conn.execute("UPDATE quote_requests SET status = ? WHERE id = ? AND status = ?", (status, request_id, expected))
+        changed = conn.execute(
+            "UPDATE quote_requests SET status = ? WHERE id = ? AND status = ?", (status, request_id, expected)
+        ).rowcount
+    if not changed:
+        row = conn.execute("SELECT status FROM quote_requests WHERE id = ?", (request_id,)).fetchone()
+        current = row["status"] if row else "unknown"
+        if current != status:
+            raise DecisionRefused(f"request {quotes.reference(request_id)} is {current}, not {expected}")
 
 
 def issue_order(conn: sqlite3.Connection, outbox: Path | str, request_id: int, supplier: str) -> dict:
@@ -394,12 +425,12 @@ def build_quote_decision_graph(
     return builder.compile(checkpointer=checkpointer, name="quote_decision")
 
 
-def decide(db_path: Path | str, checkpointer, client: llm.ModelClient, outbox: Path | str | None = None) -> dict:
+def decide(db_path: Path | str, checkpointer, client: llm.ModelClient) -> dict:
     """Start the decision of every `ready_for_decision` request; each runs to its pause in `approve`.
 
     Returns the decisions started and the references of the `no_offers` requests, which wait for a person.
     """
-    graph = build_quote_decision_graph(db_path, client, outbox, checkpointer)
+    graph = build_quote_decision_graph(db_path, client, None, checkpointer)
     conn = db.connect(db_path)
     decided = []
     try:
@@ -440,23 +471,51 @@ def _check_awaiting(conn: sqlite3.Connection, request_id: int) -> None:
         raise DecisionRefused(f"request {ref} is {row['status']}, not {AWAITING}")
 
 
-def _resume(db_path: Path | str, checkpointer, outbox, request_id: int, answer: dict) -> None:
+def _paused(db_path: Path | str, checkpointer, request_id: int) -> tuple[str | None, dict]:
+    """The node the decision thread waits at (None when it has no checkpoint or is finished) and its state."""
+    graph = build_quote_decision_graph(db_path, None, None, checkpointer)
+    state = graph.get_state(_decision_config(request_id))
+    return (state.next[0] if state.next else None), state.values
+
+
+def _resume(db_path: Path | str, checkpointer, outbox, request_id: int, answer: dict | None) -> None:
+    """Resume the thread with an answer for the pause, or with none to finish a node that stopped halfway."""
     graph = build_quote_decision_graph(db_path, None, outbox, checkpointer)
-    graph.invoke(Command(resume=answer), _decision_config(request_id))
+    graph.invoke(None if answer is None else Command(resume=answer), _decision_config(request_id))
+
+
+def _no_pause(ref: str) -> DecisionRefused:
+    return DecisionRefused(f"no paused decision for {ref} in the checkpoints file; run quotes decide first")
 
 
 def approve_request(
     db_path: Path | str, checkpointer, outbox: Path | str, request_id: int, supplier: str | None = None
 ) -> dict:
-    """Approve the recommendation, or the usable offer of `supplier`; refused commands change nothing."""
+    """Approve the recommendation, or the usable offer of `supplier`; refused commands change nothing.
+
+    A thread that stopped inside `issue` can only be finished for the supplier it already chose.
+    """
     ref = quotes.reference(request_id)
     conn = db.connect(db_path)
     try:
         _check_awaiting(conn, request_id)
-        if supplier is None:
-            chosen = recommendation(conn, request_id)["supplier"]
+        node, values = _paused(db_path, checkpointer, request_id)
+        answer = None
+        if node == "issue":
+            chosen = values["supplier"]
+            if supplier not in (None, chosen):
+                raise DecisionRefused(
+                    f"the order of {ref} was already started with {chosen}; approve it with that supplier"
+                )
+        elif node == "close":
+            raise DecisionRefused(f"request {ref} is being rejected; run reject to finish it")
+        elif node != "approve":
+            raise _no_pause(ref)
+        elif supplier is None:
+            chosen = values["recommendation"]["supplier"]  # the recommendation that was shown at decide
             if chosen is None:
                 raise DecisionRefused(f"request {ref} has no usable offer; only reject is accepted")
+            answer = {"action": APPROVE, "supplier": chosen}
         else:
             chosen = supplier
             offer = next((o for o in stored_offers(conn, request_id) if o["supplier_code"] == chosen), None)
@@ -464,24 +523,37 @@ def approve_request(
                 raise DecisionRefused(f"supplier {chosen} made no offer for {ref}")
             if not offer["usable"]:
                 raise DecisionRefused(f"the offer of {chosen} for {ref} is not usable ({offer['reason']})")
+            answer = {"action": CHOOSE, "supplier": chosen}
     finally:
         conn.close()
-    action = APPROVE if supplier is None else CHOOSE
-    _resume(db_path, checkpointer, outbox, request_id, {"action": action, "supplier": chosen})
+    _resume(db_path, checkpointer, outbox, request_id, answer)
     conn = db.connect(db_path)
     try:
         order = conn.execute("SELECT * FROM purchase_orders WHERE request_id = ?", (request_id,)).fetchone()
-        return {"reference": ref, "supplier": chosen, "order": dict(order), "number": po_number(order["id"])}
+        return {
+            "reference": ref,
+            "supplier": order["supplier_code"],
+            "order": dict(order),
+            "number": po_number(order["id"]),
+        }
     finally:
         conn.close()
 
 
 def reject_request(db_path: Path | str, checkpointer, request_id: int) -> dict:
     """Close an awaiting request as `rejected`, with no purchase order and no email."""
+    ref = quotes.reference(request_id)
     conn = db.connect(db_path)
     try:
         _check_awaiting(conn, request_id)
     finally:
         conn.close()
-    _resume(db_path, checkpointer, None, request_id, {"action": REJECT})
-    return {"reference": quotes.reference(request_id), "status": REJECTED}
+    node, values = _paused(db_path, checkpointer, request_id)
+    if node == "issue":
+        raise DecisionRefused(
+            f"the order of {ref} was already started with {values['supplier']}; run approve to finish it"
+        )
+    if node not in ("approve", "close"):
+        raise _no_pause(ref)
+    _resume(db_path, checkpointer, None, request_id, {"action": REJECT} if node == "approve" else None)
+    return {"reference": ref, "status": REJECTED}

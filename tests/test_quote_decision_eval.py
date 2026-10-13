@@ -163,3 +163,30 @@ def test_the_quote_decision_suite_passes_through_the_cli(capsys, no_network):
     for tag in qd.TAGS:
         assert f"  {tag:<18} 100.0%" in out
     assert no_network == []
+
+
+def test_a_printed_reason_with_the_rule_but_wrong_totals_fails_the_scenario(tmp_path, capsys, monkeypatch, no_network):
+    item, folder = _one(tmp_path)
+    real = qd._run_step
+
+    def step(s, paths):
+        code, out, err = real(s, paths)
+        return code, out.replace("EUR 49.20", "EUR 49.21"), err
+
+    monkeypatch.setattr(qd, "_run_step", step)
+    assert qd.evaluate("replay", "test", dataset_dir=folder) == 1
+    assert f"  {item['id']}  expected" in capsys.readouterr().out
+
+
+def test_the_oracle_counts_lead_times_from_the_decision_date():
+    item = next(i for i in qd.load_dataset() if i["id"] == "QD-038")
+    assert qd._decision_date(item) == qd.START + qd.timedelta(days=4)
+    offers = qd._oracle_offers(item)
+    assert (offers["SUP-001"]["lead"], offers["SUP-002"]["lead"]) == (5, 4)
+    assert qd.oracle_winner(item) == "SUP-002"
+
+
+def test_a_crash_after_the_offers_were_stored_is_a_scenario_that_would_catch_a_model_call_on_the_rerun():
+    item = next(i for i in qd.load_dataset() if i["id"] == "QD-039")
+    assert [s.get("crash") for s in item["steps"]] == ["extract", None, None]
+    assert [s["exit"] for s in item["steps"]] == [1, 0, 0]

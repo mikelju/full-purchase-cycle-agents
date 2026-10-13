@@ -7,7 +7,7 @@ from email import message_from_bytes
 
 import pytest
 
-from purchase_cycle import cli, db, quote_decision, sim_clock
+from purchase_cycle import cli, db, quote_decision, quotes, sim_clock
 from purchase_cycle.graph import sqlite_checkpointer
 from test_quote_decision import GOOD, _client, _setup
 
@@ -261,14 +261,11 @@ def test_decide_and_approve_in_separate_processes_equal_one_process(tmp_path):
     assert single.run("decide") == 0
     assert single.run("approve", "QR-0001", "--supplier", "SUP-002") == 0
     separate = World(tmp_path / "separate")
-    recorded = separate.recordings.read_bytes()
     steps = [
         ["decide", "--recordings", str(separate.recordings)],
         ["approve", "QR-0001", "--supplier", "SUP-002", "--outbox", str(separate.outbox)],
     ]
     for step in steps:
-        if step[0] == "approve":
-            separate.recordings.unlink()  # resuming must not read a recording, that is, call no model
         run = subprocess.run(
             [sys.executable, "-m", "purchase_cycle.cli", "--db", str(separate.db_path), "quotes", *step]
             + ["--checkpoints", str(separate.checkpoints)],
@@ -277,7 +274,6 @@ def test_decide_and_approve_in_separate_processes_equal_one_process(tmp_path):
             timeout=120,
         )
         assert run.returncode == 0, run.stderr
-    assert not separate.recordings.exists() and recorded
     rows, files = _final(separate)
     assert len(rows["purchase_orders"]) == 1 and len(files) == 1
     assert (rows, files) == _final(single)
@@ -317,3 +313,84 @@ def test_list_shows_a_rejected_request(world, capsys):
     cli.main(["--db", str(world.db_path), "quotes", "list"])
     line = capsys.readouterr().out.splitlines()[1]
     assert "status=rejected" in line and line.endswith("recommended=SUP-001  order=-")
+
+
+# A crash inside `issue`, after the purchase order row was written and before the email: the thread stays at `issue`.
+
+
+def _crash_in_issue(world, monkeypatch):
+    world.run("decide")
+    real = quotes._write_email
+
+    def broken(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(quotes, "_write_email", broken)
+    with pytest.raises(OSError):
+        world.run("approve", "QR-0001")
+    monkeypatch.setattr(quotes, "_write_email", real)
+    assert world.paused_at() == ("issue",) and world.status() == "awaiting_approval"
+
+
+def test_reject_is_refused_when_the_thread_stopped_inside_issue(world, monkeypatch, capsys):
+    _crash_in_issue(world, monkeypatch)
+    capsys.readouterr()
+    assert world.run("reject", "QR-0001") == 1
+    assert "approve" in capsys.readouterr().err
+    assert world.status() == "awaiting_approval" and world.emails() == [] and world.paused_at() == ("issue",)
+    assert world.run("approve", "QR-0001") == 0  # approve finishes the order it had chosen
+    assert world.status() == "ordered" and len(world.orders()) == 1 and len(world.emails()) == 1
+
+
+def test_a_different_supplier_is_refused_when_the_thread_stopped_inside_issue(world, monkeypatch, capsys):
+    _crash_in_issue(world, monkeypatch)
+    capsys.readouterr()
+    assert world.run("approve", "QR-0001", "--supplier", "SUP-002") == 1
+    assert "SUP-001" in capsys.readouterr().err
+    assert world.status() == "awaiting_approval" and world.emails() == [] and world.paused_at() == ("issue",)
+    assert world.run("approve", "QR-0001", "--supplier", "SUP-001") == 0
+    (order,) = world.orders()
+    assert order["supplier_code"] == "SUP-001" and "supplier=SUP-001" in capsys.readouterr().out
+
+
+def test_approve_and_reject_without_a_paused_thread_fail_with_a_message(world, capsys):
+    world.run("decide")
+    capsys.readouterr()
+    other = World(world.tmp / "other")  # the request is awaiting here, but this checkpoints file has no thread
+    world.conn.execute("UPDATE quote_requests SET status = 'awaiting_approval' WHERE id = 1")
+    world.conn.commit()
+    world.checkpoints = other.checkpoints
+    for command in ("approve", "reject"):
+        assert world.run(command, "QR-0001") == 1
+        assert "no paused decision" in capsys.readouterr().err
+    assert world.orders() == [] and world.emails() == [] and world.paused_at() == ()
+
+
+def test_approve_without_a_supplier_orders_the_recommendation_that_was_shown(tmp_path, capsys):
+    full = {**GOOD, "unit_price": 4.0, "lead_time_days": 3, "working_days": True}
+    calendar = {**GOOD, "unit_price": 4.0, "lead_time_days": 4, "working_days": False}
+    world = World(tmp_path, answers=[full, calendar, None])
+    world.run("decide")
+    assert "recommended: SUP-001" in capsys.readouterr().out  # decided on Monday
+    sim_clock.advance(world.conn, days=4)  # on Friday the other offer would win
+    assert world.run("approve", "QR-0001") == 0
+    assert [o["supplier_code"] for o in world.orders()] == ["SUP-001"]
+
+
+def test_the_lead_time_tie_break_counts_from_the_simulated_date_of_the_decision(tmp_path, capsys):
+    full = {**GOOD, "unit_price": 4.0, "lead_time_days": 3, "working_days": True}
+    calendar = {**GOOD, "unit_price": 4.0, "lead_time_days": 4, "working_days": False}
+    world = World(tmp_path, answers=[full, calendar, None])
+    sim_clock.advance(world.conn, days=4)  # the request was created on Monday, the decision is on Friday
+    assert world.run("decide") == 0
+    out = capsys.readouterr().out
+    assert "recommended: SUP-002" in out
+    assert "SUP-001 EUR 48.00 (full, 5 days)" in out and "SUP-002 EUR 48.00 (full, 4 days)" in out
+
+
+def test_a_status_update_that_matches_no_row_is_refused(world):
+    conn = db.connect(world.db_path)
+    with pytest.raises(quote_decision.DecisionRefused):
+        quote_decision._set_status(conn, 1, "ordered", "awaiting_approval")  # the request is ready_for_decision
+    assert conn.execute("SELECT status FROM quote_requests WHERE id = 1").fetchone()[0] == "ready_for_decision"
+    quote_decision._set_status(conn, 1, "ready_for_decision", "ready_for_decision")  # already there: no error

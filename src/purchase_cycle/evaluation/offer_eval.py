@@ -63,6 +63,9 @@ def grade(case: dict, fields: dict | None, error: str | None = None) -> dict:
         usable, reason, net = quote_decision.assess(fields)
     ok = {f: od._same(f, expected[f], got.get(f)) for f in od.GRADED}
     priced = expected["unit_price"] is not None
+    expected_net = case.get("expected_net_price")
+    # A VAT misread leaves the stated price right but moves the net price that the comparison uses.
+    net_wrong = usable and expected_net is not None and (net is None or abs(net - expected_net) > od.PRICE_TOLERANCE)
     r = {
         "id": case["id"],
         "category": case["category"],
@@ -81,8 +84,8 @@ def grade(case: dict, fields: dict | None, error: str | None = None) -> dict:
         else None,
         "usability_accuracy": usable == case["expected_usable"] and reason == case["expected_reason"],
         "exact_match": all(ok.values()),
-        # A usable reply with a wrong price, quantity or currency would reach a purchase order.
-        "critical_errors": usable and not (ok["unit_price"] and ok["quantity"] and ok["currency"]),
+        # A usable reply with a wrong price, quantity, currency or net price would reach a purchase order.
+        "critical_errors": usable and (not (ok["unit_price"] and ok["quantity"] and ok["currency"]) or net_wrong),
     }
     r["wrong_fields"] = [f for f in od.GRADED if not ok[f]]
     return r
@@ -179,6 +182,9 @@ def print_report(mode, split, summary, results, threshold, regression, baseline)
         print(
             "    "
             + "   ".join(f"{m} {_cell(s[m])}" for m in ("quantity_accuracy", "currency_accuracy", "critical_errors"))
+        )
+        print(
+            "    " + "   ".join(f"{m} {_cell(s[m])}" for m in ("offer_accuracy", "vat_accuracy", "lead_time_accuracy"))
         )
     failures = [r for r in results if not r["exact_match"] or not r["usability_accuracy"]]
     print(f"failures: {len(failures)}")

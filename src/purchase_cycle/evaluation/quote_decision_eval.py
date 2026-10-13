@@ -7,7 +7,7 @@ recordings file, so no key and no network are needed. Every expectation is writt
 rule: full offers first, then the lowest total, the shortest lead time and the lower supplier code.
 
 The runner seeds a temporary database per scenario and runs each step through `cli.main` (a `new_process` step
-through `python -m purchase_cycle.cli`). After the first decide the recordings file is deleted, so any later model
+through `python -m purchase_cycle.cli`). After the first decide that stored the offers the recordings file is deleted, so any later model
 call fails on the missing recording and is counted. The grader reads the database, the supplier outbox, the
 `failures` table and the printed recommendation. The critical-error counter checks the final state against an
 oracle computed apart from `quote_decision`. The gate is 100% success and 0 critical errors.
@@ -56,6 +56,12 @@ INITIAL_STATE = {"seed": "db.seed: catalog, stock, customers, suppliers and the 
 START = datetime(2026, 10, 12, 9, 0, 0)
 SKU, QUANTITY = "GLV-NIT-XS", 12
 SUPPLIER_CODES = ("SUP-001", "SUP-002", "SUP-003")
+# The address each supplier writes from, as the supplier table holds it; a reply from another one is not read.
+SENDERS = {
+    "SUP-001": "ofertas@suministros-iberia.example.com",
+    "SUP-002": "ventas@dissanorte.example.com",
+    "SUP-003": "comercial@clinicolevante.example.com",
+}
 REF = "QR-0001"
 # The rule that decided a recommendation and the words its printed reason holds.
 RULE_TEXT = {
@@ -117,6 +123,7 @@ def body(answer: dict) -> str:
 
 
 def decide(**flags) -> dict:
+    """A decide step; `crash="extract"` stops the run right after the offers were stored (exit 1)."""
     return {"op": "decide", "exit": 0, **flags}
 
 
@@ -231,6 +238,13 @@ SCENARIOS = [
     ({}, [D(), approve(exit=1), reject(exit=1)], NONE, None, None, [], 0),
     ({}, [D(), D(), approve("SUP-001", exit=1)], NONE, None, None, [], 0),
     ({}, [D(new_process=True), reject(exit=1)], NONE, None, None, [], 0),
+    # The lead times count from the decision date: on Monday 3 working days beat 4 calendar days, on Friday they do not.
+    ({"SUP-001": offer(price=4.0, lead=3), "SUP-002": offer(price=4.0, lead=4, working=False)},
+     [advance(4), D(), approve()], ORDERED, "SUP-002", "shortest_lead_time",
+     [po("SUP-002", 12, 4.0, 48.0, "2026-10-20")], 0),
+    # A run that stopped after the offers were stored goes on from its checkpoint and reads no reply again.
+    ({"SUP-001": offer(price=4.1), "SUP-002": offer(price=4.3)}, [D(crash="extract", exit=1), D(), approve()],
+     ORDERED, "SUP-001", "lowest_total", [po("SUP-001", 12, 4.1, 49.2, "2026-10-19")], 0),
 ]  # fmt: skip
 
 
@@ -310,9 +324,20 @@ def _add_days(moment: datetime, days: int, working: bool) -> datetime:
     return moment
 
 
+def _decision_date(item: dict) -> datetime:
+    """The simulated clock when the offers are compared: the start plus the days moved before the first decide."""
+    moved = 0
+    for step in item["steps"]:
+        if step["op"] == "decide":
+            break
+        if step["op"] == "advance":
+            moved += step["days"]
+    return START + timedelta(days=moved)
+
+
 def _oracle_offers(item: dict) -> dict[str, dict]:
     """The usable offers by supplier with the net price, the quantity that would be ordered and the lead time."""
-    wanted, found = item["request"]["quantity"], {}
+    wanted, found, anchor = item["request"]["quantity"], {}, _decision_date(item)
     for reply in item["replies"]:
         a = reply["answer"]
         if not (a["offers"] and isinstance(a["quantity"], int) and a["quantity"] > 0):
@@ -326,17 +351,17 @@ def _oracle_offers(item: dict) -> dict[str, dict]:
             net = net / (1 + a["vat_rate"] / 100)
         net = round(net, 4)
         quantity = min(a["quantity"], wanted)
-        delivery = _add_days(START, a["lead_time_days"], bool(a["working_days"]))
+        delivery = _add_days(anchor, a["lead_time_days"], bool(a["working_days"]))
         found[reply["supplier"]] = {
-            "full": a["quantity"] >= wanted, "quantity": quantity, "net": net, "total": round(net * quantity, 2),
-            "lead": (delivery - START).days, "lead_time_days": a["lead_time_days"], "working": bool(a["working_days"]),
+            "full": a["quantity"] >= wanted, "quantity": quantity, "net": net, "exact": net * quantity,
+            "total": round(net * quantity, 2), "lead": (delivery - anchor).days, "lead_time_days": a["lead_time_days"], "working": bool(a["working_days"]),
         }  # fmt: skip
     return found
 
 
 def oracle_winner(item: dict) -> str | None:
     found = _oracle_offers(item)
-    ranked = sorted(found, key=lambda s: (not found[s]["full"], found[s]["total"], found[s]["lead"], s))
+    ranked = sorted(found, key=lambda s: (not found[s]["full"], found[s]["exact"], found[s]["lead"], s))
     return ranked[0] if ranked else None
 
 
@@ -376,7 +401,7 @@ def _setup(item: dict, folder: Path) -> dict:
             if code in replied:
                 path = folder / f"{REF}-{code}.eml"
                 path.write_text(
-                    f"From: ventas@{code.lower()}.example.com\nTo: purchasing@distributor.example.com\n"
+                    f"From: {SENDERS[code]}\nTo: purchasing@distributor.example.com\n"
                     f"Subject: Re: Quote request {REF} - {request['sku']}\n\n{replied[code]['body']}\n",
                     encoding="utf-8",
                 )
@@ -405,9 +430,33 @@ def _argv(step: dict, paths: dict) -> list[str]:
     return [*common, "quotes", "reject", REF, *checkpoints]
 
 
+def _crashing_decide(argv: list[str]) -> tuple[int, str, str]:
+    """Run `quotes decide` in this process and stop it after the offers are stored, before the comparison."""
+    real = quote_decision.extract_offers
+
+    def crash(*args, **kwargs):
+        real(*args, **kwargs)
+        raise OSError("simulated crash after the offers were stored")
+
+    out, err = io.StringIO(), io.StringIO()
+    quote_decision.extract_offers = crash
+    try:
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            try:
+                code = cli.main(argv)
+            except OSError as error:
+                code = 1
+                err.write(f"Error: {error}\n")
+    finally:
+        quote_decision.extract_offers = real
+    return code, out.getvalue(), err.getvalue()
+
+
 def _run_step(step: dict, paths: dict) -> tuple[int, str, str]:
     """The exit code, the printed output and the error output of one step."""
     argv = _argv(step, paths)
+    if step.get("crash"):
+        return _crashing_decide(argv)
     if step.get("new_process"):
         run = [sys.executable, "-m", "purchase_cycle.cli", *argv]
         done = subprocess.run(run, capture_output=True, text=True, timeout=120)
@@ -483,14 +532,18 @@ def run_item(item: dict, tmp: Path) -> dict:
         code, out, err = _run_step(step, paths)
         log.append({"op": step["op"], "supplier": step.get("supplier"), "code": code, "err": err,
                     "printed": _printed(out) if step["op"] == "decide" else None})  # fmt: skip
-        if step["op"] == "decide" and code == 0 and not decided:
+        if step["op"] == "decide" and (code == 0 or step.get("crash")) and not decided:
             # Every later step must run with no model: a call now fails on the missing recording and is counted.
             decided = True
             paths["recordings"].unlink()
     final = _measure(paths)
     printed = next((s["printed"] for s in log if s["printed"]), None)
     expected = item["expected"]
-    reason_ok = expected["rule"] is None or (printed is not None and RULE_TEXT[expected["rule"]] in printed["reason"])
+    reason_ok = expected["rule"] is None or (
+        printed is not None
+        and RULE_TEXT[expected["rule"]] in printed["reason"]
+        and all(f"{code} EUR {o['total']:.2f}" in printed["reason"] for code, o in _oracle_offers(item).items())
+    )
     shown = [{k: v for k, v in o.items() if k != "issued_at"} for o in final["orders"]]
     measured = {
         "status": final["status"], "recommended": (printed or {}).get("supplier"), "orders": shown,

@@ -225,7 +225,7 @@ def cmd_quotes_list(args) -> int:
         db.seed(conn)
         rows = quotes.list_requests(conn)
         for row in rows:
-            request_id = int(row["reference"].removeprefix("QR-"))
+            request_id = _request_id(row["reference"])
             row["recommended"] = (
                 quote_decision.recommendation(conn, request_id)["supplier"]
                 if (conn.execute("SELECT 1 FROM quote_offers WHERE request_id = ?", (request_id,)).fetchone())
@@ -1343,7 +1343,8 @@ def main(argv=None) -> int:
     for command in (scan, tick, approve):
         command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")
     quotes_demo = sub.add_parser(
-        "quotes-demo", help="run the sample quote timeline, each scan, clock, receive and tick step in its own process"
+        "quotes-demo",
+        help="run the sample quote timeline, each scan, clock, receive, tick, decide, approve and list step in its own process",
     )
     quotes_demo.add_argument("--examples", default=str(DEMO_QUOTES), help="folder of sample orders and replies")
     quotes_demo.add_argument(
