@@ -42,7 +42,8 @@ Delivery is the work branch `cambio-006-local-test-ui`, created from `main` afte
   Evidence: `uv run pytest -q tests/test_ui.py` -> 25 passed (page served with its controls, no external URL; wheel built with `uv build --wheel` holds `purchase_cycle/ui.html`); script checked with `node --check`.
 - [x] 3. README section and `.gitignore` for `data/ui/`; C7.
   Evidence: README section "Try the orders by hand" added; `data/` is already ignored (`git check-ignore -v data/ui/x` -> .gitignore:13). Real server on port 8766 in replay: the WhatsApp doubt sample asked its question, the answer message resumed it and stored order 1; an unknown channel returned a JSON error. `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py` -> 138 passed; `npm run --silent eval` -> failures: 0, no file changed.
-- [ ] 4. Order block on each conversation (tests first, then `ui.py` and `ui.html`); C10.
+- [x] 4. Order block on each conversation (tests first, then `ui.py` and `ui.html`); C10.
+  Evidence: the 5 new `test_c10_*` tests failed first, then `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py` -> 152 passed; `ruff check` and `ruff format --check` clean; script checked with `node --check`. Replay server on port 8772 with a temporary data dir: sample 01 sent to `/api/send` stored, and `/api/conversations` returned the order block (2 lines, total 169.2).
 - [ ] 5. Owner walkthrough in live mode; C8.
 - [ ] 6. Adversarial review, `npm run check`, push and PR to `main`; C9.
 

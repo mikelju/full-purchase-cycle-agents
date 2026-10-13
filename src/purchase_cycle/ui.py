@@ -229,6 +229,7 @@ class UiApp:
         else:
             status = "no_line"
         question = paused[0].value if paused else {}
+        order_id = state.get("order_id")
         return {
             "at": datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S"),
             "channel": channel,
@@ -240,10 +241,25 @@ class UiApp:
             "thread_id": thread_id,
             "status": status,
             "outcome": cli._demo_outcome(routed, state, error),
-            "order_id": state.get("order_id"),
+            "order_id": order_id,
+            "order": self._order_block(order_id) if order_id is not None else None,
+            "unmatched": _unmatched(state),
             "round": question.get("round"),
             "reply": cli._demo_reply(state),
         }
+
+    def _order_block(self, order_id: int) -> dict:
+        """The stored lines with the current catalog price and stock; information only, stock is not reserved."""
+        rows = self._query(
+            "SELECT l.sku, p.name, l.quantity, p.price_eur AS unit_price, COALESCE(s.on_hand, 0) AS stock "
+            "FROM order_lines l JOIN products p USING (sku) LEFT JOIN stock s USING (sku) "
+            "WHERE l.order_id = ? ORDER BY l.id",
+            (order_id,),
+        )
+        for row in rows:
+            row["amount"] = round(row["quantity"] * row["unit_price"], 2)
+            row["short"] = row["quantity"] > row["stock"]
+        return {"lines": rows, "total": round(sum(row["amount"] for row in rows), 2)}
 
     def send(self, payload: dict) -> dict:
         """Write the input in the channel's format, route it and return the conversation entry."""
@@ -351,6 +367,18 @@ class UiApp:
             entry = self._entry(row["channel"], customer, text, router.Route(row["channel"]), thread_id, state, None)
             entry["route"] = "answer"
             return self._log(entry)
+
+
+def _unmatched(state: dict) -> list[str]:
+    """Short texts for the lines the order left out: not recognised, removed in a clarification, not resolved."""
+    out = []
+    for line in state.get("lines") or []:
+        if line.get("sku") is None:
+            text = line.get("source_text") or line.get("product")
+            out.append(f"{text} x {line.get('quantity')} (not recognised)")
+    for key, label in (("removed", "removed"), ("unresolved", "not resolved")):
+        out += [f"{line['text']} x {line['quantity']} ({label})" for line in state.get(key) or []]
+    return out
 
 
 def _text(value, missing: str) -> str:

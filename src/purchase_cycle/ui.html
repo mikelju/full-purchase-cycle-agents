@@ -90,6 +90,13 @@
   .entry .kv b { color: var(--muted); font-weight: 600; }
   .reply-label { margin: 10px 0 4px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
   .entry pre { white-space: pre-wrap; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--reply-bg); border: 1px solid var(--reply-border); font: inherit; }
+  .order { margin-top: 10px; }
+  .order table { border: 1px solid var(--border); border-radius: 8px; border-collapse: separate; border-spacing: 0; overflow: hidden; }
+  .order th { position: static; }
+  .order tr.short td { background: var(--warn-bg); color: var(--warn); }
+  .order tfoot td { font-weight: 700; border-bottom: 0; border-top: 1px solid var(--border); }
+  .order .tag.short { background: var(--warn); color: var(--card); margin-left: 6px; }
+  .unmatched { margin: 6px 0 0; padding-left: 20px; font-size: .92rem; color: var(--warn); }
   .answer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 10px; border-radius: 8px; background: var(--accent-soft); }
   .answer input { flex: 1 1 200px; width: auto; }
   .empty { padding: 28px 12px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 10px; }
@@ -279,6 +286,43 @@ function line(parent, label, value, className) {
   parent.appendChild(p);
 }
 
+function renderOrder(order) {
+  const wrap = document.createElement("div");
+  wrap.className = "order";
+  line(wrap, "", "Order", "reply-label");
+  const table = document.createElement("table");
+  const head = document.createElement("thead");
+  const hr = document.createElement("tr");
+  for (const [name, num] of [["SKU"], ["Name"], ["Qty", 1], ["Unit price", 1], ["Amount", 1], ["Stock", 1]]) {
+    const th = document.createElement("th");
+    th.textContent = name; if (num) th.className = "num";
+    hr.appendChild(th);
+  }
+  head.appendChild(hr); table.appendChild(head);
+  const body = document.createElement("tbody");
+  for (const l of order.lines) {
+    const tr = document.createElement("tr");
+    if (l.short) tr.className = "short";
+    cell(tr, l.sku); cell(tr, l.name);
+    cell(tr, String(l.quantity), "num"); cell(tr, l.unit_price.toFixed(2), "num");
+    cell(tr, l.amount.toFixed(2), "num"); cell(tr, String(l.stock), "num");
+    if (l.short) {
+      const tag = document.createElement("span");
+      tag.className = "tag short"; tag.textContent = "short of stock";
+      tr.children[1].appendChild(tag);
+    }
+    body.appendChild(tr);
+  }
+  table.appendChild(body);
+  const foot = document.createElement("tfoot");
+  const fr = document.createElement("tr");
+  cell(fr, "Total"); cell(fr, ""); cell(fr, ""); cell(fr, "");
+  cell(fr, order.total.toFixed(2), "num"); cell(fr, "");
+  foot.appendChild(fr); table.appendChild(foot);
+  wrap.appendChild(table);
+  return wrap;
+}
+
 function renderConversations(entries) {
   const root = $("conversations");
   root.textContent = "";
@@ -311,6 +355,14 @@ function renderConversations(entries) {
     line(div, "Thread", entry.thread_id, "mono meta");
     line(div, "Outcome", entry.outcome);
     line(div, "Order", entry.order_id);
+    if (entry.order) div.appendChild(renderOrder(entry.order));
+    if (entry.unmatched && entry.unmatched.length) {
+      line(div, "", "Not recognised or removed", "reply-label");
+      const ul = document.createElement("ul");
+      ul.className = "unmatched";
+      for (const text of entry.unmatched) { const li = document.createElement("li"); li.textContent = text; ul.appendChild(li); }
+      div.appendChild(ul);
+    }
     if (entry.reply) {
       const asking = entry.status === "question" || entry.status === "answer_rejected";
       const label = asking ? "Question to the customer" : "Reply to the customer";

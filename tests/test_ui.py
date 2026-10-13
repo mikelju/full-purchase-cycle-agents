@@ -480,3 +480,76 @@ def test_review_errors_show_the_class_not_the_text(server, monkeypatch):
 def test_review_port_out_of_range_is_a_friendly_error(capsys):
     assert ui.serve("replay", 70000) == 1
     assert "port" in capsys.readouterr().err
+
+
+def _catalog(server) -> dict:
+    return {p["sku"]: p for p in call(server, "GET", "/api/catalog")[1]}
+
+
+def test_c10_a_stored_order_shows_its_lines_prices_amounts_and_total(server):
+    form = {"channel": "web_form", "customer": "CLI-001", "lines": [{"product": "nitrile gloves M", "quantity": 20}]}
+    status, entry = call(server, "POST", "/api/send", form)
+    assert entry["status"] == "stored"
+    catalog = _catalog(server)
+    block = entry["order"]
+    assert block["lines"] and all(set(line) == {"sku", "name", "quantity", "unit_price", "amount", "stock", "short"} for line in block["lines"])  # fmt: skip
+    for line in block["lines"]:
+        product = catalog[line["sku"]]
+        assert line["name"] == product["name"] and line["unit_price"] == product["price_eur"]
+        assert line["amount"] == round(line["quantity"] * product["price_eur"], 2)
+        assert line["stock"] == product["stock"] and line["short"] is (line["quantity"] > product["stock"])
+    assert sum(line["quantity"] for line in block["lines"]) == 20
+    assert block["total"] == round(sum(line["amount"] for line in block["lines"]), 2)
+    assert entry["unmatched"] == []
+    stored = call(server, "GET", "/api/conversations")[1][0]
+    assert stored["order"] == block  # kept in the log, read back as it was
+
+
+def test_c10_a_quantity_above_the_stock_is_marked_short(server):
+    conn = db.connect(server.app.db_path)
+    conn.execute("UPDATE stock SET on_hand = 3")
+    conn.commit()
+    conn.close()
+    form = {"channel": "web_form", "customer": "CLI-001", "lines": [{"product": "nitrile gloves M", "quantity": 20}]}
+    entry = call(server, "POST", "/api/send", form)[1]
+    assert entry["status"] == "stored"
+    assert [line["short"] for line in entry["order"]["lines"]] == [True] and entry["order"]["lines"][0]["stock"] == 3
+
+
+def test_c10_entries_without_a_stored_order_carry_null_block_and_empty_list(server):
+    entry = call(server, "POST", "/api/send", {"channel": "whatsapp", "customer": "CLI-001", "text": "hello, are you open on Saturday?"})[1]  # fmt: skip
+    assert entry["order_id"] is None and entry["order"] is None and entry["unmatched"] == []
+
+
+def test_c10_unmatched_removed_and_unresolved_lines_are_listed(server):
+    state = {
+        "order_id": None,
+        "lines": [
+            {"product": "left-handed widget", "sku": None, "quantity": 2},
+            {"source_text": "that blue thing", "sku": None, "quantity": 1},
+            {"source_text": "gauze", "sku": "X", "quantity": 1},
+        ],
+        "removed": [{"text": "sterile swabs", "quantity": 4}],
+        "unresolved": [{"text": "the big box", "quantity": 1}],
+    }
+    customer = {"code": "CLI-001", "name": "n"}
+    entry = server.app._entry("email", customer, "s", router.Route(router.EMAIL), "t", state, None)
+    assert entry["unmatched"] == [
+        "left-handed widget x 2 (not recognised)",
+        "that blue thing x 1 (not recognised)",
+        "sterile swabs x 4 (removed)",
+        "the big box x 1 (not resolved)",
+    ]
+
+
+def test_c10_old_log_lines_without_the_new_fields_still_read_back(server):
+    old = {"at": "2026-10-01 10:00:00", "channel": "email", "customer": "CLI-001", "customer_name": "n", "sent": "s",
+           "route": "email", "reason": None, "thread_id": "email-old", "status": "stored", "outcome": "o", "order_id": 1,
+           "round": None, "reply": "r"}  # fmt: skip
+    server.app.root.mkdir(parents=True, exist_ok=True)
+    server.app.log_path.write_text(json.dumps(old) + "\n", encoding="utf-8")
+    entries = call(server, "GET", "/api/conversations")[1]
+    assert entries[0]["thread_id"] == "email-old" and "order" not in entries[0]
+    with urllib.request.urlopen(server.base + "/") as response:
+        page = response.read().decode("utf-8")
+    assert "entry.order" in page and "entry.unmatched" in page and "short of stock" in page
