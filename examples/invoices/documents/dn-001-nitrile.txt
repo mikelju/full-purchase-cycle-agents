@@ -1,0 +1,8 @@
+DELIVERY NOTE A-5001
+Issued by: Suministros Medicos Iberia S.L.
+Contact: ofertas@suministros-iberia.example.com
+Date: 2026-10-20
+Your order: PO-0001
+
+SKU | Qty delivered
+GLV-NIT-M | 100

@@ -33,6 +33,8 @@ from purchase_cycle.config import (
     OFFER_EXTRACTION_MAX_TOKENS,
     OFFER_EXTRACTION_RECORDINGS_PATH,
     RECORDINGS_PATH,
+    SUPPLIER_DOCUMENT_MAX_TOKENS,
+    SUPPLIER_DOCUMENT_RECORDINGS_PATH,
     WHATSAPP_EXTRACTION_RECORDINGS_PATH,
     WHATSAPP_INTAKE_RECORDINGS_PATH,
 )
@@ -276,6 +278,50 @@ class OfferExtraction(BaseModel):
     price_text: str | None = Field(description="The price exactly as written in the reply")
 
 
+SUPPLIER_DOCUMENT_INSTRUCTIONS = """You read one document that a supplier of a medical supplies distributor sent after a purchase order, an invoice or a delivery note, and extract what it states.
+
+The user message holds the text of the document only.
+Return one record:
+- kind: invoice when the document asks for payment, delivery_note when it lists the goods delivered.
+- number: the number of the document itself, as written, or null.
+- po_reference: the purchase order number the document refers to, as written (for example PO-0007), or null when it names none.
+- issue_date: the date of the document as YYYY-MM-DD, or null.
+- currency: the three-letter code of the currency of the prices, such as EUR, or null when the document states none.
+- supplier_text: the name or email address of the supplier that issued the document, as written, or null.
+- lines: one entry per product line, in order, with
+  - product: the SKU or the product description exactly as written on the line.
+  - quantity: the number of units of the line as a number, as written; do not convert packs or boxes.
+  - unit_price: the price of one unit as a number before VAT, exactly as the line states it; null when the line has no price, as on most delivery notes.
+  - line_total: the total of the line as a number before VAT, or null when the line has none.
+Only product lines are lines. Never turn VAT, tax, subtotal, total, shipping, freight, discount or payment lines into product lines.
+Ignore addresses, phone numbers, bank details, greetings and other numbers that are not a quantity, price or total.
+Never invent a value the document does not state.
+"""
+
+
+class SupplierDocumentLine(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    product: str = Field(description="SKU or product description exactly as written on the line")
+    quantity: float = Field(strict=True, description="Units on the line as a number")
+    unit_price: float | None = Field(strict=True, description="Price per unit before VAT, null when the line has none")
+    line_total: float | None = Field(strict=True, description="Line total before VAT, null when the line has none")
+
+
+class SupplierDocument(BaseModel):
+    """Structured answer of the supplier document extraction node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["invoice", "delivery_note"] = Field(description="Invoice or delivery note")
+    number: str | None = Field(description="Number of the document as written")
+    po_reference: str | None = Field(description="Purchase order number as written, null when none")
+    issue_date: str | None = Field(description="Document date as YYYY-MM-DD, null when not stated")
+    currency: str | None = Field(description="Three-letter currency code, null when not stated")
+    supplier_text: str | None = Field(description="Name or email of the issuing supplier as written")
+    lines: list[SupplierDocumentLine] = Field(description="Every product line of the document")
+
+
 @dataclass(frozen=True)
 class Task:
     """What the model is asked to do and where its recorded answers live."""
@@ -365,6 +411,15 @@ OFFER_EXTRACTION = Task(
     OfferExtraction,
     OFFER_EXTRACTION_RECORDINGS_PATH,
     OFFER_EXTRACTION_MAX_TOKENS,
+)
+SUPPLIER_DOCUMENT_EXTRACTION = Task(
+    "supplier_document_extraction",
+    SUPPLIER_DOCUMENT_INSTRUCTIONS,
+    "record_supplier_document",
+    "Record the kind, references and lines of the supplier document.",
+    SupplierDocument,
+    SUPPLIER_DOCUMENT_RECORDINGS_PATH,
+    SUPPLIER_DOCUMENT_MAX_TOKENS,
 )
 
 

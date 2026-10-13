@@ -1,0 +1,9 @@
+INVOICE F-2026-1001
+Issued by: Suministros Medicos Iberia S.L.
+Contact: ofertas@suministros-iberia.example.com
+Date: 2026-10-20
+Your order: PO-0001
+Currency: EUR (prices before VAT)
+
+SKU | Qty | Unit price | Total
+GLV-NIT-M | 100 | 4.20 | 420.00

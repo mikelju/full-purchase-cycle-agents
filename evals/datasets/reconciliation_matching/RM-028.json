@@ -1,0 +1,100 @@
+{
+  "dataset_version": "1.0",
+  "documents": {
+    "a-invoice.txt": {
+      "answer": {
+        "currency": "EUR",
+        "issue_date": "2026-10-20",
+        "kind": "invoice",
+        "lines": [
+          {
+            "line_total": 12.0,
+            "product": "Nitrile examination gloves, powder-free, size M",
+            "quantity": 10,
+            "unit_price": 1.2
+          }
+        ],
+        "number": "INV-77",
+        "po_reference": "PO-0001",
+        "supplier_text": "Distribuciones Sanitarias del Norte S.A."
+      },
+      "text": "Invoice INV-77\nOrder reference PO-0001  Supplier Distribuciones Sanitarias del Norte S.A.\nNitrile examination gloves, powder-free, size M  10  1.20\n"
+    },
+    "b-note.txt": {
+      "answer": {
+        "currency": null,
+        "issue_date": "2026-10-21",
+        "kind": "delivery_note",
+        "lines": [
+          {
+            "line_total": null,
+            "product": "Nitrile examination gloves, powder-free, size S",
+            "quantity": 25,
+            "unit_price": null
+          }
+        ],
+        "number": "DN-5",
+        "po_reference": "PO-0001",
+        "supplier_text": "Distribuciones Sanitarias del Norte S.A."
+      },
+      "text": "Delivery Note DN-5\nOrder reference PO-0001  Supplier Distribuciones Sanitarias del Norte S.A.\nNitrile examination gloves, powder-free, size S  25\n"
+    }
+  },
+  "expected": {
+    "documents": {
+      "a-invoice.txt": [
+        "linked",
+        null
+      ],
+      "b-note.txt": [
+        "linked",
+        null
+      ]
+    },
+    "model_calls": 2,
+    "progress": [
+      {
+        "a-invoice.txt": "discrepancies"
+      }
+    ],
+    "reconciliations": {
+      "a-invoice.txt": {
+        "discrepancies": [
+          [
+            "GLV-NIT-M",
+            "extra_line",
+            12.0
+          ],
+          [
+            "GLV-NIT-S",
+            "missing_line",
+            87.5
+          ]
+        ],
+        "result": "discrepancies"
+      }
+    }
+  },
+  "id": "RM-028",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock; one issued purchase order PO-0001"
+  },
+  "order": {
+    "quantity": 25,
+    "sku": "GLV-NIT-S",
+    "supplier": "SUP-002",
+    "unit_price": 3.5
+  },
+  "restart": false,
+  "scans": [
+    [
+      "a-invoice.txt",
+      "b-note.txt"
+    ]
+  ],
+  "tags": [
+    "extra_line",
+    "missing_line",
+    "several_types"
+  ]
+}

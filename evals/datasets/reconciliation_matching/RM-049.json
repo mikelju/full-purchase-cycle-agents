@@ -1,0 +1,58 @@
+{
+  "dataset_version": "1.0",
+  "documents": {
+    "a-invoice.txt": {
+      "answer": {
+        "currency": "EUR",
+        "issue_date": "2026-10-20",
+        "kind": "invoice",
+        "lines": [
+          {
+            "line_total": 41.0,
+            "product": "Nitrile examination gloves, powder-free, size XS",
+            "quantity": 10,
+            "unit_price": 4.1
+          }
+        ],
+        "number": "INV-77",
+        "po_reference": "PO-0001",
+        "supplier_text": "Unknown Company Ltd"
+      },
+      "text": "Invoice INV-77\nOrder reference PO-0001  Supplier Unknown Company Ltd\nNitrile examination gloves, powder-free, size XS  10  4.10\n"
+    }
+  },
+  "expected": {
+    "documents": {
+      "a-invoice.txt": [
+        "unlinked",
+        "supplier_mismatch"
+      ]
+    },
+    "model_calls": 1,
+    "progress": [
+      {
+        "a-invoice.txt": null
+      }
+    ],
+    "reconciliations": {}
+  },
+  "id": "RM-049",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock; one issued purchase order PO-0001"
+  },
+  "order": {
+    "quantity": 10,
+    "sku": "GLV-NIT-XS",
+    "supplier": "SUP-001",
+    "unit_price": 4.1
+  },
+  "restart": false,
+  "scans": [
+    [
+      "a-invoice.txt"
+    ]
+  ],
+  "tags": [
+    "wrong_supplier"
+  ]
+}

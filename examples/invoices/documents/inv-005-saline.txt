@@ -1,0 +1,9 @@
+INVOICE N-77005
+Issued by: Distribuciones Sanitarias del Norte S.A.
+Contact: ventas@dissanorte.example.com
+Date: 2026-10-24
+Your order: PO-0005
+Currency: EUR (prices before VAT)
+
+SKU | Qty | Unit price | Total
+SAL-250 | 60 | 1.80 | 108.00

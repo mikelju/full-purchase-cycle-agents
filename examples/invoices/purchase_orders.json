@@ -1,0 +1,51 @@
+[
+  {
+    "supplier": "SUP-001",
+    "sku": "GLV-NIT-M",
+    "quantity": 100,
+    "unit_price": 4.2,
+    "expected_delivery": "2026-10-20"
+  },
+  {
+    "supplier": "SUP-002",
+    "sku": "MASK-IIR",
+    "quantity": 50,
+    "unit_price": 3.0,
+    "expected_delivery": "2026-10-21"
+  },
+  {
+    "supplier": "SUP-003",
+    "sku": "GAUZE-NS-5",
+    "quantity": 40,
+    "unit_price": 5.0,
+    "expected_delivery": "2026-10-22"
+  },
+  {
+    "supplier": "SUP-001",
+    "sku": "GEL-500",
+    "quantity": 30,
+    "unit_price": 6.5,
+    "expected_delivery": "2026-10-23"
+  },
+  {
+    "supplier": "SUP-002",
+    "sku": "SAL-500",
+    "quantity": 60,
+    "unit_price": 1.8,
+    "expected_delivery": "2026-10-24"
+  },
+  {
+    "supplier": "SUP-003",
+    "sku": "THERM-DIG",
+    "quantity": 20,
+    "unit_price": 7.0,
+    "expected_delivery": "2026-10-25"
+  },
+  {
+    "supplier": "SUP-001",
+    "sku": "BND-ELA-10",
+    "quantity": 80,
+    "unit_price": 2.5,
+    "expected_delivery": "2026-10-26"
+  }
+]

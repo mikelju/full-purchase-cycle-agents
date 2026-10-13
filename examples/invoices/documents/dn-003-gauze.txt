@@ -1,0 +1,8 @@
+DELIVERY NOTE E-0303
+Issued by: Material Clinico Levante S.L.
+Contact: comercial@clinicolevante.example.com
+Date: 2026-10-22
+Your order: PO-0003
+
+SKU | Qty delivered
+GAUZE-NS-5 | 40

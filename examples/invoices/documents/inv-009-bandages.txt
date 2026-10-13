@@ -1,0 +1,9 @@
+INVOICE F-2026-1009
+Issued by: Suministros Medicos Iberia S.L.
+Contact: ofertas@suministros-iberia.example.com
+Date: 2026-10-26
+Your order: PO-0007
+Currency: EUR (prices before VAT)
+
+SKU | Qty | Unit price | Total
+BND-ELA-10 | 80 | 2.50 | 200.00

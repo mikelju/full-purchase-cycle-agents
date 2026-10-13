@@ -9,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import config, db, quote_decision, quotes, router, sim_clock
+from purchase_cycle import config, db, quote_decision, quotes, reconciliation, router, sim_clock
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import build_email_order_graph
@@ -21,6 +21,7 @@ from purchase_cycle.llm import (
     EMAIL_INTAKE,
     MATCHING,
     OFFER_EXTRACTION,
+    SUPPLIER_DOCUMENT_EXTRACTION,
     WHATSAPP_EXTRACTION,
     WHATSAPP_INTAKE,
     InvalidExtraction,
@@ -43,6 +44,9 @@ ORDERS_DEMO_WORKDIR = config.DATA_DIR / "orders-demo"
 DEMO_QUOTES = config.ROOT / "examples" / "quotes"
 QUOTES_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "quotes_demo.jsonl"  # the offer extraction of the demo
 QUOTES_DEMO_WORKDIR = config.DATA_DIR / "quotes-demo"
+DEMO_INVOICES = config.ROOT / "examples" / "invoices"
+RECONCILE_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "reconcile_demo.jsonl"  # the document extraction
+RECONCILE_DEMO_WORKDIR = config.DATA_DIR / "reconcile-demo"
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
 EXCEPTIONS_RECORDINGS = {
     MATCHING.name: config.CLARIFICATION_DETECTION_MATCHING_RECORDINGS_PATH,
@@ -169,6 +173,112 @@ def cmd_quotes_decide(args) -> int:
     _print_usage(client)
     if saved:
         print(f"recordings saved: {saved}")
+    return 0
+
+
+def _document_line(item: dict) -> str:
+    what = item["kind"] or "unreadable"
+    if item["kind"] == "invoice":
+        what = f"invoice {reconciliation.invoice_reference(item['id'])}"
+    elif item["kind"] == "delivery_note":
+        what = f"delivery note {item['number'] or ''}".strip()
+    state = item["status"] + (f" ({item['reason']})" if item["status"] in ("unlinked", "extraction_failed") else "")
+    result = f"  result={item['result']}" if item["result"] else ""
+    return f"  {item['file']}  {what}  {state}{result}"
+
+
+def cmd_reconcile_scan(args) -> int:
+    conn = db.connect(args.db)
+    try:
+        db.seed(conn)
+    finally:
+        conn.close()
+    folder = Path(args.folder)
+    if not folder.is_dir():
+        print(f"Error: {args.folder} is not a folder", file=sys.stderr)
+        return 1
+    client = ModelClient(args.mode, [], args.recordings, task=SUPPLIER_DOCUMENT_EXTRACTION)
+    try:
+        results = reconciliation.scan(args.db, sqlite_checkpointer(args.checkpoints), folder, client)
+    except (MissingRecording, InvalidModelOutput) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    saved = client.save_recordings()
+    print(f"mode={args.mode}  documents in the folder: {len(results)}  new: {sum(r['new'] for r in results)}")
+    for item in results:
+        print(_document_line(item))
+    if client.calls:
+        _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return 0
+
+
+def _seeded(path):
+    conn = db.connect(path)
+    db.seed(conn)
+    return conn
+
+
+def cmd_reconcile_list(args) -> int:
+    conn = _seeded(args.db)
+    try:
+        listing = reconciliation.list_results(conn)
+    finally:
+        conn.close()
+    counts = "  ".join(f"{name}={n}" for name, n in listing["by_result"].items())
+    print(f"reconciliations: {len(listing['rows'])}  {counts}")
+    print("differences by type: " + "  ".join(f"{name}={n}" for name, n in listing["by_type"].items()))
+    for row in listing["rows"]:
+        types = " ".join(f"{name}={n}" for name, n in row["by_type"].items())
+        print(
+            f"  {reconciliation.invoice_reference(row['invoice_id'])}  {reconciliation.order_reference(row['order_id'])}"
+            f"  supplier={row['supplier_code']}  {row['result']}  differences={row['differences']} ({types})"
+        )
+    if listing["unreconciled"]:
+        print(f"not reconciled: {len(listing['unreconciled'])}")
+        for item in listing["unreconciled"]:
+            print(
+                f"  {item['file']}  {item['kind'] or 'unreadable'}  {item['status']} ({item['reason'] or 'not linked yet'})"
+            )
+    return 0
+
+
+def _amount(value, places: int) -> str:
+    return "-" if value is None else f"{value:.{places}f}"
+
+
+def cmd_reconcile_show(args) -> int:
+    invoice_id = reconciliation.invoice_id_from_reference(args.reference)
+    if invoice_id is None:
+        print(f"Error: '{args.reference}' is not an invoice reference like INV-0001", file=sys.stderr)
+        return 1
+    conn = _seeded(args.db)
+    try:
+        shown = reconciliation.show_result(conn, invoice_id)
+    finally:
+        conn.close()
+    if shown is None:
+        print(f"Error: no reconciliation for {args.reference}", file=sys.stderr)
+        return 1
+    order = shown["order"]
+    print(
+        f"{reconciliation.invoice_reference(invoice_id)}  invoice {shown['invoice_number'] or '-'}  result={shown['result']}"
+    )
+    print(
+        f"purchase order: {reconciliation.order_reference(order['id'])}  supplier={order['supplier_code']}  "
+        f"sku={order['sku']}  quantity={order['quantity']}  unit price={order['unit_price']:.4f} {order['currency']}"
+    )
+    print(f"delivery note: {shown['delivery_note'] or 'none yet'}")
+    print(f"reconciled at: {shown['reconciled_at']}")
+    print(f"differences: {len(shown['discrepancies'])}")
+    for row in shown["discrepancies"]:
+        text = f'  text="{row["text"]}"' if row["text"] else ""
+        print(
+            f"  {row['type']}  sku={row['sku'] or '-'}{text}  expected={_amount(row['expected'], 4)}  "
+            f"found={_amount(row['found'], 4)}  per unit={_amount(row['unit_amount'], 4)}  "
+            f"amount={_amount(row['amount'], 2)}"
+        )
     return 0
 
 
@@ -389,6 +499,136 @@ def cmd_quotes_demo(args) -> int:
     print(f"no_offers, listed for a person: {', '.join(waiting) or 'none'}")
     if len(ordered) != 1 or len(waiting) != 1:
         print("Error: the demo did not end with one ordered request and one listed for a person", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _print_extracted(files: dict, shown: set) -> None:
+    """The documents stored since the last scan with their extracted fields and lines."""
+    conn = db.connect(files["db"])
+    try:
+        print("extracted documents:")
+        for doc in [dict(r) for r in conn.execute("SELECT * FROM supplier_documents ORDER BY id")]:
+            if doc["id"] in shown:
+                continue
+            shown.add(doc["id"])
+            print(
+                f"  {Path(doc['source_file']).name}  {doc['kind'] or 'unreadable'} {doc['number'] or '-'}  "
+                f"po={doc['po_reference'] or '-'}  date={doc['issue_date'] or '-'}  {doc['currency'] or '-'}  "
+                f"status={doc['status']}"
+            )
+            lines = conn.execute("SELECT * FROM document_lines WHERE document_id = ? ORDER BY line_no", (doc["id"],))
+            for line in lines:
+                print(
+                    f"    line {line['line_no']}: {line['product_text']}  sku={line['sku'] or '-'}  "
+                    f"quantity={line['quantity']:g}  unit price={_amount(line['unit_price'], 2)}"
+                )
+    finally:
+        conn.close()
+
+
+def _reconciliations(files: dict) -> dict:
+    conn = db.connect(files["db"])
+    try:
+        rows = conn.execute("SELECT invoice_id, result FROM reconciliations ORDER BY invoice_id")
+        return {row["invoice_id"]: row["result"] for row in rows}
+    finally:
+        conn.close()
+
+
+def cmd_reconcile_demo(args) -> int:
+    """The sample invoices and delivery notes through scan, list, show and a later scan, each step in its own process."""
+    import subprocess
+
+    examples, workdir = Path(args.examples), Path(args.workdir)
+    if workdir.resolve() == config.DATA_DIR.resolve():
+        print(f"Error: --workdir {args.workdir} is the data folder; pick another folder", file=sys.stderr)
+        return 1
+    files = {"db": workdir / "business.db", "checkpoints": workdir / "checkpoints.sqlite"}
+    workdir.mkdir(parents=True, exist_ok=True)
+    for path in files.values():
+        path.unlink(missing_ok=True)
+    conn = db.connect(files["db"])
+    try:
+        db.seed(conn)
+        seeded = reconciliation.seed_demo_orders(conn, examples / "purchase_orders.json")
+    finally:
+        conn.close()
+    print(f"reconcile-demo  mode={args.mode}  examples={args.examples}  workdir={args.workdir}")
+    print(f"purchase orders seeded from purchase_orders.json: {seeded}")
+    scan = [
+        "--mode",
+        args.mode,
+        "--recordings",
+        str(RECONCILE_DEMO_RECORDINGS),
+        "--checkpoints",
+        str(files["checkpoints"]),
+    ]
+    shown_documents: set = set()
+    shown_results: dict = {}
+    number = 0
+
+    def step(*command) -> bool:
+        nonlocal number
+        number += 1
+        run = subprocess.run(
+            [sys.executable, "-m", "purchase_cycle.cli", "--db", str(files["db"]), *command],
+            capture_output=True,
+            text=True,
+        )
+        print()
+        print(f"== step {number}: purchase-cycle {' '.join(command[:2])}  (own process, exit code {run.returncode})")
+        if run.returncode != 0:
+            print(f"Error: step {number} failed: {run.stderr.strip()}", file=sys.stderr)
+            return False
+        for line in run.stdout.splitlines():
+            print(f"  {line}")
+        return True
+
+    def scan_and_show(folder: Path) -> bool:
+        if not step("reconcile", "scan", str(folder), *scan):
+            return False
+        print()
+        _print_extracted(files, shown_documents)
+        if not step("reconcile", "list"):
+            return False
+        for invoice_id, result in _reconciliations(files).items():
+            if shown_results.get(invoice_id) == result:
+                continue  # an unchanged reconciliation was shown by an earlier step
+            if not step("reconcile", "show", reconciliation.invoice_reference(invoice_id)):
+                return False
+            shown_results[invoice_id] = result
+        return True
+
+    if not scan_and_show(examples / "documents"):
+        return 1
+    waiting = [i for i, r in _reconciliations(files).items() if r == "awaiting_delivery_note"]
+    if not scan_and_show(examples / "later"):
+        return 1
+    final = _reconciliations(files)
+    conn = db.connect(files["db"])
+    try:
+        types = {r[0] for r in conn.execute("SELECT DISTINCT type FROM discrepancies")}
+        unlinked = [r[0] for r in conn.execute("SELECT reason FROM supplier_documents WHERE status = 'unlinked'")]
+    finally:
+        conn.close()
+    completed = [i for i in waiting if final.get(i) in ("matched", "discrepancies")]
+    still_waiting = [i for i, r in final.items() if r == "awaiting_delivery_note"]
+    print()
+    print("summary:")
+    print(f"results: {', '.join(f'{reconciliation.invoice_reference(i)}={r}' for i, r in final.items())}")
+    print(f"difference types: {', '.join(sorted(types)) or 'none'}")
+    print(f"awaiting a delivery note after the first scan, completed by the second: {len(completed)} of {len(waiting)}")
+    print(f"still awaiting a delivery note at the end: {len(still_waiting)}")
+    print(f"unlinked documents: {', '.join(sorted(unlinked)) or 'none'}")
+    if (
+        "matched" not in final.values()
+        or types != set(reconciliation.DISCREPANCY_TYPES)
+        or not completed
+        or len(still_waiting) != 1
+        or not unlinked
+    ):
+        print("Error: the demo did not end with every outcome", file=sys.stderr)
         return 1
     return 0
 
@@ -1353,6 +1593,23 @@ def main(argv=None) -> int:
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     for command in (scan, tick, approve):
         command.add_argument("--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails")
+    reconcile_parser = sub.add_parser(
+        "reconcile", help="read supplier invoices and delivery notes and match them with the purchase orders"
+    )
+    reconcile_sub = reconcile_parser.add_subparsers(dest="reconcile_command", required=True)
+    reconcile_scan = reconcile_sub.add_parser("scan", help="process every new document of a folder")
+    reconcile_scan.add_argument("folder", help="folder of .txt, text .pdf and .xlsx supplier documents")
+    reconcile_scan.add_argument("--mode", choices=config.MODES, default="replay")
+    reconcile_scan.add_argument("--recordings", default=None, help="recordings file for the document extraction")
+    reconcile_scan.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
+    reconcile_scan.set_defaults(handler=cmd_reconcile_scan)
+    reconcile_list = reconcile_sub.add_parser(
+        "list", help="list every reconciliation with the counts by result and type"
+    )
+    reconcile_list.set_defaults(handler=cmd_reconcile_list)
+    reconcile_show = reconcile_sub.add_parser("show", help="show the result and each difference of one invoice")
+    reconcile_show.add_argument("reference", help="invoice reference like INV-0001")
+    reconcile_show.set_defaults(handler=cmd_reconcile_show)
     quotes_demo = sub.add_parser(
         "quotes-demo",
         help="run the sample quote timeline, each scan, clock, receive, tick, decide, approve and list step in its own process",
@@ -1365,6 +1622,22 @@ def main(argv=None) -> int:
         "--mode", choices=config.MODES, default="replay", help="offer extraction mode; record needs ANTHROPIC_API_KEY"
     )
     quotes_demo.set_defaults(handler=cmd_quotes_demo)
+
+    reconcile_demo = sub.add_parser(
+        "reconcile-demo",
+        help="run the sample invoices and delivery notes, each scan, list and show step in its own process",
+    )
+    reconcile_demo.add_argument("--examples", default=str(DEMO_INVOICES), help="folder of sample documents and orders")
+    reconcile_demo.add_argument(
+        "--workdir", default=str(RECONCILE_DEMO_WORKDIR), help="folder for the demo database and checkpoints"
+    )
+    reconcile_demo.add_argument(
+        "--mode",
+        choices=config.MODES,
+        default="replay",
+        help="document extraction mode; record needs ANTHROPIC_API_KEY",
+    )
+    reconcile_demo.set_defaults(handler=cmd_reconcile_demo)
 
     from purchase_cycle.evaluation.cli import add_eval_commands
 

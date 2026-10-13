@@ -25,6 +25,8 @@ CLARIFICATION_DETECTION_EXTRACTION_RECORDINGS_PATH = (
     EVALS_DIR / "recordings" / "clarification_detection_email_extraction.jsonl"
 )
 OFFER_EXTRACTION_RECORDINGS_PATH = EVALS_DIR / "recordings" / "offer_extraction.jsonl"
+SUPPLIER_DOCUMENT_RECORDINGS_PATH = EVALS_DIR / "recordings" / "document_extraction.jsonl"
+SUPPLIER_DOCUMENT_MAX_TOKENS = 4096  # one answer lists every line of an invoice or delivery note
 OFFER_EXTRACTION_MAX_TOKENS = 512  # one offer per supplier reply
 CLARIFICATION_MAX_TOKENS = 1024  # a question or a resolution list covers every doubtful line of an order
 

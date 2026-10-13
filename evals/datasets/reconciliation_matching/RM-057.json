@@ -1,0 +1,114 @@
+{
+  "dataset_version": "1.0",
+  "documents": {
+    "a-invoice.txt": {
+      "answer": {
+        "currency": "EUR",
+        "issue_date": "2026-10-20",
+        "kind": "invoice",
+        "lines": [
+          {
+            "line_total": 36.0,
+            "product": "Nitrile examination gloves, powder-free, size XS",
+            "quantity": 8,
+            "unit_price": 4.5
+          },
+          {
+            "line_total": 2.0,
+            "product": "Nitrile examination gloves, powder-free, size M",
+            "quantity": 1,
+            "unit_price": 2.0
+          }
+        ],
+        "number": "INV-77",
+        "po_reference": "PO-0001",
+        "supplier_text": "Suministros Medicos Iberia S.L."
+      },
+      "text": "Invoice INV-77\nOrder reference PO-0001  Supplier Suministros Medicos Iberia S.L.\nNitrile examination gloves, powder-free, size XS  8  4.50\nNitrile examination gloves, powder-free, size M  1  2.00\n"
+    },
+    "b-note.txt": {
+      "answer": {
+        "currency": null,
+        "issue_date": "2026-10-21",
+        "kind": "delivery_note",
+        "lines": [
+          {
+            "line_total": null,
+            "product": "Nitrile examination gloves, powder-free, size XS",
+            "quantity": 8,
+            "unit_price": null
+          }
+        ],
+        "number": "DN-5",
+        "po_reference": "PO-0001",
+        "supplier_text": "Suministros Medicos Iberia S.L."
+      },
+      "text": "Delivery Note DN-5\nOrder reference PO-0001  Supplier Suministros Medicos Iberia S.L.\nNitrile examination gloves, powder-free, size XS  8\n"
+    }
+  },
+  "expected": {
+    "documents": {
+      "a-invoice.txt": [
+        "linked",
+        null
+      ],
+      "b-note.txt": [
+        "linked",
+        null
+      ]
+    },
+    "model_calls": 2,
+    "progress": [
+      {
+        "a-invoice.txt": "discrepancies"
+      }
+    ],
+    "reconciliations": {
+      "a-invoice.txt": {
+        "discrepancies": [
+          [
+            "GLV-NIT-XS",
+            "price",
+            3.2
+          ],
+          [
+            "GLV-NIT-XS",
+            "quantity",
+            -8.2
+          ],
+          [
+            "GLV-NIT-M",
+            "extra_line",
+            2.0
+          ]
+        ],
+        "result": "discrepancies"
+      }
+    }
+  },
+  "id": "RM-057",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock; one issued purchase order PO-0001"
+  },
+  "order": {
+    "quantity": 10,
+    "sku": "GLV-NIT-XS",
+    "supplier": "SUP-001",
+    "unit_price": 4.1
+  },
+  "restart": true,
+  "scans": [
+    [
+      "a-invoice.txt",
+      "b-note.txt"
+    ]
+  ],
+  "tags": [
+    "price_over_tolerance",
+    "quantity_below_order",
+    "extra_line",
+    "price_and_quantity_one_line",
+    "several_types",
+    "restart"
+  ]
+}
