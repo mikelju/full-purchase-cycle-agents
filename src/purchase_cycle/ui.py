@@ -200,6 +200,8 @@ class UiApp:
             conn.close()
         last = {entry["thread_id"]: i for i, entry in enumerate(entries) if entry.get("thread_id")}
         for i, entry in enumerate(entries):
+            order_id = entry.get("order_id")  # the block is read now, so price and stock are current
+            entry["order"] = self._order_block(order_id) if order_id is not None else None
             row = pending.get(entry.get("thread_id"))
             entry["pending"] = bool(row) and last[entry["thread_id"]] == i and entry.get("status") in PENDING_STATUSES
             if entry["pending"] and row["channel"] == "whatsapp":
@@ -213,7 +215,7 @@ class UiApp:
     def _log(self, entry: dict) -> dict:
         self.root.mkdir(parents=True, exist_ok=True)
         with self.log_path.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry) + "\n")
+            fh.write(json.dumps({key: value for key, value in entry.items() if key != "order"}) + "\n")
         return entry
 
     def _entry(self, channel: str, customer: dict, sent: str, routed, thread_id, state, error) -> dict:
@@ -258,12 +260,12 @@ class UiApp:
             "outcome": cli._demo_outcome(routed, state, error),
             "order_id": order_id,
             "order": self._order_block(order_id) if order_id is not None else None,
-            "unmatched": _unmatched(state),
+            "unmatched": [] if paused else _unmatched(state),  # a pending question still holds those lines
             "round": question.get("round"),
             "reply": cli._demo_reply(state),
         }
 
-    def _order_block(self, order_id: int) -> dict:
+    def _order_block(self, order_id: int) -> dict | None:
         """The stored lines with the current catalog price and stock; information only, stock is not reserved."""
         rows = self._query(
             "SELECT l.sku, p.name, l.quantity, p.price_eur AS unit_price, COALESCE(s.on_hand, 0) AS stock "
@@ -271,9 +273,14 @@ class UiApp:
             "WHERE l.order_id = ? ORDER BY l.id",
             (order_id,),
         )
+        asked = {}
+        for row in rows:
+            asked[row["sku"]] = asked.get(row["sku"], 0) + row["quantity"]
         for row in rows:
             row["amount"] = round(row["quantity"] * row["unit_price"], 2)
-            row["short"] = row["quantity"] > row["stock"]
+            row["short"] = asked[row["sku"]] > row["stock"]  # the whole SKU of the order against the stock
+        if not rows:
+            return None
         return {"lines": rows, "total": round(sum(row["amount"] for row in rows), 2)}
 
     def send(self, payload: dict) -> dict:
@@ -313,22 +320,56 @@ class UiApp:
                     }
                     for short in quotes.shortfalls(conn)
                 ]
+                blocked = self._blocked(conn)
             finally:
                 conn.close()
             started = quotes.scan(self.db_path, self.checkpointer, self.outbox)  # no model call
         for request in started:
-            request["emails"] = [self._email_summary(path) for path in sorted(self.outbox.glob(f"{request['reference']}-request-*.eml"))]  # fmt: skip
-        message = (
-            f"{len(started)} quote request(s) started"
-            if started
-            else "No new quote requests: no SKU is short of stock beyond what was already requested."
-        )
-        return {"shortfalls": found, "started": started, "message": message}
+            mails = (self._email_summary(path) for path in sorted(self.outbox.glob(f"{request['reference']}-request-*.eml")))  # fmt: skip
+            # `quotes.scan` does not return the paths, and an older database may have left files with the same names.
+            request["emails"] = [mail for mail in mails if request["sku"] in mail.pop("text")]
+        if started:
+            message = f"{len(started)} quote request(s) started"
+            if blocked:
+                message += "; other short SKUs keep waiting for the request they already have"
+        elif blocked:
+            message = "No new quote requests: every short SKU already has a request waiting for supplier replies."
+        else:
+            message = "No new quote requests: no SKU is short of stock beyond what was already requested."
+        return {"shortfalls": found, "blocked": blocked, "started": started, "message": message}
+
+    @staticmethod
+    def _blocked(conn) -> list[dict]:
+        """SKUs short of stock that `quotes.scan` skips because a request for them is still waiting."""
+        marks = ", ".join("?" for _ in quotes.ORDER_STATUSES)
+        rows = conn.execute(
+            "SELECT l.sku, SUM(l.quantity) AS demand, s.on_hand, "
+            "(SELECT COALESCE(SUM(q.quantity), 0) FROM quote_requests q WHERE q.sku = l.sku) AS requested, "
+            "(SELECT MIN(q.id) FROM quote_requests q WHERE q.sku = l.sku AND q.status = ?) AS waiting_id "
+            "FROM order_lines l JOIN orders o ON o.id = l.order_id JOIN stock s ON s.sku = l.sku "
+            f"WHERE o.status IN ({marks}) "
+            "AND l.sku IN (SELECT sku FROM quote_requests WHERE status = ?) "
+            "GROUP BY l.sku HAVING SUM(l.quantity) > s.on_hand + requested ORDER BY l.sku",
+            (quotes.WAITING, *quotes.ORDER_STATUSES, quotes.WAITING),
+        ).fetchall()
+        return [
+            {
+                "sku": r["sku"],
+                "demand": r["demand"],
+                "on_hand": r["on_hand"],
+                "requested": r["requested"],
+                "shortfall": r["demand"] - r["on_hand"] - r["requested"],
+                "waiting_reference": quotes.reference(r["waiting_id"]),
+            }
+            for r in rows
+        ]
 
     @staticmethod
     def _email_summary(path: Path) -> dict:
         message = message_from_bytes(path.read_bytes(), policy=policy.default)
-        return {"file": path.name, "to": str(message["To"]), "subject": str(message["Subject"])}
+        body = message.get_body(("plain",))
+        text = f"{message['Subject']} {body.get_content() if body else ''}"  # for the SKU check; callers drop it
+        return {"file": path.name, "to": str(message["To"]), "subject": str(message["Subject"]), "text": text}
 
     def _write_web_form(self, folder: Path, send_id: str, customer: dict, payload: dict) -> str:
         lines = payload.get("lines")

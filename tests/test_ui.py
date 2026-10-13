@@ -502,7 +502,7 @@ def test_c10_a_stored_order_shows_its_lines_prices_amounts_and_total(server):
     assert block["total"] == round(sum(line["amount"] for line in block["lines"]), 2)
     assert entry["unmatched"] == []
     stored = call(server, "GET", "/api/conversations")[1][0]
-    assert stored["order"] == block  # kept in the log, read back as it was
+    assert stored["order"] == block  # the same values while nothing changed
 
 
 def test_c10_a_quantity_above_the_stock_is_marked_short(server):
@@ -549,7 +549,7 @@ def test_c10_old_log_lines_without_the_new_fields_still_read_back(server):
     server.app.root.mkdir(parents=True, exist_ok=True)
     server.app.log_path.write_text(json.dumps(old) + "\n", encoding="utf-8")
     entries = call(server, "GET", "/api/conversations")[1]
-    assert entries[0]["thread_id"] == "email-old" and "order" not in entries[0]
+    assert entries[0]["thread_id"] == "email-old" and entries[0]["order"] is None  # order 1 does not exist here
     with urllib.request.urlopen(server.base + "/") as response:
         page = response.read().decode("utf-8")
     assert "entry.order" in page and "entry.unmatched" in page and "short of stock" in page
@@ -625,7 +625,8 @@ def test_c12_scan_starts_a_request_for_a_shortfall_and_writes_the_supplier_email
     )
     rows = {t["name"]: t["rows"] for t in call(server, "GET", "/api/database")[1]["tables"]}
     assert [r["sku"] for r in rows["quote_requests"]] == [short["sku"]]
-    assert (server.app.root / "checkpoints.db").exists()
+    config = {"configurable": {"thread_id": "quote-QR-0001", "checkpoint_ns": ""}}
+    assert server.app.checkpointer.get_tuple(config) is not None  # the request thread left a checkpoint
 
 
 def test_c12_a_second_scan_with_nothing_new_says_so(server):
@@ -633,7 +634,7 @@ def test_c12_a_second_scan_with_nothing_new_says_so(server):
     first = call(server, "POST", "/api/quotes/scan", {})[1]
     files = sorted(p.name for p in server.app.outbox.iterdir())
     again = call(server, "POST", "/api/quotes/scan", {})[1]
-    assert again["started"] == [] and again["shortfalls"] == []
+    assert again["started"] == [] and again["shortfalls"] == [] and again["blocked"] == []
     assert "no new" in again["message"].lower() and first["message"] != again["message"]
     assert sorted(p.name for p in server.app.outbox.iterdir()) == files  # no email repeated
 
@@ -665,3 +666,89 @@ def test_c12_the_page_has_the_button(server):
     with urllib.request.urlopen(server.base + "/") as response:
         page = response.read().decode("utf-8")
     assert "Check stock shortfalls" in page and "/api/quotes/scan" in page
+
+
+def test_c10_the_order_block_is_read_at_view_time(server):
+    entry = _short_order(server, quantity=20, stock=3)
+    assert entry["order"]["lines"][0]["stock"] == 3
+    conn = db.connect(server.app.db_path)
+    conn.execute("UPDATE stock SET on_hand = 50")
+    conn.execute("UPDATE products SET price_eur = price_eur + 1")
+    conn.commit()
+    conn.close()
+    [stored] = call(server, "GET", "/api/conversations")[1]
+    line = stored["order"]["lines"][0]
+    assert line["stock"] == 50 and line["short"] is False
+    assert line["unit_price"] == entry["order"]["lines"][0]["unit_price"] + 1
+
+
+def test_c10_duplicate_skus_in_one_order_are_compared_as_a_sum(server):
+    conn = db.connect(server.app.db_path)
+    conn.execute("UPDATE stock SET on_hand = 10")
+    conn.commit()
+    conn.close()
+    form = {"channel": "web_form", "customer": "CLI-001", "lines": [{"product": "nitrile gloves M", "quantity": 6}, {"product": "nitrile gloves M", "quantity": 6}]}  # fmt: skip
+    entry = call(server, "POST", "/api/send", form)[1]
+    lines = entry["order"]["lines"]
+    assert [line["quantity"] for line in lines] == [6, 6] and all(line["short"] for line in lines)
+
+
+def test_review_unmatched_is_empty_while_a_question_is_pending(server):
+    state = {
+        "lines": [{"product": "left-handed widget", "sku": None, "quantity": 2}],
+        "__interrupt__": [type("Interrupt", (), {"value": {"round": 1, "question": "which one?"}})()],
+    }
+    customer = {"code": "CLI-001", "name": "n"}
+    entry = server.app._entry("email", customer, "s", router.Route(router.EMAIL), "t", state, None)
+    assert entry["status"] == "question" and entry["unmatched"] == []
+
+
+def test_c12_an_earlier_closed_request_counts_as_already_requested(server):
+    _short_order(server, quantity=20, stock=3)
+    call(server, "POST", "/api/quotes/scan", {})
+    conn = db.connect(server.app.db_path)
+    conn.execute(
+        "UPDATE quote_requests SET status = 'no_offers'"
+    )  # closed by hand: no supplier replies are simulated here
+    conn.commit()
+    conn.close()
+    form = {"channel": "web_form", "customer": "CLI-001", "lines": [{"product": "nitrile gloves M", "quantity": 10}]}
+    assert call(server, "POST", "/api/send", form)[1]["status"] == "stored"
+    result = call(server, "POST", "/api/quotes/scan", {})[1]
+    [short] = result["shortfalls"]
+    assert (short["demand"], short["on_hand"], short["requested"], short["shortfall"]) == (30, 3, 17, 10)
+    assert [r["reference"] for r in result["started"]] == ["QR-0002"] and result["started"][0]["quantity"] == 10
+
+
+def test_c12_extra_demand_behind_a_waiting_request_is_reported_as_blocked(server):
+    _short_order(server, quantity=20, stock=3)
+    call(server, "POST", "/api/quotes/scan", {})  # QR-0001 stays waiting
+    form = {"channel": "web_form", "customer": "CLI-001", "lines": [{"product": "nitrile gloves M", "quantity": 10}]}
+    assert call(server, "POST", "/api/send", form)[1]["status"] == "stored"
+    result = call(server, "POST", "/api/quotes/scan", {})[1]
+    assert result["started"] == [] and result["shortfalls"] == []
+    [blocked] = result["blocked"]
+    assert set(blocked) == {"sku", "demand", "on_hand", "requested", "shortfall", "waiting_reference"}
+    assert (blocked["demand"], blocked["on_hand"], blocked["requested"], blocked["shortfall"]) == (30, 3, 17, 10)
+    assert blocked["waiting_reference"] == "QR-0001"
+    assert "waiting" in result["message"] and "no sku is short" not in result["message"].lower()
+
+
+def test_c12_stale_emails_of_another_sku_are_not_listed(server):
+    _short_order(server)
+    server.app.outbox.mkdir(parents=True, exist_ok=True)
+    (server.app.outbox / "QR-0001-request-ZZZ.eml").write_text(
+        "To: old@example.com\nSubject: Quote request QR-0001\n\nSKU: OTHER-SKU-1\n", encoding="utf-8"
+    )  # left by an older database
+    [started] = call(server, "POST", "/api/quotes/scan", {})[1]["started"]
+    assert started["emails"] and "QR-0001-request-ZZZ.eml" not in [m["file"] for m in started["emails"]]
+
+
+def test_c12_a_failing_scan_returns_a_json_500_with_the_class_only(server, monkeypatch):
+    def broken(*args, **kwargs):
+        raise RuntimeError("secret detail C:/private/path")
+
+    monkeypatch.setattr(ui.quotes, "scan", broken)
+    status, body = call(server, "POST", "/api/quotes/scan", {})
+    assert status == 500 and "RuntimeError" in body["error"] and "secret" not in body["error"]
+    assert call(server, "GET", "/api/info")[0] == 200  # the server keeps answering

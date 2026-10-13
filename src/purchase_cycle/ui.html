@@ -415,12 +415,12 @@ function renderConversations(entries) {
   }
 }
 
-function table(columns, rows) {
+function table(columns, rows, labels) {
   const wrap = document.createElement("div");
   wrap.className = "scroll";
   const t = document.createElement("table");
   const hr = document.createElement("tr");
-  for (const name of columns) { const th = document.createElement("th"); th.textContent = name; hr.appendChild(th); }
+  for (const name of columns) { const th = document.createElement("th"); th.textContent = labels ? labels[name] : name; hr.appendChild(th); }
   const head = document.createElement("thead"); head.appendChild(hr); t.appendChild(head);
   const body = document.createElement("tbody");
   for (const row of rows) {
@@ -447,6 +447,9 @@ async function loadDatabase() {
   }
 }
 
+const SHORTFALL_COLUMNS = ["sku", "demand", "on_hand", "requested", "shortfall"];
+const SHORTFALL_LABELS = { sku: "SKU", demand: "Units asked", on_hand: "Stock", requested: "Already requested", shortfall: "Shortfall" };
+
 async function scan() {
   showError("");
   $("scan").disabled = true;
@@ -456,8 +459,13 @@ async function scan() {
     root.textContent = "";
     line(root, "", result.message, "reply-label");
     if (result.shortfalls.length) {
-      const cols = ["sku", "demand", "on_hand", "requested", "shortfall"];
-      root.appendChild(table(cols, result.shortfalls));
+      root.appendChild(table(SHORTFALL_COLUMNS, result.shortfalls, SHORTFALL_LABELS));
+    }
+    if (result.blocked.length) {
+      for (const b of result.blocked) {
+        line(root, b.sku, "short, but " + b.waiting_reference + " is still waiting for supplier replies; a new request starts when it closes", "reply-label");
+      }
+      root.appendChild(table(SHORTFALL_COLUMNS, result.blocked, SHORTFALL_LABELS));
     }
     for (const request of result.started) {
       line(root, request.reference, request.sku + " x " + request.quantity);

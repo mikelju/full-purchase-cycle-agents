@@ -72,11 +72,16 @@ A 500 returns the exception class and a generic message; the detail goes to the 
 The `outcome` of a failed run still carries the first line of the exception text (shown on the local page and kept in the log).
 The owner added C10 on 2026-10-13 after the first walkthrough; stock is not checked or reserved when an order is stored, so the stock shown is the current `stock.on_hand` and the warning is informative only; the graph steps path was offered and not chosen.
 The owner added C11 and C12 on 2026-10-13: a read-only database view and a button that runs `quotes scan`; the full quotes cycle on the page was offered and left for a later change; stock is still not reserved when an order is stored.
+Review round 3 decisions: the scan result carries `blocked`, the SKUs still short whose new demand a waiting request holds back (read-only SQL in `ui.py`, same formula as `quotes.shortfalls`), and the message tells apart nothing short, only blocked, and started.
+The order block is computed when the conversations are read, from the entry's `order_id`, so price and stock are current; the log no longer stores it and old log lines keep working.
+The shortage warning compares the order's total per SKU against the stock, and the unmatched list stays empty while a clarification question is pending.
+The request emails listed are those named `<reference>-request-*.eml` that also name the request's SKU, because `quotes.scan` does not return the paths.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
 | 1 | Claude Opus 5.5 subagents | `origin/main..0f7da4a` | Security; Correctness (two independent runs) | Important: no Origin or Content-Type check on POST (CWE-352); rejected answer hid the answer control (C4); WhatsApp answer control shown when the router would start a new order (C4); single-threaded server with no timeout; `route` on `examples/orders` fails in replay, so C5 and the README name the wrong command. Minor: truncated log line gives 500; parked run shown as failed; raw exception text in 500s (CWE-209); `data/ui/` growth; port out of range; checkpointer never closed | Fixed in 441faf5 (SEC-012 widened for `data/ui/` growth); C5 wording pending the owner |
 | 2 | Claude Opus 5.5 subagent | `441faf5` | Security; Correctness | Medium: thread parked after a transient error shown as failed. Low: race in `conversations()` could give 500; app closed under an in-flight run and leaked on bind failure; rejected-answer test forced an impossible state. No Critical or High | Fixed in 2c521d2 |
+| 3 | Claude Opus 5.5 subagent | `90aee16..8058388` | Security; Correctness | Medium: false "nothing new" message when extra demand sits behind a waiting request. Medium: missing test coverage (earlier closed request) and a tautological `checkpoints.db exists` assertion. Low/Medium: lines under a pending question listed as not recognised. Low: shortage warning per line, not per SKU. Low: order block frozen in the log. Low: stale `.eml` files of an older database listed. Low: shortfall headers. Not fixed (Low): SKU without a stock row (the seed always creates one); a partly failed scan leaves its emails off the page (they show in the Database view and the outbox) | Fixed in COMMIT |
 
 ## Delivery
