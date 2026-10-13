@@ -89,7 +89,7 @@ This file is the durable state: a new session resumes from here and from Git.
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
-| DV-01 | The phase 05 test `tests/test_whatsapp_eval.py` (suite order of `eval all`) will gain `offer_extraction` at the end of its expected list, because `ALL_SUITES` grows in increment 12 when its baseline is recorded, and then `quote_decision` at the very end in increment 13 when its scenarios are registered; the behaviour of the earlier suites is unchanged | C1, C12 | Applied in increments 12 and 13 |
+| DV-01 | The phase 05 test `tests/test_whatsapp_eval.py` (suite order of `eval all`) will gain `offer_extraction` at the end of its expected list, because `ALL_SUITES` grows in increment 12 when its baseline is recorded, and then `quote_decision` at the very end in increment 13 when its scenarios are registered (`tests/test_offer_eval.py` then expects `offer_extraction` second to last, one line); the behaviour of the earlier suites is unchanged | C1, C12 | Applied in increments 12 and 13 |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
