@@ -60,6 +60,7 @@ Replay reuses `studio.StudioModelClient` with `orders_demo.jsonl` plus `studio.j
 Sample 06 (a re-delivered message id) is excluded from the C5 test, because the page gives every send a new message id.
 WhatsApp accepts an optional `"type": "image"` and the page a "send a photo" checkbox, so sample 05 can be sent.
 Extra endpoints: `/api/info` (mode) and `/api/conversations` (reads the log `data/ui/conversations.jsonl`); every request also passes a Host header check (127.0.0.1 or localhost).
+Owner walkthrough on 2026-10-13 in live mode: the page works; the owner asked for a three-column layout (new order left, catalog, shortfalls and database centre, conversations right) so the cards are reachable without long scrolling.
 A WhatsApp answer sent to `/api/answer` returns 400, because it is a new message from the same customer.
 Request limits: 100 KB per request, 4000 characters per text, 50 lines per form.
 An occupied port gives a friendly error, and so does a port outside 1-65535.

@@ -398,6 +398,13 @@ Pick a channel and a customer, write the order and press Send:
 - Email: a subject and a body, sent from the customer's email.
 - WhatsApp: a text, sent from the customer's phone; the photo box sends an image message, which is answered as text only.
 
+The page uses three columns on a wide screen, each scrolling on its own: the new order on the left, the catalog, stock shortfalls and database in the centre, the conversations on the right; on a narrow screen they stack in one column.
+A stored order shows as an order block in its conversation, with its lines, amounts, stock and the lines short of stock.
+The Database card shows the page's own tables (orders, order lines, stock, quote requests, quote offers, purchase orders), read only, with a Refresh button.
+The "Check stock shortfalls" button starts one quote request per short SKU and puts the request emails in the outbox; it makes no model call.
+A SKU whose earlier request is still waiting for supplier replies does not get a new one.
+Supplier replies, the decision and the approval are not on the page.
+
 Each send writes one input in the channel's own format under `data/ui/inbox/` and runs it through the router, as `purchase-cycle route` does.
 The conversation list shows the route, the thread id, the outcome (stored order, question, not an order, rejected) and the reply the customer would get.
 
