@@ -27,6 +27,7 @@ def _merge(lines: list[dict]) -> dict[str | None, dict]:
         key = line["sku"] if line["sku"] is not None else ("unresolved", number)
         if key in merged:
             merged[key]["quantity"] += line["quantity"]
+            merged[key]["parts"].append((line["quantity"], line["unit_price"]))
             if merged[key]["unit_price"] is None:
                 merged[key]["unit_price"] = line["unit_price"]
         else:
@@ -36,6 +37,7 @@ def _merge(lines: list[dict]) -> dict[str | None, dict]:
                 "quantity": line["quantity"],
                 "unit_price": line["unit_price"],
                 "line_total": line.get("line_total"),
+                "parts": [(line["quantity"], line["unit_price"])],
             }
     return merged
 
@@ -70,15 +72,26 @@ def classify(order: dict, invoice_lines: list[dict], note_lines: list[dict] | No
                 total = line["unit_price"] * line["quantity"]
             rows.append(_row(sku, EXTRA_LINE, None, line["quantity"], line["unit_price"], total, line["text"]))
             continue
-        price = line["unit_price"]
-        if price is not None and round(abs(price - order["unit_price"]), 6) > PRICE_TOLERANCE:
-            unit = price - order["unit_price"]
-            rows.append(_row(sku, PRICE, order["unit_price"], price, unit, unit * line["quantity"]))
-        expected = None
-        if abs(line["quantity"] - order["quantity"]) > QUANTITY_TOLERANCE:
-            expected = order["quantity"]
-        elif sku in delivered and abs(line["quantity"] - delivered[sku]["quantity"]) > QUANTITY_TOLERANCE:
-            expected = delivered[sku]["quantity"]
+        # Every repeated line is checked on its own; the row holds the lines outside the tolerance.
+        off = [
+            (quantity, price)
+            for quantity, price in line["parts"]
+            if price is None or round(abs(price - order["unit_price"]), 6) > PRICE_TOLERANCE
+        ]
+        if off:
+            if any(price is None for _, price in off):
+                rows.append(_row(sku, PRICE, order["unit_price"], None, None, None))  # no price stated: not a match
+            else:
+                amount = sum((price - order["unit_price"]) * quantity for quantity, price in off)
+                unit = amount / sum(quantity for quantity, _ in off)
+                rows.append(_row(sku, PRICE, order["unit_price"], order["unit_price"] + unit, unit, amount))
+        # When the invoice differs from both the order and the note, the larger difference is the one stored
+        # (one quantity row per SKU, as the discrepancies key allows).
+        references = [order["quantity"]]
+        if sku in delivered:
+            references.append(delivered[sku]["quantity"])
+        off_by = [ref for ref in references if abs(line["quantity"] - ref) > QUANTITY_TOLERANCE]
+        expected = max(off_by, key=lambda ref: abs(line["quantity"] - ref)) if off_by else None
         if expected is not None:
             rows.append(
                 _row(

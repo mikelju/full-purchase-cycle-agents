@@ -8,6 +8,7 @@ import pytest
 from purchase_cycle import reconcile_match as rm
 
 ORDER = {"sku": "GLV-NIT-XS", "quantity": 10, "unit_price": 4.10}
+ORDER_100 = {**ORDER, "quantity": 100}
 
 
 def _line(sku="GLV-NIT-XS", quantity=10, price=4.10, total=None):
@@ -111,6 +112,34 @@ def test_no_note_yet_is_awaiting_and_makes_no_delivery_check():
 
 def test_repeated_lines_of_one_sku_add_up_their_quantities():
     assert rm.classify(ORDER, [_line(quantity=4), _line(quantity=6)], [_note()]) == (rm.MATCHED, [])
+
+
+def test_repeated_lines_at_different_prices_are_a_price_difference():
+    lines = [_line(quantity=50, price=4.10), _line(quantity=50, price=4.60)]
+    result, rows = rm.classify(ORDER_100, lines, [_note(quantity=100)])
+    assert result == rm.DISCREPANCIES
+    assert [(r["type"], r["found"], r["unit_amount"], r["amount"]) for r in rows] == [("price", 4.6, 0.5, 25.0)]
+
+
+def test_repeated_lines_with_the_same_price_and_one_row_per_sku_and_type():
+    lines = [_line(quantity=50, price=5.10), _line(quantity=50, price=5.10), _line(sku=None, price=1.0, quantity=1)]
+    lines.append(_line(sku=None, price=2.0, quantity=1))
+    rows = rm.classify(ORDER_100, lines, [_note(quantity=100)])[1]
+    assert _summary(rows) == [(None, "extra_line"), (None, "extra_line"), ("GLV-NIT-XS", "price")]
+    assert len({(r["sku"], r["type"]) for r in rows if r["sku"] is not None}) == 1
+
+
+def test_an_invoice_line_without_unit_price_is_a_price_difference_not_a_match():
+    result, rows = rm.classify(ORDER, [_line(price=None)], [_note()])
+    assert result == rm.DISCREPANCIES
+    assert [(r["type"], r["expected"], r["found"], r["amount"]) for r in rows] == [("price", 4.1, None, None)]
+
+
+def test_a_quantity_that_differs_from_the_order_and_the_note_reports_the_larger_difference():
+    rows = rm.classify(ORDER, [_line(quantity=12)], [_note(quantity=9)])[1]
+    assert [(r["type"], r["expected"], r["found"], r["amount"]) for r in rows] == [("quantity", 9.0, 12.0, 12.3)]
+    rows = rm.classify(ORDER, [_line(quantity=12)], [_note(quantity=11)])[1]
+    assert [(r["type"], r["expected"]) for r in rows] == [("quantity", 10.0)]
 
 
 def test_matching_imports_no_model_client():
