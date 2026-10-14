@@ -1,60 +1,17 @@
 """C14: `reconcile-demo` runs the sample folder from the scan to the stored results, each step in its own process, with the network blocked."""
 
 import json
-import os
 import shutil
 import sqlite3
-import subprocess
-import sys
 
 import pytest
 
+from conftest import run_reconcile_demo
 from purchase_cycle import claims, config, db, llm
-from test_orders_demo import SITECUSTOMIZE
-
-
-@pytest.fixture(scope="session")
-def claim_recordings(tmp_path_factory):
-    """A claim recordings file for the four demo prompts, built from the phase 08 part of a demo run that has none."""
-    base = tmp_path_factory.mktemp("claim_recordings")
-    missing = base / "none.jsonl"
-    run, _, workdir = _run_demo(base, "--claim-recordings", str(missing))
-    assert run.returncode == 1 and "claim recordings not found" in run.stderr
-    conn = db.connect(workdir / "business.db")
-    try:
-        facts = [claims.claim_facts(conn, invoice_id) for invoice_id in claims.candidates(conn)]
-    finally:
-        conn.close()
-    path = base / "claim_demo.jsonl"
-    system = llm.build_system_prompt([], llm.CLAIM_DRAFTING)
-    with path.open("w", encoding="utf-8") as fh:
-        for fact in facts:
-            key = llm.recording_key(system, claims.facts_prompt(fact), llm.CLAIM_DRAFTING)
-            row = {
-                "key": key,
-                "case_id": f"claim-{fact['invoice']}",
-                "sentence": "",
-                "answer": {"body": claims.fill_template(fact)},
-            }
-            fh.write(json.dumps(row) + "\n")
-    return path
-
-
-def _run_demo(tmp_path, *extra):
-    site = tmp_path / "site"
-    site.mkdir()
-    (site / "sitecustomize.py").write_text(SITECUSTOMIZE, encoding="utf-8")
-    log = tmp_path / "processes.log"
-    env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "LANGSMITH_API_KEY")}
-    env.update(PYTHONPATH=str(site), ORDERS_DEMO_TEST_LOG=str(log))
-    workdir = tmp_path / "work"
-    command = [sys.executable, "-m", "purchase_cycle.cli", "reconcile-demo", "--workdir", str(workdir), *extra]
-    run = subprocess.run(command, capture_output=True, text=True, env=env)
-    return run, log, workdir
 
 
 def test_reconcile_demo_ends_with_every_outcome_with_the_network_blocked(tmp_path, claim_recordings):
-    run, log, workdir = _run_demo(tmp_path, "--claim-recordings", str(claim_recordings))
+    run, log, workdir = run_reconcile_demo(tmp_path, "--claim-recordings", str(claim_recordings))
     out = run.stdout
     assert run.returncode == 0, out + run.stderr
     assert run.stderr == ""
@@ -101,7 +58,7 @@ def test_the_demo_replays_whatever_the_line_endings_of_the_sample_text_files(tmp
     shutil.copytree(config.ROOT / "examples" / "invoices", examples)
     for path in examples.rglob("*.txt"):
         path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", ending))
-    run, _, _ = _run_demo(tmp_path, "--examples", str(examples), "--claim-recordings", str(claim_recordings))
+    run, _, _ = run_reconcile_demo(tmp_path, "--examples", str(examples), "--claim-recordings", str(claim_recordings))
     assert run.returncode == 0, run.stdout + run.stderr
     assert "still awaiting a delivery note at the end: 1" in run.stdout
 
@@ -117,7 +74,7 @@ def test_the_recordings_hold_one_row_per_sample_document():
 def test_the_versioned_claim_recordings_hold_one_row_per_demo_claim_and_replay_the_demo(tmp_path):
     path = config.EVALS_DIR / "recordings" / "claim_demo.jsonl"
     rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
-    run, _, workdir = _run_demo(tmp_path)  # the default claim recordings are the versioned file
+    run, _, workdir = run_reconcile_demo(tmp_path)  # the default claim recordings are the versioned file
     assert run.returncode == 0, run.stdout + run.stderr
     assert "claims: INV-0007=sent, INV-0008=sent edited, INV-0009=rejected, INV-0010=awaiting_approval" in run.stdout
     conn = db.connect(workdir / "business.db")

@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from test_orders_demo import SITECUSTOMIZE
+from conftest import SITECUSTOMIZE
 
 PHASE_06_OUTPUT = (
     Path(__file__).parent / "golden" / "quotes_demo_phase06.txt"

@@ -436,6 +436,8 @@ Recipient, subject (`Claim on invoice <number> for purchase order <PO>`) and sen
 
 Claude Haiku 4.5 writes only the body, in one call per claim.
 Plain code then checks the draft: it must name the invoice and order references, every difference by SKU or product text, every difference amount, the amount in dispute and a request for a corrected invoice or credit note; an amount that is not in the facts, non-ASCII text or an over-long body fails.
+The amount in dispute must appear in a sentence that mentions the dispute, and each row amount in the segment of its own item.
+Amounts are read with an optional euro sign or EUR and with thousands separators, and references and item names must match on token boundaries.
 When the answer is invalid after retries or the check fails, a fixed template filled from the facts is used, the claim is stored with source `template` and one `failures` row (`needs_review`, step `claim_drafting`) is written, and the next claim is still drafted by the model.
 Each claim is stored with its draft, source (`model` or `template`), status and decision.
 
@@ -456,7 +458,7 @@ An `approve` or `reject` of a claim whose thread is missing from the checkpoints
 A claim outbox file of the same name with another text refuses the send and leaves the claim awaiting; `--body-file` cannot change a decision that is already being completed.
 A decision resolves the `claim_drafting` row of `failures`; `failures resume` refuses it and points to `reconcile approve` or `reject`.
 `reconcile list` shows the claim status of each invoice and `reconcile show` the draft, the final text, the source and the status.
-Every command accepts `--db` and `--checkpoints`, and each can run in its own process.
+`--db` is a global option placed before the subcommand and every command accepts it; `--checkpoints` is accepted by `scan`, `claims`, `approve` and `reject`, not by `list` or `show`; each command can run in its own process.
 
 ### Run the claim demo
 
@@ -767,7 +769,7 @@ Scenario success is 100.0% (91.0% to 100.0%, 39 of 39) with 0 critical errors; t
 `uv run purchase-cycle eval --suite claim_drafting` runs the 80 claims of `evals/datasets/claim_drafting/` (20 development, 60 test) through the real drafting call and fact check.
 The cases are planned by a seeded script over ten categories, their differences and amounts in dispute are recomputed with the matching code, and a clean-context second pass agreed on all 80.
 The grader scores the model draft before any template fallback: reference accuracy, discrepancy coverage, amount in dispute accuracy, requested action, invented amount rate and case pass rate, with Wilson intervals, globally and per category.
-A critical error is a draft that omits the amount in dispute or a difference, or states an amount not in the facts.
+A critical error is a draft that omits the amount in dispute or a difference, states an amount not in the facts, states a wrong amount in dispute, or gives a wrong invoice or order number.
 The instructions were tuned on the development split only (one live round, 20 of 20) and not changed after the test run.
 The Claude Haiku 4.5 baseline on the 60 test claims (`evals/baselines/claim_drafting.json`):
 
@@ -782,7 +784,8 @@ The Claude Haiku 4.5 baseline on the 60 test claims (`evals/baselines/claim_draf
 
 The gate sits exactly on the edge (57 of 60).
 The three critical errors are CLM-044 (amount in dispute missing) and CLM-066 and CLM-072 (a difference named only by product text is omitted).
-They are reported, not hidden; at run time the fact check catches such drafts and falls back to the template.
+They are reported, not hidden.
+The grader and the run-time fact check share one implementation (`check_draft`), so the evaluation cannot measure drafts that the check wrongly passes; this is a known limit.
 
 `uv run purchase-cycle eval --suite claim_approval` runs the 35 scenarios of `evals/datasets/claim_approval/` through the same functions as the CLI on a temporary database, with the drafting call given by a test double so no model is called.
 They cover claims for each kind of invoice, no claim for matched, awaiting and unlinked ones, a later delivery note, the template fallback, approve, approve with an edit, an empty edit refused, reject, repeated decisions, a decision with no claim, `claims` re-runs and a restart between steps.
@@ -790,7 +793,7 @@ The grader reads the database, the outbox and `failures` against an oracle apart
 Scenario success is 100.0% (90.1% to 100.0%, 35 of 35) with 0 critical errors; the gate is 100% success and 0 critical errors.
 The whole phase cost about 0.18 USD of live calls (84 calls).
 
-`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the seven dataset evaluations once; `--suite <name>` uploads one; `offer_extraction` and `claim_drafting` are uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait`, `quote_decision` and `claim_approval` are not).
+`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the nine dataset evaluations once; `--suite <name>` uploads one; `offer_extraction` and `claim_drafting` are uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait`, `quote_decision`, `reconciliation_matching` and `claim_approval` are not).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
 Recordings in `evals/recordings/` are tied to the exact prompt and model: changing either needs a new recording and a new comparison against the baseline.
 
@@ -840,7 +843,8 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - The sample documents of the demo list the SKU only: in a first recording a description column made the model join it to the SKU, which left the line unresolved, so the reading of free descriptions relies on the catalog matching of phase 02.
 - The LangSmith trace of a live `reconcile-demo` run and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
 - A claim for an invoice whose differences are all in the supplier's favour has 0.00 EUR in dispute and asks for a corrected invoice (the LV-0303 case).
-- The claim is one email in the outbox: nothing is sent over a network and the supplier's answer, a credit note or a payment block is not read.
+- The fact check does not read the direction of a difference: a credit asked on a difference in the supplier's favour passes the check.
+- The blind second pass of the `claim_drafting` dataset compared rows, amounts and totals, not the expected and found values, and the raw annotator readings were not kept.
 - `claim_drafting` has 3 critical errors out of 60 test claims against a target of 0, its gate is on the edge at 95.0%, and the writer and the evaluated model belong to the same family, so the figures may be optimistic.
 - The LangSmith trace of a live `reconcile-demo` claim run and the experiment of `claim_drafting` are pending until the LangSmith trace quota resets, around 2026-11-05.
 

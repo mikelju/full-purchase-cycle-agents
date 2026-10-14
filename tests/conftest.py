@@ -1,9 +1,13 @@
 import json
+import os
 import socket
+import subprocess
+import sys
+import textwrap
 
 import pytest
 
-from purchase_cycle import db
+from purchase_cycle import claims, db, llm
 from purchase_cycle.llm import EXTRACTION, build_system_prompt, recording_key
 
 SENTENCE = "Please send 40 boxes of powder-free nitrile gloves, size M"
@@ -127,3 +131,118 @@ def invoke_durability(monkeypatch):
 
     monkeypatch.setattr(Pregel, "invoke", spy)
     return seen
+
+
+# Loaded by every Python process the test starts, the demo and its crash and resume children: it notes the process
+# and blocks the network, noting each attempt.
+SITECUSTOMIZE = textwrap.dedent(
+    """
+    import os, socket
+
+    LOG = os.environ["ORDERS_DEMO_TEST_LOG"]
+
+    def note(text):
+        with open(LOG, "a", encoding="utf-8") as fh:
+            fh.write(text + "\\n")
+
+    def blocked(*args, **kwargs):
+        note("network")
+        raise OSError("network blocked by test")
+
+    note("process")
+    socket.socket.connect = blocked
+    socket.create_connection = blocked
+    """
+)
+
+SKU = "GLV-NIT-XS"
+
+
+def _invoice(conn, number, result, rows=(), supplier="SUP-001"):
+    """A reconciled invoice with its purchase order and discrepancy rows; returns the invoice id."""
+    conn.execute(
+        "INSERT INTO supplier_documents (kind, number, source_file, content_hash, status, created_at) "
+        "VALUES ('invoice', ?, 'f.txt', ?, 'linked', 't')",
+        (number, number),
+    )
+    invoice = conn.execute("SELECT MAX(id) FROM supplier_documents").fetchone()[0]
+    conn.execute(
+        "INSERT INTO quote_requests (sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
+        "VALUES (?, 5, ?, 'ordered', 't', 't', 't')",
+        (SKU, f"th-{number}"),
+    )
+    conn.execute(
+        "INSERT INTO purchase_orders (request_id, supplier_code, sku, quantity, unit_price, currency, total, "
+        "expected_delivery, issued_at, status) "
+        "VALUES ((SELECT MAX(id) FROM quote_requests), ?, ?, 5, 1.0, 'EUR', 5.0, 't', 't', 'issued')",
+        (supplier, SKU),
+    )
+    conn.execute(
+        "INSERT INTO reconciliations (invoice_id, purchase_order_id, result, reconciled_at) "
+        "VALUES (?, (SELECT MAX(id) FROM purchase_orders), ?, 't')",
+        (invoice, result),
+    )
+    reconciliation_id = conn.execute("SELECT MAX(id) FROM reconciliations").fetchone()[0]
+    for sku, kind, expected, found, unit_amount, amount, text in rows:
+        conn.execute(
+            "INSERT INTO discrepancies (reconciliation_id, sku, type, expected, found, unit_amount, amount, text) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (reconciliation_id, sku, kind, expected, found, unit_amount, amount, text),
+        )
+    conn.commit()
+    return invoice
+
+
+ROWS = [(SKU, "price", 4.0, 4.5, 0.5, 5.0, None), (None, "extra_line", None, 3.0, 2.0, 6.0, "Surgical masks")]
+
+
+def _two_claims_from(conn, tmp_path, facts, bodies):
+    path = tmp_path / "two.jsonl"
+    with path.open("w") as fh:
+        for fact, body in zip(facts, bodies, strict=True):
+            key = llm.recording_key(
+                llm.build_system_prompt([], llm.CLAIM_DRAFTING), claims.facts_prompt(fact), llm.CLAIM_DRAFTING
+            )
+            answer = body if isinstance(body, dict) else {"body": body}
+            fh.write(json.dumps({"key": key, "case_id": "t", "sentence": "", "answer": answer}) + "\n")
+    return facts, llm.ModelClient("replay", [], path, task=llm.CLAIM_DRAFTING)
+
+
+def run_reconcile_demo(tmp_path, *extra):
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "sitecustomize.py").write_text(SITECUSTOMIZE, encoding="utf-8")
+    log = tmp_path / "processes.log"
+    env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "LANGSMITH_API_KEY")}
+    env.update(PYTHONPATH=str(site), ORDERS_DEMO_TEST_LOG=str(log))
+    workdir = tmp_path / "work"
+    command = [sys.executable, "-m", "purchase_cycle.cli", "reconcile-demo", "--workdir", str(workdir), *extra]
+    run = subprocess.run(command, capture_output=True, text=True, env=env)
+    return run, log, workdir
+
+
+@pytest.fixture(scope="session")
+def claim_recordings(tmp_path_factory):
+    """A claim recordings file for the four demo prompts, built from the phase 08 part of a demo run that has none."""
+    base = tmp_path_factory.mktemp("claim_recordings")
+    missing = base / "none.jsonl"
+    run, _, workdir = run_reconcile_demo(base, "--claim-recordings", str(missing))
+    assert run.returncode == 1 and "claim recordings not found" in run.stderr
+    conn = db.connect(workdir / "business.db")
+    try:
+        facts = [claims.claim_facts(conn, invoice_id) for invoice_id in claims.candidates(conn)]
+    finally:
+        conn.close()
+    path = base / "claim_demo.jsonl"
+    system = llm.build_system_prompt([], llm.CLAIM_DRAFTING)
+    with path.open("w", encoding="utf-8") as fh:
+        for fact in facts:
+            key = llm.recording_key(system, claims.facts_prompt(fact), llm.CLAIM_DRAFTING)
+            row = {
+                "key": key,
+                "case_id": f"claim-{fact['invoice']}",
+                "sentence": "",
+                "answer": {"body": claims.fill_template(fact)},
+            }
+            fh.write(json.dumps(row) + "\n")
+    return path

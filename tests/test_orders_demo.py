@@ -4,31 +4,9 @@ import os
 import sqlite3
 import subprocess
 import sys
-import textwrap
 
+from conftest import SITECUSTOMIZE
 from purchase_cycle import faults
-
-# Loaded by every Python process the test starts, the demo and its crash and resume children: it notes the process
-# and blocks the network, noting each attempt.
-SITECUSTOMIZE = textwrap.dedent(
-    """
-    import os, socket
-
-    LOG = os.environ["ORDERS_DEMO_TEST_LOG"]
-
-    def note(text):
-        with open(LOG, "a", encoding="utf-8") as fh:
-            fh.write(text + "\\n")
-
-    def blocked(*args, **kwargs):
-        note("network")
-        raise OSError("network blocked by test")
-
-    note("process")
-    socket.socket.connect = blocked
-    socket.create_connection = blocked
-    """
-)
 
 
 def _item(out: str, name: str) -> list[str]:

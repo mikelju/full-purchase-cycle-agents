@@ -456,6 +456,7 @@ def _measure(paths: dict) -> dict:
             entry["count"] += 1
             facts = claims.claim_facts(conn, row["invoice_id"])
             entry["template_ok"] = facts is not None and not claims.check_draft(row["draft_body"], facts)
+            entry["template_text"] = None if facts is None else claims.fill_template(facts).strip()
         results = {
             reconciliation.invoice_reference(r["invoice_id"]): r["result"]
             for r in conn.execute("SELECT invoice_id, result FROM reconciliations")
@@ -502,6 +503,7 @@ def _errors(item: dict, final: dict, log: list[dict]) -> dict[str, int]:
     counts["duplicate_claim_or_email"] = sum(max(0, c["count"] - 1) for c in found.values()) + sum(
         max(0, n - 1) for n in per_ref.values()
     )
+    drafts = {reconciliation.invoice_reference(n): i["draft"] for n, i in enumerate(item["invoices"], start=1)}
     approved = {}
     for step, line in zip(item["steps"], log, strict=True):
         if step["op"] == "approve" and line["code"] == 0:
@@ -512,9 +514,12 @@ def _errors(item: dict, final: dict, log: list[dict]) -> dict[str, int]:
             counts["status_outbox_mismatch"] += 1
         if final["results"].get(ref) != "discrepancies":
             counts["claim_without_discrepancies"] += 1
-        wanted = claim["draft_body"] if approved.get(ref) is None else approved[ref]
-        if claim["draft_source"] == "model" and approved.get(ref) is None:
-            wanted = item["expected"]["claims"][ref]["sent_body"] or claim["draft_body"]
+        if approved.get(ref) is not None:
+            wanted = approved[ref]
+        elif claim["draft_source"] == "model":
+            wanted = drafts[ref]  # the scenario's own draft text, not the stored one
+        else:
+            wanted = claim["template_text"]  # the template filled from the scenario facts, not the stored one
         for mail in mails:
             if mail["body"] != wanted.strip() or (claim["final_body"] or "").strip() != mail["body"]:
                 counts["sent_text_differs"] += 1
@@ -554,7 +559,7 @@ def run_item(item: dict, tmp: Path) -> dict:
             measured_claims[r] = None
             continue
         sent = next((e["body"] for name, e in final["emails"].items() if _email_ref(name) == r), None)
-        if sent is not None and claim["draft_source"] == "template" and sent == claim["draft_body"].strip():
+        if sent is not None and claim["draft_source"] == "template" and sent == claim["template_text"]:
             sent = TEMPLATE if claim["template_ok"] else sent
         measured_claims[r] = {
             "status": claim["status"], "source": claim["draft_source"], "edited": claim["edited"], "sent_body": sent,

@@ -6,10 +6,9 @@ from email import message_from_bytes, policy
 import pytest
 from langgraph.types import Command
 
+from conftest import ROWS, SKU, _invoice, _two_claims_from
 from purchase_cycle import claims, db, llm
 from purchase_cycle.graph import sqlite_checkpointer
-
-SKU = "GLV-NIT-XS"
 
 
 @pytest.fixture
@@ -17,41 +16,6 @@ def conn(tmp_path):
     conn = db.connect(tmp_path / "claims.db")
     db.seed(conn)
     return conn
-
-
-def _invoice(conn, number, result, rows=(), supplier="SUP-001"):
-    """A reconciled invoice with its purchase order and discrepancy rows; returns the invoice id."""
-    conn.execute(
-        "INSERT INTO supplier_documents (kind, number, source_file, content_hash, status, created_at) "
-        "VALUES ('invoice', ?, 'f.txt', ?, 'linked', 't')",
-        (number, number),
-    )
-    invoice = conn.execute("SELECT MAX(id) FROM supplier_documents").fetchone()[0]
-    conn.execute(
-        "INSERT INTO quote_requests (sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
-        "VALUES (?, 5, ?, 'ordered', 't', 't', 't')",
-        (SKU, f"th-{number}"),
-    )
-    conn.execute(
-        "INSERT INTO purchase_orders (request_id, supplier_code, sku, quantity, unit_price, currency, total, "
-        "expected_delivery, issued_at, status) "
-        "VALUES ((SELECT MAX(id) FROM quote_requests), ?, ?, 5, 1.0, 'EUR', 5.0, 't', 't', 'issued')",
-        (supplier, SKU),
-    )
-    conn.execute(
-        "INSERT INTO reconciliations (invoice_id, purchase_order_id, result, reconciled_at) "
-        "VALUES (?, (SELECT MAX(id) FROM purchase_orders), ?, 't')",
-        (invoice, result),
-    )
-    reconciliation_id = conn.execute("SELECT MAX(id) FROM reconciliations").fetchone()[0]
-    for sku, kind, expected, found, unit_amount, amount, text in rows:
-        conn.execute(
-            "INSERT INTO discrepancies (reconciliation_id, sku, type, expected, found, unit_amount, amount, text) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (reconciliation_id, sku, kind, expected, found, unit_amount, amount, text),
-        )
-    conn.commit()
-    return invoice
 
 
 def _claim(conn, invoice, status="awaiting_approval"):
@@ -145,9 +109,6 @@ def test_facts_of_an_unknown_invoice_or_one_without_discrepancies_are_none(conn)
 def test_the_amount_in_dispute_follows_the_sign_rule(rows, expected):
     assert _amount(rows) == pytest.approx(expected, abs=1e-9)
     assert _amount(rows) == round(_amount(rows), 2)
-
-
-ROWS = [(SKU, "price", 4.0, 4.5, 0.5, 5.0, None), (None, "extra_line", None, 3.0, 2.0, 6.0, "Surgical masks")]
 
 
 def _client(facts, body, tmp_path, mode="replay"):
@@ -457,18 +418,6 @@ def test_a_failed_draft_stores_the_template_and_the_next_claim_is_still_model(co
     assert (row["status"], row["step"], row["channel"]) == ("needs_review", "claim_drafting", "reconcile")
     assert db.get_failure(conn, f"claim-{facts[1]['invoice']}") is None
     assert len(db.list_failures(conn)) == 1
-
-
-def _two_claims_from(conn, tmp_path, facts, bodies):
-    path = tmp_path / "two.jsonl"
-    with path.open("w") as fh:
-        for fact, body in zip(facts, bodies, strict=True):
-            key = llm.recording_key(
-                llm.build_system_prompt([], llm.CLAIM_DRAFTING), claims.facts_prompt(fact), llm.CLAIM_DRAFTING
-            )
-            answer = body if isinstance(body, dict) else {"body": body}
-            fh.write(json.dumps({"key": key, "case_id": "t", "sentence": "", "answer": answer}) + "\n")
-    return facts, llm.ModelClient("replay", [], path, task=llm.CLAIM_DRAFTING)
 
 
 def test_a_good_draft_is_stored_as_model_with_no_failure(conn, tmp_path):
