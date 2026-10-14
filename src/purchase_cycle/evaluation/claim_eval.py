@@ -54,14 +54,12 @@ def grade(case: dict, body: str | None, error: str | None = None) -> dict:
     rows = facts["differences"]
     text = body or ""
     problems = claims.check_draft(text, facts) if body is not None else ["no draft"]
-    amounts = claims.money_amounts(text)
     covered = 0
     for row in rows:
         item = row["sku"] or row["text"]
-        stated = row["amount"] is None or any(abs(a - abs(row["amount"])) < 0.005 for a in amounts)
-        covered += bool(item and item in text and stated)
+        covered += bool(item and claims.mentions(text, item) and claims.amount_stated(row, text))
     reference_ok = not any(p.startswith(("missing invoice number", "missing purchase order")) for p in problems)
-    amount_ok = not any(p.startswith("missing amount in dispute") for p in problems)
+    amount_ok = not any(p.startswith(("missing amount in dispute", "wrong amount in dispute")) for p in problems)
     invented = any(p.startswith("invented amount") for p in problems)
     return {
         "id": case["id"],

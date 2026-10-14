@@ -15,9 +15,13 @@ CLAIM_SUBJECT = "Claim on invoice {invoice} for purchase order {order}"
 MAX_CLAIM_BODY = 3000
 CHANNEL = "reconcile"
 STEP = "claim_drafting"
-# A money amount: a number with exactly two decimals, or any number next to EUR or euro(s); bare integers are not money.
+AMOUNT_TOLERANCE = 0.005  # half a cent
+_CURRENCY = r"(?:EUR|euros?|\u20ac)(?![A-Za-z])"
+_NUMBER = r"\d{1,3}(?:[ ,.]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?"
+# A money amount: a number with decimals, or any number next to EUR, euro(s) or the euro sign; bare integers are not
+# money. A match never starts inside a word, a number or a SKU and never ends inside a number (dates are not amounts).
 AMOUNT_PATTERN = re.compile(
-    r"(?<![\w.])(\d+(?:[.,]\d+)?)\s*(?:EUR|euros?)\b|\bEUR\s*(\d+(?:[.,]\d+)?)|(?<!\d)(\d+[.,]\d{2})(?!\d)",
+    rf"(?<![\w.,])(?<!\w-)(?:(?P<pre>{_CURRENCY})\s*)?(?P<num>{_NUMBER})(?!\d|[.,]\d)(?:\s*(?P<post>{_CURRENCY}))?",
     re.IGNORECASE,
 )
 CLAIM_TEMPLATE = """Dear {supplier},
@@ -45,13 +49,13 @@ def candidates(conn: sqlite3.Connection) -> list[int]:
 
 
 def amount_in_dispute(differences: list[dict]) -> float:
-    """Sum of the differences that make us pay more: positive price and quantity amounts and priced extra lines."""
+    """Sum of the differences that make us pay more: the positive amounts of price, quantity and extra lines."""
     total = 0.0
     for row in differences:
         amount = row["amount"]
         if amount is None:
             continue
-        if row["type"] in ("price", "quantity") and amount > 0 or row["type"] == "extra_line":
+        if row["type"] in ("price", "quantity", "extra_line") and amount > 0:
             total += amount
     return round(total, 2)
 
@@ -96,36 +100,91 @@ def facts_prompt(facts: dict) -> str:
     return json.dumps(shown, sort_keys=True)
 
 
+def _read_number(text: str) -> tuple[float, bool]:
+    """The value of a number written with thousands separators and a decimal point or comma, and whether it has decimals."""
+    text = text.replace(" ", "")
+    marks = [i for i, c in enumerate(text) if c in ".,"]
+    if not marks:
+        return float(text), False
+    last = marks[-1]
+    head, tail = text[:last], text[last + 1 :]
+    other_kind = any(c in ".," and c != text[last] for c in head)
+    if len(tail) != 3 or other_kind or head == "0":
+        return float(re.sub(r"[.,]", "", head) + "." + tail), True
+    return float(re.sub(r"[.,]", "", text)), False
+
+
+def _money_spans(text: str) -> list[tuple[float, int]]:
+    """Every money amount of the text with the position where it starts."""
+    spans = []
+    for m in AMOUNT_PATTERN.finditer(text):
+        value, decimals = _read_number(m["num"])
+        if m["pre"] or m["post"] or decimals:
+            spans.append((value, m.start()))
+    return spans
+
+
 def money_amounts(text: str) -> list[float]:
-    """Every money amount in the text, read by AMOUNT_PATTERN; a decimal comma counts as a point."""
-    return [float(next(g for g in m.groups() if g).replace(",", ".")) for m in AMOUNT_PATTERN.finditer(text)]
+    """Every money amount in the text, read by AMOUNT_PATTERN."""
+    return [value for value, _ in _money_spans(text)]
+
+
+def _near(a: float, b: float) -> bool:
+    return abs(a - b) < AMOUNT_TOLERANCE
+
+
+def mentions(text: str, token: str) -> bool:
+    """Whether the token appears in the text as a whole token, not inside a longer SKU or number."""
+    return bool(re.search(rf"(?<![A-Za-z0-9])(?<![A-Za-z0-9]-){re.escape(token)}(?![A-Za-z0-9]|-[A-Za-z0-9])", text))
+
+
+def _sentences(body: str) -> list[str]:
+    return [part for line in body.splitlines() for part in re.split(r"(?<=[.!?])\s+", line) if part.strip()]
+
+
+def amount_stated(row: dict, body: str) -> bool:
+    """Whether the amount of a discrepancy row is written next to its item on one line or in one sentence."""
+    if row["amount"] is None:
+        return True
+    item = row["sku"] or row["text"]
+    amount = abs(row["amount"])
+    return bool(item) and any(
+        mentions(part, item) and any(_near(v, amount) for v in money_amounts(part))
+        for part in body.splitlines() + _sentences(body)
+    )
 
 
 def check_draft(body: str, facts: dict) -> list[str]:
     """Deterministic fact check of a draft; an empty list means it passes."""
     problems = []
-    found = money_amounts(body)
-
-    def has(amount: float) -> bool:
-        return any(abs(value - amount) < 0.005 for value in found)
-
+    total = abs(facts["amount_in_dispute"])
+    sentences = _sentences(body)
     for label, reference in (("invoice number", facts["invoice_number"]), ("purchase order", facts["order"])):
-        if reference and reference not in body:
+        if reference and not mentions(body, reference):
             problems.append(f"missing {label} {reference}")
-    allowed = [abs(facts["amount_in_dispute"])]
+    money = {abs(total)}
     for row in facts["differences"]:
         item = row["sku"] or row["text"]
-        if item and item not in body:
+        if item and not mentions(body, item):
             problems.append(f"missing difference {item}")
-        if row["amount"] is not None and not has(abs(row["amount"])):
+        if not amount_stated(row, body):
             problems.append(f"missing amount {abs(row['amount']):.2f} of {item}")
-        allowed += [abs(row[key]) for key in ("expected", "found", "unit_amount", "amount") if row[key] is not None]
-    if not has(abs(facts["amount_in_dispute"])):
+        keys = ("unit_amount", "amount") + (("expected", "found") if row["type"] == "price" else ())
+        money |= {abs(row[key]) for key in keys if row[key] is not None}
+    disputed = [part for part in sentences if re.search(r"disput", part, re.IGNORECASE)]
+    stated = [money_amounts(part) for part in disputed]
+    if not any(_near(v, total) for values in stated for v in values):
         problems.append(f"missing amount in dispute {facts['amount_in_dispute']:.2f}")
+    for value in sorted({v for values in stated for v in values if not _near(v, total)}):
+        problems.append(f"wrong amount in dispute {value:.2f}")
     if not re.search(r"corrected invoice|credit note", body, re.IGNORECASE):
         problems.append("missing request for a corrected invoice or a credit note")
-    for value in found:
-        if not any(abs(value - known) < 0.005 for known in allowed):
+    unnamed = body  # a SKU or product text may hold numbers such as "2.5 cm"; they are names, not amounts
+    names = {name for row in facts["differences"] for name in (row["sku"], row["text"]) if name}
+    for name in sorted(names, key=len, reverse=True):
+        unnamed = unnamed.replace(name, " ")
+    for value in money_amounts(unnamed):
+        if not any(_near(value, known) for known in money):
             problems.append(f"invented amount {value:.2f}")
     if not body.isascii():
         problems.append("body is not ASCII")

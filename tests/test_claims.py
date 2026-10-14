@@ -299,6 +299,123 @@ def test_a_difference_with_no_amount_needs_no_amount():
     assert claims.check_draft(body, facts) == []
 
 
+@pytest.mark.parametrize(
+    ("text", "values"),
+    [
+        ("1,050.00 EUR", [1050.0]),
+        ("EUR 1,234.56", [1234.56]),
+        ("1.234,56 EUR", [1234.56]),
+        ("1 234.56", [1234.56]),
+        ("\u20ac12 and 12 \u20ac", [12.0, 12.0]),
+        ("on 12.10.26 and 12.10.2026", []),  # dates are not amounts
+        ("GEL-5.5 and N-77002.50", []),  # nothing starts inside a SKU
+        ("The total overcharge is 999.5", [999.5]),
+    ],
+)
+def test_amounts_with_separators_signs_and_dates(text, values):
+    assert claims.money_amounts(text) == values
+
+
+CLM = {
+    "invoice": "INV-0001",
+    "invoice_number": "F-1",
+    "order": "PO-0001",
+    "supplier": "S",
+    "recipient": "a@b.c",
+    "differences": [
+        {"sku": "GAUZE-NS-5-12", "type": "price", "expected": 3.6, "found": 4.3, "unit_amount": 0.7, "amount": 350.0, "text": None}
+    ],
+    "amount_in_dispute": 350.0,
+}  # fmt: skip
+CLM_OK = "F-1 PO-0001 GAUZE-NS-5-12 difference 350.00 EUR. The amount in dispute is 350.00 EUR. Send a credit note."
+
+
+def _row(sku, kind, amount, **more):
+    row = {
+        "sku": sku,
+        "type": kind,
+        "expected": None,
+        "found": None,
+        "unit_amount": None,
+        "amount": amount,
+        "text": None,
+    }
+    return row | more
+
+
+def test_the_amount_in_dispute_must_be_stated_as_the_dispute():
+    assert claims.check_draft(CLM_OK, CLM) == []
+    wrong = CLM_OK.replace("is 350.00 EUR", "is 4.30 EUR")
+    assert any("amount in dispute" in p for p in claims.check_draft(wrong, CLM))
+    two = CLM_OK.replace("is 350.00 EUR", "is 350.00 EUR, not 4.30 EUR")
+    assert any("wrong amount in dispute 4.30" in p for p in claims.check_draft(two, CLM))
+    never = CLM_OK.replace("The amount in dispute is 350.00 EUR.", "We ask for 350.00 EUR back.")
+    assert any("missing amount in dispute" in p for p in claims.check_draft(never, CLM))
+
+
+def test_a_row_amount_is_not_the_amount_in_dispute():
+    facts = CLM | {
+        "differences": [_row("A-1", "price", 12.0), _row("B-2", "quantity", -5.0)],
+        "amount_in_dispute": 12.0,
+    }
+    body = "F-1 PO-0001 A-1 12.00 EUR. B-2 5.00 EUR. The amount in dispute is 5.00 EUR. Send a credit note."
+    assert any("missing amount in dispute 12.00" in p for p in claims.check_draft(body, facts))
+    assert claims.check_draft(body.replace("is 5.00", "is 12.00"), facts) == []
+
+
+def test_each_row_amount_sits_with_its_sku():
+    facts = CLM | {
+        "differences": [_row("NDL-20G", "extra_line", 31.6), _row("BND-ELA-7", "missing_line", 40.0)],
+        "amount_in_dispute": 31.6,
+    }
+    good = "F-1 PO-0001\n- NDL-20G: difference 31.60 EUR\n- BND-ELA-7: difference 40.00 EUR\nIn dispute: 31.60 EUR. Credit note."
+    assert claims.check_draft(good, facts) == []
+    swapped = (
+        "F-1 PO-0001\n- NDL-20G: difference 40.00 EUR\n- BND-ELA-7: difference 31.60 EUR\n"
+        "In dispute: 31.60 EUR. Credit note."
+    )
+    assert any("missing amount 31.60 of NDL-20G" in p for p in claims.check_draft(swapped, facts))
+
+
+def test_a_quantity_is_not_a_money_amount():
+    facts = CLM | {
+        "differences": [_row("A-1", "quantity", 302.0, expected=100, found=302)],
+        "amount_in_dispute": 302.0,
+    }
+    body = "F-1 PO-0001 A-1 invoiced 302 against 100, 302.00 EUR. The amount in dispute is 302.00 EUR. Credit note."
+    assert claims.check_draft(body, facts) == []
+    facts = facts | {"differences": [_row("A-1", "quantity", 12.0, expected=100, found=302)], "amount_in_dispute": 12.0}
+    body = "F-1 PO-0001 A-1 invoiced 302 against 100, 12.00 EUR. The amount in dispute is 12.00 EUR. Credit of 302 EUR."
+    assert "invented amount 302.00" in claims.check_draft(body, facts)
+    assert "invented amount 999.50" in claims.check_draft(CLM_OK + " The total overcharge is 999.5", CLM)
+
+
+def test_references_and_skus_match_whole_tokens():
+    facts = CLM | {
+        "invoice_number": "N-77002",
+        "differences": [_row("GEL-500", "price", 5.0)],
+        "amount_in_dispute": 5.0,
+    }
+    body = "N-77002 PO-0001 GEL-500 5.00 EUR. The amount in dispute is 5.00 EUR. Credit note."
+    assert claims.check_draft(body, facts) == []
+    longer = body.replace("N-77002", "N-770021").replace("GEL-500", "GEL-5000")
+    problems = claims.check_draft(longer, facts)
+    assert any("missing invoice number N-77002" in p for p in problems)
+    assert any("missing difference GEL-500" in p for p in problems)
+    assert claims.mentions("X-10 only", "X-1") is False and claims.mentions("pay X-1.", "X-1")
+
+
+def test_without_an_invoice_number_the_order_is_still_required():
+    facts = CLM | {"invoice_number": None}
+    assert claims.check_draft(CLM_OK.replace("F-1 ", ""), facts) == []
+    assert any("purchase order" in p for p in claims.check_draft(CLM_OK.replace("PO-0001", ""), facts))
+
+
+def test_a_negative_extra_line_does_not_reduce_the_dispute():
+    rows = [(SKU, "price", 4.0, 4.3, 0.3, 30.0, None), (None, "extra_line", None, 1.0, -40.0, -40.0, "Discount")]
+    assert _amount(rows) == 30.0
+
+
 SIGN_CASES = [
     [(SKU, "price", 4.0, 4.5, 0.5, 5.0, None)],
     [(SKU, "price", 4.0, 3.5, -0.5, -5.0, None)],
@@ -322,7 +439,10 @@ def test_the_filled_template_passes_the_check(conn, rows):
 
 
 def _good_for(facts):
-    return f"{facts['invoice_number']} {facts['order']} {SKU} 5.00 EUR Surgical masks 6.00 EUR total 11.00 EUR, credit note"
+    return (
+        f"{facts['invoice_number']} {facts['order']} {SKU} 5.00 EUR Surgical masks 6.00 EUR. "
+        "The amount in dispute is 11.00 EUR, credit note"
+    )
 
 
 @pytest.mark.parametrize("failing", ["schema", "fact_check"])
@@ -460,3 +580,12 @@ def test_rerunning_a_node_writes_nothing_twice_and_calls_no_model(flow):
     claims.draft_message(flow.db_path, None, flow.invoice)
     assert ([tuple(r) for r in flow.row()], flow.emails(), flow.client.calls) == before
     assert graph.get_state(flow.run).next == ()
+
+
+def test_numbers_inside_a_product_text_are_not_amounts():
+    facts = CLM | {
+        "differences": [_row(None, "extra_line", 20.0, text="zinc oxide tape 2.5 cm x 5 m")],
+        "amount_in_dispute": 20.0,
+    }
+    body = "F-1 PO-0001 zinc oxide tape 2.5 cm x 5 m 20.00 EUR. The amount in dispute is 20.00 EUR. Credit note."
+    assert claims.check_draft(body, facts) == []

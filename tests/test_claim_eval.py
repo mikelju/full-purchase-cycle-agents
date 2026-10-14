@@ -148,7 +148,7 @@ def test_each_check_and_critical_error_is_graded():
     no_ref = claim_eval.grade(case, claims.fill_template(facts).replace(facts["invoice_number"], "X"))
     assert not no_ref["reference_accuracy"] and no_ref["critical_errors"]
     no_total = claim_eval.grade(case, claims.fill_template(facts).replace("amount in dispute is", "total is"))
-    assert no_total["amount_in_dispute_accuracy"]  # the wording is free; the amount is what counts
+    assert not no_total["amount_in_dispute_accuracy"]  # the total has to be stated as the amount in dispute
     several = next(c for c in cd.load_dataset() if c["category"] == "several_types")
     text = claims.fill_template(several["facts"])
     wrong_total = claim_eval.grade(
@@ -185,3 +185,14 @@ def test_the_suite_is_registered_for_run_and_upload_and_last_in_all(monkeypatch)
     assert ran == ["claim_drafting"]
     monkeypatch.undo()
     assert harness._suite("claim_drafting") is claim_eval
+
+
+def test_swapped_row_amounts_fail_the_grader():
+    case = next(c for c in cd.load_dataset() if c["id"] == "CLM-049")
+    body = claims.fill_template(case["facts"])
+    assert claim_eval.grade(case, body)["case_pass_rate"]
+    swapped = (
+        body.replace("31.60 EUR\n", "TMP\n", 1).replace("40.00 EUR\n", "31.60 EUR\n", 1).replace("TMP", "40.00 EUR")
+    )
+    r = claim_eval.grade(case, swapped)
+    assert not r["case_pass_rate"] and r["rows_covered"] < r["rows"] and r["critical_errors"]

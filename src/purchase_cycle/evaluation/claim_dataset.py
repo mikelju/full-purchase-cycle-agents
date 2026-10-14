@@ -53,7 +53,7 @@ DATASET_PATH = DATASET_DIR / "dataset.jsonl"
 REVIEW_PATH = DATASET_DIR / "second_pass_review.jsonl"
 BLIND_DIR = ROOT / ".runtime" / "claim_second_pass"  # gitignored input of the blind annotator
 REVIEW_DECISIONS = ("agree", "label_fixed", "annotator_wrong")
-AMOUNT_TOLERANCE = 0.005  # half a cent
+AMOUNT_TOLERANCE = claims.AMOUNT_TOLERANCE
 BLIND_RULES = """You are the second annotator of a claim dataset. For each case you get the purchase order line,
 the invoice lines and the delivery note lines (null when there is no delivery note). Work out, without any tool:
 - the discrepancy rows of the invoice, one JSON object each with sku, text, type, expected, found and amount;
