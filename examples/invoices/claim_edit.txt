@@ -1,0 +1,8 @@
+Dear supplier team,
+
+Our check of invoice LV-0303 against purchase order PO-0003 found that GAUZE-NS-5 was invoiced for 35 units, while the delivery note and the order show 40 units.
+Please send us a corrected invoice so that our records match the goods received.
+No payment is due on this invoice until we have the corrected one.
+
+Kind regards,
+Purchasing

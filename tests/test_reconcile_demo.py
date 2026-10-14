@@ -9,8 +9,35 @@ import sys
 
 import pytest
 
-from purchase_cycle import config
+from purchase_cycle import claims, config, db, llm
 from test_orders_demo import SITECUSTOMIZE
+
+
+@pytest.fixture(scope="session")
+def claim_recordings(tmp_path_factory):
+    """A claim recordings file for the four demo prompts, built from the phase 08 part of a demo run that has none."""
+    base = tmp_path_factory.mktemp("claim_recordings")
+    missing = base / "none.jsonl"
+    run, _, workdir = _run_demo(base, "--claim-recordings", str(missing))
+    assert run.returncode == 1 and "claim recordings not found" in run.stderr
+    conn = db.connect(workdir / "business.db")
+    try:
+        facts = [claims.claim_facts(conn, invoice_id) for invoice_id in claims.candidates(conn)]
+    finally:
+        conn.close()
+    path = base / "claim_demo.jsonl"
+    system = llm.build_system_prompt([], llm.CLAIM_DRAFTING)
+    with path.open("w", encoding="utf-8") as fh:
+        for fact in facts:
+            key = llm.recording_key(system, claims.facts_prompt(fact), llm.CLAIM_DRAFTING)
+            row = {
+                "key": key,
+                "case_id": f"claim-{fact['invoice']}",
+                "sentence": "",
+                "answer": {"body": claims.fill_template(fact)},
+            }
+            fh.write(json.dumps(row) + "\n")
+    return path
 
 
 def _run_demo(tmp_path, *extra):
@@ -26,8 +53,8 @@ def _run_demo(tmp_path, *extra):
     return run, log, workdir
 
 
-def test_reconcile_demo_ends_with_every_outcome_with_the_network_blocked(tmp_path):
-    run, log, workdir = _run_demo(tmp_path)
+def test_reconcile_demo_ends_with_every_outcome_with_the_network_blocked(tmp_path, claim_recordings):
+    run, log, workdir = _run_demo(tmp_path, "--claim-recordings", str(claim_recordings))
     out = run.stdout
     assert run.returncode == 0, out + run.stderr
     assert run.stderr == ""
@@ -65,15 +92,16 @@ def test_reconcile_demo_ends_with_every_outcome_with_the_network_blocked(tmp_pat
     assert "unlinked (unknown_order)" in out and "unlinked (supplier_mismatch)" in out
     for kind in ("price", "quantity", "extra_line", "missing_line"):
         assert f"  {kind}  sku=" in out
+    assert "claims: INV-0007=sent, INV-0008=sent edited, INV-0009=rejected, INV-0010=awaiting_approval" in out
 
 
 @pytest.mark.parametrize("ending", [b"\n", b"\r\n"], ids=["lf", "crlf"])
-def test_the_demo_replays_whatever_the_line_endings_of_the_sample_text_files(tmp_path, ending):
+def test_the_demo_replays_whatever_the_line_endings_of_the_sample_text_files(tmp_path, ending, claim_recordings):
     examples = tmp_path / "examples"
     shutil.copytree(config.ROOT / "examples" / "invoices", examples)
     for path in examples.rglob("*.txt"):
         path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", ending))
-    run, _, _ = _run_demo(tmp_path, "--examples", str(examples))
+    run, _, _ = _run_demo(tmp_path, "--examples", str(examples), "--claim-recordings", str(claim_recordings))
     assert run.returncode == 0, run.stdout + run.stderr
     assert "still awaiting a delivery note at the end: 1" in run.stdout
 

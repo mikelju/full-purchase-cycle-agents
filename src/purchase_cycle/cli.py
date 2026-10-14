@@ -47,7 +47,10 @@ QUOTES_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "quotes_demo.jsonl"  
 QUOTES_DEMO_WORKDIR = config.DATA_DIR / "quotes-demo"
 DEMO_INVOICES = config.ROOT / "examples" / "invoices"
 RECONCILE_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "reconcile_demo.jsonl"  # the document extraction
+RECONCILE_DEMO_CLAIM_RECORDINGS = config.EVALS_DIR / "recordings" / "claim_demo.jsonl"  # the claim drafting
 RECONCILE_DEMO_WORKDIR = config.DATA_DIR / "reconcile-demo"
+# Which discrepancies invoice gets which decision; the fourth stays awaiting approval.
+RECONCILE_DEMO_CLAIMS = {"approve": "N-77002", "edit": "LV-0303", "reject": "F-2026-1004", "wait": "N-77005"}
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
 EXCEPTIONS_RECORDINGS = {
     MATCHING.name: config.CLARIFICATION_DETECTION_MATCHING_RECORDINGS_PATH,
@@ -637,9 +640,13 @@ def cmd_reconcile_demo(args) -> int:
     if workdir.resolve() == config.DATA_DIR.resolve():
         print(f"Error: --workdir {args.workdir} is the data folder; pick another folder", file=sys.stderr)
         return 1
-    files = {"db": workdir / "business.db", "checkpoints": workdir / "checkpoints.sqlite"}
+    files = {
+        "db": workdir / "business.db",
+        "checkpoints": workdir / "checkpoints.sqlite",
+        "outbox": workdir / "supplier_outbox",
+    }
     workdir.mkdir(parents=True, exist_ok=True)
-    for path in files.values():
+    for path in (files["db"], files["checkpoints"]):
         path.unlink(missing_ok=True)
     conn = db.connect(files["db"])
     try:
@@ -722,6 +729,68 @@ def cmd_reconcile_demo(args) -> int:
         or not unlinked
     ):
         print("Error: the demo did not end with every outcome", file=sys.stderr)
+        return 1
+    return _reconcile_demo_claims(args, files, step)
+
+
+def _reconcile_demo_claims(args, files: dict, step) -> int:
+    """Draft the claims, then send one as drafted, one edited and reject one; the fourth waits."""
+    recordings = Path(args.claim_recordings)
+    if args.mode == "replay" and not recordings.is_file():
+        print(f"Error: claim recordings not found: {recordings}; record them once with --mode record", file=sys.stderr)
+        return 1
+    conn = db.connect(files["db"])
+    try:
+        refs = {}
+        for action, number in RECONCILE_DEMO_CLAIMS.items():
+            row = conn.execute("SELECT id FROM supplier_documents WHERE kind = 'invoice' AND number = ?", (number,))
+            refs[action] = reconciliation.invoice_reference(row.fetchone()["id"])
+    finally:
+        conn.close()
+    checkpoints = ["--checkpoints", str(files["checkpoints"])]
+    outbox = ["--outbox", str(files["outbox"])]
+    for old in files["outbox"].glob("*.eml") if files["outbox"].is_dir() else []:
+        old.unlink()
+    print()
+    print("claims:")
+    edit_file = Path(args.examples) / "claim_edit.txt"
+    steps = [
+        ["reconcile", "claims", "--mode", args.mode, "--recordings", str(recordings), *checkpoints],
+        ["reconcile", "list"],
+        ["reconcile", "approve", refs["approve"], *checkpoints, *outbox],
+        ["reconcile", "approve", refs["edit"], "--body-file", str(edit_file), *checkpoints, *outbox],
+        ["reconcile", "reject", refs["reject"], *checkpoints],
+        *(["reconcile", "show", refs[action]] for action in ("approve", "edit", "reject")),
+    ]
+    for command in steps:
+        if not step(*command):
+            return 1
+    conn = db.connect(files["db"])
+    try:
+        decided = {
+            reconciliation.invoice_reference(r["invoice_id"]): f"{r['status']}{' edited' if r['edited'] else ''}"
+            for r in conn.execute(
+                "SELECT r.invoice_id, c.status, c.edited FROM claims c JOIN reconciliations r ON r.id = c.reconciliation_id ORDER BY r.invoice_id"
+            )
+        }
+    finally:
+        conn.close()
+    print()
+    print("claim summary:")
+    print(f"claims: {', '.join(f'{ref}={state}' for ref, state in decided.items())}")
+    emails = sorted(p.name for p in files["outbox"].glob("CLAIM-*.eml"))
+    print(f"claim emails: {', '.join(emails) or 'none'}")
+    print(f"still awaiting approval: {refs['wait']}")
+    expected = {
+        refs["approve"]: "sent",
+        refs["edit"]: "sent edited",
+        refs["reject"]: "rejected",
+        refs["wait"]: "awaiting_approval",
+    }
+    if decided != expected or len(emails) != 2:
+        print(
+            "Error: the demo did not end with one sent, one edited, one rejected and one waiting claim", file=sys.stderr
+        )
         return 1
     return 0
 
@@ -1733,7 +1802,12 @@ def main(argv=None) -> int:
         "--mode",
         choices=config.MODES,
         default="replay",
-        help="document extraction mode; record needs ANTHROPIC_API_KEY",
+        help="document extraction and claim drafting mode; record needs ANTHROPIC_API_KEY",
+    )
+    reconcile_demo.add_argument(
+        "--claim-recordings",
+        default=str(RECONCILE_DEMO_CLAIM_RECORDINGS),
+        help="recordings file for the claim drafting",
     )
     reconcile_demo.set_defaults(handler=cmd_reconcile_demo)
 

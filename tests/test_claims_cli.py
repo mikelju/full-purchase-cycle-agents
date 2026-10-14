@@ -5,6 +5,7 @@ import sys
 
 from purchase_cycle import claims, cli, db
 from test_claims import ROWS, _invoice, _two_claims_from
+from test_reconcile_demo import claim_recordings  # noqa: F401  (fixture)
 
 SNAPSHOT = ("reconciliations", "discrepancies", "purchase_orders", "stock", "supplier_documents")
 
@@ -214,3 +215,42 @@ def test_an_invoice_with_no_claim_prints_the_phase_08_output(tmp_path, capsys):
     assert "claim" not in capsys.readouterr().out
     assert world.main("list") == 0
     assert "claim=" not in capsys.readouterr().out
+
+
+def test_the_demo_ends_with_one_claim_sent_one_edited_one_rejected_and_one_waiting(tmp_path, claim_recordings):  # noqa: F811
+    from test_reconcile_demo import _run_demo
+
+    run, _, workdir = _run_demo(tmp_path, "--claim-recordings", str(claim_recordings))
+    assert run.returncode == 0, run.stdout + run.stderr
+    conn = db.connect(workdir / "business.db")
+    try:
+        rows = conn.execute(
+            "SELECT d.number, c.status, c.edited, c.final_body, c.draft_body, c.outbox_file FROM claims c "
+            "JOIN reconciliations r ON r.id = c.reconciliation_id JOIN supplier_documents d ON d.id = r.invoice_id "
+            "ORDER BY d.number"
+        ).fetchall()
+        others = conn.execute("SELECT COUNT(*) FROM reconciliations WHERE result != 'discrepancies'").fetchone()[0]
+    finally:
+        conn.close()
+    by_number = {r["number"]: r for r in rows}
+    assert len(rows) == 4 and others == 3  # no claim for the matched, waiting and unlinked documents
+    assert by_number["N-77002"]["status"] == "sent" and not by_number["N-77002"]["edited"]
+    assert by_number["N-77002"]["final_body"] == by_number["N-77002"]["draft_body"]
+    edited = by_number["LV-0303"]
+    assert edited["status"] == "sent" and edited["edited"] and "invoice LV-0303" in edited["final_body"]
+    assert by_number["F-2026-1004"]["status"] == "rejected" and by_number["F-2026-1004"]["outbox_file"] is None
+    assert by_number["N-77005"]["status"] == "awaiting_approval"
+    assert len(list((workdir / "supplier_outbox").glob("CLAIM-*.eml"))) == 2
+    assert (
+        run.stdout.index("== step 1:")
+        < run.stdout.index("still awaiting a delivery note")
+        < run.stdout.index("claim summary:")
+    )
+
+
+def test_the_demo_fails_clearly_when_the_claim_recordings_are_missing(tmp_path):
+    from test_reconcile_demo import _run_demo
+
+    run, _, _ = _run_demo(tmp_path, "--claim-recordings", str(tmp_path / "none.jsonl"))
+    assert run.returncode == 1
+    assert "claim recordings not found" in run.stderr and "still awaiting a delivery note at the end: 1" in run.stdout
