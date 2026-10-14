@@ -1,6 +1,6 @@
 # Phase 09 - Reconciliation, claim: plan and results
 
-Status: in progress
+Status: built and reviewed on the branch; branch push and PR by the coordinator, C17 pending
 Spec: `spec.md` (approved 2026-10-14, frozen)
 Base: branch `fase-09-conciliacion-reclamacion` at `d05c2af`, which holds the phase 08 work over `main` at `e48bdec` (phase 08 is not merged yet); the unchanged-behaviour reference of C18 is the code at `d05c2af`.
 
@@ -143,15 +143,19 @@ This batch runs with the owner's key present, `LANGSMITH_TRACING` unset or false
 
 ### Batch H - Documentation and secrets
 - [x] 19. README sections in English for the claim step, the claim content and amount in dispute, the fact check and template fallback, the `claims`, `approve` and `reject` commands, the outbox email, the extended `reconcile-demo` in replay and live mode, how both evaluations were built and run, their figures and the known limitations (C20) - files: `README.md`; check: followed step by step in the clean clone of increment 21; `check` and `eval` now say sixteen evaluations; status line and phase table updated.
-  - Evidence: README gains the section "Claim a supplier for invoice differences" (claim content and amount in dispute, drafting, fact check and template, commands, outbox email, demo in replay and live), the "Claim drafting cases" part with both evaluations and their figures, five limits, status line for phase 09, and sixteen evaluations in `check` and `eval`; commands checked with `reconcile --help`, `reconcile approve --help` and `reconcile-demo --help`; the walkthrough in the clean clone waits for increment 21.
+  - Evidence: README gains the section "Claim a supplier for invoice differences" (claim content and amount in dispute, drafting, fact check and template, commands, outbox email, demo in replay and live), the "Claim drafting cases" part with both evaluations and their figures, five limits, status line for phase 09, and sixteen evaluations in `check` and `eval`; commands checked with `reconcile --help`, `reconcile approve --help` and `reconcile-demo --help`; the walkthrough was then followed in a fresh clone of the branch at d837849 (no keys, no `.env`, replay): `reconcile-demo` ends with `claims: INV-0007=sent, INV-0008=sent edited, INV-0009=rejected, INV-0010=awaiting_approval`; a `claims` re-run drafts nothing with a missing recordings file, `list` shows the `claim=` statuses, `approve` or `reject` of a decided claim, of an invoice with no claim and of an unknown reference exit 1 with the documented messages, an empty `--body-file` is refused, `reject` of the awaiting claim writes no email, `list` refuses `--checkpoints` as documented, `eval --suite claim_drafting` (95.0%, 3 critical errors) and `claim_approval` (35 of 35) match the README figures; the live-only commands (`--mode record`, `--mode live`, `eval:live`, `eval-upload`) were only checked with `--help`; no README fix needed; transcript `.evidence/fase-09/readme-walkthrough.txt`.
 - [x] 20. Secret scan of the new recordings, edited body file, outbox examples, dataset and scenario files, asserting they are tracked (C19) - files: `tests/test_secrets.py` (new test only); check: `uv run pytest -q tests/test_secrets.py`: a phase 09 test lists `claim_drafting.jsonl`, `claim_demo.jsonl`, the baseline, the new modules, `evals/datasets/claim_drafting`, `evals/datasets/claim_approval` and `examples/invoices/claim_edit.txt`, asserts they are tracked and hold no keys or auth headers.
   - Evidence: `tests/test_secrets.py::test_phase_09_files_are_tracked_and_hold_no_keys` added; `uv run pytest -q tests/test_secrets.py` 11 passed (`.evidence/fase-09/secret-test.txt`); scan of the 70 files of `git diff --name-only 3833d94..HEAD` finds no key or auth header (`.evidence/fase-09/secret-scan.txt`); `.env` not opened; deviation D12.
 
 ### Batch I - Validation and closing
-- [ ] 21. `npm run check`, unchanged-behaviour evidence and fresh-clone run with the Anthropic and LangSmith variables unset and no `.env` (C1, C18) - check: `npm ci`, `uv sync` and `npm run check` in a fresh clone of the branch outside the repo; sixteen evaluations in replay with every gate PASS; phase 01 to 08 tests passing apart from the tests named as deviations; `git diff --stat d05c2af -- evals/recordings evals/datasets evals/baselines` lists only added files; `orders-demo` and `quotes-demo` replay output equal to increment 1 once run ids and folder paths are masked; output saved as `.evidence/fase-09/fresh-clone-check.txt`, `recordings-diff-stat.txt` and the demo diffs.
+- [x] 21. `npm run check`, unchanged-behaviour evidence and fresh-clone run with the Anthropic and LangSmith variables unset and no `.env` (C1, C18) - check: `npm ci`, `uv sync` and `npm run check` in a fresh clone of the branch outside the repo; sixteen evaluations in replay with every gate PASS; phase 01 to 08 tests passing apart from the tests named as deviations; `git diff --stat d05c2af -- evals/recordings evals/datasets evals/baselines` lists only added files; `orders-demo` and `quotes-demo` replay output equal to increment 1 once run ids and folder paths are masked; output saved as `.evidence/fase-09/fresh-clone-check.txt`, `recordings-diff-stat.txt` and the demo diffs.
+  - Evidence: `npm run check` in the repo, exit 0, 1139 passed, every gate PASS (`.evidence/fase-09/check-final.txt`); fresh clone with `npm ci`, `uv sync` and check: exit 0, 1139 passed, 31 PASS lines and 0 FAIL (`fresh-clone-check.txt`); `fresh-clone-diff.txt` and `recordings-diff-stat.txt`: 41 added files and `--diff-filter=MDR` empty; `orders-demo-fresh-clone.txt`, `quotes-demo-fresh-clone.txt` and `demo-comparison.txt`: equal to increment 1 once run ids, thread ids and root paths are masked.
 - [ ] 22. LangSmith trace and experiment (C17) - check: blocked by the trace quota until about 2026-11-05; recorded as pending and delivered with the catch-up change of earlier phases.
-- [ ] 23. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
-- [ ] 24. Results per criterion in the table below, master plan row 09 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+  - Pending: LangSmith trace quota until about 2026-11-05; delivered with the catch-up change of earlier phases.
+- [x] 23. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
+  - Evidence: two rounds, see the Adversarial review table; the final `npm run check` after the fixes is `.evidence/fase-09/check-final.txt`; round 2 fixes in commit d837849; regrade `.evidence/fase-09/eval-replay-regrade-2.txt` 57/60 = 95.0%, critical errors CLM-044, CLM-066 and CLM-072.
+- [x] 24. Results per criterion in the table below, master plan row 09 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+  - Evidence: results table, open items and candidate learnings below; master plan row 09 updated. Done except the delivery itself: branch push and PR by the coordinator.
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
@@ -182,6 +186,39 @@ Open items, limitations and what could not be checked, stated plainly.
 
 | ID | Result | Evidence |
 |---|---|---|
+| C1 | Met | Fresh clone, Anthropic and LangSmith variables unset, no `.env`: `npm ci`, `uv sync`, `npm run check` exit 0, 1139 passed, sixteen evaluations in replay, 31 PASS lines and 0 FAIL (`fresh-clone-check.txt`, `check-final.txt`) |
+| C2 | Met | `uv run pytest -q tests/test_seed.py` (table exists and is empty after seed, seeding twice equal, other tables and phase 08 rows unchanged) (increment 2) |
+| C3 | Met | `tests/test_claims.py`, `tests/test_claims_cli.py` on temporary databases: candidates, later delivery note, second run with no draft and no model call (increments 3 and 8) |
+| C4 | Met | `tests/test_claims.py`, `tests/test_llm.py` with recorded answers; amount in dispute per sign case (increments 3 and 4) |
+| C5 | Met | `tests/test_claims.py`: one test per fact check rule, template fallback with one `failures` row, next claim still `model` (increment 5); rules tightened in review rounds 1 and 2 (D13) |
+| C6 | Met | `tests/test_claims.py`: `awaiting_approval` and the thread `claim-INV-NNNN` at `review` in the SQLite checkpoint (increment 7) |
+| C7 | Met | `tests/test_claims.py`, `tests/test_claims_cli.py`: one keyed `.eml`, `sent`, edited text with `--body-file`, empty file refused (increments 7 and 8); README walkthrough (`readme-walkthrough.txt`) |
+| C8 | Met | `tests/test_claims_cli.py`: reject writes no email, repeated, unknown and no-claim commands exit 1, matching tables unchanged (increment 8); README walkthrough |
+| C9 | Met | `tests/test_claims_cli.py` subprocess steps equal an in-process run, resumption with the recordings file removed (increment 9) |
+| C10 | Met | `tests/test_claims_cli.py`, `tests/test_reconcile_show.py`, `tests/test_reconcile_results.py` unchanged (increment 10) |
+| C11 | Met | `tests/test_review.py`: three answers and the import check (increment 6) |
+| C12 | Met | `tests/test_claim_dataset.py`, 80 cases in ten categories, seeded plan, blind second pass 80 agree (`claim-dataset.txt`, increment 11) |
+| C13 | Met | `tests/test_claim_eval.py`, replay report with Wilson intervals and critical errors, forced gate failures exit non-zero (increment 12; `eval-replay-regrade-2.txt`) |
+| C14 | Met | Haiku 4.5 baseline on the test split: 95.0% (57 of 60, Wilson 86.3 to 98.3), 3 critical errors reported, not gated; absolute gate 95.0% (`claim-baseline-live.txt`, `evals/baselines/claim_drafting.json`, regraded in `eval-replay-regrade-2.txt`) |
+| C15 | Met | `claim_approval` 35 of 35 (Wilson 90.1 to 100.0), 0 critical errors, injection tests per critical error (`eval-claim-approval.txt`, increments 13 and 14) |
+| C16 | Met | `reconcile-demo` in replay, network blocked in the pytest, ends with `claims: INV-0007=sent, INV-0008=sent edited, INV-0009=rejected, INV-0010=awaiting_approval` (`reconcile-demo.txt`, `readme-walkthrough.txt` in a fresh clone) |
+| C17 | Pending | LangSmith trace of a live demo claim and experiment of `claim_drafting` are blocked by the trace quota until about 2026-11-05; delivered with the catch-up change of earlier phases (increment 22); nothing checked |
+| C18 | Met with deviations | Earlier tests pass apart from the edits D2 to D6 and D8 to D12 (suite order and file counts only), to be ratified by the owner in the PR; `--diff-filter=MDR` on recordings, datasets and baselines empty and 41 added files (`recordings-diff-stat.txt`, `fresh-clone-diff.txt`); `orders-demo` and `quotes-demo` equal to increment 1 once masked (`demo-comparison.txt`); `npm run check` 1139 passed (`check-final.txt`) |
+| C19 | Met | `tests/test_secrets.py::test_phase_09_files_are_tracked_and_hold_no_keys` and scan of 70 files (`secret-test.txt`, `secret-scan.txt`) |
+| C20 | Met | README sections followed step by step in a fresh clone in replay, no wrong step found (`readme-walkthrough.txt`); live-only commands checked with `--help` only; master plan row 09 updated |
+
+Open items and limitations:
+- C17 is pending until the LangSmith trace quota resets, about 2026-11-05.
+- C18 holds with deviations D2 to D6 and D8 to D12 (mechanical edits to earlier-phase tests), accepted under the owner's pre-approval and to be ratified by the owner in the PR.
+- SEC-015 (supplier free text can steer the drafted claim) stays at Medium severity.
+- Three critical errors at the baseline (CLM-044 amount in dispute missing, CLM-066 and CLM-072 a difference named only by product text omitted) are reported, not gated.
+- The test split sits exactly on the 95% gate (57 of 60), so one more failing claim fails the gate.
+- Review limits r2-2 (a wrong figure beside the correct total in the dispute sentences) and r2-4 (the total in dispute counted as the last row amount) are not fixed and are listed in the README limits.
+- The PR stacks on the phase 08 PR #18, which is not merged yet.
+- Not checked: the live-key commands (`--mode record`, `--mode live`, `eval:live`, `eval-upload`) were only checked with `--help` in the README walkthrough.
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
+
+- The Stop hook gate `check:puerta` runs while a background writer is still editing and reports its half-written files as a failure; wait for the writer or its handback before ending the turn. Quote from the hook output: "`npm run --silent check:puerta` falla con cambios sin comprobar".
+- A background writer survives a session handoff, so a relaunched writer must check the working tree before editing. Quote from the relaunched writer: "another writer is already editing the same files in this checkout".
