@@ -214,7 +214,7 @@ Open items and limitations:
 - Three critical errors at the baseline (CLM-044 amount in dispute missing, CLM-066 and CLM-072 a difference named only by product text omitted) are reported, not gated.
 - The test split sits exactly on the 95% gate (57 of 60), so one more failing claim fails the gate.
 - Review limits r2-2 (a wrong figure beside the correct total in the dispute sentences) and r2-4 (the total in dispute counted as the last row amount) are not fixed and are listed in the README limits.
-- The PR stacks on the phase 08 PR #18, which is not merged yet.
+- The branch starts from phase 08 before its PR #18 was merged; it merges cleanly into the current `main`.
 - Not checked: the live-key commands (`--mode record`, `--mode live`, `eval:live`, `eval-upload`) were only checked with `--help` in the README walkthrough.
 
 ## Candidate learnings
