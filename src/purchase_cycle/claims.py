@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command
 
 from purchase_cycle import config, db, llm, quotes, reconciliation, review, sim_clock
 
@@ -311,3 +312,110 @@ def build_claim_graph(
     builder.add_edge("send", END)
     builder.add_edge("close", END)
     return builder.compile(checkpointer=checkpointer, name="claim")
+
+
+class DecisionRefused(Exception):
+    """A command that the claim cannot take now; nothing was changed."""
+
+
+def _config(invoice_id: int) -> dict:
+    return {"configurable": {"thread_id": claim_thread_id(invoice_id)}}
+
+
+def claim_of(conn: sqlite3.Connection, invoice_id: int) -> dict | None:
+    """The stored claim of an invoice as a dict, or None."""
+    row = _claim_row(conn, invoice_id)
+    return None if row is None else dict(row)
+
+
+def draft_claims(
+    db_path: Path | str, checkpointer, client: llm.ModelClient, outbox: Path | str | None = None
+) -> list[dict]:
+    """Draft one claim per candidate and stop each thread at the review; a thread that already exists is resumed."""
+    graph = build_claim_graph(db_path, client, outbox, checkpointer)
+    results = []
+    conn = db.connect(db_path)
+    try:
+        for invoice_id in candidates(conn):
+            run = _config(invoice_id)
+            graph.invoke(None if graph.get_state(run).next else {"invoice_id": invoice_id}, run)
+            results.append(
+                {"invoice_id": invoice_id, "facts": claim_facts(conn, invoice_id), "claim": claim_of(conn, invoice_id)}
+            )
+    finally:
+        conn.close()
+    return results
+
+
+def _check_awaiting(conn: sqlite3.Connection, invoice_id: int) -> None:
+    ref = reconciliation.invoice_reference(invoice_id)
+    row = claim_of(conn, invoice_id)
+    if row is None:
+        raise DecisionRefused(f"no claim for {ref}; run reconcile claims first")
+    if row["status"] != AWAITING:
+        raise DecisionRefused(f"claim {ref} is {row['status']}, not {AWAITING}")
+
+
+def _paused(db_path: Path | str, checkpointer, invoice_id: int) -> str | None:
+    """The node the claim thread waits at, or None when it has no checkpoint or is finished."""
+    state = build_claim_graph(db_path, None, None, checkpointer).get_state(_config(invoice_id))
+    return state.next[0] if state.next else None
+
+
+def _resume(db_path: Path | str, checkpointer, outbox, invoice_id: int, answer: dict | None) -> None:
+    """Resume the thread with an answer for the pause, or with none to finish a node that stopped halfway."""
+    graph = build_claim_graph(db_path, None, outbox, checkpointer)
+    graph.invoke(None if answer is None else Command(resume=answer), _config(invoice_id))
+
+
+def _decided(db_path: Path | str, invoice_id: int) -> dict:
+    conn = db.connect(db_path)
+    try:
+        return claim_of(conn, invoice_id)
+    finally:
+        conn.close()
+
+
+def _no_pause(ref: str) -> DecisionRefused:
+    return DecisionRefused(f"no paused claim for {ref} in the checkpoints file; run reconcile claims first")
+
+
+def approve_claim(
+    db_path: Path | str, checkpointer, outbox: Path | str, invoice_id: int, body: str | None = None
+) -> dict:
+    """Send the draft, or `body` in its place; refused commands change nothing."""
+    ref = reconciliation.invoice_reference(invoice_id)
+    conn = db.connect(db_path)
+    try:
+        _check_awaiting(conn, invoice_id)
+    finally:
+        conn.close()
+    if body is not None and not body.strip():
+        raise DecisionRefused("the body text is empty")
+    node = _paused(db_path, checkpointer, invoice_id)
+    if node == "close":
+        raise DecisionRefused(f"claim {ref} is being rejected; run reject to finish it")
+    if node not in ("review", "send"):
+        raise _no_pause(ref)
+    answer = None
+    if node == "review":
+        answer = {"action": review.APPROVE} if body is None else {"action": review.EDIT, "body": body}
+    _resume(db_path, checkpointer, outbox, invoice_id, answer)
+    return _decided(db_path, invoice_id)
+
+
+def reject_claim(db_path: Path | str, checkpointer, invoice_id: int) -> dict:
+    """Close an awaiting claim as `rejected`, with no email."""
+    ref = reconciliation.invoice_reference(invoice_id)
+    conn = db.connect(db_path)
+    try:
+        _check_awaiting(conn, invoice_id)
+    finally:
+        conn.close()
+    node = _paused(db_path, checkpointer, invoice_id)
+    if node == "send":
+        raise DecisionRefused(f"claim {ref} is being sent; run approve to finish it")
+    if node not in ("review", "close"):
+        raise _no_pause(ref)
+    _resume(db_path, checkpointer, None, invoice_id, {"action": review.REJECT} if node == "review" else None)
+    return _decided(db_path, invoice_id)
