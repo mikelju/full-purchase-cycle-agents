@@ -112,3 +112,26 @@ def test_the_recordings_hold_one_row_per_sample_document():
         for line in (config.EVALS_DIR / "recordings" / "reconcile_demo.jsonl").read_text(encoding="utf-8").splitlines()
     ]
     assert len(rows) == 15
+
+
+def test_the_versioned_claim_recordings_hold_one_row_per_demo_claim_and_replay_the_demo(tmp_path):
+    path = config.EVALS_DIR / "recordings" / "claim_demo.jsonl"
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    run, _, workdir = _run_demo(tmp_path)  # the default claim recordings are the versioned file
+    assert run.returncode == 0, run.stdout + run.stderr
+    assert "claims: INV-0007=sent, INV-0008=sent edited, INV-0009=rejected, INV-0010=awaiting_approval" in run.stdout
+    conn = db.connect(workdir / "business.db")
+    try:
+        ids = [
+            r[0]
+            for r in conn.execute(
+                "SELECT invoice_id FROM reconciliations WHERE result = 'discrepancies' ORDER BY invoice_id"
+            )
+        ]
+        facts = [claims.claim_facts(conn, invoice_id) for invoice_id in ids]
+    finally:
+        conn.close()
+    system = llm.build_system_prompt([], llm.CLAIM_DRAFTING)
+    keys = sorted(llm.recording_key(system, claims.facts_prompt(fact), llm.CLAIM_DRAFTING) for fact in facts)
+    assert len(rows) == len(facts) == 4
+    assert sorted(row["key"] for row in rows) == keys
