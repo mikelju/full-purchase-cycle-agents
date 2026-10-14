@@ -3,13 +3,15 @@
 Source of the flow animations, kept so they can be regenerated:
 - `docs/assets/purchase-cycle-flow.gif` and `.mp4` (change 005, orders).
 - `docs/assets/quotes-flow.gif` and `.mp4` (change 008, quotes).
+- `docs/assets/reconcile-flow.gif` and `.mp4` (change 011, invoice reconciliation).
 
 ## Files
 - `purchase-cycle-flow.html`: the orders animated SVG page; it loads the Inter and JetBrains Mono fonts from Google Fonts, so capturing needs network access.
 - `quotes-flow.html`: the quotes animated SVG page (customer, three suppliers, quotes and decision graphs, database); same fonts, about 37 s.
+- `reconcile-flow.html`: the reconciliation animated SVG page (files read from a folder, the read-extract-link-match-store graph, the three-way match and the database, then a second scan of `later/`); same fonts, about 37 s.
 - `record.py`: captures a page (optional name argument, default the orders page) frame by frame into `frames/<page>/` (git-ignored; the folder is cleaned before each capture) with a virtual clock, so the output is deterministic: 15 fps, 1280x720 PNG.
 
-The flows are conceptual, as stated in `docs/changes/005-flow-animation.md` and `docs/changes/008-quotes-flow-animation.md`: it does not claim to show the exact current behavior of the code.
+The flows are conceptual, as stated in `docs/changes/005-flow-animation.md`, `docs/changes/008-quotes-flow-animation.md` and `docs/changes/011-reconcile-flow-animation.md`: it does not claim to show the exact current behavior of the code.
 
 ## Capture frames
 Requires Google Chrome installed and Playwright, which is not a project dependency, so it is pulled only for this run:
@@ -17,13 +19,14 @@ Requires Google Chrome installed and Playwright, which is not a project dependen
 ```
 uv run --with playwright python docs/assets/flow-animation/record.py
 uv run --with playwright python docs/assets/flow-animation/record.py quotes-flow.html
+uv run --with playwright python docs/assets/flow-animation/record.py reconcile-flow.html
 ```
 
 Playwright drives the installed Chrome (`channel="chrome"`), so no browser download is needed.
 
 ## Encode
 The frames are encoded with ffmpeg into a GIF of 960x540 (looping) and an MP4 of 1280x720 (H.264).
-The commands below are the ones used for the quotes animation (change 008); the orders animation (change 005) was encoded earlier with unrecorded commands.
+The commands below are the ones used for the quotes animation (change 008) and, with `quotes-flow` replaced by `reconcile-flow`, for the reconciliation one (change 011); the orders animation (change 005) was encoded earlier with unrecorded commands.
 They need an ffmpeg build with `palettegen` and `paletteuse` (a full build; a minimal one fails with "No such filter").
 Run them from the repository root, with `F=docs/assets/flow-animation/frames/quotes-flow`:
 

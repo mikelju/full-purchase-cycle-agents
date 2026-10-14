@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orders test page</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --border: #e2e5ea; --text: #1f2933; --muted: #697586;
+    --accent: #2563a8; --accent-hover: #1d4f87; --accent-soft: #e8f0fa; --on-accent: #fff;
+    --zebra: #f9fafb; --hover: #eef3f9; --input: #fff;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 2px 8px rgba(16,24,40,.04);
+    --reply-bg: #eef5ff; --reply-border: #bcd3f2; --err-bg: #fdecec; --err: #b42318;
+    --ok-bg: #e3f5ea; --ok: #176639; --warn-bg: #fff3d6; --warn: #8a5a00;
+    --info-bg: #e5eefb; --info: #1d4f87; --neutral-bg: #eceff3; --neutral: #4b5563;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171c; --card: #1c2026; --border: #2d333b; --text: #e6e9ee; --muted: #9aa5b4;
+      --accent: #5b9be0; --accent-hover: #7bb0ea; --accent-soft: #22324a; --on-accent: #0d1722;
+      --zebra: #20252c; --hover: #263243; --input: #14171c; --shadow: 0 1px 2px rgba(0,0,0,.4);
+      --reply-bg: #1e2b3d; --reply-border: #35547d; --err-bg: #3a1f1f; --err: #ff9b92;
+      --ok-bg: #173324; --ok: #7ad8a0; --warn-bg: #3b2f12; --warn: #f0c36a;
+      --info-bg: #1f2e45; --info: #8dbcf0; --neutral-bg: #2a3038; --neutral: #b3bcc9;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .page { height: 100vh; display: flex; flex-direction: column; padding: 16px 20px 0; }
+  .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 320px minmax(0, 1fr) minmax(460px, 1fr); gap: 20px; }
+  .col { min-width: 0; height: 100%; overflow-y: auto; padding-bottom: 20px; display: flex; flex-direction: column; gap: 20px; }
+  .col > .card { flex: none; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
+  h1 { font-size: 1.5rem; margin: 0; font-weight: 650; }
+  h2 { font-size: 1.05rem; margin: 0; font-weight: 650; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; line-height: 1.5; white-space: nowrap; }
+  .pill:empty { display: none; }
+  .pill.live { background: var(--warn-bg); color: var(--warn); }
+  .pill.replay { background: var(--ok-bg); color: var(--ok); }
+  .s-stored { background: var(--ok-bg); color: var(--ok); }
+  .s-question, .s-answer_rejected { background: var(--info-bg); color: var(--info); }
+  .s-under_review { background: var(--warn-bg); color: var(--warn); }
+  .s-failed, .s-rejected { background: var(--err-bg); color: var(--err); }
+  .s-duplicate, .s-not_order, .s-no_line { background: var(--neutral-bg); color: var(--neutral); }
+  .error { margin: 0 0 16px; padding: 10px 14px; border-radius: 8px; background: var(--err-bg); color: var(--err); font-weight: 600; }
+  .error:empty { display: none; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 18px 20px; }
+  .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 1100px) {
+    .order td.nm { max-width: none; width: auto; white-space: normal; }
+    .page { height: auto; display: block; padding: 16px 12px 40px; }
+    .cols { display: flex; flex-direction: column; }
+    .col { height: auto; overflow-y: visible; padding-bottom: 0; }
+  }
+  label { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); }
+  label > input, label > select, label > textarea { margin-top: 4px; font-weight: 400; color: var(--text); }
+  label.check { display: flex; align-items: center; gap: 8px; font-size: .95rem; font-weight: 400; color: var(--text); }
+  label.check > input { margin-top: 0; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--input); color: var(--text); font: inherit; }
+  textarea { resize: vertical; }
+  input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  .field { margin-bottom: 12px; }
+  .hint { color: var(--muted); font-size: .85rem; margin: 0 0 12px; min-height: 1.3em; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem; color: var(--muted); }
+  button { font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: var(--on-accent); }
+  button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+  button.secondary { background: var(--card); color: var(--accent); border-color: var(--accent); }
+  button.secondary:hover:not(:disabled) { background: var(--accent-soft); }
+  button.quiet { background: none; color: var(--muted); font-weight: 500; padding: 8px 10px; }
+  button.quiet:hover:not(:disabled) { background: var(--neutral-bg); color: var(--text); }
+  .actions { display: flex; justify-content: flex-end; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .line { display: grid; grid-template-columns: minmax(0, 1fr) 72px auto; gap: 8px; align-items: end; margin-bottom: 10px; }
+  .filter { width: 260px; max-width: 100%; }
+  .scroll { max-height: 18rem; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { position: sticky; top: 0; background: var(--card); z-index: 1; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); box-shadow: 0 1px 0 var(--border); }
+  tbody tr:nth-child(even) { background: var(--zebra); }
+  tbody tr:hover { background: var(--hover); }
+  tbody tr:last-child td { border-bottom: 0; }
+  th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .entry { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; background: var(--card); }
+  .entry-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .tag { padding: 1px 8px; border-radius: 6px; background: var(--neutral-bg); color: var(--neutral); font-size: .78rem; font-weight: 600; }
+  .entry-head .who { font-weight: 600; }
+  .entry-head .pill { margin-left: auto; }
+  .entry .meta { margin: 2px 0; }
+  .entry .kv { margin: 2px 0; font-size: .92rem; }
+  .entry .kv b { color: var(--muted); font-weight: 600; }
+  .reply-label { margin: 10px 0 4px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
+  .entry pre { white-space: pre-wrap; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--reply-bg); border: 1px solid var(--reply-border); font: inherit; }
+  .order { margin-top: 10px; }
+  .order th, .order td { padding: 5px 6px; font-size: .82rem; }
+  .order th { letter-spacing: 0; }
+  .order td:first-child, .order td.num { white-space: nowrap; }
+  .order td.nm { max-width: 0; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .order td .tag.short { display: block; margin: 2px 0 0; text-align: center; white-space: nowrap; }
+  .entry { min-width: 0; }
+  .order table { border: 1px solid var(--border); border-radius: 8px; border-collapse: separate; border-spacing: 0; overflow: hidden; }
+  .order th { position: static; }
+  .order tr.short td { background: var(--warn-bg); color: var(--warn); }
+  .order tfoot td { font-weight: 700; border-bottom: 0; border-top: 1px solid var(--border); }
+  .order .tag.short { background: var(--warn); color: var(--card); }
+  .unmatched { margin: 6px 0 0; padding-left: 20px; font-size: .92rem; color: var(--warn); }
+  .answer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 10px; border-radius: 8px; background: var(--accent-soft); }
+  .answer input { flex: 1 1 200px; width: auto; }
+  .db-table { margin-bottom: 14px; }
+  .db-table h3 { font-size: .9rem; margin: 0 0 6px; }
+  .empty { padding: 28px 12px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 10px; }
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <h1>Orders test page</h1>
+  <span class="pill" id="mode"></span>
+</header>
+<p class="error" id="error"></p>
+
+<div class="cols">
+<aside class="col">
+<section class="card">
+  <div class="card-head"><h2>Send an order</h2></div>
+  <div class="row">
+    <label>Channel
+      <select id="channel">
+        <option value="web_form">Web form</option>
+        <option value="email">Email</option>
+        <option value="whatsapp">WhatsApp</option>
+      </select>
+    </label>
+    <label>Customer <select id="customer"></select></label>
+  </div>
+  <p class="hint" id="identity"></p>
+
+  <div id="form-web_form">
+    <div id="lines"></div>
+    <button type="button" id="add-line" class="secondary">Add line</button>
+    <datalist id="products"></datalist>
+  </div>
+
+  <div id="form-email" hidden>
+    <div class="field"><label>Subject <input type="text" id="subject"></label></div>
+    <div class="field"><label>Body <textarea id="body" rows="6"></textarea></label></div>
+  </div>
+
+  <div id="form-whatsapp" hidden>
+    <div class="field"><label>Message <textarea id="text" rows="4"></textarea></label></div>
+    <div class="field"><label class="check"><input type="checkbox" id="photo"> Send a photo instead of text</label></div>
+  </div>
+
+  <div class="actions"><button type="button" id="send" class="primary">Send</button></div>
+</section>
+</aside>
+<main class="col">
+<section class="card">
+  <div class="card-head">
+    <h2>Catalog</h2>
+    <input type="text" id="filter" class="filter" placeholder="Filter by SKU, name or family" aria-label="Filter the catalog">
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>SKU</th><th>Name</th><th>Family</th><th>Unit</th><th class="num">Price (EUR)</th><th class="num">Stock</th></tr></thead>
+      <tbody id="catalog"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Stock shortfalls</h2>
+    <button type="button" id="scan" class="primary">Check stock shortfalls</button>
+  </div>
+  <p class="hint">Starts one quote request per SKU whose stored orders exceed its stock; the request emails go to the outbox. No model call.</p>
+  <div id="scan-result"></div>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Database</h2>
+    <button type="button" id="refresh-db" class="secondary">Refresh</button>
+  </div>
+  <p class="hint">Read only: the page's own database, <span class="mono">data/ui/purchase_cycle.db</span>.</p>
+  <div id="database"></div>
+</section>
+</main>
+<aside class="col" id="col-conversations">
+<section class="card">
+  <div class="card-head"><h2>Conversations</h2></div>
+  <div id="conversations"></div>
+</section>
+</aside>
+</div>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+let customers = [];
+
+function showError(message) { $("error").textContent = message || ""; }
+
+async function api(path, body) {
+  const options = body === undefined ? {} : {
+    method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)};
+  let response, data;
+  try {
+    response = await fetch(path, options);
+    data = await response.json();
+  } catch (error) {
+    throw new Error("The server did not answer: " + error.message);
+  }
+  if (!response.ok) throw new Error(data.error || ("Error " + response.status));
+  return data;
+}
+
+function cell(tr, text, className) {
+  const td = document.createElement("td");
+  td.textContent = text;
+  if (className) td.className = className;
+  tr.appendChild(td);
+}
+
+function renderCatalog(products) {
+  const needle = $("filter").value.trim().toLowerCase();
+  const body = $("catalog");
+  body.textContent = "";
+  for (const p of products) {
+    if (needle && !(p.sku + " " + p.name + " " + p.family).toLowerCase().includes(needle)) continue;
+    const tr = document.createElement("tr");
+    cell(tr, p.sku); cell(tr, p.name); cell(tr, p.family); cell(tr, p.sale_unit);
+    cell(tr, p.price_eur.toFixed(2), "num"); cell(tr, String(p.stock), "num");
+    body.appendChild(tr);
+  }
+}
+
+function addLine() {
+  const row = document.createElement("div");
+  row.className = "line";
+  const product = document.createElement("input");
+  product.type = "text"; product.className = "product"; product.placeholder = "Product";
+  product.setAttribute("list", "products");
+  const productLabel = document.createElement("label");
+  productLabel.append("Product", product);
+  const quantity = document.createElement("input");
+  quantity.type = "number"; quantity.className = "quantity"; quantity.min = "1"; quantity.value = "1";
+  const quantityLabel = document.createElement("label");
+  quantityLabel.append("Quantity", quantity);
+  const remove = document.createElement("button");
+  remove.type = "button"; remove.textContent = "Remove"; remove.className = "quiet";
+  remove.onclick = () => row.remove();
+  row.append(productLabel, quantityLabel, remove);
+  $("lines").appendChild(row);
+}
+
+function currentCustomer() { return customers.find((c) => c.code === $("customer").value); }
+
+function showChannel() {
+  const channel = $("channel").value;
+  for (const name of ["web_form", "email", "whatsapp"]) $("form-" + name).hidden = name !== channel;
+  const c = currentCustomer();
+  if (!c) { $("identity").textContent = ""; return; }
+  $("identity").textContent = channel === "email" ? "sends from " + c.email
+    : channel === "whatsapp" ? "sends from " + c.phone : "customer code " + c.code;
+}
+
+function payload() {
+  const channel = $("channel").value;
+  const base = {channel, customer: $("customer").value};
+  if (channel === "web_form") {
+    const lines = [...$("lines").children].map((row) => ({
+      product: row.querySelector(".product").value,
+      quantity: Number(row.querySelector(".quantity").value)}));
+    return {...base, lines};
+  }
+  if (channel === "email") return {...base, subject: $("subject").value, body: $("body").value};
+  return $("photo").checked ? {...base, type: "image"} : {...base, text: $("text").value};
+}
+
+async function send() {
+  showError("");
+  $("send").disabled = true; $("send").textContent = "Sending...";
+  try {
+    await api("/api/send", payload());
+    if ($("channel").value === "whatsapp") { $("text").value = ""; }
+    await loadConversations();
+  } catch (error) { showError(error.message); }
+  $("send").disabled = false; $("send").textContent = "Send";
+}
+
+async function answer(entry, box, button) {
+  showError("");
+  button.disabled = true;
+  try {
+    await api("/api/answer", {thread_id: entry.thread_id, text: box.value});
+    await loadConversations();
+  } catch (error) { showError(error.message); button.disabled = false; }
+}
+
+function answerWhatsApp(entry, box) {
+  $("channel").value = "whatsapp";
+  $("customer").value = entry.customer;
+  $("photo").checked = false;
+  $("text").value = "";
+  showChannel();
+  $("text").focus();
+}
+
+function line(parent, label, value, className) {
+  if (value === null || value === undefined || value === "") return;
+  const p = document.createElement("div");
+  p.className = className || "kv";
+  if (label) { const b = document.createElement("b"); b.textContent = label + ": "; p.appendChild(b); }
+  p.append(String(value));
+  parent.appendChild(p);
+}
+
+function renderOrder(order) {
+  const wrap = document.createElement("div");
+  wrap.className = "order";
+  line(wrap, "", "Order", "reply-label");
+  const table = document.createElement("table");
+  const head = document.createElement("thead");
+  const hr = document.createElement("tr");
+  for (const [name, num] of [["SKU"], ["Name"], ["Qty", 1], ["Unit price", 1], ["Amount", 1], ["Stock", 1]]) {
+    const th = document.createElement("th");
+    th.textContent = name; if (num) th.className = "num";
+    hr.appendChild(th);
+  }
+  head.appendChild(hr); table.appendChild(head);
+  const body = document.createElement("tbody");
+  for (const l of order.lines) {
+    const tr = document.createElement("tr");
+    if (l.short) tr.className = "short";
+    cell(tr, l.sku); cell(tr, l.name, "nm"); tr.children[1].title = l.name;
+    cell(tr, String(l.quantity), "num"); cell(tr, l.unit_price.toFixed(2), "num");
+    cell(tr, l.amount.toFixed(2), "num"); cell(tr, String(l.stock), "num");
+    if (l.short) {
+      const tag = document.createElement("span");
+      tag.className = "tag short"; tag.textContent = "short of stock";
+      tr.children[5].appendChild(tag);
+    }
+    body.appendChild(tr);
+  }
+  table.appendChild(body);
+  const foot = document.createElement("tfoot");
+  const fr = document.createElement("tr");
+  cell(fr, "Total"); cell(fr, ""); cell(fr, ""); cell(fr, "");
+  cell(fr, order.total.toFixed(2), "num"); cell(fr, "");
+  foot.appendChild(fr); table.appendChild(foot);
+  wrap.appendChild(table);
+  return wrap;
+}
+
+function renderConversations(entries) {
+  const root = $("conversations");
+  root.textContent = "";
+  if (!entries.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty"; empty.textContent = "Nothing sent yet.";
+    root.appendChild(empty);
+    return;
+  }
+  for (const entry of [...entries].reverse()) {
+    const div = document.createElement("div");
+    div.className = "entry";
+    const head = document.createElement("div");
+    head.className = "entry-head";
+    const tag = document.createElement("span");
+    tag.className = "tag"; tag.textContent = entry.channel;
+    const who = document.createElement("span");
+    who.className = "who"; who.textContent = entry.customer + " " + entry.customer_name;
+    const when = document.createElement("span");
+    when.className = "mono"; when.textContent = entry.at;
+    head.append(tag, who, when);
+    if (entry.status) {
+      const pill = document.createElement("span");
+      pill.className = "pill s-" + entry.status; pill.textContent = entry.status;
+      head.appendChild(pill);
+    }
+    div.appendChild(head);
+    line(div, "Sent", entry.sent);
+    line(div, "Route", entry.route + (entry.reason ? " (" + entry.reason + ")" : ""), "mono meta");
+    line(div, "Thread", entry.thread_id, "mono meta");
+    line(div, "Outcome", entry.outcome);
+    line(div, "Order", entry.order_id);
+    if (entry.order) div.appendChild(renderOrder(entry.order));
+    if (entry.unmatched && entry.unmatched.length) {
+      line(div, "", "Not recognised or removed", "reply-label");
+      const ul = document.createElement("ul");
+      ul.className = "unmatched";
+      for (const text of entry.unmatched) { const li = document.createElement("li"); li.textContent = text; ul.appendChild(li); }
+      div.appendChild(ul);
+    }
+    if (entry.reply) {
+      const asking = entry.status === "question" || entry.status === "answer_rejected";
+      const label = asking ? "Question to the customer" : "Reply to the customer";
+      line(div, "", label, "reply-label");
+      const pre = document.createElement("pre");
+      pre.textContent = entry.reply;
+      div.appendChild(pre);
+    }
+    if (entry.pending && entry.can_answer) {
+      const wrap = document.createElement("div");
+      wrap.className = "answer";
+      const box = document.createElement("input");
+      box.type = "text"; box.placeholder = "The customer's answer";
+      const button = document.createElement("button");
+      button.type = "button"; button.textContent = "Answer"; button.className = "primary";
+      button.onclick = () => answer(entry, box, button);
+      wrap.append(box, button);
+      div.appendChild(wrap);
+    } else if (entry.pending) {
+      const wrap = document.createElement("div");
+      wrap.className = "answer";
+      const button = document.createElement("button");
+      button.type = "button"; button.textContent = "Answer with a WhatsApp message"; button.className = "secondary";
+      button.onclick = () => answerWhatsApp(entry);
+      wrap.appendChild(button);
+      div.appendChild(wrap);
+    }
+    root.appendChild(div);
+  }
+}
+
+function table(columns, rows, labels) {
+  const wrap = document.createElement("div");
+  wrap.className = "scroll";
+  const t = document.createElement("table");
+  const hr = document.createElement("tr");
+  for (const name of columns) { const th = document.createElement("th"); th.textContent = labels ? labels[name] : name; hr.appendChild(th); }
+  const head = document.createElement("thead"); head.appendChild(hr); t.appendChild(head);
+  const body = document.createElement("tbody");
+  for (const row of rows) {
+    const tr = document.createElement("tr");
+    for (const name of columns) cell(tr, row[name] === null ? "" : String(row[name]));
+    body.appendChild(tr);
+  }
+  t.appendChild(body); wrap.appendChild(t);
+  return wrap;
+}
+
+async function loadDatabase() {
+  const root = $("database");
+  root.textContent = "";
+  for (const t of (await api("/api/database")).tables) {
+    const div = document.createElement("div");
+    div.className = "db-table";
+    const h = document.createElement("h3");
+    h.textContent = t.name + " (" + t.rows.length + ")";
+    div.appendChild(h);
+    if (t.rows.length) div.appendChild(table(t.columns, t.rows));
+    else line(div, "", "No rows.", "hint");
+    root.appendChild(div);
+  }
+}
+
+const SHORTFALL_COLUMNS = ["sku", "demand", "on_hand", "requested", "shortfall"];
+const SHORTFALL_LABELS = { sku: "SKU", demand: "Units asked", on_hand: "Stock", requested: "Already requested", shortfall: "Shortfall" };
+
+async function scan() {
+  showError("");
+  $("scan").disabled = true;
+  try {
+    const result = await api("/api/quotes/scan", {});
+    const root = $("scan-result");
+    root.textContent = "";
+    line(root, "", result.message, "reply-label");
+    if (result.shortfalls.length) {
+      root.appendChild(table(SHORTFALL_COLUMNS, result.shortfalls, SHORTFALL_LABELS));
+    }
+    if (result.blocked.length) {
+      for (const b of result.blocked) {
+        line(root, b.sku, "short, but " + b.waiting_reference + " is still waiting for supplier replies; a new request starts when it closes", "reply-label");
+      }
+      root.appendChild(table(SHORTFALL_COLUMNS, result.blocked, SHORTFALL_LABELS));
+    }
+    for (const request of result.started) {
+      line(root, request.reference, request.sku + " x " + request.quantity);
+      for (const mail of request.emails) line(root, "", mail.file + " to " + mail.to + " - " + mail.subject, "mono meta");
+    }
+    await loadDatabase();
+  } catch (error) { showError(error.message); }
+  $("scan").disabled = false;
+}
+
+async function loadConversations() { renderConversations(await api("/api/conversations")); }
+
+async function start() {
+  try {
+    const info = await api("/api/info");
+    $("mode").className = "pill " + (info.mode === "replay" ? "replay" : "live");
+    $("mode").textContent = info.mode === "replay" ? "Replay - only the recorded sample texts are understood"
+      : "Live - costs a few cents per order";
+    $("mode").title = "Mode: " + info.mode;
+    const products = await api("/api/catalog");
+    renderCatalog(products);
+    $("filter").oninput = () => renderCatalog(products);
+    for (const p of products) {
+      const option = document.createElement("option");
+      option.value = p.name;
+      $("products").appendChild(option);
+    }
+    customers = await api("/api/customers");
+    for (const c of customers) {
+      const option = document.createElement("option");
+      option.value = c.code;
+      option.textContent = c.code + " " + c.name + " - " + c.email + " - " + c.phone;
+      $("customer").appendChild(option);
+    }
+    addLine();
+    showChannel();
+    await loadConversations();
+    await loadDatabase();
+  } catch (error) { showError(error.message); }
+}
+
+$("channel").onchange = showChannel;
+$("customer").onchange = showChannel;
+$("add-line").onclick = addLine;
+$("send").onclick = send;
+$("scan").onclick = scan;
+$("refresh-db").onclick = () => loadDatabase().catch((error) => showError(error.message));
+start();
+</script>
+</body>
+</html>
