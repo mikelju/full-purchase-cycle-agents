@@ -406,7 +406,7 @@ UPLOAD_SUITES = tuple(
 # deterministic and local, so it joined with its scenarios (increment 13).
 # `reconciliation_matching` (phase 08) is deterministic and local, so it joined with its cases (increment 12).
 # `document_extraction` (phase 08) joined once its baseline was recorded (increment 11).
-# `claim_drafting` (phase 09) is in `SUITES` but joins `ALL_SUITES` once its baseline is recorded (increment 17).
+# `claim_drafting` (phase 09) joined `ALL_SUITES` last once its baseline was recorded (increment 17).
 # `claim_approval` (phase 09) is deterministic and local, so it joined with its scenarios (increment 14).
 ALL_SUITES = (
     "order_line_extraction",
@@ -424,6 +424,7 @@ ALL_SUITES = (
     "reconciliation_matching",
     "document_extraction",
     "claim_approval",
+    "claim_drafting",
 )
 
 
