@@ -14,7 +14,7 @@ Phase 08 (reconciliation, detection) is built and delivered for review via PR: s
 
 The same animation as a video: [docs/assets/purchase-cycle-flow.mp4](docs/assets/purchase-cycle-flow.mp4).
 
-It is a conceptual flow: today the channels run as separate graphs and the quotes graph starts from its own command until the orchestrator of phase 10.
+It is a conceptual flow: today the channels run as separate graphs and the quotes graph starts from its own command until the orchestrator of phase 12.
 
 ![A shortfall becomes three supplier quote requests; the decision graph compares the offers, recommends the full one and waits for approval before issuing the purchase order](docs/assets/quotes-flow.gif)
 
@@ -27,7 +27,7 @@ Like the one above, it is a conceptual flow, not the exact current behavior of t
 |---|---|---|
 | Customer orders | Email (text, PDF, Excel), web form and simulated WhatsApp; extraction, catalog matching, exceptions and reply | Per-channel subgraphs, pause until the customer answers, database |
 | Supplier quotes | Out of stock, quote requests, multi-day wait with saved state, comparison and human approval | Persistent state, human-in-the-loop, resumption |
-| Invoice reconciliation | Invoice against purchase order and delivery note, differences and a claim draft approved by a person | Structured validation, human-in-the-loop |
+| Reconciliation | Order, delivery note and invoice on the purchase side (supplier) and the sales side (customer), differences and a claim or credit note approved by a person; goods receipt and serving of customer orders | Structured validation, human-in-the-loop |
 | Orchestrator | Top-level graph composing the three modules over the shared database | Subgraph composition, failure recovery |
 
 Every module will have a runnable demo, tests, an evaluation with metrics over a set of cases, and traces in LangSmith.
