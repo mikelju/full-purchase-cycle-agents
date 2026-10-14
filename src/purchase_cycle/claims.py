@@ -1,8 +1,12 @@
 """Phase 09: claims to the supplier for the invoices that phase 08 left with discrepancies."""
 
+import json
 import sqlite3
 
-from purchase_cycle import reconciliation
+from purchase_cycle import llm, reconciliation
+
+CLAIM_SUBJECT = "Claim on invoice {invoice} for purchase order {order}"
+MONEY_KEYS = ("unit_amount", "amount")
 
 ROW_KEYS = reconciliation.DISCREPANCY_COLUMNS  # sku, type, expected, found, unit_amount, amount, text
 
@@ -51,4 +55,29 @@ def claim_facts(conn: sqlite3.Connection, invoice_id: int) -> dict | None:
         "recipient": head[4],
         "differences": differences,
         "amount_in_dispute": amount_in_dispute(differences),
+    }
+
+
+def facts_prompt(facts: dict) -> str:
+    """The facts as one JSON object with sorted keys and two-decimal amounts; no recipient, so the key is stable."""
+    differences = []
+    for row in facts["differences"]:
+        row = dict(row)
+        for key in MONEY_KEYS + (("expected", "found") if row["type"] == "price" else ()):
+            if row[key] is not None:
+                row[key] = f"{row[key]:.2f}"
+        differences.append(row)
+    shown = {k: v for k, v in facts.items() if k != "recipient"}
+    shown |= {"differences": differences, "amount_in_dispute": f"{facts['amount_in_dispute']:.2f}"}
+    return json.dumps(shown, sort_keys=True)
+
+
+def draft_claim(client: llm.ModelClient, facts: dict) -> dict:
+    """One model call; recipient and subject come from the facts, never from the model."""
+    answer = client.extract(facts_prompt(facts), case_id=f"claim-{facts['invoice']}")
+    return {
+        "recipient": facts["recipient"],
+        "subject": CLAIM_SUBJECT.format(invoice=facts["invoice_number"] or facts["invoice"], order=facts["order"]),
+        "body": answer.body,
+        "source": "model",
     }

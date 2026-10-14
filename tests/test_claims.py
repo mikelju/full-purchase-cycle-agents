@@ -1,8 +1,10 @@
 """C3 and C4: claim candidates, claim facts and the amount in dispute."""
 
+import json
+
 import pytest
 
-from purchase_cycle import claims, db
+from purchase_cycle import claims, db, llm
 
 SKU = "GLV-NIT-XS"
 
@@ -140,3 +142,66 @@ def test_facts_of_an_unknown_invoice_or_one_without_discrepancies_are_none(conn)
 def test_the_amount_in_dispute_follows_the_sign_rule(rows, expected):
     assert _amount(rows) == pytest.approx(expected, abs=1e-9)
     assert _amount(rows) == round(_amount(rows), 2)
+
+
+ROWS = [(SKU, "price", 4.0, 4.5, 0.5, 5.0, None), (None, "extra_line", None, 3.0, 2.0, 6.0, "Surgical masks")]
+
+
+def _client(facts, body, tmp_path, mode="replay"):
+    path = tmp_path / "claim_recordings.jsonl"
+    key = llm.recording_key(
+        llm.build_system_prompt([], llm.CLAIM_DRAFTING), claims.facts_prompt(facts), llm.CLAIM_DRAFTING
+    )
+    path.write_text(json.dumps({"key": key, "case_id": "t", "sentence": "", "answer": {"body": body}}) + "\n")
+    return llm.ModelClient(mode, [], path, task=llm.CLAIM_DRAFTING)
+
+
+def test_the_prompt_holds_the_facts_json_and_no_recipient_or_subject(conn):
+    facts = claims.claim_facts(conn, _invoice(conn, "F-77", "discrepancies", ROWS))
+    prompt = claims.facts_prompt(facts)
+    loaded = json.loads(prompt)
+    assert list(loaded) == sorted(loaded)
+    assert loaded["invoice_number"] == "F-77"
+    assert loaded["amount_in_dispute"] == "11.00"
+    assert [row["amount"] for row in loaded["differences"]] == ["5.00", "6.00"]
+    assert facts["recipient"] not in prompt
+    assert "subject" not in loaded
+    assert claims.facts_prompt(facts) == prompt
+
+
+def test_one_call_per_claim_and_recipient_and_subject_come_from_code(conn, tmp_path):
+    invoice = _invoice(conn, "F-77", "discrepancies", ROWS)
+    facts = claims.claim_facts(conn, invoice)
+    client = _client(facts, "Body text", tmp_path)
+    draft = claims.draft_claim(client, facts)
+    assert client.calls == 1
+    assert draft["body"] == "Body text"
+    assert draft["recipient"] == facts["recipient"]
+    assert draft["subject"] == f"Claim on invoice F-77 for purchase order {facts['order']}"
+
+
+def test_a_missing_recording_raises(conn, tmp_path):
+    facts = claims.claim_facts(conn, _invoice(conn, "F-77", "discrepancies", ROWS))
+    client = llm.ModelClient("replay", [], tmp_path / "none.jsonl", task=llm.CLAIM_DRAFTING)
+    with pytest.raises(llm.MissingRecording):
+        claims.draft_claim(client, facts)
+
+
+def test_record_mode_stores_the_answer_and_replay_reads_it(conn, tmp_path, monkeypatch):
+    facts = claims.claim_facts(conn, _invoice(conn, "F-77", "discrepancies", ROWS))
+    path = tmp_path / "rec.jsonl"
+    recorder = llm.ModelClient("record", [], path, task=llm.CLAIM_DRAFTING)
+    monkeypatch.setattr(recorder, "_call_model", lambda sentence: ({"body": "Recorded"}, {}))
+    assert claims.draft_claim(recorder, facts)["body"] == "Recorded"
+    assert recorder.save_recordings() == 1
+    replayer = llm.ModelClient("replay", [], path, task=llm.CLAIM_DRAFTING)
+    assert claims.draft_claim(replayer, facts)["body"] == "Recorded"
+
+
+def test_the_task_is_separate_and_existing_keys_are_unchanged():
+    assert llm.CLAIM_DRAFTING.name == "claim_drafting"
+    assert llm.CLAIM_DRAFTING.recordings_path.name == "claim_drafting.jsonl"
+    assert llm.CLAIM_DRAFTING.tool_name == "record_claim_body"
+    assert llm.recording_key("s", "x", llm.CLAIM_DRAFTING) != llm.recording_key("s", "x", llm.OFFER_EXTRACTION)
+    assert llm.CLAIM_DRAFTING.answer.model_config["extra"] == "forbid"
+    assert llm.EXTRACTION.name == "order_line_extraction"
