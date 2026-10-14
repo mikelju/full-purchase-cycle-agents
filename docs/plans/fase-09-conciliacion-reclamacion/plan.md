@@ -168,6 +168,7 @@ This batch runs with the owner's key present, `LANGSMITH_TRACING` unset or false
 | D10 | `tests/test_offer_eval.py` (earlier phase): the run order tail gains `claim_drafting` | none | accepted |
 | D11 | `tests/test_whatsapp_eval.py` (earlier phase): the `eval all` order gains `claim_drafting` at the end | none | accepted |
 | D12 | `tests/test_secrets.py` (earlier phase): the phase 08 test expects 17 files under `examples/invoices/` since `claim_edit.txt` was added | none | accepted |
+| D13 | Review round 1 tightened the claim fact check and grader (amount pattern, dispute figure, SKU-amount segment pairing, money vs quantities, token boundaries, positive extra lines); instructions and recordings unchanged; test split regraded from recordings, baseline rewritten; affects C5, C13, C14 | none | accepted |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |

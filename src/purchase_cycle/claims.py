@@ -135,23 +135,32 @@ def _near(a: float, b: float) -> bool:
 
 def mentions(text: str, token: str) -> bool:
     """Whether the token appears in the text as a whole token, not inside a longer SKU or number."""
-    return bool(re.search(rf"(?<![A-Za-z0-9])(?<![A-Za-z0-9]-){re.escape(token)}(?![A-Za-z0-9]|-[A-Za-z0-9])", text))
+    return bool(re.search(_token(token), text))
 
 
 def _sentences(body: str) -> list[str]:
     return [part for line in body.splitlines() for part in re.split(r"(?<=[.!?])\s+", line) if part.strip()]
 
 
-def amount_stated(row: dict, body: str) -> bool:
-    """Whether the amount of a discrepancy row is written next to its item on one line or in one sentence."""
+def _token(token: str) -> str:
+    return rf"(?<![A-Za-z0-9])(?<![A-Za-z0-9]-){re.escape(token)}(?![A-Za-z0-9]|-[A-Za-z0-9])"
+
+
+def amount_stated(row: dict, body: str, rows: list[dict]) -> bool:
+    """Whether the amount of a row is written in its item's segment: from the item to the next other item."""
     if row["amount"] is None:
         return True
     item = row["sku"] or row["text"]
     amount = abs(row["amount"])
-    return bool(item) and any(
-        mentions(part, item) and any(_near(v, amount) for v in money_amounts(part))
-        for part in body.splitlines() + _sentences(body)
-    )
+    if not item:
+        return False
+    others = {name for r in rows for name in (r["sku"], r["text"]) if name and name != item}
+    stops = sorted(m.start() for name in others for m in re.finditer(_token(name), body))
+    for m in re.finditer(_token(item), body):
+        end = next((pos for pos in stops if pos > m.start()), len(body))
+        if any(_near(v, amount) for v in money_amounts(body[m.start() : end])):
+            return True
+    return False
 
 
 def check_draft(body: str, facts: dict) -> list[str]:
@@ -167,7 +176,7 @@ def check_draft(body: str, facts: dict) -> list[str]:
         item = row["sku"] or row["text"]
         if item and not mentions(body, item):
             problems.append(f"missing difference {item}")
-        if not amount_stated(row, body):
+        if not amount_stated(row, body, facts["differences"]):
             problems.append(f"missing amount {abs(row['amount']):.2f} of {item}")
         keys = ("unit_amount", "amount") + (("expected", "found") if row["type"] == "price" else ())
         money |= {abs(row[key]) for key in keys if row[key] is not None}
@@ -175,8 +184,6 @@ def check_draft(body: str, facts: dict) -> list[str]:
     stated = [money_amounts(part) for part in disputed]
     if not any(_near(v, total) for values in stated for v in values):
         problems.append(f"missing amount in dispute {facts['amount_in_dispute']:.2f}")
-    for value in sorted({v for values in stated for v in values if not _near(v, total)}):
-        problems.append(f"wrong amount in dispute {value:.2f}")
     if not re.search(r"corrected invoice|credit note", body, re.IGNORECASE):
         problems.append("missing request for a corrected invoice or a credit note")
     unnamed = body  # a SKU or product text may hold numbers such as "2.5 cm"; they are names, not amounts

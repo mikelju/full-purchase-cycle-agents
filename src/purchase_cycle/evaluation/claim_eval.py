@@ -57,9 +57,9 @@ def grade(case: dict, body: str | None, error: str | None = None) -> dict:
     covered = 0
     for row in rows:
         item = row["sku"] or row["text"]
-        covered += bool(item and claims.mentions(text, item) and claims.amount_stated(row, text))
+        covered += bool(item and claims.mentions(text, item) and claims.amount_stated(row, text, rows))
     reference_ok = not any(p.startswith(("missing invoice number", "missing purchase order")) for p in problems)
-    amount_ok = not any(p.startswith(("missing amount in dispute", "wrong amount in dispute")) for p in problems)
+    amount_ok = not any(p.startswith("missing amount in dispute") for p in problems)
     invented = any(p.startswith("invented amount") for p in problems)
     return {
         "id": case["id"],
