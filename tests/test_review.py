@@ -47,3 +47,10 @@ def test_the_module_imports_nothing_from_the_business_side():
         elif isinstance(node, ast.ImportFrom):
             imported.add(node.module)
     assert {name.split(".")[0] for name in imported} <= {"typing", "langgraph"}
+
+
+def test_an_unknown_action_is_an_error_not_a_reject():
+    graph, run = _graph(), {"configurable": {"thread_id": "t"}}
+    graph.invoke({"message": MESSAGE}, run)
+    with pytest.raises(ValueError, match="aprove"):
+        graph.invoke(Command(resume={"action": "aprove"}), run)

@@ -21,6 +21,8 @@ def review(state: ReviewState) -> ReviewState:
         final = state["message"]["body"]
     elif action == EDIT:
         final = answer["body"]
+    elif action == REJECT:
+        final = None
     else:
-        action, final = REJECT, None
+        raise ValueError(f"unknown review action {action!r}")
     return {"decision": action, "final_body": final}
