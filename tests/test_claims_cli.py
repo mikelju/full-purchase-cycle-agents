@@ -1,5 +1,8 @@
 """C3, C7, C8, C9 and C10: the claim commands, the restart between processes and the list and show output."""
 
+import subprocess
+import sys
+
 from purchase_cycle import claims, cli, db
 from test_claims import ROWS, _invoice, _two_claims_from
 
@@ -149,3 +152,37 @@ def test_refused_commands_exit_1_with_a_message_and_leave_at_most_one_email(tmp_
         assert capsys.readouterr().err.startswith("Error:")
     assert (world.query("SELECT * FROM claims"), world.emails()) == before
     assert len(world.emails()) == 1
+
+
+def _process(world, *words):
+    run = subprocess.run(
+        [sys.executable, "-m", "purchase_cycle.cli", "--db", str(world.db), "reconcile", *words],
+        capture_output=True,
+        text=True,
+    )
+    assert run.returncode == 0, run.stderr
+    return run.stdout
+
+
+def _final(world):
+    root = str(world.outbox.parent)
+    rows = [tuple(str(v).replace(root, "ROOT") for v in r) for r in world.query("SELECT * FROM claims ORDER BY id")]
+    mails = {p.name: p.read_bytes() for p in world.outbox.glob("*.eml")}
+    return rows, mails
+
+
+def test_claims_and_each_decision_in_separate_processes_equal_one_process_with_no_model_call(tmp_path):
+    single, split = World(tmp_path / "single"), World(tmp_path / "split")
+    body = tmp_path / "edit.txt"
+    body.write_text("Corrected invoice please.\n", encoding="utf-8")
+    assert single.claims() == 0
+    assert single.approve("INV-0001") == 0
+    assert single.approve("INV-0002", "--body-file", str(body)) == 0
+    cp = ["--checkpoints", str(split.checkpoints)]
+    _process(split, "claims", *cp, "--recordings", str(split.recordings))
+    split.recordings.unlink()  # from here any model call fails
+    _process(split, "approve", "INV-0001", *cp, "--outbox", str(split.outbox))
+    _process(split, "approve", "INV-0002", *cp, "--outbox", str(split.outbox), "--body-file", str(body))
+    assert "nothing to be drafted" in _process(split, "claims", *cp, "--recordings", str(split.recordings))
+    assert _final(split) == _final(single)
+    assert [r[0] for r in split.query("SELECT status FROM claims ORDER BY id")] == ["sent", "sent"]
