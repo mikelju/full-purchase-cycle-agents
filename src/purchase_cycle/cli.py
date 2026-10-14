@@ -225,6 +225,7 @@ def cmd_reconcile_list(args) -> int:
     conn = _seeded(args.db)
     try:
         listing = reconciliation.list_results(conn)
+        claim_status = {row["invoice_id"]: claims.claim_of(conn, row["invoice_id"]) for row in listing["rows"]}
     finally:
         conn.close()
     counts = "  ".join(f"{name}={n}" for name, n in listing["by_result"].items())
@@ -235,6 +236,7 @@ def cmd_reconcile_list(args) -> int:
         print(
             f"  {reconciliation.invoice_reference(row['invoice_id'])}  {reconciliation.order_reference(row['order_id'])}"
             f"  supplier={row['supplier_code']}  {row['result']}  differences={row['differences']} ({types})"
+            + (f"  claim={claim['status']}" if (claim := claim_status[row["invoice_id"]]) else "")
         )
     if listing["unreconciled"]:
         print(f"not reconciled: {len(listing['unreconciled'])}")
@@ -249,6 +251,19 @@ def _amount(value, places: int) -> str:
     return "-" if value is None else f"{value:.{places}f}"
 
 
+def _print_claim(claim: dict) -> None:
+    print(f"claim: status={claim['status']}  source={claim['draft_source']}  edited={bool(claim['edited'])}")
+    print(f"  to: {claim['recipient']}  subject: {claim['subject']}")
+    print("  draft body:")
+    for line in claim["draft_body"].splitlines():
+        print(f"    {line}")
+    if claim["final_body"] is not None:
+        print("  final body:")
+        for line in claim["final_body"].splitlines():
+            print(f"    {line}")
+    print(f"  outbox file: {claim['outbox_file'] or '-'}")
+
+
 def cmd_reconcile_show(args) -> int:
     invoice_id = reconciliation.invoice_id_from_reference(args.reference)
     if invoice_id is None:
@@ -257,6 +272,7 @@ def cmd_reconcile_show(args) -> int:
     conn = _seeded(args.db)
     try:
         shown = reconciliation.show_result(conn, invoice_id)
+        claim = claims.claim_of(conn, invoice_id)
     finally:
         conn.close()
     if shown is None:
@@ -280,6 +296,8 @@ def cmd_reconcile_show(args) -> int:
             f"found={_amount(row['found'], 4)}  per unit={_amount(row['unit_amount'], 4)}  "
             f"amount={_amount(row['amount'], 2)}"
         )
+    if claim:
+        _print_claim(claim)
     return 0
 
 

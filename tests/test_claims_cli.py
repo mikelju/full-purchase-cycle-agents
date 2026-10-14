@@ -186,3 +186,31 @@ def test_claims_and_each_decision_in_separate_processes_equal_one_process_with_n
     assert "nothing to be drafted" in _process(split, "claims", *cp, "--recordings", str(split.recordings))
     assert _final(split) == _final(single)
     assert [r[0] for r in split.query("SELECT status FROM claims ORDER BY id")] == ["sent", "sent"]
+
+
+def test_list_and_show_carry_the_claim_status_text_and_source(tmp_path, capsys):
+    world = World(tmp_path)
+    world.claims()
+    body = tmp_path / "edit.txt"
+    body.write_text("Corrected invoice please.\n", encoding="utf-8")
+    assert world.approve("INV-0001", "--body-file", str(body)) == 0
+    assert world.reject("INV-0002") == 0
+    capsys.readouterr()
+    assert world.main("list") == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[2].endswith("claim=sent") and lines[3].endswith("claim=rejected") and "claim=" not in lines[4]
+    assert world.main("show", "INV-0001") == 0
+    sent = capsys.readouterr().out
+    assert "claim: status=sent  source=model  edited=True" in sent and "Corrected invoice please." in sent
+    assert "draft body:" in sent and "final body:" in sent and "CLAIM-INV-0001-SUP-001.eml" in sent
+    assert world.main("show", "INV-0002") == 0
+    rejected = capsys.readouterr().out
+    assert "claim: status=rejected" in rejected and "final body" not in rejected and "outbox file: -" in rejected
+
+
+def test_an_invoice_with_no_claim_prints_the_phase_08_output(tmp_path, capsys):
+    world = World(tmp_path)
+    assert world.main("show", "INV-0003") == 0
+    assert "claim" not in capsys.readouterr().out
+    assert world.main("list") == 0
+    assert "claim=" not in capsys.readouterr().out
