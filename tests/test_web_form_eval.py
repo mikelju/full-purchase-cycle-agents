@@ -167,5 +167,8 @@ def test_upload_command_uploads_every_suite_and_keeps_the_worst_exit(monkeypatch
     from purchase_cycle.evaluation import document_eval
 
     monkeypatch.setattr(document_eval, "upload_datasets", lambda: uploaded.append("document_extraction") or 0)
+    from purchase_cycle.evaluation import claim_eval
+
+    monkeypatch.setattr(claim_eval, "upload_datasets", lambda: uploaded.append("claim_drafting") or 0)
     assert main(["eval-upload"]) == 1
     assert uploaded == list(harness.UPLOAD_SUITES)
