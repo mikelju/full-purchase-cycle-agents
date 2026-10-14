@@ -1,0 +1,94 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "claims": {
+      "INV-0001": {
+        "edited": 0,
+        "sent_body": "Dear supplier,\n\nInvoice F-2601 does not match purchase order PO-0001:\n- GLV-NIT-XS: price 4.00 EUR on the order, 4.20 EUR on the invoice, difference 1.00 EUR\nThe amount in dispute is 1.00 EUR.\nPlease send us a corrected invoice or a credit note.\n\nBest regards,\nPurchasing department",
+        "source": "model",
+        "status": "sent"
+      },
+      "INV-0002": {
+        "edited": 0,
+        "sent_body": null,
+        "source": "model",
+        "status": "rejected"
+      }
+    },
+    "failures": 0,
+    "model_calls": 2,
+    "outbox": [
+      "CLAIM-INV-0001-SUP-001.eml"
+    ]
+  },
+  "id": "CA-035",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "invoices": [
+    {
+      "dispute": 1.0,
+      "draft": "Dear supplier,\n\nInvoice F-2601 does not match purchase order PO-0001:\n- GLV-NIT-XS: price 4.00 EUR on the order, 4.20 EUR on the invoice, difference 1.00 EUR\nThe amount in dispute is 1.00 EUR.\nPlease send us a corrected invoice or a credit note.\n\nBest regards,\nPurchasing department",
+      "later": false,
+      "number": "F-2601",
+      "order": "PO-0001",
+      "result": "discrepancies",
+      "rows": [
+        [
+          "GLV-NIT-XS",
+          "price",
+          4.0,
+          4.2,
+          0.2,
+          1.0,
+          null
+        ]
+      ],
+      "supplier": "SUP-001"
+    },
+    {
+      "dispute": 4.0,
+      "draft": "Dear supplier,\n\nInvoice F-2602 does not match purchase order PO-0002:\n- GLV-NIT-XS: quantity 5 ordered, 6 invoiced, difference 4.00 EUR\nThe amount in dispute is 4.00 EUR.\nPlease send us a corrected invoice or a credit note.\n\nBest regards,\nPurchasing department",
+      "later": false,
+      "number": "F-2602",
+      "order": "PO-0002",
+      "result": "discrepancies",
+      "rows": [
+        [
+          "GLV-NIT-XS",
+          "quantity",
+          5,
+          6,
+          4.0,
+          4.0,
+          null
+        ]
+      ],
+      "supplier": "SUP-002"
+    }
+  ],
+  "steps": [
+    {
+      "exit": 0,
+      "op": "claims"
+    },
+    {
+      "exit": 0,
+      "invoice": "INV-0001",
+      "new_process": true,
+      "op": "approve"
+    },
+    {
+      "exit": 0,
+      "invoice": "INV-0002",
+      "new_process": true,
+      "op": "reject"
+    }
+  ],
+  "tags": [
+    "discrepancy_claim",
+    "approve",
+    "reject",
+    "restart"
+  ]
+}

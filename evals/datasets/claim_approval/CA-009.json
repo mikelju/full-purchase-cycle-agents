@@ -1,0 +1,59 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "claims": {
+      "INV-0001": {
+        "edited": 0,
+        "sent_body": "Dear supplier,\n\nInvoice F-2601 does not match purchase order PO-0001:\n- Special handling: invoiced but not ordered\nThe amount in dispute is 0.00 EUR.\nPlease send us a corrected invoice or a credit note.\n\nBest regards,\nPurchasing department",
+        "source": "model",
+        "status": "sent"
+      }
+    },
+    "failures": 0,
+    "model_calls": 1,
+    "outbox": [
+      "CLAIM-INV-0001-SUP-001.eml"
+    ]
+  },
+  "id": "CA-009",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "invoices": [
+    {
+      "dispute": 0.0,
+      "draft": "Dear supplier,\n\nInvoice F-2601 does not match purchase order PO-0001:\n- Special handling: invoiced but not ordered\nThe amount in dispute is 0.00 EUR.\nPlease send us a corrected invoice or a credit note.\n\nBest regards,\nPurchasing department",
+      "later": false,
+      "number": "F-2601",
+      "order": "PO-0001",
+      "result": "discrepancies",
+      "rows": [
+        [
+          null,
+          "extra_line",
+          null,
+          null,
+          null,
+          null,
+          "Special handling"
+        ]
+      ],
+      "supplier": "SUP-001"
+    }
+  ],
+  "steps": [
+    {
+      "exit": 0,
+      "op": "claims"
+    },
+    {
+      "exit": 0,
+      "invoice": "INV-0001",
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "discrepancy_claim",
+    "approve"
+  ]
+}
