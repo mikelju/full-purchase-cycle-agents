@@ -60,3 +60,5 @@ The installed ffmpeg on PATH lacks `palettegen`, so the full build under WinGet 
 | - | not run | - | - | Media and docs only, owner approved the design | - |
 
 ## Delivery
+PR: https://github.com/mikelju/full-purchase-cycle-agents/pull/19
+See the PR description for results per criterion.
