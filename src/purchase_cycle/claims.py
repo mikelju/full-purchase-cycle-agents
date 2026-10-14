@@ -3,6 +3,7 @@
 import json
 import re
 import sqlite3
+from email import message_from_bytes, policy
 from pathlib import Path
 from typing import TypedDict
 
@@ -301,6 +302,25 @@ def draft_message(db_path: Path | str, client: llm.ModelClient | None, invoice_i
         conn.close()
 
 
+def _refuse_other_file(path: Path, body: str) -> None:
+    """A file of the same name with another text is not ours: refuse, so the claim is not marked sent for it."""
+    if not path.exists():
+        return
+    written = message_from_bytes(path.read_bytes(), policy=policy.default).get_content()
+    if written.strip() != body.strip():
+        raise DecisionRefused(
+            f"{path} already exists with a different text; move it away and run approve again, nothing was sent"
+        )
+
+
+def _resolve_failure(conn: sqlite3.Connection, invoice_id: int) -> None:
+    """The decision settles the parked template-fallback row of the claim, if there is one."""
+    try:
+        db.resolve_failure(conn, claim_thread_id(invoice_id))
+    except db.NotPending:
+        pass
+
+
 def send_claim(db_path: Path | str, outbox: Path | str, state: ClaimState) -> None:
     """Write the keyed email once and set the claim `sent`; a claim that is no longer awaiting is left alone."""
     conn = db.connect(db_path)
@@ -314,9 +334,9 @@ def send_claim(db_path: Path | str, outbox: Path | str, state: ClaimState) -> No
             (row["reconciliation_id"],),
         ).fetchone()[0]
         name = f"CLAIM-{reconciliation.invoice_reference(state['invoice_id'])}-{code}"
-        quotes._write_email(
-            Path(outbox), name, row["recipient"], row["subject"], state["final_body"], row["drafted_at"]
-        )
+        decided_at = sim_clock.now(conn).strftime(sim_clock.FORMAT)
+        _refuse_other_file(Path(outbox) / f"{name}.eml", state["final_body"])
+        quotes._write_email(Path(outbox), name, row["recipient"], row["subject"], state["final_body"], decided_at)
         with conn:
             conn.execute(
                 "UPDATE claims SET status = ?, final_body = ?, edited = ?, decided_at = ?, outbox_file = ? "
@@ -325,12 +345,13 @@ def send_claim(db_path: Path | str, outbox: Path | str, state: ClaimState) -> No
                     SENT,
                     state["final_body"],
                     int(state["decision"] == review.EDIT),
-                    sim_clock.now(conn).strftime(sim_clock.FORMAT),
+                    decided_at,
                     str(Path(outbox) / f"{name}.eml"),
                     row["id"],
                     AWAITING,
                 ),
             )
+        _resolve_failure(conn, state["invoice_id"])
     finally:
         conn.close()
 
@@ -345,6 +366,7 @@ def close_claim(db_path: Path | str, state: ClaimState) -> None:
                 "(SELECT id FROM reconciliations WHERE invoice_id = ?)",
                 (REJECTED, sim_clock.now(conn).strftime(sim_clock.FORMAT), AWAITING, state["invoice_id"]),
             )
+        _resolve_failure(conn, state["invoice_id"])
     finally:
         conn.close()
 
@@ -404,6 +426,9 @@ def draft_claims(
     try:
         for invoice_id in candidates(conn):
             run = _config(invoice_id)
+            waiting = graph.get_state(run).next
+            if waiting and waiting[0] != "draft":  # a thread of an earlier database: it has no claim row to decide
+                checkpointer.delete_thread(run["configurable"]["thread_id"])
             graph.invoke(None if graph.get_state(run).next else {"invoice_id": invoice_id}, run)
             results.append(
                 {"invoice_id": invoice_id, "facts": claim_facts(conn, invoice_id), "claim": claim_of(conn, invoice_id)}
@@ -424,7 +449,17 @@ def _check_awaiting(conn: sqlite3.Connection, invoice_id: int) -> None:
 
 def _paused(db_path: Path | str, checkpointer, invoice_id: int) -> str | None:
     """The node the claim thread waits at, or None when it has no checkpoint or is finished."""
-    state = build_claim_graph(db_path, None, None, checkpointer).get_state(_config(invoice_id))
+    graph = build_claim_graph(db_path, None, None, checkpointer)
+    state = graph.get_state(_config(invoice_id))
+    if not state.values:  # no thread (another checkpoints file, or a stop before the first checkpoint): rebuild it
+        conn = db.connect(db_path)
+        try:
+            row = claim_of(conn, invoice_id)
+        finally:
+            conn.close()
+        message = {"to": row["recipient"], "subject": row["subject"], "body": row["draft_body"]}
+        graph.update_state(_config(invoice_id), {"invoice_id": invoice_id, "message": message}, as_node="draft")
+        state = graph.get_state(_config(invoice_id))
     return state.next[0] if state.next else None
 
 
@@ -464,6 +499,13 @@ def approve_claim(
     if node not in ("review", "send"):
         raise _no_pause(ref)
     answer = None
+    if node == "send":
+        recorded = build_claim_graph(db_path, None, None, checkpointer).get_state(_config(invoice_id)).values
+        if body is not None and body != recorded.get("final_body"):
+            raise DecisionRefused(
+                f"claim {ref} already has an earlier decision that is being completed; "
+                "run approve without --body-file to finish it"
+            )
     if node == "review":
         answer = {"action": review.APPROVE} if body is None else {"action": review.EDIT, "body": body}
     _resume(db_path, checkpointer, outbox, invoice_id, answer)

@@ -254,3 +254,47 @@ def test_the_demo_fails_clearly_when_the_claim_recordings_are_missing(tmp_path):
     run, _, _ = _run_demo(tmp_path, "--claim-recordings", str(tmp_path / "none.jsonl"))
     assert run.returncode == 1
     assert "claim recordings not found" in run.stderr and "still awaiting a delivery note at the end: 1" in run.stdout
+
+
+def test_a_claim_is_decided_with_a_missing_thread_and_resolves_its_failure(tmp_path, capsys):
+    world = World(tmp_path)
+    world.claims()
+    conn = db.connect(world.db)
+    try:
+        db.park_failure(conn, "claim-INV-0001", "reconcile", "INV-0001", "claim_drafting", "template")
+    finally:
+        conn.close()
+    world.checkpoints = tmp_path / "other.sqlite"  # `approve` reads another checkpoints file: no thread
+    capsys.readouterr()
+    assert world.approve("INV-0001") == 0
+    assert "INV-0001 claim sent (as drafted)" in capsys.readouterr().out
+    assert world.query("SELECT status FROM failures") == [("resolved",)]
+    assert world.reject("INV-0002") == 0
+
+
+def test_failures_resume_refuses_a_claim_and_points_to_reconcile(tmp_path, capsys):
+    world = World(tmp_path)
+    conn = db.connect(world.db)
+    try:
+        db.park_failure(conn, "claim-INV-0001", "reconcile", "INV-0001", "claim_drafting", "template")
+    finally:
+        conn.close()
+    assert cli.main(["--db", str(world.db), "failures", "resume", "claim-INV-0001"]) == 1
+    assert "reconcile approve|reject" in capsys.readouterr().err
+    assert world.query("SELECT status FROM failures") == [("needs_review",)]
+
+
+def test_a_different_file_in_the_outbox_exits_1_and_a_body_file_cannot_change_a_pending_send(tmp_path, capsys):
+    world = World(tmp_path)
+    world.claims()
+    world.outbox.mkdir()
+    (world.outbox / "CLAIM-INV-0001-SUP-001.eml").write_bytes(b"Subject: x\n\nsomething else\n")
+    capsys.readouterr()
+    assert world.approve("INV-0001") == 1
+    assert "already exists" in capsys.readouterr().err
+    assert world.query("SELECT status FROM claims ORDER BY id")[0] == ("awaiting_approval",)
+    body = tmp_path / "edit.txt"
+    body.write_text("Other words.\n", encoding="utf-8")
+    assert world.approve("INV-0001", "--body-file", str(body)) == 1  # the thread is already at send
+    assert "earlier decision" in capsys.readouterr().err
+    assert world.query("SELECT status FROM claims ORDER BY id")[0] == ("awaiting_approval",)

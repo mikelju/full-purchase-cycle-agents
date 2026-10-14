@@ -600,3 +600,95 @@ def test_a_sku_header_with_bullets_and_per_unit_figures_pass():
     )
     assert claims.check_draft(body, facts) == []
     assert claims.check_draft(body.replace("overcharge 12.00", "overcharge 5.00"), facts) != []
+
+
+def _past_draft(flow, node):
+    """Move the claim thread to `node` (review or send) without a decision from a person."""
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    if node == "send":
+        flow.graph(client=False).update_state(flow.run, {"decision": "approve", "final_body": "x"}, as_node="review")
+    assert flow.graph(client=False).get_state(flow.run).next == (node,)
+
+
+@pytest.mark.parametrize("node", ["review", "send"])
+def test_a_thread_past_draft_with_no_claim_row_is_discarded_and_drafted_again(flow, node):
+    _past_draft(flow, node)
+    flow.conn.execute("DELETE FROM claims")  # the business database was reset; the checkpoints file was kept
+    flow.conn.commit()
+    [item] = claims.draft_claims(flow.db_path, flow.checkpointer, flow.client, flow.outbox)
+    assert item["claim"]["status"] == "awaiting_approval" and item["claim"]["recipient"]
+    assert flow.graph(client=False).get_state(flow.run).next == ("review",)
+    assert flow.client.calls == 2 and flow.emails() == []
+    decided = claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice)
+    assert decided["status"] == "sent" and len(flow.emails()) == 1
+
+
+def test_a_thread_still_at_draft_is_resumed(flow):
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    flow.graph(client=False).update_state(flow.run, {"invoice_id": flow.invoice}, as_node="__start__")
+    flow.conn.execute("DELETE FROM claims")
+    flow.conn.commit()
+    assert flow.graph(client=False).get_state(flow.run).next == ("draft",)
+    [item] = claims.draft_claims(flow.db_path, flow.checkpointer, flow.client, flow.outbox)
+    assert item["claim"]["status"] == "awaiting_approval"
+
+
+@pytest.mark.parametrize("decide", ["approve", "reject"])
+def test_a_claim_whose_thread_is_missing_can_still_be_decided_with_no_model_call(flow, tmp_path, decide):
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    other = sqlite_checkpointer(tmp_path / "other.sqlite")  # a different checkpoints file: no thread
+    if decide == "approve":
+        done = claims.approve_claim(flow.db_path, other, flow.outbox, flow.invoice)
+        assert done["status"] == "sent" and len(flow.emails()) == 1
+    else:
+        done = claims.reject_claim(flow.db_path, other, flow.invoice)
+        assert done["status"] == "rejected" and flow.emails() == []
+    assert flow.client.calls == 1
+
+
+def _occupy_outbox(flow, body):
+    name = f"CLAIM-{flow.facts['invoice']}-SUP-001"
+    claims.quotes._write_email(flow.outbox, name, "x@y.z", "other", body, "2026-10-12 09:00:00")
+
+
+def test_an_existing_different_file_refuses_the_send_and_leaves_the_claim_awaiting(flow):
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    _occupy_outbox(flow, "Some other text.")
+    with pytest.raises(claims.DecisionRefused, match="already exists"):
+        claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice)
+    assert flow.row()[0]["status"] == "awaiting_approval"
+
+
+def test_an_existing_identical_file_is_kept_and_the_claim_is_sent(flow):
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    _occupy_outbox(flow, flow.row()[0]["draft_body"])
+    done = claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice)
+    assert done["status"] == "sent" and len(flow.emails()) == 1
+
+
+def test_the_email_date_is_the_decision_time(flow):
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    claims.sim_clock.advance(flow.conn, days=2)
+    done = claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice)
+    message = message_from_bytes(flow.emails()[0].read_bytes(), policy=policy.default)
+    assert message["Date"].datetime.strftime(claims.sim_clock.FORMAT) == done["decided_at"] != done["drafted_at"]
+
+
+def test_approve_with_a_different_body_while_the_send_is_pending_is_refused(flow):
+    _past_draft(flow, "send")
+    with pytest.raises(claims.DecisionRefused, match="earlier decision"):
+        claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice, "Other words.")
+    assert flow.row()[0]["status"] == "awaiting_approval" and flow.emails() == []
+    done = claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice)
+    assert (done["status"], done["final_body"]) == ("sent", "x")
+
+
+@pytest.mark.parametrize("decide", ["approve", "reject"])
+def test_a_decision_resolves_the_parked_failure(flow, decide):
+    claims.db.park_failure(flow.conn, f"claim-{flow.facts['invoice']}", "reconcile", flow.facts["invoice"], "s", "e")
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    if decide == "approve":
+        claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice)
+    else:
+        claims.reject_claim(flow.db_path, flow.checkpointer, flow.invoice)
+    assert flow.conn.execute("SELECT status FROM failures").fetchall()[0][0] == "resolved"

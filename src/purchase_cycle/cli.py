@@ -1525,6 +1525,12 @@ def cmd_failures_resume(args) -> int:
             f"Error: thread {args.thread_id} is not parked (status {row['status']}); nothing changed", file=sys.stderr
         )
         return 1
+    if row["channel"] == claims.CHANNEL:
+        print(
+            f"Error: thread {args.thread_id} is a claim; use purchase-cycle reconcile approve|reject; nothing changed",
+            file=sys.stderr,
+        )
+        return 1
     steps = []
     graph, clients = _clarify_graph(args, row["channel"], recovery=True, channel_clients=steps)
     run_config = {"configurable": {"thread_id": args.thread_id}, "run_name": f"{row['channel']}_order"}
