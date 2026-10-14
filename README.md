@@ -452,6 +452,9 @@ A second run drafts nothing and calls no model.
 `approve` sends the draft as it is, or the text of `--body-file` (marked edited; an empty file is refused), by writing one `.eml` to the supplier outbox, and sets the claim to `sent`.
 `reject` closes the claim with no email.
 A second decision, an unknown reference or an invoice with no claim exits 1 with a message.
+An `approve` or `reject` of a claim whose thread is missing from the checkpoints file rebuilds the thread from the stored claim, with no model call.
+A claim outbox file of the same name with another text refuses the send and leaves the claim awaiting; `--body-file` cannot change a decision that is already being completed.
+A decision resolves the `claim_drafting` row of `failures`; `failures resume` refuses it and points to `reconcile approve` or `reject`.
 `reconcile list` shows the claim status of each invoice and `reconcile show` the draft, the final text, the source and the status.
 Every command accepts `--db` and `--checkpoints`, and each can run in its own process.
 
@@ -837,7 +840,6 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - The sample documents of the demo list the SKU only: in a first recording a description column made the model join it to the SKU, which left the line unresolved, so the reading of free descriptions relies on the catalog matching of phase 02.
 - The LangSmith trace of a live `reconcile-demo` run and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
 - A claim for an invoice whose differences are all in the supplier's favour has 0.00 EUR in dispute and asks for a corrected invoice (the LV-0303 case).
-- A claim row whose thread is still at `draft` after a crash is refused by `approve` and `reject` as "no paused claim"; `reconcile claims` does not repair it.
 - The claim is one email in the outbox: nothing is sent over a network and the supplier's answer, a credit note or a payment block is not read.
 - `claim_drafting` has 3 critical errors out of 60 test claims against a target of 0, its gate is on the edge at 95.0%, and the writer and the evaluated model belong to the same family, so the figures may be optimistic.
 - The LangSmith trace of a live `reconcile-demo` claim run and the experiment of `claim_drafting` are pending until the LangSmith trace quota resets, around 2026-11-05.
