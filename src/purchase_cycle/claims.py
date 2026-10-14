@@ -18,11 +18,13 @@ CHANNEL = "reconcile"
 STEP = "claim_drafting"
 AMOUNT_TOLERANCE = 0.005  # half a cent
 _CURRENCY = r"(?:EUR|euros?|\u20ac)(?![A-Za-z])"
-_NUMBER = r"\d{1,3}(?:[ ,.]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?"
+_NUMBER = r"\d{1,3}(?:[,.]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?"
 # A money amount: a number with decimals, or any number next to EUR, euro(s) or the euro sign; bare integers are not
-# money. A match never starts inside a word, a number or a SKU and never ends inside a number (dates are not amounts).
+# money. A match never starts inside a number or after a letter and a hyphen (a SKU or reference), never ends inside a
+# number (dates are not amounts) and is not followed by a percent sign.
 AMOUNT_PATTERN = re.compile(
-    rf"(?<![\w.,])(?<!\w-)(?:(?P<pre>{_CURRENCY})\s*)?(?P<num>{_NUMBER})(?!\d|[.,]\d)(?:\s*(?P<post>{_CURRENCY}))?",
+    rf"(?<![\d.,])(?<![A-Za-z]-)(?:(?P<pre>{_CURRENCY})\s*)?(?P<num>{_NUMBER})(?!\d|[.,]\d|\s*%)"
+    rf"(?:\s*(?P<post>{_CURRENCY}))?",
     re.IGNORECASE,
 )
 CLAIM_TEMPLATE = """Dear {supplier},
@@ -103,7 +105,6 @@ def facts_prompt(facts: dict) -> str:
 
 def _read_number(text: str) -> tuple[float, bool]:
     """The value of a number written with thousands separators and a decimal point or comma, and whether it has decimals."""
-    text = text.replace(" ", "")
     marks = [i for i, c in enumerate(text) if c in ".,"]
     if not marks:
         return float(text), False
@@ -302,23 +303,34 @@ def draft_message(db_path: Path | str, client: llm.ModelClient | None, invoice_i
         conn.close()
 
 
-def _refuse_other_file(path: Path, body: str) -> None:
-    """A file of the same name with another text is not ours: refuse, so the claim is not marked sent for it."""
+def _lines(text: str) -> str:
+    """The text with LF line ends and no outer blanks, as the email writer stores it."""
+    return text.replace("\r\n", "\n").replace("\r", "\n").strip()
+
+
+def _own_file_date(path: Path, body: str) -> str | None:
+    """The date of the file of the same name when it holds this text, None without a file; another text is refused.
+
+    A file of the same name with another text is not ours: refuse, so the claim is not marked sent for it.
+    """
     if not path.exists():
-        return
-    written = message_from_bytes(path.read_bytes(), policy=policy.default).get_content()
-    if written.strip() != body.strip():
+        return None
+    message = message_from_bytes(path.read_bytes(), policy=policy.default)
+    if _lines(message.get_content()) != _lines(body):
         raise DecisionRefused(
             f"{path} already exists with a different text; move it away and run approve again, nothing was sent"
         )
+    date = message["Date"]
+    return date.datetime.strftime(sim_clock.FORMAT) if date else None
 
 
 def _resolve_failure(conn: sqlite3.Connection, invoice_id: int) -> None:
-    """The decision settles the parked template-fallback row of the claim, if there is one."""
-    try:
-        db.resolve_failure(conn, claim_thread_id(invoice_id))
-    except db.NotPending:
-        pass
+    """The decision settles the parked template-fallback row of the claim, if there is one; the caller commits."""
+    conn.execute(
+        "UPDATE failures SET status = 'resolved', updated_at = datetime('now') "
+        "WHERE thread_id = ? AND status = 'needs_review'",
+        (claim_thread_id(invoice_id),),
+    )
 
 
 def send_claim(db_path: Path | str, outbox: Path | str, state: ClaimState) -> None:
@@ -334,8 +346,10 @@ def send_claim(db_path: Path | str, outbox: Path | str, state: ClaimState) -> No
             (row["reconciliation_id"],),
         ).fetchone()[0]
         name = f"CLAIM-{reconciliation.invoice_reference(state['invoice_id'])}-{code}"
-        decided_at = sim_clock.now(conn).strftime(sim_clock.FORMAT)
-        _refuse_other_file(Path(outbox) / f"{name}.eml", state["final_body"])
+        # a retry after a stop between the file and the update keeps the date already written in the file
+        decided_at = _own_file_date(Path(outbox) / f"{name}.eml", state["final_body"]) or sim_clock.now(conn).strftime(
+            sim_clock.FORMAT
+        )
         quotes._write_email(Path(outbox), name, row["recipient"], row["subject"], state["final_body"], decided_at)
         with conn:
             conn.execute(
@@ -351,7 +365,7 @@ def send_claim(db_path: Path | str, outbox: Path | str, state: ClaimState) -> No
                     AWAITING,
                 ),
             )
-        _resolve_failure(conn, state["invoice_id"])
+            _resolve_failure(conn, state["invoice_id"])
     finally:
         conn.close()
 
@@ -366,7 +380,7 @@ def close_claim(db_path: Path | str, state: ClaimState) -> None:
                 "(SELECT id FROM reconciliations WHERE invoice_id = ?)",
                 (REJECTED, sim_clock.now(conn).strftime(sim_clock.FORMAT), AWAITING, state["invoice_id"]),
             )
-        _resolve_failure(conn, state["invoice_id"])
+            _resolve_failure(conn, state["invoice_id"])
     finally:
         conn.close()
 
@@ -450,17 +464,21 @@ def _check_awaiting(conn: sqlite3.Connection, invoice_id: int) -> None:
 def _paused(db_path: Path | str, checkpointer, invoice_id: int) -> str | None:
     """The node the claim thread waits at, or None when it has no checkpoint or is finished."""
     graph = build_claim_graph(db_path, None, None, checkpointer)
+    conn = db.connect(db_path)
+    try:
+        row = claim_of(conn, invoice_id)
+    finally:
+        conn.close()
+    message = {"to": row["recipient"], "subject": row["subject"], "body": row["draft_body"]}
     state = graph.get_state(_config(invoice_id))
-    if not state.values:  # no thread (another checkpoints file, or a stop before the first checkpoint): rebuild it
-        conn = db.connect(db_path)
-        try:
-            row = claim_of(conn, invoice_id)
-        finally:
-            conn.close()
-        message = {"to": row["recipient"], "subject": row["subject"], "body": row["draft_body"]}
+    node = state.next[0] if state.next else None
+    # A thread of this claim waits at the review or the send with the stored draft, or at the close; anything else
+    # (no thread, a stop at the draft, a finished thread, a message of another database) is rebuilt from the stored claim.
+    own = node == "close" or (node in ("review", "send") and state.values.get("message") == message)
+    if not own:
         graph.update_state(_config(invoice_id), {"invoice_id": invoice_id, "message": message}, as_node="draft")
-        state = graph.get_state(_config(invoice_id))
-    return state.next[0] if state.next else None
+        node = graph.get_state(_config(invoice_id)).next[0]
+    return node
 
 
 def _resume(db_path: Path | str, checkpointer, outbox, invoice_id: int, answer: dict | None) -> None:

@@ -844,6 +844,7 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - The LangSmith trace of a live `reconcile-demo` run and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
 - A claim for an invoice whose differences are all in the supplier's favour has 0.00 EUR in dispute and asks for a corrected invoice (the LV-0303 case).
 - The fact check does not read the direction of a difference: a credit asked on a difference in the supplier's favour passes the check.
+- The dispute figure is checked only as one correct total in a sentence that names the dispute: a wrong figure beside the correct total in such sentences passes, and the total in dispute can stand in for the amount of the last row, because a stricter reading failed 14 of the 60 test claims.
 - The blind second pass of the `claim_drafting` dataset compared rows, amounts and totals, not the expected and found values, and the raw annotator readings were not kept.
 - `claim_drafting` has 3 critical errors out of 60 test claims against a target of 0, its gate is on the edge at 95.0%, and the writer and the evaluated model belong to the same family, so the figures may be optimistic.
 - The LangSmith trace of a live `reconcile-demo` claim run and the experiment of `claim_drafting` are pending until the LangSmith trace quota resets, around 2026-11-05.

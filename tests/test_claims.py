@@ -266,7 +266,11 @@ def test_a_difference_with_no_amount_needs_no_amount():
         ("1,050.00 EUR", [1050.0]),
         ("EUR 1,234.56", [1234.56]),
         ("1.234,56 EUR", [1234.56]),
-        ("1 234.56", [1234.56]),
+        ("1 234.56", [234.56]),  # a space is no thousands separator: the safe side, flagged as invented
+        ("Line 3 350.00 EUR", [350.0]),
+        ("a 19.44% rate and 19.44 %", []),
+        ("price 4.30-999.00 EUR, Total_999.00 EUR, x999.00", [4.3, 999.0, 999.0, 999.0]),
+        ("PO-0001, INV-0002, GAUZE-NS-5-12, F-2026-9939", []),
         ("\u20ac12 and 12 \u20ac", [12.0, 12.0]),
         ("on 12.10.26 and 12.10.2026", []),  # dates are not amounts
         ("GEL-5.5 and N-77002.50", []),  # nothing starts inside a SKU
@@ -641,3 +645,78 @@ def test_a_decision_resolves_the_parked_failure(flow, decide):
     else:
         claims.reject_claim(flow.db_path, flow.checkpointer, flow.invoice)
     assert flow.conn.execute("SELECT status FROM failures").fetchall()[0][0] == "resolved"
+
+
+def test_an_amount_after_a_word_or_a_hyphen_is_read_as_invented():
+    for text in ("price 4.30-999.00 EUR", "Total_999.00 EUR", "x999.00 EUR"):
+        problems = claims.check_draft(CLM_OK + " " + text, CLM)
+        assert "invented amount 999.00" in problems, text
+
+
+def test_a_small_integer_before_an_amount_and_a_percentage_are_handled():
+    assert claims.check_draft(CLM_OK + " Line 3 350.00 EUR.", CLM) == []
+    assert "invented amount 19.44" in claims.check_draft(CLM_OK + " A 19.44 EUR fee.", CLM)
+    assert claims.check_draft(CLM_OK + " That is 19.44% more.", CLM) == []
+
+
+def _probe_row_thread(flow, values, as_node):
+    """Store the claim row with the model double, then leave the thread as a stop would."""
+    claims.draft_message(flow.db_path, flow.client, flow.invoice)
+    flow.graph(client=False).update_state(flow.run, values, as_node=as_node)
+
+
+@pytest.mark.parametrize("decide", ["approve", "reject"])
+def test_an_awaiting_claim_whose_thread_stopped_at_the_draft_can_be_decided(flow, decide):
+    _probe_row_thread(flow, {"invoice_id": flow.invoice}, "__start__")
+    assert flow.graph(client=False).get_state(flow.run).next == ("draft",)
+    if decide == "approve":
+        done = claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice)
+        assert done["status"] == "sent" and len(flow.emails()) == 1
+    else:
+        done = claims.reject_claim(flow.db_path, flow.checkpointer, flow.invoice)
+        assert done["status"] == "rejected" and flow.emails() == []
+    assert flow.client.calls == 1
+
+
+@pytest.mark.parametrize("finished", [False, True])
+def test_a_foreign_thread_is_replaced_by_the_stored_claim(flow, tmp_path, finished):
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    foreign = {"to": "x@y.z", "subject": "old", "body": "OLD BODY FROM ANOTHER DB"}
+    flow.graph(client=False).update_state(flow.run, {"message": foreign}, as_node="draft")
+    if finished:
+        flow.graph(client=False).update_state(flow.run, {"decision": "reject", "final_body": None}, as_node="close")
+        assert flow.graph(client=False).get_state(flow.run).next == ()
+    done = claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice)
+    assert (done["status"], done["edited"]) == ("sent", 0)
+    assert done["final_body"] == done["draft_body"] != foreign["body"]
+    assert "OLD BODY" not in flow.emails()[0].read_text()
+
+
+def test_a_crlf_body_is_not_refused_on_a_retry_and_keeps_the_written_date(flow):
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    body = "Dear S,\r\nline\r\nBest regards"
+    name = f"CLAIM-{flow.facts['invoice']}-SUP-001"
+    claims.quotes._write_email(flow.outbox, name, "a@b.c", "s", body, "2026-10-12 09:00:00")
+    claims.sim_clock.advance(flow.conn, days=2)
+    done = claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice, body)
+    assert done["status"] == "sent" and done["decided_at"] == "2026-10-12 09:00:00"
+
+
+@pytest.mark.parametrize("decide", ["approve", "reject"])
+def test_the_failure_is_resolved_in_the_same_transaction_as_the_decision(flow, monkeypatch, decide):
+    claims.db.park_failure(flow.conn, f"claim-{flow.facts['invoice']}", "reconcile", flow.facts["invoice"], "s", "e")
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    real = claims._resolve_failure
+
+    def stop(conn, invoice_id):
+        real(conn, invoice_id)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(claims, "_resolve_failure", stop)
+    with pytest.raises(KeyboardInterrupt):
+        if decide == "approve":
+            claims.approve_claim(flow.db_path, flow.checkpointer, flow.outbox, flow.invoice)
+        else:
+            claims.reject_claim(flow.db_path, flow.checkpointer, flow.invoice)
+    assert flow.row()[0]["status"] == "awaiting_approval"
+    assert flow.conn.execute("SELECT status FROM failures").fetchall()[0][0] == "needs_review"
