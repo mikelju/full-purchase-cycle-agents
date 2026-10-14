@@ -70,3 +70,13 @@ def test_review_disagreements_compare_rows_and_amounts(dataset):
     assert cd.review_disagreements(row, read) == []
     assert cd.review_disagreements(row, dict(read, amount_in_dispute=row["facts"]["amount_in_dispute"] + 1))
     assert cd.review_disagreements(row, dict(read, differences=[]))
+
+
+def test_second_pass_review_covers_every_case_and_has_no_pending_decision(dataset):
+    review = read_jsonl(cd.REVIEW_PATH)
+    assert {r["id"] for r in review} == {d["id"] for d in dataset}
+    assert all(r["decision"] in cd.REVIEW_DECISIONS for r in review)
+    for r in review:
+        assert (r["decision"] == "agree") == (not r["disagreements"])
+        if r["decision"] != "agree":
+            assert r["justification"]
