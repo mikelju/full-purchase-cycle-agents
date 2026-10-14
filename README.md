@@ -413,6 +413,11 @@ It prints the extracted documents with their lines, the result of every invoice 
 By default (`--mode replay`) it reads the extraction answers from `evals/recordings/reconcile_demo.jsonl` and needs no key and no network; a test inside `npm run check` runs it with the network blocked.
 To record them again, set `ANTHROPIC_API_KEY` in `.env` and run `uv run purchase-cycle reconcile-demo --mode record` (15 Haiku 4.5 calls, a few cents); `--mode live` calls the model without saving.
 
+![Delivery notes and invoices are read from a folder, extracted, linked to their purchase order, matched in plain code and stored as matched, discrepancies or awaiting delivery note; a later scan completes the awaiting invoice](docs/assets/reconcile-flow.gif)
+
+The reconciliation flow as a video: [docs/assets/reconcile-flow.mp4](docs/assets/reconcile-flow.mp4).
+Like the orders and quotes animations, it is a conceptual flow, not the exact current behavior of the code: it shows five of the seven reconciliations of the demo.
+
 ## Watch the graphs in LangGraph Studio
 
 ```

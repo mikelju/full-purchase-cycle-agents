@@ -91,8 +91,8 @@ body.clean header { display: none; }
 .chip.zero rect:first-child { fill: var(--idle); stroke: var(--line); }
 .chip text { fill: var(--ink); }
 
-.tok { opacity: 0; transition: opacity .25s; filter: url(#glow-t); }
-.tok.on { opacity: 1; }
+.tok { opacity: 0; filter: url(#glow-t); }
+.tok.on { opacity: 1; transition: opacity .25s; }
 .typing circle { fill: var(--title); opacity: 0; }
 .typing.on circle { animation: blink 1s infinite; }
 .typing.on circle:nth-child(2) { animation-delay: .2s; }
@@ -252,7 +252,7 @@ function fileCard(parent, cy, f, kind) {
   const w = f.t.length * 7 + 12;
   el("rect", { x: 42, y: cy - 22, width: w, height: 14, rx: 7, fill: BADGE[f.t] }, g);
   txt({ x: 42 + w / 2, y: cy - 15, style: "font:700 9px var(--mono);fill:#fff;dominant-baseline:central;text-anchor:middle" }, f.t, g);
-  txt({ x: 42, y: cy + 6, style: "font:600 10px var(--mono);fill:var(--ink)" }, f.file, g);
+  txt({ x: 42, y: cy + 6, style: `font:600 ${Math.min(10, 128 / (f.file.length * 0.6)).toFixed(1)}px var(--mono);fill:var(--ink)` }, f.file, g);
   txt({ x: 42, y: cy + 21, style: "font:400 10.5px var(--sans);fill:var(--muted)" }, kind, g);
   return { g, r };
 }
@@ -585,7 +585,10 @@ async function runCase(c, k) {
 }
 async function secondScan() {
   const c = CASES[4];
-  off("mclock");
+  clearMatch(); resetGraph();
+  $("files").innerHTML = ""; fileEls = [];
+  for (const k2 of ["dn", "inv", "line", "rec"]) fxOff(chips[k2]);
+  fillOrder(c); fillInv(c);
   $("later").innerHTML = "";
   fileCard($("later"), 590, LATER, "delivery note");
   await wait(600);
