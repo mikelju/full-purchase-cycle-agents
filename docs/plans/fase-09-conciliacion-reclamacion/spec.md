@@ -1,7 +1,7 @@
 # Phase 09 - Reconciliation, claim: specification
 
-Status: in review
-Approved by the owner: -
+Status: approved (frozen)
+Approved by the owner: 2026-10-14 (recommended options pre-approved for D1 to D10)
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
@@ -14,7 +14,7 @@ It is needed now because phase 08 detects and classifies differences but nothing
 It shows the master plan capabilities "human-in-the-loop", "persistent state" and "structured evaluation" in the reconciliation module.
 
 ## Scope
-Each decision id points to "Open decisions"; the scope and criteria are written for the recommended option of each.
+Each decision id points to "Resolved decisions"; the scope and criteria are written for the chosen option of each.
 In:
 - Claim candidates: every `reconciliations` row with result `discrepancies` and no claim yet; `matched`, `awaiting_delivery_note` and unlinked documents get no claim, and an invoice that moves from `awaiting_delivery_note` to `discrepancies` on a later scan becomes a candidate then.
 - Claim content (D5): one claim per invoice covering all its `discrepancies` rows; for each difference the SKU, the type, the expected and found values and the amount; the amount in dispute, which is the sum of the differences that make us pay more (positive price and quantity amounts and extra lines); differences in the supplier's favour and missing lines are listed for correction and not added to the amount; the requested action is a corrected invoice or a credit note.
@@ -97,7 +97,7 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 
 ## Constraints and risks
 - No new dependency is expected: `interrupt`, `Command` and the SQLite checkpointer are in `langgraph`, the model client already serves record and replay, and the email uses the standard library `email` package through the phase 06 writer.
-- Live model cost ceiling for the phase (D10), a limit and not a budget; the expected cost is under 1 USD with prompt caching: short answers, about 15 calls per tuning round on the development split for up to three rounds, about 45 calls for the test record and a few for the demo.
+- Live model cost ceiling of 5 USD for the phase (D10), a limit and not a budget; the expected cost is under 1 USD with prompt caching: short answers, about 15 calls per tuning round on the development split for up to three rounds, about 45 calls for the test record and a few for the demo.
 - Live runs need the owner's Anthropic and LangSmith keys in `.env`; the agent never reads that file.
 - The LangSmith trace quota is exhausted until about 2026-11-05; C17 is pending at delivery, as C13 to C16 of phases 02 to 08, and is delivered with the catch-up change after the reset.
 - An invented or wrong amount in a sent claim is the worst error; the fact check stops it before the person sees the draft, the template fallback keeps the flow going, and the evaluation scores the model before the fallback so the check does not hide model errors.
@@ -125,47 +125,18 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 - The phase 08 limitations remain: one invoice and one delivery note per order, fixed tolerances, and the DOC-060 and DOC-112 extraction errors until their change lands.
 
 ## Open decisions
-Questions the owner must resolve before approval; empty on approval.
-The recommended option is A in each; the scope and criteria above are written for it.
+None; every decision was resolved on approval.
 
-### D1 - Who drafts the claim
-- A (recommended): Claude Haiku 4.5 writes the body from structured facts; code sets recipient and subject, checks the facts and falls back to a fixed template on failure. Trade-off: a small live cost and a new evaluation, but a real drafting agent whose worst error is caught by code.
-- B: a fixed template only, no model. Trade-off: no cost, simplest and fully deterministic, but no drafting agent to show and no `claim_drafting` evaluation; C4, C5, C12 to C14 change.
-- C: the model drafts with no template fallback; a failing draft is left for the person to write. Trade-off: less code, but a failed draft blocks the claim until a person writes it.
-
-### D2 - Human review answers
-- A (recommended): one pause with three answers: approve, approve with an edited text from a file (`--body-file`), or reject; both the draft and the final text are kept. Trade-off: one command decides, as in phase 07 `approve --supplier`, but the person cannot save an edit and approve later.
-- B: `edit` stores a new text and keeps the claim waiting, then a separate `approve` sends it. Trade-off: a two-step review closer to a mail client, with one more command and more states to test.
-
-### D3 - What sending means
-- A (recommended): an `.eml` in the supplier outbox, as the phase 06 requests and phase 07 purchase orders; nothing leaves the machine. Trade-off: consistent and inspectable, no real delivery.
-- B: no file; the claim only changes status. Trade-off: less code, but nothing to show of what the supplier would receive.
-
-### D4 - Status after approval or rejection
-- A (recommended): a new `claims` table holds `awaiting_approval`, `sent` or `rejected`; `reconciliations.result` stays `discrepancies` and is not altered; a rejected claim is final and no new claim is drafted. Trade-off: the phase 08 tables and checks stay frozen, but closing the reconciliation is left to a later phase.
-- B: widen `reconciliations.result` with `claimed` and `accepted`. Trade-off: one status to read, but it changes a phase 08 check constraint, which SQLite cannot alter in place, so local databases must be re-seeded.
-
-### D5 - Claim content
-- A (recommended): one claim per invoice listing every difference; the amount in dispute adds only the differences that make us pay more (higher price or quantity, extra line); differences in the supplier's favour and missing lines are listed for correction; the requested action is a corrected invoice or a credit note. Trade-off: honest and complete, with one rule to explain in the README.
-- B: claim only the differences that make us pay more; an invoice with only differences in the supplier's favour or missing lines gets no claim. Trade-off: simpler text, but missing lines, which may hide goods not delivered, are never raised.
-
-### D6 - Side-agnostic design for phase 11
-- A (recommended): the `review` node handles a plain message (recipient, subject, body) and knows nothing of suppliers or invoices; the supplier logic lives in `draft` and `send`; no sales table, column or command. Trade-off: phase 11 reuses the review step at almost no cost now.
-- B: a fully supplier-specific graph; phase 11 refactors it. Trade-off: slightly less code now, more change later.
-- C: a generic `claims` table with a `side` column and counterparty fields now. Trade-off: ready for phase 11, but it adds sales-side design before phase 11 is specified.
-
-### D7 - Commands and demo
-- A (recommended): `reconcile claims`, `reconcile approve INV-NNNN [--body-file FILE]` and `reconcile reject INV-NNNN` in the existing group, and `reconcile-demo` extended with the claim steps after the phase 08 steps. Trade-off: one demo for the whole module, as phase 07 extended `quotes-demo`, and the phase 08 demo test gains the new end state.
-- B: a separate `claims` command group and a `claims-demo`. Trade-off: the phase 08 demo stays untouched, but the module has two demos.
-
-### D8 - Evaluations
-- A (recommended): `claim_drafting` in replay over structured cases with a deterministic fact grader, plus the deterministic `claim_approval` scenarios. Trade-off: both run in `check` with no cost; tone is not scored.
-- B: A plus an LLM judge of tone and clarity on the test split. Trade-off: a fuller picture of draft quality, but a judge of the same family, more cost and a grader that is not deterministic.
-
-### D9 - Dataset size and owner audit
-- A (recommended): at least 60 cases, 25% development and 75% test, no owner audit, as in phases 07 and 08. Trade-off: the facts are made by code and checked against `classify`, so labels are reliable, but the interval is wide.
-- B: at least 100 cases and an owner audit of 20 random drafts. Trade-off: a narrower interval and a human look at the text, with more cost and about 10 minutes of owner time.
-
-### D10 - Live model cost ceiling
-- A (recommended): 5 USD for the phase, as in phases 06 to 08, a limit and not a budget; the expected cost is under 1 USD.
-- B: 2 USD. Trade-off: closer to the expected cost, with less room for an extra tuning round before stopping to ask.
+## Resolved decisions
+Owner 2026-10-14: recommended options pre-approved.
+The chosen option is the recommended option A in each; the scope and criteria above are written for it.
+- D1 - Who drafts the claim: A, Claude Haiku 4.5 writes the body from structured facts; code sets recipient and subject, checks the facts and falls back to a fixed template on failure. Alternatives: B, a fixed template only, no model; C, the model drafts with no template fallback and a failing draft is left for the person.
+- D2 - Human review answers: A, one pause with three answers: approve, approve with an edited text from a file (`--body-file`), or reject; both the draft and the final text are kept. Alternative: B, a separate `edit` that stores a new text and keeps the claim waiting, then `approve`.
+- D3 - What sending means: A, an `.eml` in the supplier outbox, as the phase 06 requests and phase 07 purchase orders; nothing leaves the machine. Alternative: B, no file, only a status change.
+- D4 - Status after approval or rejection: A, a new `claims` table holds `awaiting_approval`, `sent` or `rejected`; `reconciliations.result` stays `discrepancies`; a rejected claim is final. Alternative: B, widen `reconciliations.result` with `claimed` and `accepted`.
+- D5 - Claim content: A, one claim per invoice listing every difference; the amount in dispute adds only the differences that make us pay more; differences in the supplier's favour and missing lines are listed for correction; the requested action is a corrected invoice or a credit note. Alternative: B, claim only the differences that make us pay more.
+- D6 - Side-agnostic design for phase 11: A, the `review` node handles a plain message (recipient, subject, body) with no supplier or invoice logic; no sales table, column or command. Alternatives: B, a fully supplier-specific graph refactored in phase 11; C, a generic `claims` table with a `side` column and counterparty fields now.
+- D7 - Commands and demo: A, `reconcile claims`, `reconcile approve INV-NNNN [--body-file FILE]` and `reconcile reject INV-NNNN` in the existing group, and `reconcile-demo` extended with the claim steps. Alternative: B, a separate `claims` command group and a `claims-demo`.
+- D8 - Evaluations: A, `claim_drafting` in replay with a deterministic fact grader, plus the deterministic `claim_approval` scenarios. Alternative: B, A plus an LLM judge of tone and clarity.
+- D9 - Dataset size and owner audit: A, at least 60 cases, 25% development and 75% test, no owner audit. Alternative: B, at least 100 cases and an owner audit of 20 random drafts.
+- D10 - Live model cost ceiling: A, 5 USD for the phase, a limit and not a budget. Alternative: B, 2 USD.
