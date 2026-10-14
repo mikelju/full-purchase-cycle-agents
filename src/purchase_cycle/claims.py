@@ -3,8 +3,12 @@
 import json
 import re
 import sqlite3
+from pathlib import Path
+from typing import TypedDict
 
-from purchase_cycle import db, llm, reconciliation
+from langgraph.graph import END, START, StateGraph
+
+from purchase_cycle import config, db, llm, quotes, reconciliation, review, sim_clock
 
 CLAIM_SUBJECT = "Claim on invoice {invoice} for purchase order {order}"
 MAX_CLAIM_BODY = 3000
@@ -179,3 +183,131 @@ def draft_claim(conn: sqlite3.Connection, client: llm.ModelClient, facts: dict) 
         "body": body,
         "source": source,
     }
+
+
+AWAITING, SENT, REJECTED = "awaiting_approval", "sent", "rejected"
+
+
+class ClaimState(TypedDict, total=False):
+    invoice_id: int
+    message: dict
+    decision: str
+    final_body: str | None
+
+
+def claim_thread_id(invoice_id: int) -> str:
+    return f"claim-{reconciliation.invoice_reference(invoice_id)}"
+
+
+def _claim_row(conn: sqlite3.Connection, invoice_id: int):
+    return conn.execute(
+        "SELECT c.* FROM claims c JOIN reconciliations r ON r.id = c.reconciliation_id WHERE r.invoice_id = ?",
+        (invoice_id,),
+    ).fetchone()
+
+
+def draft_message(db_path: Path | str, client: llm.ModelClient | None, invoice_id: int) -> dict:
+    """The stored claim as a message; a claim without a row is drafted and stored first, a stored one calls no model."""
+    conn = db.connect(db_path)
+    try:
+        row = _claim_row(conn, invoice_id)
+        if row is None:
+            facts = claim_facts(conn, invoice_id)
+            draft = draft_claim(conn, client, facts)
+            with conn:
+                conn.execute(
+                    "INSERT OR IGNORE INTO claims (reconciliation_id, recipient, subject, draft_body, draft_source, "
+                    "status, drafted_at) SELECT id, ?, ?, ?, ?, ?, ? FROM reconciliations WHERE invoice_id = ?",
+                    (
+                        draft["recipient"],
+                        draft["subject"],
+                        draft["body"],
+                        draft["source"],
+                        AWAITING,
+                        sim_clock.now(conn).strftime(sim_clock.FORMAT),
+                        invoice_id,
+                    ),
+                )
+            row = _claim_row(conn, invoice_id)
+        return {"to": row["recipient"], "subject": row["subject"], "body": row["draft_body"]}
+    finally:
+        conn.close()
+
+
+def send_claim(db_path: Path | str, outbox: Path | str, state: ClaimState) -> None:
+    """Write the keyed email once and set the claim `sent`; a claim that is no longer awaiting is left alone."""
+    conn = db.connect(db_path)
+    try:
+        row = _claim_row(conn, state["invoice_id"])
+        if row["status"] != AWAITING:
+            return
+        code = conn.execute(
+            "SELECT o.supplier_code FROM reconciliations r JOIN purchase_orders o ON o.id = r.purchase_order_id "
+            "WHERE r.id = ?",
+            (row["reconciliation_id"],),
+        ).fetchone()[0]
+        name = f"CLAIM-{reconciliation.invoice_reference(state['invoice_id'])}-{code}"
+        quotes._write_email(
+            Path(outbox), name, row["recipient"], row["subject"], state["final_body"], row["drafted_at"]
+        )
+        with conn:
+            conn.execute(
+                "UPDATE claims SET status = ?, final_body = ?, edited = ?, decided_at = ?, outbox_file = ? "
+                "WHERE id = ? AND status = ?",
+                (
+                    SENT,
+                    state["final_body"],
+                    int(state["decision"] == review.EDIT),
+                    sim_clock.now(conn).strftime(sim_clock.FORMAT),
+                    str(Path(outbox) / f"{name}.eml"),
+                    row["id"],
+                    AWAITING,
+                ),
+            )
+    finally:
+        conn.close()
+
+
+def close_claim(db_path: Path | str, state: ClaimState) -> None:
+    """Set the claim `rejected` and write nothing; a claim that is no longer awaiting is left alone."""
+    conn = db.connect(db_path)
+    try:
+        with conn:
+            conn.execute(
+                "UPDATE claims SET status = ?, decided_at = ? WHERE status = ? AND reconciliation_id = "
+                "(SELECT id FROM reconciliations WHERE invoice_id = ?)",
+                (REJECTED, sim_clock.now(conn).strftime(sim_clock.FORMAT), AWAITING, state["invoice_id"]),
+            )
+    finally:
+        conn.close()
+
+
+def build_claim_graph(
+    db_path: Path | str, client: llm.ModelClient | None = None, outbox: Path | str | None = None, checkpointer=None
+):
+    """One thread per invoice: draft, review (the pause), then send or close."""
+
+    def draft(state: ClaimState) -> ClaimState:
+        return {"message": draft_message(db_path, client, state["invoice_id"])}
+
+    def send(state: ClaimState) -> ClaimState:
+        send_claim(db_path, outbox or config.SUPPLIER_OUTBOX_DIR, state)
+        return {}
+
+    def close(state: ClaimState) -> ClaimState:
+        close_claim(db_path, state)
+        return {}
+
+    builder = StateGraph(ClaimState)
+    builder.add_node("draft", draft, retry_policy=llm.MODEL_RETRY)
+    builder.add_node("review", review.review)
+    builder.add_node("send", send)
+    builder.add_node("close", close)
+    builder.add_edge(START, "draft")
+    builder.add_edge("draft", "review")
+    builder.add_conditional_edges(
+        "review", lambda s: "close" if s["decision"] == review.REJECT else "send", ["send", "close"]
+    )
+    builder.add_edge("send", END)
+    builder.add_edge("close", END)
+    return builder.compile(checkpointer=checkpointer, name="claim")

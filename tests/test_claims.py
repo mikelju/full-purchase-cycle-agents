@@ -1,10 +1,13 @@
 """C3 and C4: claim candidates, claim facts and the amount in dispute."""
 
 import json
+from email import message_from_bytes, policy
 
 import pytest
+from langgraph.types import Command
 
 from purchase_cycle import claims, db, llm
+from purchase_cycle.graph import sqlite_checkpointer
 
 SKU = "GLV-NIT-XS"
 
@@ -355,3 +358,105 @@ def test_a_good_draft_is_stored_as_model_with_no_failure(conn, tmp_path):
     _, client = _two_claims_from(conn, tmp_path, [facts], [_good_for(facts)])
     assert claims.draft_claim(conn, client, facts)["source"] == "model"
     assert db.list_failures(conn) == []
+
+
+class Counter:
+    """A model double that answers with the facts' own template and counts its calls."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def extract(self, text, case_id=None):
+        self.calls += 1
+        facts = json.loads(text)
+        return llm.ClaimBody(body=claims.fill_template(CLAIM_FACTS[facts["invoice"]]))
+
+
+CLAIM_FACTS = {}
+
+
+class Flow:
+    """One claim graph over a temporary database with a call-counting model double."""
+
+    def __init__(self, tmp_path, conn):
+        self.db_path = tmp_path / "claims.db"
+        self.conn = conn
+        self.client = Counter()
+        self.outbox = tmp_path / "outbox"
+        self.checkpointer = sqlite_checkpointer(tmp_path / "cp.sqlite")
+        self.invoice = _invoice(conn, "F-77", "discrepancies", ROWS)
+        self.facts = CLAIM_FACTS[claims.reconciliation.invoice_reference(self.invoice)] = claims.claim_facts(
+            conn, self.invoice
+        )
+        self.run = {"configurable": {"thread_id": f"claim-{self.facts['invoice']}"}}
+
+    def graph(self, client=True):
+        return claims.build_claim_graph(self.db_path, self.client if client else None, self.outbox, self.checkpointer)
+
+    def row(self):
+        return self.conn.execute("SELECT * FROM claims").fetchall()
+
+    def emails(self):
+        return sorted(self.outbox.glob("*.eml")) if self.outbox.exists() else []
+
+
+@pytest.fixture
+def flow(tmp_path, conn):
+    return Flow(tmp_path, conn)
+
+
+def test_drafting_stores_an_awaiting_row_and_the_thread_waits_at_review(flow):
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    [row] = flow.row()
+    assert (row["status"], row["draft_source"], row["edited"]) == ("awaiting_approval", "model", 0)
+    assert row["recipient"] == flow.facts["recipient"]
+    assert row["draft_body"] == claims.fill_template(flow.facts)
+    assert flow.graph(client=False).get_state(flow.run).next == ("review",)
+    assert flow.client.calls == 1
+    assert flow.emails() == []
+
+
+def _decide(flow, answer):
+    flow.graph().invoke({"invoice_id": flow.invoice}, flow.run)
+    flow.graph(client=False).invoke(Command(resume=answer), flow.run)
+    return flow.row()[0]
+
+
+def test_approve_writes_one_keyed_email_and_sets_sent(flow):
+    row = _decide(flow, {"action": "approve"})
+    assert (row["status"], row["edited"], row["final_body"]) == ("sent", 0, row["draft_body"])
+    [path] = flow.emails()
+    assert path.name == f"CLAIM-{flow.facts['invoice']}-SUP-001.eml"
+    assert row["outbox_file"] == str(path) and row["decided_at"]
+    message = message_from_bytes(path.read_bytes(), policy=policy.default)
+    assert message["To"] == flow.facts["recipient"]
+    assert message["Subject"] == f"Claim on invoice F-77 for purchase order {flow.facts['order']}"
+    assert message.get_content().strip() == row["draft_body"].strip()
+
+
+def test_edit_sends_the_given_text_keeps_the_draft_and_marks_edited(flow):
+    row = _decide(flow, {"action": "edit", "body": "My own words."})
+    assert (row["status"], row["edited"], row["final_body"]) == ("sent", 1, "My own words.")
+    assert row["draft_body"] == claims.fill_template(flow.facts)
+    assert (
+        message_from_bytes(flow.emails()[0].read_bytes(), policy=policy.default).get_content().strip()
+        == "My own words."
+    )
+
+
+def test_reject_writes_nothing(flow):
+    row = _decide(flow, {"action": "reject"})
+    assert (row["status"], row["final_body"], row["outbox_file"]) == ("rejected", None, None)
+    assert row["decided_at"] and flow.emails() == []
+
+
+def test_rerunning_a_node_writes_nothing_twice_and_calls_no_model(flow):
+    _decide(flow, {"action": "approve"})
+    before = ([tuple(r) for r in flow.row()], flow.emails(), flow.client.calls)
+    graph = flow.graph(client=False)
+    state = {"invoice_id": flow.invoice, "decision": "approve", "final_body": "other text"}
+    claims.send_claim(flow.db_path, flow.outbox, state)
+    claims.close_claim(flow.db_path, state)
+    claims.draft_message(flow.db_path, None, flow.invoice)
+    assert ([tuple(r) for r in flow.row()], flow.emails(), flow.client.calls) == before
+    assert graph.get_state(flow.run).next == ()
