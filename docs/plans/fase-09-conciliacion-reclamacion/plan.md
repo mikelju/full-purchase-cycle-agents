@@ -108,9 +108,9 @@ This file is the durable state: a new session resumes from here and from Git.
   - Evidence: `uv run pytest -q tests/test_claims.py tests/test_review.py` 60 passed; ruff check and format clean.
 - [x] 8. `reconcile claims`, `reconcile approve [--body-file]` and `reconcile reject` (C3, C7, C8) - files: `src/purchase_cycle/cli.py`, `src/purchase_cycle/claims.py`, new `tests/test_claims_cli.py`; check: `uv run pytest -q tests/test_claims_cli.py`: `claims` drafts one claim per candidate and prints draft, facts and source; a second run drafts nothing with the recordings removed and a call counter at 0; empty and blank body files are refused and change nothing; a second approve or reject, an unknown id, an invoice with no claim and a decided claim each exit 1 with a message and leave at most one email; `reconciliations`, `discrepancies`, purchase orders and stock are unchanged by every claim command.
   - Evidence: `uv run pytest -q tests/test_claims_cli.py` 7 passed; with test_claims, test_review and `tests/test_reconcile*.py` 143 passed; ruff check and format clean.
-- [x] 9. Restart across processes (C9) - files: `tests/test_claims_cli.py`; check: `scan`, `claims` and each decision run as separate subprocesses against the same database and checkpoint files, and the final `claims` rows and outbox files equal the same steps run in one process; the resumption subprocesses run with the recordings file removed, so any model call fails the test.
+- [x] 9. Restart across processes (C9) - files: `tests/test_claims_cli.py`; check: `scan`, `claims` and each decision run as separate subprocesses against the same database and checkpoint files, and the final `claims` rows and outbox files equal the same steps run in one process; the resumption subprocesses run with the recordings file removed, so any model call fails the test.
   - Evidence: `uv run pytest -q tests/test_claims_cli.py` 8 passed; subprocess steps run with the recordings file removed after `claims`.
-- [x] 10. `reconcile list` and `reconcile show` with claims (C10) - files: `src/purchase_cycle/cli.py`, `src/purchase_cycle/reconciliation.py` only if the list helper needs the claim status, new tests in `tests/test_claims_cli.py`; check: claims in each status show their status in `list` and their draft, final text, source and status in `show`; for invoices with no claim the output equals the phase 08 output, and `tests/test_reconcile_show.py` and `tests/test_reconcile_results.py` pass unchanged.
+- [x] 10. `reconcile list` and `reconcile show` with claims (C10) - files: `src/purchase_cycle/cli.py`, `src/purchase_cycle/reconciliation.py` only if the list helper needs the claim status, new tests in `tests/test_claims_cli.py`; check: claims in each status show their status in `list` and their draft, final text, source and status in `show`; for invoices with no claim the output equals the phase 08 output, and `tests/test_reconcile_show.py` and `tests/test_reconcile_results.py` pass unchanged.
   - Evidence: `uv run pytest -q tests/test_claims_cli.py tests/test_reconcile_show.py tests/test_reconcile_results.py tests/test_claims.py` 83 passed; test_reconcile_demo and test_reconcile_scan pass; ruff clean.
 
 ### Batch D - Evaluation `claim_drafting`, dataset and grader
@@ -147,6 +147,7 @@ This batch runs with the owner's key present, `LANGSMITH_TRACING` unset or false
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
+| D1 | `evaluation/cli.py` touched to register the claim-dataset commands, like earlier suites, though not listed in the allowed files | none | accepted |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
