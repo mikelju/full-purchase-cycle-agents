@@ -556,11 +556,12 @@ During development the graph runs can be traced in a local Arize Phoenix instead
 npm run phoenix
 ```
 
-Starts Phoenix 20.18.0 through `uvx` on `http://127.0.0.1:6006`, with its telemetry off; the first run downloads it.
+Starts Phoenix through `uvx` on `http://127.0.0.1:6006`, with its telemetry off; the first run downloads it.
+The Phoenix version is pinned in the `phoenix` script of `package.json`, and `--exclude-newer 2026-10-01` keeps its dependencies to releases up to that date.
 Its data lives in `data/phoenix/`, which is ignored by Git; delete that folder to start empty.
-The launcher `src/purchase_cycle/phoenix_server.py` keeps every port on loopback: Phoenix binds its OTLP gRPC receiver (port 4317) on every network interface with no setting to change it, so the launcher turns that receiver off and traces go over HTTP to port 6006.
+The launcher `src/purchase_cycle/phoenix_server.py` keeps every port on loopback; checked against the pinned version, Phoenix binds its OTLP gRPC receiver (port 4317) on every network interface with no setting to change it, so the launcher turns that receiver off and traces go over HTTP to port 6006.
 The startup banner still lists the gRPC address; nothing listens there.
-The launcher also turns off Phoenix's AI assistant, with its server-side bash, web access and GitHub tools.
+The launcher also turns off Phoenix's AI assistant, with its server-side bash, web access and GitHub tools, its code sandboxes, and its MCP server at `/mcp`, which needs no login and answers any web page's origin.
 
 In another terminal, turn tracing on for one run with `PHOENIX_TRACING=true` (or set it in `.env`):
 
@@ -568,8 +569,11 @@ In another terminal, turn tracing on for one run with `PHOENIX_TRACING=true` (or
 PHOENIX_TRACING=true uv run purchase-cycle demo
 ```
 
+In PowerShell: `$env:PHOENIX_TRACING="true"; uv run purchase-cycle demo`, then `Remove-Item Env:PHOENIX_TRACING` to turn it off again.
+
 Every LangGraph node and LangChain model call of that run is sent to the project `purchase-cycle`; open `http://127.0.0.1:6006`, choose that project and open a trace to see its spans.
 Replay runs show the graph nodes only, because their model answers come from recordings; live runs also show the model calls.
+Spans leave in the background and the last ones at exit; if Phoenix is not running, the run still finishes, about two seconds later, and its spans are lost.
 Without the variable, or with any other value, nothing is set up and the Phoenix packages are not even imported.
 Tests and `npm run check` never send traces to Phoenix, even when `.env` sets the variable.
 
