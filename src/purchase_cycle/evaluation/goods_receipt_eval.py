@@ -42,7 +42,8 @@ TAGS = (
     "matched_received", "discrepancies_received", "claim_status", "no_receipt_awaiting_invoice",
     "no_receipt_unlinked", "no_receipt_no_invoice", "later_scan", "short_delivery", "shortfall_scan",
     "over_delivery", "sku_not_on_po", "parked_unknown_sku", "parked_fractional", "serve_in_order",
-    "large_skipped", "covered_before_receipt", "multi_line_short", "rerun", "crash_resume", "restart",
+    "large_skipped", "covered_before_receipt", "multi_line_short", "rerun", "crash_resume", "crash_after_receive",
+    "restart",
 )  # fmt: skip
 # C11 minimums: scenarios in all and per coverage tag.
 MINIMUMS = {"scenarios": 30, **dict.fromkeys(TAGS, 2)}
@@ -143,6 +144,7 @@ SCENARIOS = [
     S({}, [ORD(1, (A, 10))], [N("matched", [(A, 10)], later=True)], [SCAN(1), RUNP], what="a process restart between the scan and the run"),
     S({}, [ORD(1, (A, 10))], [N("matched", [(A, 10)]), N("discrepancies", [(B, 3)], later=True)], [RUN, SCAN(2), RUNP], what="a restart between a later scan and the run"),
     S({}, [ORD(1, (A, 6), (A, 6))], [N("matched", [(A, 14)], po=(A, 14))], what="lines of the same SKU are summed to serve"),
+    S({}, [ORD(1, (A, 10)), ORD(2, (B, 4)), ORD(3, (A, 5))], [N("matched", [(A, 15)]), N("matched", [(B, 4)])], [CRASH("receive"), RUN], what="a crash after receive with several notes and orders"),
 ]  # fmt: skip
 
 
@@ -292,6 +294,9 @@ def derive_tags(item: dict) -> list[str]:
     tags |= {"later_scan"} if "scan" in ops else set()
     tags |= {"shortfall_scan"} if "quotes_scan" in ops else set()
     tags |= {"crash_resume"} if "crash" in ops else set()
+    tags |= (
+        {"crash_after_receive"} if any(s["op"] == "crash" and s["after"] == "receive" for s in item["steps"]) else set()
+    )
     tags |= {"restart"} if any(s.get("new_process") for s in item["steps"]) else set()
     tags |= {"rerun"} if any(a == b == "run" for a, b in zip(ops, ops[1:], strict=False)) else set()
     for run in sim["runs"]:
@@ -491,13 +496,6 @@ def _measure(paths: dict, item: dict) -> dict:
                     "AND d.id IN (SELECT delivery_note_id FROM reconciliations WHERE result IN ('matched', 'discrepancies'))"
                 )
             ],
-            "received_units": {
-                r[0]: r[1]
-                for r in conn.execute(
-                    "SELECT l.sku, SUM(l.quantity) FROM goods_receipt_lines l JOIN goods_receipts g "
-                    "ON g.id = l.receipt_id WHERE g.status = 'received' GROUP BY l.sku"
-                )
-            },
             "failures": conn.execute("SELECT COUNT(*) FROM failures WHERE step = 'goods_receipt'").fetchone()[0],
             "files": sorted(p.name for p in Path(paths["notes"]).glob("*.txt")) if Path(paths["notes"]).exists() else [],
         }  # fmt: skip
@@ -509,14 +507,20 @@ def _errors(item: dict, final: dict) -> dict[str, int]:
     """The critical errors of one scenario, from the final state and an oracle apart from `receipts`."""
     found = dict.fromkeys(CRITICAL_KINDS, 0)
     found["negative_stock"] = sum(v < 0 for v in final["stock"].values()) + sum(
-        v < 0 for snapshot in final["stock_steps"] for v in snapshot.values()
+        v < 0 for step in final["steps"] for v in step["post_stock"].values()
     )
+    by_number = {n["number"]: n["lines"] for n in item["notes"]}
     served = Counter()
     for order in {n["order"] for n in final["notes"]}:
         for sku, quantity in item["orders"][order - 1]["lines"]:
             served[sku] += quantity
+    received = Counter()  # the units of the notes marked received, read from the note lines and not from the code
+    for number, status in final["receipt_rows"]:
+        if status == "received":
+            for sku, quantity in by_number[number]:
+                received[sku] += quantity
     for sku, on_hand in final["stock"].items():
-        if on_hand != final["stock0"][sku] + final["received_units"].get(sku, 0) - served[sku]:
+        if on_hand != final["stock0"][sku] + received[sku] - served[sku]:
             found["stock_change_mismatch"] += 1
     made = final["receipts"]
     found["receipt_repeated_or_not_candidate"] = (len(made) - len(set(made))) + sum(
@@ -524,18 +528,26 @@ def _errors(item: dict, final: dict) -> dict[str, int]:
     )
     per_order = Counter(n["order"] for n in final["notes"])
     found["order_served_twice_or_two_notes"] = sum(c - 1 for c in per_order.values() if c > 1)
-    for snapshot, orders in zip(final["stock_steps"], final["served_steps"], strict=True):
-        for position, order in enumerate(orders):
+    for step in final["steps"]:
+        # The stock the pass saw: the stock before the step plus the units of the notes received in it.
+        stock = Counter(step["pre_stock"])
+        for number in step["received"]:
+            for sku, quantity in by_number[number]:
+                stock[sku] += quantity
+        found["order_out_of_arrival_order"] += sum(
+            1 for a, b in zip(step["served"], step["served"][1:], strict=False) if a > b
+        )
+        pending = [i for i in range(1, len(item["orders"]) + 1) if i not in step["pre_served"]]
+        for order in sorted(set(pending) | set(step["served"])):
             need = Counter()
             for sku, quantity in item["orders"][order - 1]["lines"]:
                 need[sku] += quantity
-            before = Counter(snapshot)
-            for later in orders[position:]:  # the stock this order saw: what is left plus it and the later ones
-                for sku, quantity in item["orders"][later - 1]["lines"]:
-                    before[sku] += quantity
-            if any(before[sku] < quantity for sku, quantity in need.items()):
-                found["served_not_covered"] += 1
-        found["order_out_of_arrival_order"] += sum(1 for a, b in zip(orders, orders[1:], strict=False) if a > b)
+            covered = all(stock[sku] >= quantity for sku, quantity in need.items())
+            if order in step["served"]:
+                found["served_not_covered"] += not covered
+                stock.subtract(need)
+            elif step["serve_pass"] and covered:  # a pass serves, in arrival order, every order the stock covers
+                found["order_out_of_arrival_order"] += 1
     for n in final["notes"]:
         wanted = [list(x) for x in item["orders"][n["order"] - 1]["lines"]]
         if n["lines"] != wanted:
@@ -570,27 +582,41 @@ def run_item(item: dict, tmp: Path) -> dict:
     folder = tmp / item["id"]
     folder.mkdir(parents=True)
     paths = _setup(item, folder)
-    outs, served_steps, stock_steps = [], [], []
+    outs, steps = [], []
     with _no_model() as counter:
         for step in item["steps"]:
             conn = db.connect(paths["db"])
             before = conn.execute("SELECT COALESCE(MAX(id), 0) FROM customer_delivery_notes").fetchone()[0]
+            made = conn.execute("SELECT COALESCE(MAX(id), 0) FROM goods_receipts").fetchone()[0]
+            served = [r[0] for r in conn.execute("SELECT order_id FROM customer_delivery_notes ORDER BY id")]
+            pre_stock = _stock(conn)
             conn.close()
             outs.append(_run_step(item, step, paths))
             if step["op"] in ("run", "crash"):
                 conn = db.connect(paths["db"])
-                served_steps.append(
-                    [
-                        r[0]
-                        for r in conn.execute(
-                            "SELECT order_id FROM customer_delivery_notes WHERE id > ? ORDER BY id", (before,)
-                        )
-                    ]
-                )
-                stock_steps.append(_stock(conn))
+                steps.append(
+                    {
+                        "pre_stock": pre_stock, "post_stock": _stock(conn), "pre_served": served,
+                        "served": [
+                            r[0]
+                            for r in conn.execute(
+                                "SELECT order_id FROM customer_delivery_notes WHERE id > ? ORDER BY id", (before,)
+                            )
+                        ],
+                        "received": [
+                            r[0]
+                            for r in conn.execute(
+                                "SELECT d.number FROM goods_receipts g JOIN supplier_documents d "
+                                "ON d.id = g.delivery_note_id WHERE g.id > ? AND g.status = 'received' ORDER BY g.id",
+                                (made,),
+                            )
+                        ],
+                        "serve_pass": step["op"] == "run" or step["after"] == "serve",
+                    }
+                )  # fmt: skip
                 conn.close()
     final = _measure(paths, item)
-    final.update(calls=counter["calls"], served_steps=served_steps, stock_steps=stock_steps)
+    final.update(calls=counter["calls"], steps=steps)
     measured = {
         "orders": final["orders"], "stock": {sku: final["stock"][sku] for sku in SKUS},
         "receipts": final["receipt_rows"], "failures": final["failures"],

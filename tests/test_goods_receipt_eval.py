@@ -82,7 +82,9 @@ def _served_twice(final):
 
 
 def _not_covered(final):
-    final["stock_steps"][0][gr.X] = -999
+    final["steps"][0][
+        "received"
+    ] = []  # the oracle credits no units, so the order served is not covered, stock stays >= 0
 
 
 def _lines_differ(final):
@@ -90,7 +92,15 @@ def _lines_differ(final):
 
 
 def _out_of_order(final):
-    final["served_steps"][0].reverse()
+    final["steps"][0]["served"].reverse()
+
+
+def _skipped_coverable(final):
+    final["steps"][0]["served"] = [2, 3]  # the pass skips order 1, which the stock covers, and serves 2 and 3
+
+
+def _po_quantity_received(final):
+    final["stock"][gr.A] = 100  # receive recorded the purchase order quantity, not the 60 delivered
 
 
 def _file_without_row(final):
@@ -115,6 +125,8 @@ INJECTIONS = {
     "served_not_covered": (_not_covered, "GR-001", "served_not_covered"),
     "note_lines_differ": (_lines_differ, "GR-001", "note_lines_differ"),
     "served_out_of_order": (_out_of_order, "GR-026", "order_out_of_arrival_order"),
+    "coverable_order_skipped": (_skipped_coverable, "GR-026", "order_out_of_arrival_order"),
+    "po_quantity_received": (_po_quantity_received, "GR-015", "stock_change_mismatch"),
     "file_without_row": (_file_without_row, "GR-001", "file_row_mismatch"),
     "row_without_file": (_row_without_file, "GR-001", "file_row_mismatch"),
     "model_call": (_model_call, "GR-001", "model_call"),
@@ -160,3 +172,18 @@ def test_a_wrong_printed_line_fails_the_scenario(tmp_path, capsys, no_network):
     gr.write_items([item], folder)
     assert gr.evaluate("replay", "test", dataset_dir=folder) == 1
     assert f"  {item['id']}  expected" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("name", ["served_not_covered", "coverable_order_skipped", "po_quantity_received"])
+def test_the_independent_checks_fire_on_their_own(name, tmp_path, monkeypatch, no_network):
+    injection, item_id, kind = INJECTIONS[name]
+    item = next(i for i in gr.load_dataset() if i["id"] == item_id)
+    seen = []
+    real_errors = gr._errors
+    monkeypatch.setattr(gr, "_errors", lambda it, final: seen.append(final) or real_errors(it, final))
+    assert not any(gr.run_item(item, tmp_path)["critical"].values())
+    ran = copy.deepcopy(seen[0])
+    injection(ran)
+    found = gr._errors(item, ran)
+    assert found[kind] > 0
+    assert found["negative_stock"] == 0

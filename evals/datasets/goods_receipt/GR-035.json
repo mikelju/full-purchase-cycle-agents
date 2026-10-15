@@ -72,6 +72,7 @@
   "stock": {},
   "tags": [
     "matched_received",
-    "crash_resume"
+    "crash_resume",
+    "crash_after_receive"
   ]
 }
