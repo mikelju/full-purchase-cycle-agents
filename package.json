@@ -14,7 +14,7 @@
     "format": "uv run --quiet ruff format --quiet",
     "eval": "uv run --quiet purchase-cycle eval --mode replay --split test",
     "eval:live": "uv run --quiet purchase-cycle eval --mode live --split test",
-    "phoenix": "node -e \"const p=require('path');process.env.PHOENIX_WORKING_DIR=p.resolve('data/phoenix');process.env.PHOENIX_HOST='127.0.0.1';process.env.PHOENIX_TELEMETRY_ENABLED='false';const r=require('child_process').spawnSync('uvx',['--from','arize-phoenix==20.18.0','phoenix','serve'],{stdio:'inherit'});process.exit(r.status??1)\""
+    "phoenix": "uvx --from arize-phoenix==20.18.0 python src/purchase_cycle/phoenix_server.py"
   },
   "devDependencies": {
     "gh-axi": "0.1.35",

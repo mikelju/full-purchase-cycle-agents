@@ -86,3 +86,37 @@ def test_nothing_is_imported_without_the_variable():
     )
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
     assert out.stdout.strip() == "[]"
+
+
+def test_launcher_keeps_the_server_on_loopback_with_the_assistant_off():
+    from purchase_cycle import phoenix_server
+
+    env = phoenix_server.SERVER_ENV
+    assert env["PHOENIX_HOST"] == "127.0.0.1"
+    assert env["PHOENIX_WORKING_DIR"] == str(config.ROOT / "data" / "phoenix")
+    assert env["PHOENIX_TELEMETRY_ENABLED"] == "false"
+    for name in (
+        "PHOENIX_DISABLE_AGENT_ASSISTANT",
+        "PHOENIX_AGENTS_DISABLE_BASH",
+        "PHOENIX_AGENTS_DISABLE_WEB_ACCESS",
+        "PHOENIX_AGENTS_DISABLE_GITHUB",
+    ):
+        assert env[name] == "true"
+
+
+def test_launcher_disables_the_grpc_receiver_or_refuses_to_start():
+    from purchase_cycle import phoenix_server
+
+    class FakeGrpcServer:
+        def __init__(self, enqueue_span, port, disabled=False):
+            self.disabled = disabled
+
+    phoenix_server.disable_grpc_receiver(FakeGrpcServer)
+    assert FakeGrpcServer(None, port=4317, disabled=False).disabled is True
+
+    class ChangedGrpcServer:
+        def __init__(self, enqueue_span, port):
+            pass
+
+    with pytest.raises(SystemExit):
+        phoenix_server.disable_grpc_receiver(ChangedGrpcServer)
