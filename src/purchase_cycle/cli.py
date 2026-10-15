@@ -828,50 +828,80 @@ def cmd_receipt_demo(args) -> int:
     conn = db.connect(files["db"])
     try:
         notes = [r[0] for r in conn.execute("SELECT id FROM customer_delivery_notes ORDER BY id")]
-        received = conn.execute(
-            "SELECT g.id, r.result FROM goods_receipts g JOIN reconciliations r ON r.delivery_note_id = g.delivery_note_id "
-            "WHERE g.status = 'received'"
-        ).fetchall()
-        short = conn.execute(
-            "SELECT COUNT(DISTINCT g.id) FROM goods_receipt_lines l JOIN goods_receipts g ON g.id = l.receipt_id "
-            "JOIN purchase_orders p ON p.id = g.purchase_order_id WHERE g.status = 'received' AND l.quantity < p.quantity"
-        ).fetchone()[0]
-        unlinked = conn.execute("SELECT COUNT(*) FROM supplier_documents WHERE status = 'unlinked'").fetchone()[0]
-        unlinked_receipts = conn.execute(
-            "SELECT COUNT(*) FROM goods_receipts g JOIN supplier_documents d ON d.id = g.delivery_note_id "
-            "WHERE d.status = 'unlinked'"
-        ).fetchone()[0]
     finally:
         conn.close()
     for note in notes:
         if not step("receipts", "show", f"CDN-{note:04d}"):
             return 1
-    final_receipts, final_orders = counts()
-    late = len(final_receipts - first_receipts)
-    waited = [o for o, status in final_orders.items() if status == "served" and first_orders[o] == "received"]
-    skipped = [o for o, status in final_orders.items() if status == "received"]
-    results = {result for _, result in received}
+    conn = db.connect(files["db"])
+    try:
+        figures = receipt_outcomes(conn, first_receipts, first_orders)
+    finally:
+        conn.close()
     print()
     print("summary:")
-    print(f"receipts from matched invoices: {sum(r == 'matched' for _, r in received)}")
-    print(f"receipts from discrepancies invoices: {sum(r == 'discrepancies' for _, r in received)}")
-    print(f"receipts only after the later scan: {late}")
-    print(f"short deliveries: {short}")
-    print(f"orders served after waiting for stock: {', '.join(f'ORD-{o:04d}' for o in waited) or 'none'}")
-    print(f"orders skipped for lack of stock at the end: {', '.join(f'ORD-{o:04d}' for o in skipped) or 'none'}")
-    print(f"unlinked documents: {unlinked}  receipts of unlinked documents: {unlinked_receipts}")
-    if (
-        results != {"matched", "discrepancies"}
-        or not late
-        or not short
-        or not waited
-        or not skipped
-        or not unlinked
-        or unlinked_receipts
-    ):
-        print("Error: the demo did not end with every outcome, for example no short delivery", file=sys.stderr)
+    print(f"receipts from matched invoices: {figures['matched']}")
+    print(f"receipts from discrepancies invoices: {figures['discrepancies']}")
+    print(f"receipts only after the later scan: {figures['late']}")
+    print(f"short deliveries: {figures['short']}")
+    print(f"orders served after waiting for stock: {', '.join(f'ORD-{o:04d}' for o in figures['waited']) or 'none'}")
+    print(
+        f"orders skipped for lack of stock at the end: {', '.join(f'ORD-{o:04d}' for o in figures['skipped']) or 'none'}"
+    )
+    print(f"unlinked documents: {figures['unlinked']}  receipts of unlinked documents: {figures['unlinked_receipts']}")
+    if figures["missing"]:
+        print(
+            f"Error: the demo did not end with every outcome, missing: {'; '.join(figures['missing'])}", file=sys.stderr
+        )
         return 1
     return 0
+
+
+def receipt_outcomes(conn, first_receipts: set, first_orders: dict) -> dict:
+    """Figures of the receipt demo and the list of outcomes it still lacks.
+
+    `first_receipts` and `first_orders` are the receipt ids and order statuses after the first scan and run.
+    """
+    received = conn.execute(
+        "SELECT g.id, r.result FROM goods_receipts g JOIN reconciliations r ON r.delivery_note_id = g.delivery_note_id "
+        "WHERE g.status = 'received'"
+    ).fetchall()
+    short = conn.execute(
+        "SELECT COUNT(*) FROM goods_receipts g JOIN purchase_orders p ON p.id = g.purchase_order_id "
+        "WHERE g.status = 'received' AND COALESCE((SELECT SUM(l.quantity) FROM goods_receipt_lines l "
+        "WHERE l.receipt_id = g.id AND l.sku = p.sku), 0) < p.quantity"
+    ).fetchone()[0]
+    unlinked = conn.execute("SELECT COUNT(*) FROM supplier_documents WHERE status = 'unlinked'").fetchone()[0]
+    unlinked_receipts = conn.execute(
+        "SELECT COUNT(*) FROM goods_receipts g JOIN supplier_documents d ON d.id = g.delivery_note_id "
+        "WHERE d.status = 'unlinked'"
+    ).fetchone()[0]
+    orders = {r[0]: r[1] for r in conn.execute("SELECT id, status FROM orders")}
+    figures = {
+        "matched": sum(r == "matched" for _, r in received),
+        "discrepancies": sum(r == "discrepancies" for _, r in received),
+        "late": sum(g not in first_receipts for g, _ in received),
+        "short": short,
+        "waited": [o for o, status in orders.items() if status == "served" and first_orders.get(o) == "received"],
+        "skipped": [o for o, status in orders.items() if status == "received"],
+        "unlinked": unlinked,
+        "unlinked_receipts": unlinked_receipts,
+    }
+    figures["missing"] = [
+        text
+        for text, lacking in (
+            ("receipt from a matched invoice", not figures["matched"]),
+            ("receipt from a discrepancies invoice", not figures["discrepancies"]),
+            ("receipt received only after the later scan", not figures["late"]),
+            ("short delivery against its purchase order line", not short),
+            ("order served after waiting for stock", not figures["waited"]),
+            ("order skipped for lack of stock", not figures["skipped"]),
+            ("unlinked document", not unlinked),
+            ("no receipt for unlinked documents", bool(unlinked_receipts)),
+        )
+        if lacking
+    ]
+    return figures
 
 
 def _reconcile_demo_claims(args, files: dict, step) -> int:
@@ -1975,7 +2005,9 @@ def main(argv=None) -> int:
     )
     receipt_demo.add_argument("--examples", default=str(DEMO_INVOICES), help="folder of sample supplier documents")
     receipt_demo.add_argument(
-        "--receipts", default=str(DEMO_RECEIPTS), help="folder of purchase_orders.json and customer_orders.json"
+        "--receipts",
+        default=str(DEMO_RECEIPTS),
+        help="folder of purchase_orders.json (the orders matching the --examples documents) and customer_orders.json",
     )
     receipt_demo.add_argument(
         "--workdir", default=str(RECEIPT_DEMO_WORKDIR), help="folder for the demo database, checkpoints and notes"

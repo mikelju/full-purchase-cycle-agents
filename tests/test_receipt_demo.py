@@ -1,11 +1,15 @@
 """C12: `receipt-demo` runs from the sample supplier documents to the customer delivery notes, each step in its own process, with the network blocked."""
 
 import os
+import shutil
 import sqlite3
 import subprocess
 import sys
 
+import pytest
+
 from conftest import SITECUSTOMIZE
+from purchase_cycle import cli
 
 
 def run_receipt_demo(tmp_path, *extra):
@@ -72,3 +76,74 @@ def test_receipt_demo_exits_non_zero_without_the_later_delivery_note(tmp_path):
     run, _, _ = run_receipt_demo(tmp_path, "--examples", str(examples))
     assert run.returncode == 1
     assert "did not end with every outcome" in run.stderr or "failed" in run.stderr
+
+
+FIRST_RECEIPTS = {1, 2, 3, 4, 5}  # the receipts of the first scan; receipt 6 comes from the later one
+FIRST_ORDERS = {1: "served", 2: "served", 3: "received", 4: "received", 5: "served"}
+
+
+@pytest.fixture(scope="module")
+def demo_db(tmp_path_factory):
+    run, _, workdir = run_receipt_demo(tmp_path_factory.mktemp("demo"))
+    assert run.returncode == 0, run.stdout + run.stderr
+    return workdir / "business.db"
+
+
+def _outcomes(demo_db, tmp_path, *statements):
+    copy = tmp_path / "copy.db"
+    shutil.copy(demo_db, copy)
+    conn = sqlite3.connect(copy)
+    try:
+        conn.row_factory = sqlite3.Row
+        for statement in statements:
+            conn.execute(statement)
+        return cli.receipt_outcomes(conn, FIRST_RECEIPTS, FIRST_ORDERS)
+    finally:
+        conn.close()
+
+
+def test_the_outcome_check_finds_nothing_missing_in_the_demo_database(demo_db, tmp_path):
+    assert _outcomes(demo_db, tmp_path)["missing"] == []
+
+
+@pytest.mark.parametrize(
+    ("statements", "missing"),
+    [
+        (["UPDATE reconciliations SET result = 'discrepancies'"], "matched invoice"),
+        (["UPDATE reconciliations SET result = 'matched'"], "discrepancies invoice"),
+        (["UPDATE goods_receipts SET status = 'failed' WHERE id = 6"], "after the later scan"),
+        (["UPDATE goods_receipt_lines SET quantity = 50 WHERE receipt_id = 3"], "short delivery"),
+        (
+            [
+                "UPDATE goods_receipt_lines SET quantity = 50 WHERE receipt_id = 3",
+                "INSERT INTO goods_receipt_lines VALUES (3, 2, 'MASK-IIR', 5)",
+            ],
+            "short delivery",
+        ),  # an extra line of another SKU is not a short delivery
+        (["UPDATE orders SET status = 'received' WHERE id = 4"], "served after waiting"),
+        (["UPDATE orders SET status = 'served' WHERE id = 3"], "order skipped"),
+        (["UPDATE supplier_documents SET status = 'extracted' WHERE status = 'unlinked'"], "unlinked document"),
+        (
+            [
+                "UPDATE supplier_documents SET status = 'unlinked' WHERE id = (SELECT delivery_note_id FROM goods_receipts WHERE id = 1)"
+            ],
+            "no receipt for unlinked",
+        ),
+    ],
+)
+def test_the_outcome_check_reports_each_missing_outcome(demo_db, tmp_path, statements, missing):
+    found = _outcomes(demo_db, tmp_path, *statements)["missing"]
+    assert len(found) == 1 and missing in found[0]
+
+
+def test_a_delivery_that_omits_the_purchase_order_sku_counts_as_short(demo_db, tmp_path):
+    figures = _outcomes(demo_db, tmp_path, "UPDATE goods_receipt_lines SET sku = 'MASK-IIR' WHERE receipt_id = 1")
+    assert figures["short"] == 2
+
+
+def test_the_demo_exits_non_zero_when_an_outcome_is_missing(tmp_path, monkeypatch, capsys):
+    real = cli.receipt_outcomes
+    monkeypatch.setattr(cli, "receipt_outcomes", lambda *a: {**real(*a), "missing": ["short delivery"]})
+    code = cli.main(["receipt-demo", "--workdir", str(tmp_path / "work")])
+    assert code == 1
+    assert "did not end with every outcome, missing: short delivery" in capsys.readouterr().err
