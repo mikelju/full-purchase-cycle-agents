@@ -1,6 +1,6 @@
 # Phase 10 - Goods receipt and serving: plan and results
 
-Status: in progress
+Status: built and reviewed on the branch; branch push and PR by the coordinator, C13 pending
 Spec: `spec.md` (approved 2026-10-15, frozen)
 Base: branch `fase-10-recepcion-servicio` at `06e4397` (phase 09 merged into `main` through PR #20); the unchanged-behaviour reference of C14 is the code at `06e4397`.
 
@@ -131,8 +131,8 @@ Before increment 12 the owner decides DV-A; without an answer the batch does not
   - Pending:
 - [ ] 19. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
   - Evidence:
-- [ ] 20. Results per criterion in the table below, master plan row 10 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
-  - Evidence:
+- [x] 20. Results per criterion in the table below, master plan row 10 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+  - Evidence: Results table filled per criterion with commands, observations and evidence files (C13 pending, quota); master plan row 10 set to built and delivered for review via PR, C13 pending; open items, writer decisions and candidate learnings recorded; the PR to `main` is opened by the coordinator and never merged here.
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
@@ -153,22 +153,34 @@ Open items, limitations and what could not be checked, stated plainly.
 
 | ID | Result | Evidence |
 |---|---|---|
-| C1 | | |
-| C2 | | |
-| C3 | | |
-| C4 | | |
-| C5 | | |
-| C6 | | |
-| C7 | | |
-| C8 | | |
-| C9 | | |
-| C10 | | |
-| C11 | | |
-| C12 | | |
-| C13 | | |
-| C14 | | |
-| C15 | | |
-| C16 | | |
+| C1 | Met | Fresh clone of `cc0b87b`, Anthropic and LangSmith variables unset, no `.env`: `npm ci` and `uv sync` exit 0; `npm run check` exit 1 on attempt 1 (1276 passed, 1 failed: the sqlite ResourceWarning flake in `tests/test_graph.py::test_no_tracing_without_langsmith_variables`, which passes alone), exit 0 on attempt 2 with 1277 passed and seventeen evaluations in replay, every gate PASS, 0 FAIL (`fresh-clone-check.txt`, increment 17) |
+| C2 | Met | `uv run pytest -q tests/test_seed.py` 29 passed: `test_seed_creates_the_four_receipt_tables_empty`, `test_seed_twice_gives_the_same_rows_in_every_table`, `test_a_phase_09_database_gains_the_receipt_tables_without_losing_rows`, `test_a_changed_stock_survives_a_reseed` (increment 2) |
+| C3 | Met | `tests/test_receipts.py` candidates, later link, received and failed notes, second call; `tests/test_receipts_cli.py` run output (increments 3 and 8) |
+| C4 | Met | `tests/test_receipts.py`: `test_receiving_adds_short_exact_and_over_deliveries_and_other_skus`, `test_an_unknown_sku_or_a_fractional_quantity_is_parked_and_the_next_note_is_received`, plus the review fixes for infinite, oversized and overflowing quantities (increment 3, review rounds 1 and 2) |
+| C5 | Met | `tests/test_receipts.py`: `test_shortfalls_without_receipts_equal_the_phase_06_query`, `test_after_a_short_delivery_the_scan_starts_a_request_for_the_unreceived_remainder`, `test_after_an_exact_delivery_that_covers_the_orders_no_request_starts`; `tests/test_quotes.py` unchanged (increment 4; the same netting was applied to `ui.py` in review round 1) |
+| C6 | Met | `tests/test_receipts.py`: serving by id, one short line, large older order skipped while a later one is served, waiting order served after a receipt, second pass serves nothing; stock never below zero (increment 5) |
+| C7 | Met | `tests/test_receipts.py`: note rows equal order lines with catalog sale units, ASCII file with the listed fields and no price, ASCII for every catalog product and customer, file not rewritten, a crash while writing leaves no partial file; the README walkthrough printed four notes (increment 6, `readme-walkthrough.txt`) |
+| C8 | Met | `tests/test_receipts.py`: second run changes nothing, interrupted after a node and resumed equals an uninterrupted run, thread `receipt-run-NNNN` in the SQLite checkpoint, the model double is never reached, the module imports no `llm` symbol (increment 7) |
+| C9 | Met | `tests/test_receipts_cli.py::test_run_a_later_insert_and_run_in_separate_processes_equal_the_same_steps_in_one_process`; `receipt-demo` runs each step in its own process (increment 9, `receipt-demo.txt`) |
+| C10 | Met | `tests/test_receipts_cli.py`: list, show, unknown and malformed reference exit 1 with nothing changed, `reconcile list` unchanged; the README walkthrough showed `CDN-9999` and `XYZ` exit 1 (increment 8, `readme-walkthrough.txt`) |
+| C11 | Met | `tests/test_goods_receipt_eval.py` 11 tests: coverage minimums, one injection per critical error and wrong expectations exit 1, independent checks; replay 100.0% [91.2, 100.0] n=40 scenarios, 0 critical errors (`eval-goods-receipt.txt`; 39 scenarios at increment 10, GR-040 added in review round 1) |
+| C12 | Met | `tests/test_receipt_demo.py` 6 tests with the network blocked; the demo ran in the fresh clone with exit 0 and the full summary: 2 matched, 4 discrepancies, 1 after the later scan, 1 short delivery, ORD-0004 served after waiting, ORD-0003 skipped, 0 receipts for the 2 unlinked documents (`receipt-demo.txt`, `readme-walkthrough.txt`) |
+| C13 | Pending, not met | A `receipt-demo` live run traced in LangSmith (one trace per `receipts run`, one span per node) and the owner's screenshot are blocked by the LangSmith trace quota until about 2026-11-05; nothing was run or checked for this criterion; delivered with the catch-up change of earlier phases (increment 18 stays open) |
+| C14 | Met with notes | Fresh-clone `npm run check` 1277 passed and the sixteen earlier evaluations PASS; `git diff --stat 06e4397 -- evals/recordings evals/datasets evals/baselines` lists only the 40 added `goods_receipt` scenario files (`recordings-diff-stat.txt`); `orders-demo`, `quotes-demo` and `reconcile-demo` identical to increment 1 after masking (`demo-comparison.txt`, `demo-compare.py`). Earlier-phase edits: DV-B (one line in `tests/test_whatsapp_eval.py`) and DV-C (`INSERT OR IGNORE` for stock) approved; not in the plan and listed in the open items: the `ui.py` shortfall netting and 30 added lines in `tests/test_ui.py` (review fix aedd96a) |
+| C15 | Met | `tests/test_secrets.py::test_phase_10_files_are_tracked_and_hold_no_keys` (12 passed); SEC-021 to SEC-025 in `docs/security.md` (increments 15 and 16, review round 1) |
+| C16 | Met | README section 'Receive goods and serve orders' followed step by step in the fresh clone: seed, `receipt-demo`, `receipts run`, `list`, `show`, error cases and both helps all worked as written (`readme-walkthrough.txt`); master plan row 10 compared with the phase status (increment 20) |
+
+Open items and limitations:
+- C13 is not met: it is pending because of the LangSmith trace quota until about 2026-11-05 (increment 18 stays open); nothing was checked.
+- Customer CLI-004 "Policlinica Gipuzkoa Norte" resembles a real hospital; renaming it in the catalog, datasets and recordings is a separate change, the owner's decision.
+- Round 1 correctness F6: `failures resume` of a `goods_receipt` failure falls through to the email graph with a misleading message (minor, not fixed).
+- Flaky ResourceWarning from sqlite connections left unclosed by older tests and by `test_receipts*.py`; it made `tests/test_graph.py::test_no_tracing_without_langsmith_variables` fail once in the fresh-clone run and pass on the rerun of the whole check.
+- The three critical cases of `claim_drafting` (CLM-044, CLM-066, CLM-072) are reported in replay before and after this phase; they are phase 09 findings, not phase 10.
+- Outside the allowed earlier-code list: review fix aedd96a also changed the `requested` subquery in `ui.py` (now `quotes.REQUESTED_NOT_RECEIVED`) with tests added to `tests/test_ui.py`; no earlier assertion was edited.
+- Writer decisions not in the plan: an empty delivery note is a failed receipt; the receipt's purchase order comes from the first `matched` or `discrepancies` reconciliation of the note; `failures.source` holds the delivery note number; one customer note line per order line; note text goes through `ascii_text`; `run_receipts` resumes the highest unfinished `receipt-run-NNNN`; `receipts run` prints `nothing changed` when nothing changed; the evaluation expectations come from an independent `_simulate`; `receipt-demo` has the options `--examples` and `--receipts`; the demo customer orders are inserted with `db.insert_order` in channel `demo`.
+- The live-key commands (`--mode record`, `--mode live`, `eval:live`, `eval-upload`) were not run in this phase.
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
+- A subagent of a previous session survived a handoff and kept writing: two writers collided on increment 12, and a writer kept editing `demo-compare.py` after the handoff; the coordinator must stop the old writer before a new one starts, and a relaunched writer checks `git status` first. Quote from the coordinator brief: "subagents of a previous session survived a handoff and kept writing".
+- Evidence files under `.evidence/` are ignored by Git and stay local to the working copy, so the plan lines must carry the figures that matter.
