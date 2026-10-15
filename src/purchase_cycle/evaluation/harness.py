@@ -421,6 +421,7 @@ ALL_SUITES = (
     "failure_recovery",
     "order_scenarios",
     "quote_wait",
+    "goods_receipt",
     "offer_extraction",
     "quote_decision",
     "reconciliation_matching",
