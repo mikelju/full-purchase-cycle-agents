@@ -1,6 +1,6 @@
 From: Lucia Soler <lucia.cli-011@example.com>
 To: orders@purchase-cycle.example
-Subject: Order Clinica Dental Ruzafa
+Subject: Order Clinica Dental Demo Ruzafa
 Date: Sun, 04 Oct 2026 00:16:00 +0000
 Message-ID: <eml-0112@dataset.purchase-cycle.example>
 Content-Type: text/plain; charset="utf-8"
@@ -18,4 +18,4 @@ This is our order for the dental clinic:
 Regards.
 
 Lucia
-Clinica Dental Ruzafa
+Clinica Dental Demo Ruzafa

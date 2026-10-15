@@ -250,7 +250,7 @@ We will be closed on 12 October for the bank holiday.
 Thank you for your support,
 Oier Bengoa
 Farmacia Lakua";no;;ok;
-EML-0117;txt_attachment;emails/EML-0117.eml;"Subject: Order Clinica Fisioterapia Deusto
+EML-0117;txt_attachment;emails/EML-0117.eml;"Subject: Order Clinica Fisioterapia Demo Deusto
 
 Body:
 Egun on,
@@ -259,7 +259,7 @@ We attach our order for the physiotherapy units. Please call if anything is out 
 
 Thank you,
 Ane
-Clinica Fisioterapia Deusto
+Clinica Fisioterapia Demo Deusto
 
 Attachment: order-0117.txt
 thirty-five aneroid sphygmomanometers with stethoscope
@@ -455,7 +455,7 @@ EML-0167-L4: Microporous paper tape 2.5 cm x 9.1 m -> TAPE-PAP-25 Microporous pa
 EML-0167-L5: Weekly pill organiser, 7 days -> PILL-BOX-7 Weekly pill organiser, 7 days x 5 (unit)
 EML-0167-L6: Sterile neoprene surgical gloves (latex-free), 7.5 -> GLV-SURG-NEO-7.5 Sterile latex-free surgical gloves (neoprene), size 7.5 x 6 (box of 50 pairs)
 EML-0167-L7: Elastic elbow support, size S -> SUP-ELBOW-S Elastic elbow support, size S x 7 (unit)";ok;
-EML-0172;body_list;emails/EML-0172.eml;"Subject: Order Policlinica Gipuzkoa Norte
+EML-0172;body_list;emails/EML-0172.eml;"Subject: Order Clinica Demo Gipuzkoa
 
 Body:
 Egun on,
@@ -474,7 +474,7 @@ Our order for the coming week:
 Thanks, and please split the delivery if some items are back-ordered.
 
 Jon
-Policlinica Gipuzkoa Norte";yes;"EML-0172-L1: Silk tape 2.5 cm x 9.1 m, 15 boxes -> TAPE-SILK-25 Silk tape 2.5 cm x 9.1 m x 15 (box of 12 rolls)
+Clinica Demo Gipuzkoa";yes;"EML-0172-L1: Silk tape 2.5 cm x 9.1 m, 15 boxes -> TAPE-SILK-25 Silk tape 2.5 cm x 9.1 m x 15 (box of 12 rolls)
 EML-0172-L2: Sterile transport swab with medium, 450 swabs -> SWAB-TRANS Sterile transport swab with medium x 9 (box of 50)
 EML-0172-L3: Elbow support, elastic, medium size, 14 units -> SUP-ELBOW-M Elastic elbow support, size M x 14 (unit)
 EML-0172-L4: Disposible syringe 1 ml, luer slip, 18 boxes -> SYR-1 Disposable syringe 1 ml, luer slip x 18 (box of 100)
@@ -626,8 +626,8 @@ Thank you for changing our delivery slot at such short notice last week. It mean
 
 Kind regards,
 Rocio Dominguez
-Farmacia Nervion";no;;ok;
-EML-0268;body_list;emails/EML-0268.eml;"Subject: Order Farmacia Nervion
+Farmacia Demo Nervion";no;;ok;
+EML-0268;body_list;emails/EML-0268.eml;"Subject: Order Farmacia Demo Nervion
 
 Body:
 Buenas tardes,
@@ -640,7 +640,7 @@ Please send:
 Thank you.
 
 Rocio
-Farmacia Nervion";yes;"EML-0268-L1: Latex examination gloves, lightly powdered, size L (3 boxes) -> GLV-LTXP-L Latex examination gloves, lightly powdered, size L x 3 (box of 100)
+Farmacia Demo Nervion";yes;"EML-0268-L1: Latex examination gloves, lightly powdered, size L (3 boxes) -> GLV-LTXP-L Latex examination gloves, lightly powdered, size L x 3 (box of 100)
 EML-0268-L2: Adult incontinence briefs, size M (14 packs) -> INC-BRF-M Adult incontinence briefs, size M x 14 (pack of 20)";ok;
 EML-0269;pdf_attachment;emails/EML-0269.eml;"Subject: Pamplona medical centre - delivery note
 
