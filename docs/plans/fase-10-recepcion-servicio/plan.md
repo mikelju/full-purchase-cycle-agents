@@ -128,9 +128,9 @@ Before increment 12 the owner decides DV-A; without an answer the batch does not
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
-| DV-A | The reconcile-demo sample delivery notes all deliver the full purchase order quantity, so C12 "one short delivery" cannot happen with the reconcile-demo purchase orders. Proposed: `receipt-demo` seeds `examples/receipts/purchase_orders.json`, a copy of `examples/invoices/purchase_orders.json` with PO-0003 GAUZE-NS-5 at 50 instead of 40, so E-0303 (40) is a short delivery and INV-0008 stays `discrepancies`; documents and recording unchanged | C12 | proposed, needs the owner before increment 12 |
-| DV-B | `tests/test_whatsapp_eval.py::test_eval_all_runs_the_whatsapp_suite_after_its_baseline` lists the whole `eval all` order and gains `goods_receipt` before `offer_extraction`; mechanical edit, no assertion weakened | C14 | proposed, needs the owner before increment 11 |
-| DV-C | `db.seed` writes `stock` with `INSERT OR IGNORE` instead of `INSERT OR REPLACE`, so a reseed by any command keeps received and served stock; fresh databases get the same rows | C2, C14 | proposed, needs the owner before increment 2 |
+| DV-A | The reconcile-demo sample delivery notes all deliver the full purchase order quantity, so C12 "one short delivery" cannot happen with the reconcile-demo purchase orders. Proposed: `receipt-demo` seeds `examples/receipts/purchase_orders.json`, a copy of `examples/invoices/purchase_orders.json` with PO-0003 GAUZE-NS-5 at 50 instead of 40, so E-0303 (40) is a short delivery and INV-0008 stays `discrepancies`; documents and recording unchanged | C12 | approved by the owner 2026-10-15 (option A) |
+| DV-B | `tests/test_whatsapp_eval.py::test_eval_all_runs_the_whatsapp_suite_after_its_baseline` lists the whole `eval all` order and gains `goods_receipt` before `offer_extraction`; mechanical edit, no assertion weakened | C14 | approved by the owner 2026-10-15 (option A) |
+| DV-C | `db.seed` writes `stock` with `INSERT OR IGNORE` instead of `INSERT OR REPLACE`, so a reseed by any command keeps received and served stock; fresh databases get the same rows | C2, C14 | approved by the owner 2026-10-15 (option A) |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
