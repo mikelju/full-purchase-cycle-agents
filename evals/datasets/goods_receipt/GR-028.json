@@ -1,0 +1,64 @@
+{
+  "dataset_version": "1.0",
+  "description": "covered stock is served even if nothing was received",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [
+      1
+    ],
+    "orders": [
+      "served"
+    ],
+    "receipts": [],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-028",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        10
+      ],
+      "result": "awaiting"
+    }
+  ],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-L",
+          5
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "served ORD-0001  CDN-0001  GLV-NIT-L=5",
+        "delivery note file: <notes>/CDN-0001.txt"
+      ]
+    }
+  ],
+  "stock": {
+    "GLV-NIT-L": 5
+  },
+  "tags": [
+    "no_receipt_awaiting_invoice",
+    "covered_before_receipt"
+  ]
+}

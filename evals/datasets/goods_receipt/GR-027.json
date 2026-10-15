@@ -1,0 +1,51 @@
+{
+  "dataset_version": "1.0",
+  "description": "an order stock covered before any receipt",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [
+      1
+    ],
+    "orders": [
+      "served"
+    ],
+    "receipts": [],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 40,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-027",
+  "notes": [],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-M",
+          10
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "served ORD-0001  CDN-0001  GLV-NIT-M=10",
+        "delivery note file: <notes>/CDN-0001.txt"
+      ]
+    }
+  ],
+  "stock": {
+    "GLV-NIT-M": 50
+  },
+  "tags": [
+    "covered_before_receipt"
+  ]
+}

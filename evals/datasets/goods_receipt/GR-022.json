@@ -1,0 +1,94 @@
+{
+  "dataset_version": "1.0",
+  "description": "an unknown SKU is parked, the next note is received",
+  "expected": {
+    "failures": 1,
+    "model_calls": 0,
+    "notes": [
+      1
+    ],
+    "orders": [
+      "served"
+    ],
+    "receipts": [
+      [
+        "DN-1",
+        "failed"
+      ],
+      [
+        "DN-2",
+        "received"
+      ]
+    ],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-022",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          null,
+          5
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        5
+      ],
+      "result": "matched"
+    },
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-S",
+          5
+        ]
+      ],
+      "number": "DN-2",
+      "po": [
+        "GLV-NIT-S",
+        5
+      ],
+      "result": "matched"
+    }
+  ],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-S",
+          5
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-1  PO-0001  failed  reason: line 1 has no catalog SKU: Unknown item",
+        "receipt RCP-0002  DN-2  PO-0002  received  GLV-NIT-S=5",
+        "served ORD-0001  CDN-0001  GLV-NIT-S=5",
+        "delivery note file: <notes>/CDN-0001.txt"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "matched_received",
+    "parked_unknown_sku"
+  ]
+}

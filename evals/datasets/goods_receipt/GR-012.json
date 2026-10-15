@@ -1,0 +1,73 @@
+{
+  "dataset_version": "1.0",
+  "description": "a note with no invoice next to a received one",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [],
+    "orders": [],
+    "receipts": [
+      [
+        "DN-2",
+        "received"
+      ]
+    ],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 6,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-012",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-XL",
+          10
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-XL",
+        10
+      ],
+      "result": "no_invoice"
+    },
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-XL",
+          6
+        ]
+      ],
+      "number": "DN-2",
+      "po": [
+        "GLV-NIT-XL",
+        6
+      ],
+      "result": "discrepancies"
+    }
+  ],
+  "orders": [],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-2  PO-0002  received  GLV-NIT-XL=6"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "discrepancies_received",
+    "no_receipt_no_invoice"
+  ]
+}
