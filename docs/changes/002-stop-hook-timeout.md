@@ -1,6 +1,6 @@
 # 002 - Raise the stop hook timeout to 300 s
 
-Status: ready locally
+Status: integrated (merged via PR #7)
 
 ## Contract
 Goal and reason:

@@ -1,6 +1,6 @@
 # 008 - Quotes flow animation
 
-Status: ready locally (PR to `main`, stacked on PR 14, pending owner merge)
+Status: integrated (merged via PR #15)
 
 ## Contract
 Goal and reason:

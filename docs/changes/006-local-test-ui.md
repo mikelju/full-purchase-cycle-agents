@@ -1,6 +1,6 @@
 # 006 - Local test page for the orders channels
 
-Status: delivered (PR to `main`, pending owner merge)
+Status: integrated (merged via PR #16)
 
 ## Contract
 Goal and reason:

@@ -1,6 +1,6 @@
 # Phase 03 - Email orders: plan and results
 
-Status: delivered for review; ready locally after two review rounds; C13 pending (increment 17, LangSmith trace quota until about 2026-11-05), so the phase does not close yet
+Status: integrated (merged via PR #5); C13 pending (LangSmith trace quota until about 2026-11-05)
 Spec: `spec.md` (frozen)
 Base: branch `fase-03-pedidos-email` from `main` at commit `d335905`; the spec was frozen in `d283f99`.
 

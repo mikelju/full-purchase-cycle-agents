@@ -1,6 +1,6 @@
 # Phase 10 - Goods receipt and serving: plan and results
 
-Status: built and reviewed on the branch; branch push and PR by the coordinator, C13 pending
+Status: integrated (merged via PR #21); C13 pending (LangSmith trace quota until about 2026-11-05)
 Spec: `spec.md` (approved 2026-10-15, frozen)
 Base: branch `fase-10-recepcion-servicio` at `06e4397` (phase 09 merged into `main` through PR #20); the unchanged-behaviour reference of C14 is the code at `06e4397`.
 
@@ -173,7 +173,7 @@ Open items, limitations and what could not be checked, stated plainly.
 
 Open items and limitations:
 - C13 is not met: it is pending because of the LangSmith trace quota until about 2026-11-05 (increment 18 stays open); nothing was checked.
-- Customer CLI-004 "Policlinica Gipuzkoa Norte" resembles a real hospital; renaming it in the catalog, datasets and recordings is a separate change, the owner's decision.
+- Customer CLI-004 resembled a real hospital; done in change 012 (PR #22), which renamed it and five more customers.
 - Round 1 correctness F6: `failures resume` of a `goods_receipt` failure falls through to the email graph with a misleading message (minor, not fixed).
 - Flaky ResourceWarning from sqlite connections left unclosed by older tests and by `test_receipts*.py`; it made `tests/test_graph.py::test_no_tracing_without_langsmith_variables` fail once in the fresh-clone run and pass on the rerun of the whole check.
 - The three critical cases of `claim_drafting` (CLM-044, CLM-066, CLM-072) are reported in replay before and after this phase; they are phase 09 findings, not phase 10.

@@ -1,6 +1,6 @@
 # Phase 04 - Exceptions: plan and results
 
-Status: delivered for review on 2026-10-08; every increment done except 19 (LangSmith trace and experiments, C15), blocked by the trace quota until about 2026-11-05, so the phase is ready locally but not closed
+Status: integrated (merged via PR #6); C15 pending (LangSmith trace quota until about 2026-11-05)
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-08)
 Base: branch `fase-04-excepciones` from `main` at commit `037f66d`; the spec was frozen in `ff4f2ec`.
 

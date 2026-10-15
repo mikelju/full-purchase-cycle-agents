@@ -1,6 +1,6 @@
 # 012 - Rename customer CLI-004 and five more customers
 
-Status: ready locally (PR to `main`, pending owner merge)
+Status: integrated (merged via PR #22)
 
 ## Contract
 Goal and reason:

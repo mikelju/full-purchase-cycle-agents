@@ -1,6 +1,6 @@
 # 011 - Reconciliation flow animation
 
-Status: ready locally (PR to `main`, pending owner merge)
+Status: integrated (merged via PR #19)
 
 ## Contract
 Goal and reason:

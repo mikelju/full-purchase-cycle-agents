@@ -1,6 +1,6 @@
 # 005 - Purchase cycle flow animation
 
-Status: delivered (PR to `main`, pending owner merge)
+Status: integrated (merged via PR #12)
 
 ## Contract
 Goal and reason:

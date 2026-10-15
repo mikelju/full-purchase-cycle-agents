@@ -1,6 +1,6 @@
 # Phase 01 - Foundations: plan and results
 
-Status: in progress
+Status: integrated (merged via PR #3)
 Spec: `spec.md` (frozen)
 Base: branch `fase-01-cimientos`, commit `ac3c83a` plus the merge of `main` with the English `AGENTS.md`.
 

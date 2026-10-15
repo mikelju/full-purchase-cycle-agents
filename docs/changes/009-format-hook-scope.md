@@ -1,6 +1,6 @@
 # 009 - Format hook: project files only, never invalid JSON
 
-Status: ready locally
+Status: integrated (merged via PR #17)
 
 ## Contract
 Goal and reason:

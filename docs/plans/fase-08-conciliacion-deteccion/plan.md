@@ -1,6 +1,6 @@
 # Phase 08 - Reconciliation, detection: plan and results
 
-Status: in progress
+Status: integrated (merged via PR #18); C15 pending (LangSmith trace quota until about 2026-11-05)
 Spec: `spec.md` (approved 2026-10-13, frozen)
 Base: branch `fase-08-conciliacion-deteccion` from `main` at the merge commit `e48bdec`.
 

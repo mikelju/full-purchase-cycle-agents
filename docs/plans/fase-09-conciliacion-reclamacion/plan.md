@@ -1,6 +1,6 @@
 # Phase 09 - Reconciliation, claim: plan and results
 
-Status: built and reviewed on the branch; branch push and PR by the coordinator, C17 pending
+Status: integrated (merged via PR #20); C17 pending (LangSmith trace quota until about 2026-11-05)
 Spec: `spec.md` (approved 2026-10-14, frozen)
 Base: branch `fase-09-conciliacion-reclamacion` at `d05c2af`, which holds the phase 08 work over `main` at `e48bdec` (phase 08 is not merged yet); the unchanged-behaviour reference of C18 is the code at `d05c2af`.
 

@@ -1,6 +1,6 @@
 # Phase 06 - Quotes, request and wait: plan and results
 
-Status: built, delivered for review via PR on 2026-10-11
+Status: integrated (merged via PR #11)
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-11)
 Base: branch `fase-06-presupuestos-espera` from `main` at commit `ada28ab`.
 
