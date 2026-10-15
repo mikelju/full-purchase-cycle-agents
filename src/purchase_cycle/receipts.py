@@ -6,6 +6,9 @@ Deterministic: no model is called here.
 import sqlite3
 import unicodedata
 from pathlib import Path
+from typing import TypedDict
+
+from langgraph.graph import END, START, StateGraph
 
 from purchase_cycle import db, sim_clock
 
@@ -176,3 +179,73 @@ def issue(conn: sqlite3.Connection) -> list[Path]:
         path.write_text(_note_text(conn, note), encoding="ascii", newline="\n")
         written.append(path)
     return written
+
+
+class ReceiptState(TypedDict, total=False):
+    receipts: list[dict]
+    served: list[dict]
+    skipped: list[dict]
+    issued: list[str]
+
+
+def build_receipt_graph(db_path: Path | str, notes_dir: Path | str, checkpointer=None, interrupt_after=None):
+    """One thread per run: receive the candidate notes, serve what stock covers, issue the delivery note files.
+
+    Every node reads the database before acting, so a re-run or a resumption repeats no effect.
+    """
+
+    def receive_node(state: ReceiptState) -> ReceiptState:
+        conn = db.connect(db_path)
+        try:
+            return {"receipts": receive(conn)}
+        finally:
+            conn.close()
+
+    def serve_node(state: ReceiptState) -> ReceiptState:
+        conn = db.connect(db_path)
+        try:
+            return serve(conn, notes_dir)
+        finally:
+            conn.close()
+
+    def issue_node(state: ReceiptState) -> ReceiptState:
+        conn = db.connect(db_path)
+        try:
+            return {"issued": [str(path) for path in issue(conn)]}
+        finally:
+            conn.close()
+
+    builder = StateGraph(ReceiptState)
+    builder.add_node("receive", receive_node)
+    builder.add_node("serve", serve_node)
+    builder.add_node("issue", issue_node)
+    builder.add_edge(START, "receive")
+    builder.add_edge("receive", "serve")
+    builder.add_edge("serve", "issue")
+    builder.add_edge("issue", END)
+    return builder.compile(checkpointer=checkpointer, interrupt_after=interrupt_after, name="receipt")
+
+
+THREAD_PREFIX = "receipt-run-"
+
+
+def _last_run(checkpointer) -> int:
+    numbers = [
+        int(c.config["configurable"]["thread_id"].removeprefix(THREAD_PREFIX))
+        for c in checkpointer.list(None)
+        if c.config["configurable"]["thread_id"].startswith(THREAD_PREFIX)
+    ]
+    return max(numbers, default=0)
+
+
+def run_receipts(db_path: Path | str, notes_dir: Path | str, checkpointer, interrupt_after=None) -> ReceiptState:
+    """Resume the last run when it stopped before its end, otherwise start the next one; returns what the run did."""
+    graph = build_receipt_graph(db_path, notes_dir, checkpointer, interrupt_after)
+    last = _last_run(checkpointer)
+    config = {"configurable": {"thread_id": f"{THREAD_PREFIX}{last:04d}"}}
+    if last and graph.get_state(config).next:
+        graph.invoke(None, config)
+    else:
+        config = {"configurable": {"thread_id": f"{THREAD_PREFIX}{last + 1:04d}"}}
+        graph.invoke({}, config)
+    return graph.get_state(config).values

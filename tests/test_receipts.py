@@ -3,7 +3,9 @@
 import ast
 from pathlib import Path
 
-from purchase_cycle import db, quotes, receipts
+import pytest
+
+from purchase_cycle import db, llm, quotes, receipts
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
 from purchase_cycle.graph import sqlite_checkpointer
 
@@ -387,3 +389,80 @@ def test_the_files_are_ascii_for_every_catalog_product_and_customer(tmp_path):
 
 def test_non_ascii_text_is_transliterated_by_a_fixed_rule():
     assert receipts.ascii_text("Cl\u00ednica Sant Mart\u00ed \u2013 Pe\u00f1a \u20ac") == "Clinica Sant Marti ? Pena ?"
+
+
+def _dump(conn, notes):
+    tables = ("goods_receipts", "goods_receipt_lines", "customer_delivery_note_lines")
+    rows = {t: [tuple(r) for r in conn.execute(f"SELECT * FROM {t} ORDER BY 1, 2")] for t in tables}
+    rows["customer_delivery_notes"] = [
+        tuple(r) for r in conn.execute("SELECT id, order_id, customer_code, issued_at FROM customer_delivery_notes")
+    ]
+    rows["document_file"] = [Path(r[0]).name for r in conn.execute("SELECT document_file FROM customer_delivery_notes")]
+    rows["orders"] = [tuple(r) for r in conn.execute("SELECT id, status FROM orders ORDER BY id")]
+    rows["stock"] = [tuple(r) for r in conn.execute("SELECT sku, on_hand FROM stock ORDER BY sku")]
+    rows["failures"] = conn.execute("SELECT COUNT(*) FROM failures").fetchone()[0]
+    rows["files"] = {p.name: p.read_text(encoding="ascii") for p in sorted(Path(notes).glob("*"))}
+    return rows
+
+
+def _scenario(folder):
+    """A bad note, a good short note, a waiting order, a covered order and a larger order that stays skipped."""
+    folder.mkdir()
+    conn = db.connect(folder / "r.db")
+    db.seed(conn)
+    _note(conn, "DN-1", lines=((EMPTY, 60),), sku=EMPTY, quantity=100)
+    _note(conn, "DN-2", lines=(("NOPE", 5),), sku=A, quantity=5)
+    db.insert_order(conn, CUSTOMER, "web_form", "received", [(EMPTY, 50)])
+    db.insert_order(conn, CUSTOMER, "web_form", "received", [(A, 1)])
+    db.insert_order(conn, CUSTOMER, "web_form", "received", [(EMPTY, 500)])
+    conn.close()
+    return folder / "r.db", folder / "notes", sqlite_checkpointer(folder / "checkpoints.sqlite")
+
+
+def test_one_run_receives_serves_and_issues_and_a_second_run_changes_nothing(tmp_path):
+    db_path, notes, saver = _scenario(tmp_path / "one")
+    first = receipts.run_receipts(db_path, notes, saver)
+    assert [r["status"] for r in first["receipts"]] == ["received", "failed"]
+    assert [o["order_id"] for o in first["served"]] == [1, 2]
+    assert [(o["order_id"], o["missing"]) for o in first["skipped"]] == [(3, {EMPTY: 490})]
+    assert len(first["issued"]) == 2
+    conn = db.connect(db_path)
+    before = _dump(conn, notes)
+    second = receipts.run_receipts(db_path, notes, saver)
+    assert _dump(conn, notes) == before
+    assert second["receipts"] == second["served"] == second["issued"] == []
+    assert [o["order_id"] for o in second["skipped"]] == [3]
+
+
+def test_the_thread_receipt_run_nnnn_is_stored_in_the_sqlite_checkpoint(tmp_path):
+    db_path, notes, saver = _scenario(tmp_path / "one")
+    receipts.run_receipts(db_path, notes, saver)
+    receipts.run_receipts(db_path, notes, saver)
+    threads = {c.config["configurable"]["thread_id"] for c in saver.list(None)}
+    assert threads == {"receipt-run-0001", "receipt-run-0002"}
+
+
+@pytest.mark.parametrize("node", ["receive", "serve"])
+def test_a_run_interrupted_after_a_node_and_resumed_ends_like_an_uninterrupted_run(tmp_path, node):
+    db_path, notes, saver = _scenario(tmp_path / "crash")
+    receipts.run_receipts(db_path, notes, saver, interrupt_after=[node])
+    conn = db.connect(db_path)
+    partial = _dump(conn, notes)
+    assert partial["files"] == {} and (partial["goods_receipts"] != [])
+    resumed = receipts.run_receipts(db_path, notes, saver)
+    ref_db, ref_notes, ref_saver = _scenario(tmp_path / "plain")
+    receipts.run_receipts(ref_db, ref_notes, ref_saver)
+    assert _dump(conn, notes) == _dump(db.connect(ref_db), ref_notes)
+    assert len(resumed["issued"]) == 2
+    threads = {c.config["configurable"]["thread_id"] for c in saver.list(None)}
+    assert threads == {"receipt-run-0001"}  # the resumption reused the interrupted thread
+
+
+def test_the_graph_never_reaches_a_model_client(tmp_path, monkeypatch):
+    def boom(*args, **kwargs):
+        raise AssertionError("a model call")
+
+    monkeypatch.setattr(llm.ModelClient, "__init__", boom)
+    monkeypatch.setattr(llm.ModelClient, "_call_model", boom)
+    db_path, notes, saver = _scenario(tmp_path / "nomodel")
+    assert receipts.run_receipts(db_path, notes, saver)["issued"]
