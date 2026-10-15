@@ -3,10 +3,13 @@
 import ast
 from pathlib import Path
 
-from purchase_cycle import db, receipts
-from purchase_cycle.catalog import PRODUCTS
+from purchase_cycle import db, quotes, receipts
+from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
+from purchase_cycle.graph import sqlite_checkpointer
 
 A, B, C = PRODUCTS[1].sku, PRODUCTS[2].sku, PRODUCTS[3].sku
+EMPTY = PRODUCTS[0].sku  # seeded with no stock
+CUSTOMER = CUSTOMERS[0].code
 
 
 def _conn(tmp_path):
@@ -180,3 +183,71 @@ def test_the_module_imports_no_llm_symbol():
         elif isinstance(node, ast.ImportFrom):
             names |= {node.module or ""} | {a.name for a in node.names}
     assert not any("llm" in n or "anthropic" in n for n in names)
+
+
+def _old_shortfalls(conn):
+    """The phase 06 query, kept here as the oracle for a database with no receipts."""
+    marks = ", ".join("?" for _ in quotes.ORDER_STATUSES)
+    rows = conn.execute(
+        "SELECT l.sku, SUM(l.quantity) AS demand, s.on_hand, "
+        "(SELECT COALESCE(SUM(q.quantity), 0) FROM quote_requests q WHERE q.sku = l.sku) AS requested "
+        "FROM order_lines l JOIN orders o ON o.id = l.order_id JOIN stock s ON s.sku = l.sku "
+        f"WHERE o.status IN ({marks}) "
+        "AND l.sku NOT IN (SELECT sku FROM quote_requests WHERE status = ?) "
+        "GROUP BY l.sku HAVING SUM(l.quantity) > s.on_hand + requested ORDER BY l.sku",
+        (*quotes.ORDER_STATUSES, quotes.WAITING),
+    ).fetchall()
+    return [
+        {
+            "sku": r["sku"],
+            "demand": r["demand"],
+            "on_hand": r["on_hand"],
+            "shortfall": r["demand"] - r["on_hand"] - r["requested"],
+        }
+        for r in rows
+    ]
+
+
+def _order(conn, lines, status="received"):
+    return db.insert_order(conn, CUSTOMER, "web_form", status, lines)
+
+
+def test_shortfalls_without_receipts_equal_the_phase_06_query(tmp_path):
+    conn = _conn(tmp_path)
+    assert quotes.shortfalls(conn) == _old_shortfalls(conn) == []
+    _order(conn, [(EMPTY, 40), (A, _stock(conn, A) + 9)])
+    _order(conn, [(B, 5)], status="served")
+    assert quotes.shortfalls(conn) == _old_shortfalls(conn) != []
+    _purchase_order(conn, EMPTY, 25)  # an ordered request
+    assert quotes.shortfalls(conn) == _old_shortfalls(conn)
+    conn.execute(
+        "INSERT INTO quote_requests (sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
+        "VALUES (?, 3, 'th-w', 'waiting', 't', 't', 't')",
+        (A,),
+    )
+    conn.commit()
+    assert quotes.shortfalls(conn) == _old_shortfalls(conn)
+
+
+def _scan(tmp_path, conn):
+    return quotes.scan(tmp_path / "r.db", sqlite_checkpointer(tmp_path / "checkpoints.sqlite"), tmp_path / "outbox")
+
+
+def test_after_a_short_delivery_the_scan_starts_a_request_for_the_unreceived_remainder(tmp_path):
+    conn = _conn(tmp_path)
+    _order(conn, [(EMPTY, 100)])
+    _note(conn, "DN-1", lines=((EMPTY, 60),), sku=EMPTY, quantity=100)
+    assert quotes.shortfalls(conn) == []  # the ordered request still covers the demand
+    receipts.receive(conn)
+    assert [s["shortfall"] for s in quotes.shortfalls(conn)] == [40]
+    started = _scan(tmp_path, conn)
+    assert [(s["sku"], s["quantity"]) for s in started] == [(EMPTY, 40)]
+
+
+def test_after_an_exact_delivery_that_covers_the_orders_no_request_starts(tmp_path):
+    conn = _conn(tmp_path)
+    _order(conn, [(EMPTY, 100)])
+    _note(conn, "DN-1", lines=((EMPTY, 100),), sku=EMPTY, quantity=100)
+    receipts.receive(conn)
+    assert quotes.shortfalls(conn) == []
+    assert _scan(tmp_path, conn) == []
