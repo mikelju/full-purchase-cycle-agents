@@ -9,7 +9,8 @@ Phase 05 (closing the orders module) integrated (merged via PR #9): a simulated 
 Phase 06 (quote requests and wait) integrated (merged via PR #11): quote requests for products short of stock, supplier emails, a simulated clock and a multi-day wait with one reminder and a deadline, with no model call.
 Phase 07 (quotes, decision) is built and delivered for review via PR: offer extraction with Claude Haiku 4.5, a fixed comparison rule, a human approval after a pause with saved state and an issued purchase order, with two new evaluations.
 Phase 08 (reconciliation, detection) is built and delivered for review via PR: supplier invoices and delivery notes in text, PDF and Excel are read with Claude Haiku 4.5, linked to a purchase order, matched in plain code with a stated tolerance and stored with each difference, with two new evaluations; its LangSmith trace evidence is pending.
-Phase 09 (reconciliation, claim) is built on its branch, not yet delivered: a claim email to the supplier is drafted with Claude Haiku 4.5, checked by code, approved, edited or rejected by a person after a pause with saved state, and written to the outbox, with two new evaluations; its LangSmith trace evidence is pending.
+Phase 09 (reconciliation, claim) is built and delivered for review via PR: a claim email to the supplier is drafted with Claude Haiku 4.5, checked by code, approved, edited or rejected by a person after a pause with saved state, and written to the outbox, with two new evaluations; its LangSmith trace evidence is pending.
+Phase 10 (goods receipt and serving) is built on its branch, not yet delivered: a reconciled supplier delivery note puts its goods into stock, the waiting customer orders that stock covers are served and a customer delivery note is written as a local file, in plain code with no model call and one new evaluation; its LangSmith trace evidence is pending.
 
 ![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
 
@@ -472,6 +473,80 @@ One claim is sent as drafted, one is sent with the edited text of `examples/invo
 In replay (the default) the four drafts come from `evals/recordings/claim_demo.jsonl`, with no key and no network.
 To record them again, set `ANTHROPIC_API_KEY` in `.env` and run `uv run purchase-cycle reconcile-demo --mode record` (15 extraction calls and 4 drafting calls, a few cents); `--mode live` calls the model without saving; `--claim-recordings FILE` picks another claim recordings file.
 
+## Receive goods and serve orders
+
+Phase 10 closes the purchase side: a reconciled supplier delivery note puts its goods into stock, the customer orders that stock now covers are served, and a delivery note for the customer is issued.
+It is a `receipt` graph (`src/purchase_cycle/receipts.py`) with the nodes `receive`, `serve` and `issue`, run by `receipts run`.
+No model is called anywhere in this step; it is plain code over the tables of phases 06 to 09 and four new ones (`goods_receipts`, `goods_receipt_lines`, `customer_delivery_notes` and `customer_delivery_note_lines`).
+
+### Receipt candidates and received quantities
+
+A delivery note is a candidate when it is linked to a purchase order, a reconciliation of result `matched` or `discrepancies` references it, and it has no receipt yet.
+A claim on the invoice concerns money and does not hold the goods, so a note whose invoice is under claim is received like any other.
+An invoice `awaiting_delivery_note`, an unlinked document and a note with no invoice are not candidates; a note linked by a later reconciliation becomes one on the next run.
+Receiving adds the delivered quantity of each line to `stock.on_hand`, whether it is short, exact or above the purchase order, and for a SKU that is not on the purchase order.
+A note with an unknown SKU, a fractional or non-positive quantity or no lines adds nothing: it is stored as a `failed` receipt with its reason, one `failures` row (`needs_review`, step `goods_receipt`) is written, and the next note is still received.
+Each note is received once, in one transaction with its stock change.
+
+### Short deliveries and the quote scan
+
+A short delivery is closed short: there is one delivery note per purchase order and no backorder.
+`quotes scan` counts the units of a purchase order as still on their way until a receipt of that order exists; after a receipt they are in `stock.on_hand`, so a short delivery with orders still needing the SKU starts a new request for exactly the unreceived remainder, and an exact delivery that covers the orders starts none.
+Without receipts the shortfall is the same as in phase 06.
+
+### The allocation rule
+
+`receipts run` serves the stored orders in `received` status in ascending order id, in one first pass.
+An order is served only when stock covers every line; it then becomes `served`, its quantities leave `on_hand` and stock never goes below zero.
+An order that is not fully covered is skipped with its missing units per SKU, stays `received` and waits for the next run; a later order that stock does cover is still served, so a large old order does not hold up the small ones behind it.
+The pass runs on every `receipts run`, so an order that stock already covers is served even when the run received nothing.
+There is no second pass within a run: a skipped order is looked at again only on the next run.
+
+### The customer delivery note
+
+Each served order gets one row `CDN-NNNN` with its lines and the sale unit of each product, and a text file `CDN-NNNN.txt` in `data/customer_delivery_notes/` (`--notes-dir` to change it).
+The file holds the company, the delivery note number, the date from the simulated clock, the order as `ORD-NNNN`, the customer name, code and city, one line per SKU with name, quantity and sale unit, and a signature line.
+It has no price and only ASCII characters (accents are dropped).
+An existing file is not rewritten, and a missing file of a stored note is written again on the next run.
+The file is a local text file: nothing is sent to the customer.
+
+### Receipt commands
+
+```
+uv run purchase-cycle receipts run [--checkpoints FILE] [--notes-dir DIR]
+uv run purchase-cycle receipts list
+uv run purchase-cycle receipts show CDN-0001
+```
+
+`receipts run` prints each receipt (`RCP-NNNN`) with its delivery note, purchase order and units or failure reason, each served order with its note, each skipped order with its missing units and each file written, or `nothing changed`.
+`receipts list` prints every receipt and every customer delivery note with its order and customer, and `receipts show` prints the text of one note; an unknown or malformed reference exits 1 with a message and changes nothing.
+`--db` is a global option placed before the subcommand, and the state is in the database, so each command can run in its own process.
+Each run is the thread `receipt-run-NNNN` in the checkpoint file; a run that stopped before its end is resumed by the next `receipts run`, which ends with the same rows, stock and files as an uninterrupted run.
+
+### Run the receipt demo
+
+```
+uv run purchase-cycle receipt-demo
+```
+
+`receipt-demo` starts from a fresh database in `data/receipt-demo/` (`--workdir <folder>` to change it).
+It seeds the seven purchase orders of `examples/receipts/purchase_orders.json` (the phase 08 file with the gauze order raised to 50 units so one delivery is short) and the five customer orders of `examples/receipts/customer_orders.json`, then runs each step as its own process: `reconcile scan examples/invoices/documents`, `receipts run`, `reconcile scan examples/invoices/later`, `receipts run`, `receipts list` and a `receipts show` of each note.
+It prints the stock before and after each run, and ends with a summary of two receipts from matched invoices, four from invoices with discrepancies, one received only after the later scan, one short delivery, one order served after waiting for stock, one order skipped for lack of stock and no receipt for the two unlinked documents; it exits non-zero when any of these is missing.
+By default (`--mode replay`) it reads the extraction answers from the phase 08 recording `evals/recordings/reconcile_demo.jsonl` and needs no key and no network; a test inside `npm run check` runs it with the network blocked.
+`--mode record` and `--mode live` behave as in `reconcile-demo`.
+
+### Limitations of the receipt step
+
+- Whole orders only: an order waits until every line is covered, and no partial delivery or backorder is made.
+- One delivery note per purchase order; a short delivery is closed short and the remainder is bought again through `quotes scan`.
+- Serving is a first pass by ascending order id: an order skipped for lack of stock waits for the next `receipts run`, and a smaller later order may take the stock first.
+- A delivery note that fails is stored as a `failed` receipt and parked once; it is never retried, so a corrected note needs a new document.
+- `receipts run` resumes the highest unfinished `receipt-run-NNNN` thread before it starts a new one.
+- Stock is a single number per SKU, with no reservation, location, lot or expiry.
+- The customer delivery note is a local text file; nothing is sent to the customer.
+- The delivered quantity read by the model goes into stock with no human check (SEC-022 in `docs/security.md`).
+- The phase 08 limitations remain: one invoice and one delivery note per order, fixed tolerances, and the DOC-060 and DOC-112 extraction errors until their change lands.
+
 ## Watch the graphs in LangGraph Studio
 
 ```
@@ -565,7 +640,7 @@ Limits:
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and the sixteen evaluations in replay mode.
+Runs the method's hook tests, ruff, pytest and the seventeen evaluations in replay mode.
 
 ## The golden dataset
 
@@ -712,7 +787,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the sixteen evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
+`npm run eval` replays the seventeen evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:
@@ -844,7 +919,13 @@ The grader reads the database, the outbox and `failures` against an oracle apart
 Scenario success is 100.0% (90.1% to 100.0%, 35 of 35) with 0 critical errors; the gate is 100% success and 0 critical errors.
 The whole phase cost about 0.18 USD of live calls (84 calls).
 
-`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the nine dataset evaluations once; `--suite <name>` uploads one; `offer_extraction` and `claim_drafting` are uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait`, `quote_decision`, `reconciliation_matching` and `claim_approval` are not).
+`uv run purchase-cycle eval --suite goods_receipt` runs the 39 scenarios `GR-001` to `GR-039` of `evals/datasets/goods_receipt/` through the same functions and commands as the CLI on a temporary database, with a model double that fails the scenario if it is called, so no model is called and there is no split or baseline.
+They cover receipts from matched and discrepancies invoices, every claim status, delivery notes with no receipt (invoice awaiting, unlinked, no invoice), a later scan, short and over deliveries, a SKU not on the purchase order, an unknown SKU and a fractional quantity parked, serving in id order, a large order skipped, an order covered before any receipt, a multi-line order with one short line, a re-run, a crash and resume and a restart, at least two scenarios each.
+The grader reads the database, the files and `failures` against an oracle apart from the module and counts nine critical errors: negative stock, a stock change different from received minus served, a note received twice or a non-candidate received, an order served twice or with two notes, a served order not covered, note lines different from the order lines, an order served out of arrival order, a file without its row or a row without its file, and a model call.
+Scenario success is 100.0% (91.0% to 100.0%, 39 of 39) with 0 critical errors; the gate is 100% success and 0 critical errors.
+It runs in seconds and costs nothing.
+
+`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the nine dataset evaluations once; `--suite <name>` uploads one; `offer_extraction` and `claim_drafting` are uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait`, `quote_decision`, `reconciliation_matching`, `claim_approval` and `goods_receipt` are not).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
 Recordings in `evals/recordings/` are tied to the exact prompt and model: changing either needs a new recording and a new comparison against the baseline.
 
@@ -877,12 +958,12 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - Suppliers are simulated by email files; nothing is sent or received over a network.
 - Offers come from simulated reply files; no currency conversion, minimum order quantity, shipping cost or payment terms are modelled, and an offer in another currency is shown as unusable.
 - No order is split between suppliers. A partial order leaves the rest of the shortfall without a new request, because phase 06 nets every earlier request out of the shortfall whatever its status; the same holds for `rejected` and `no_offers` requests, so there is no automatic re-quote after a rejection or a request with no offers, and the person has to handle them.
-- Stock and customer orders are not updated when a purchase order is issued; phase 08 matches delivery notes to purchase orders but does not change stock either, so receiving the goods stays out of scope.
+- Stock and customer orders are not updated when a purchase order is issued; stock changes only when phase 10 receives a reconciled delivery note.
 - Working days ignore holidays, as the simulated clock does.
 - A database made by phase 06 code needs a new seeded file because the status check of `quote_requests` is wider and SQLite cannot change it in place.
 - The text writer and the evaluated model belong to the same family, so the `offer_extraction` figures may be optimistic, and a price per pack read as a price per sale unit is the most costly extraction error, which is why it has its own category and counts as a critical error.
 - The LangSmith trace of a live `quotes-demo` decision and the experiment of `offer_extraction` are pending until the LangSmith trace quota resets, around 2026-11-05.
-- Stock is not reserved or decremented, so demand is the sum of stored `received` orders.
+- Stock is not reserved when an order is stored, so demand is the sum of stored `received` orders; phase 10 decrements it when an order is served.
 - The simulated clock has no business days, holidays or time zones, and nothing ticks by itself: an operator or the demo runs `quotes tick`.
 - A supplier reply is accepted on the subject reference and the sender address in the file; there is no sender authentication, as in the email channel.
 - Supplier documents come from simulated files; nothing is received or sent over a network, and no scanned or image PDF is read.
