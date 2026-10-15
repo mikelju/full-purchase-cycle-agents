@@ -3,6 +3,7 @@
 Deterministic: no model is called here.
 """
 
+import math
 import sqlite3
 import unicodedata
 from pathlib import Path
@@ -15,6 +16,7 @@ from purchase_cycle import db, sim_clock
 CHANNEL = "receipts"
 STEP = "goods_receipt"
 COMPANY = "Distribuciones Sanitarias Demo S.L."
+MAX_QUANTITY = 2**63 - 1  # the largest value of a SQLite INTEGER
 
 
 def candidates(conn: sqlite3.Connection) -> list[int]:
@@ -35,6 +37,8 @@ def _problem(conn: sqlite3.Connection, lines: list[sqlite3.Row]) -> str | None:
         sku, quantity = line["sku"], line["quantity"]
         if sku is None or conn.execute("SELECT 1 FROM products WHERE sku = ?", (sku,)).fetchone() is None:
             return f"line {line['line_no']} has no catalog SKU: {sku or line['product_text']}"
+        if not math.isfinite(quantity) or quantity > MAX_QUANTITY:
+            return f"line {line['line_no']} has quantity {quantity:g}, not a number that fits the stock"
         if quantity != int(quantity) or quantity <= 0:
             return f"line {line['line_no']} has quantity {quantity:g}, not a whole positive number"
     return None

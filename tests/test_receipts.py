@@ -466,3 +466,18 @@ def test_the_graph_never_reaches_a_model_client(tmp_path, monkeypatch):
     monkeypatch.setattr(llm.ModelClient, "_call_model", boom)
     db_path, notes, saver = _scenario(tmp_path / "nomodel")
     assert receipts.run_receipts(db_path, notes, saver)["issued"]
+
+
+@pytest.mark.parametrize("quantity", [float("inf"), 1e19])
+def test_an_infinite_or_oversized_quantity_is_parked_and_the_next_note_is_received(tmp_path, quantity):
+    conn = _conn(tmp_path)
+    before = _stock(conn, A)
+    bad = _note(conn, "DN-1", lines=((A, quantity),))
+    ok = _note(conn, "DN-2", lines=((A, 7),))
+    done = receipts.receive(conn)
+    assert [d["status"] for d in done] == ["failed", "received"]
+    assert _receipt_rows(conn) == [(bad, "failed"), (ok, "received")]
+    assert len(db.list_failures(conn)) == 1
+    assert _stock(conn, A) == before + 7
+    assert receipts.candidates(conn) == []
+
