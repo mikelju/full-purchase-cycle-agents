@@ -14,7 +14,7 @@ from purchase_cycle import db, sim_clock
 
 CHANNEL = "receipts"
 STEP = "goods_receipt"
-COMPANY = "Sanitas Distribuciones S.L."
+COMPANY = "Distribuciones Sanitarias Demo S.L."
 
 
 def candidates(conn: sqlite3.Connection) -> list[int]:
