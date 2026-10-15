@@ -1,6 +1,6 @@
 From: Jon Arrieta <jon.cli-004@example.com>
 To: orders@purchase-cycle.example
-Subject: Order Policlinica Gipuzkoa Norte
+Subject: Order Clinica Demo Gipuzkoa
 Date: Wed, 21 Oct 2026 12:16:00 +0000
 Message-ID: <eml-0172@dataset.purchase-cycle.example>
 Content-Type: text/plain; charset="utf-8"
@@ -23,4 +23,4 @@ Our order for the coming week:
 Thanks, and please split the delivery if some items are back-ordered.
 
 Jon
-Policlinica Gipuzkoa Norte
+Clinica Demo Gipuzkoa
