@@ -31,7 +31,7 @@ Owner approval of 2026-10-15 ("go ahead, Phoenix first"): build the change, push
 
 ## Decisions
 Only changes of approach or scope with their reason.
-- `npm run phoenix` runs `uvx --from arize-phoenix==20.18.0 python src/purchase_cycle/phoenix_server.py`, a Python launcher inside the Phoenix environment, because `phoenix serve` takes no host or folder flags and npm on Windows runs scripts in `cmd`, where `VAR=value cmd` does not work.
+- `npm run phoenix` runs `uvx --exclude-newer 2026-10-01 --from arize-phoenix==20.18.0 python src/purchase_cycle/phoenix_server.py`, a Python launcher inside the Phoenix environment, because `phoenix serve` takes no host or folder flags and npm on Windows runs scripts in `cmd`, where `VAR=value cmd` does not work.
   The launcher sets `PHOENIX_HOST=127.0.0.1`, `PHOENIX_WORKING_DIR=data/phoenix` and `PHOENIX_TELEMETRY_ENABLED=false`, then calls Phoenix's own `phoenix serve` entry point; uvx works on Windows, so no dev group is needed for the server.
   It replaces the first inline Node launcher, which could not change the gRPC receiver.
 - Phoenix data lives in `data/phoenix/`, already ignored with `data/`, so `.gitignore` is unchanged.
@@ -44,7 +44,14 @@ Only changes of approach or scope with their reason.
 - Exact pins released before 2026-10-01: `arize-phoenix==20.18.0`, `arize-phoenix-otel==0.17.1` and `openinference-instrumentation-langchain==0.1.76`.
   `arize-phoenix-otel==0.17.2` needs OpenTelemetry 1.45, which forced `langgraph-api` (LangGraph Studio) down from 0.16.0 to 0.10.3; 0.17.1 keeps every locked version unchanged and only adds packages.
 - The two client packages are runtime dependencies, because `src/purchase_cycle/config.py` imports them during a normal CLI run; the imports are lazy, so nothing loads without the variable.
-- Opt-in variable `PHOENIX_TRACING=true`, project `purchase-cycle`, endpoint `http://127.0.0.1:6006/v1/traces`, spans exported one by one so a short CLI run loses none at exit.
+- Opt-in variable `PHOENIX_TRACING=true`, project `purchase-cycle`, endpoint `http://127.0.0.1:6006/v1/traces`.
+- Review fix: spans leave through a batch processor with a 1 s export timeout instead of one by one, because with Phoenix down each span blocked about 10 s (OTLP retries).
+  The SDK flushes the batch at exit, so a short CLI run still delivers every span (`.evidence/cambio-013/c2-replay-spans.txt`).
+  Replay demo with Phoenix down: 32.5 s one by one, 13-14 s batched with the default 10 s timeout, 6.5 s batched with 1 s, against 3.8 s without tracing.
+- Review fix, owner rule that every unused Phoenix feature is off: the launcher also sets `PHOENIX_ENABLE_MCP_SERVER=false`, because `/mcp` had no login and answered any browser origin with `Access-Control-Allow-Origin: *`, and `PHOENIX_ALLOWED_SANDBOX_PROVIDERS=NONE`.
+  The pinned version still sends `Access-Control-Allow-Origin: *` on `/oauth2/register`, `/oauth2/token`, `/oauth2/revoke` and `/.well-known/*`, with no setting to stop it; with authentication off they return only the static UI page or static metadata, while `/v1` and `/graphql` send no CORS header (`.evidence/cambio-013/c1.txt`).
+- Review fix: `--exclude-newer 2026-10-01` freezes the launcher's transitive dependencies; the Phoenix version has one source, the `phoenix` script of `package.json`.
+- Review fix: a test walks every script `npm run check` reaches in `package.json` and requires each one that runs Python or uv to be covered by the guard.
 - `configure_tracing` calls `configure_phoenix_tracing` last, so every entry point that already sets up LangSmith also honours the opt-in.
 - Guard: Phoenix is never set up when `PYTEST_VERSION` is set (pytest sets it for the whole session) or when `npm_lifecycle_event` is `check`, `check:puerta`, `check:python` or `eval`, the scripts `npm run check` runs; replay runs outside those may trace, because Phoenix is local and free.
 - C2 real path first used a replay `demo`, which shows the graph and node spans but no model-call span, since replay answers from recordings without `ChatAnthropic`.
