@@ -47,10 +47,11 @@ def default_checkpoint_path() -> Path:
 
 
 def configure_tracing(mode: str) -> None:
-    """Tracing is only allowed when the real model is called.
+    """LangSmith tracing is only allowed when the real model is called.
 
     Replay runs, including the ones inside `npm run check`, never send traces
     even when the owner's `.env` enables them.
+    Local Phoenix tracing has its own opt-in, checked last.
     """
     if mode == "replay":
         from langsmith.utils import get_env_var
@@ -59,3 +60,36 @@ def configure_tracing(mode: str) -> None:
         for name in ("LANGSMITH_TRACING_V2", "LANGCHAIN_TRACING_V2", "LANGSMITH_TRACING", "LANGCHAIN_TRACING"):
             os.environ[name] = "false"
         get_env_var.cache_clear()
+    configure_phoenix_tracing()
+
+
+PHOENIX_ENDPOINT = "http://127.0.0.1:6006/v1/traces"  # the server started by `npm run phoenix`
+PHOENIX_PROJECT = "purchase-cycle"
+_phoenix_provider = None
+
+
+def phoenix_tracing_allowed() -> bool:
+    """Local Phoenix tracing is opt-in and never runs inside pytest or `npm run check`."""
+    if os.environ.get("PHOENIX_TRACING", "").strip().lower() != "true":
+        return False
+    if "PYTEST_VERSION" in os.environ:  # pytest sets it for the whole session
+        return False
+    # npm names the running script; `npm run check` runs its Python steps and the replay eval through these.
+    return os.environ.get("npm_lifecycle_event", "") not in ("check", "check:puerta", "check:python", "eval")
+
+
+def configure_phoenix_tracing():
+    """Send LangChain and LangGraph spans to the local Phoenix when `PHOENIX_TRACING=true`.
+
+    The imports stay inside the function so nothing loads without the variable.
+    """
+    global _phoenix_provider
+    if _phoenix_provider is not None or not phoenix_tracing_allowed():
+        return _phoenix_provider
+    from openinference.instrumentation.langchain import LangChainInstrumentor
+    from phoenix.otel import register
+
+    # Spans are exported one by one so a short CLI run loses none at exit.
+    _phoenix_provider = register(project_name=PHOENIX_PROJECT, endpoint=PHOENIX_ENDPOINT, batch=False, verbose=False)
+    LangChainInstrumentor().instrument(tracer_provider=_phoenix_provider)
+    return _phoenix_provider
