@@ -49,6 +49,8 @@ DEMO_INVOICES = config.ROOT / "examples" / "invoices"
 RECONCILE_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "reconcile_demo.jsonl"  # the document extraction
 RECONCILE_DEMO_CLAIM_RECORDINGS = config.EVALS_DIR / "recordings" / "claim_demo.jsonl"  # the claim drafting
 RECONCILE_DEMO_WORKDIR = config.DATA_DIR / "reconcile-demo"
+DEMO_RECEIPTS = config.ROOT / "examples" / "receipts"
+RECEIPT_DEMO_WORKDIR = config.DATA_DIR / "receipt-demo"
 # Which discrepancies invoice gets which decision; the fourth stays awaiting approval.
 RECONCILE_DEMO_CLAIMS = {"approve": "N-77002", "edit": "LV-0303", "reject": "F-2026-1004", "wait": "N-77005"}
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
@@ -731,6 +733,145 @@ def cmd_reconcile_demo(args) -> int:
         print("Error: the demo did not end with every outcome", file=sys.stderr)
         return 1
     return _reconcile_demo_claims(args, files, step)
+
+
+def _stock_line(files: dict, label: str, skus: list) -> None:
+    conn = db.connect(files["db"])
+    try:
+        rows = {s: conn.execute("SELECT on_hand FROM stock WHERE sku = ?", (s,)).fetchone()[0] for s in skus}
+    finally:
+        conn.close()
+    print(f"{label}: {'  '.join(f'{sku}={quantity}' for sku, quantity in rows.items())}")
+
+
+def cmd_receipt_demo(args) -> int:
+    """The sample documents and customer orders through scan, receipts run, a later scan and receipts run, each step in its own process."""
+    import subprocess
+
+    receipts_dir, workdir = Path(args.receipts), Path(args.workdir)
+    if workdir.resolve() == config.DATA_DIR.resolve():
+        print(f"Error: --workdir {args.workdir} is the data folder; pick another folder", file=sys.stderr)
+        return 1
+    files = {"db": workdir / "business.db", "checkpoints": workdir / "checkpoints.sqlite"}
+    notes_dir = workdir / "customer_delivery_notes"
+    workdir.mkdir(parents=True, exist_ok=True)
+    for path in (files["db"], files["checkpoints"]):
+        path.unlink(missing_ok=True)
+    for old in notes_dir.glob("*.txt") if notes_dir.is_dir() else []:
+        old.unlink()
+    customer_orders = json.loads((receipts_dir / "customer_orders.json").read_text(encoding="utf-8"))
+    conn = db.connect(files["db"])
+    try:
+        db.seed(conn)
+        seeded = reconciliation.seed_demo_orders(conn, receipts_dir / "purchase_orders.json")
+        for order in customer_orders:
+            lines = [(line["sku"], line["quantity"]) for line in order["lines"]]
+            db.insert_order(conn, order["customer_code"], "demo", "received", lines)
+        skus = sorted({r[0] for r in conn.execute("SELECT sku FROM purchase_orders")})
+        skus += sorted({line["sku"] for order in customer_orders for line in order["lines"]} - set(skus))
+    finally:
+        conn.close()
+    print(f"receipt-demo  mode={args.mode}  examples={args.examples}  receipts={args.receipts}  workdir={args.workdir}")
+    print(f"purchase orders seeded: {seeded}  customer orders seeded: {len(customer_orders)}")
+    scan = [
+        "--mode",
+        args.mode,
+        "--recordings",
+        str(RECONCILE_DEMO_RECORDINGS),
+        "--checkpoints",
+        str(files["checkpoints"]),
+    ]
+    number = 0
+
+    def step(*command) -> bool:
+        nonlocal number
+        number += 1
+        run = subprocess.run(
+            [sys.executable, "-m", "purchase_cycle.cli", "--db", str(files["db"]), *command],
+            capture_output=True,
+            text=True,
+        )
+        print()
+        print(f"== step {number}: purchase-cycle {' '.join(command[:2])}  (own process, exit code {run.returncode})")
+        if run.returncode != 0:
+            print(f"Error: step {number} failed: {run.stderr.strip()}", file=sys.stderr)
+            return False
+        for line in run.stdout.splitlines():
+            print(f"  {line}")
+        return True
+
+    def receipts_run() -> bool:
+        print()
+        _stock_line(files, "stock before", skus)
+        if not step("receipts", "run", "--checkpoints", str(files["checkpoints"]), "--notes-dir", str(notes_dir)):
+            return False
+        _stock_line(files, "stock after", skus)
+        return True
+
+    def counts() -> tuple:
+        conn = db.connect(files["db"])
+        try:
+            return (
+                {r[0] for r in conn.execute("SELECT id FROM goods_receipts")},
+                {r[0]: r[1] for r in conn.execute("SELECT id, status FROM orders")},
+            )
+        finally:
+            conn.close()
+
+    if not step("reconcile", "scan", str(Path(args.examples) / "documents"), *scan) or not receipts_run():
+        return 1
+    first_receipts, first_orders = counts()
+    if not step("reconcile", "scan", str(Path(args.examples) / "later"), *scan) or not receipts_run():
+        return 1
+    if not step("receipts", "list"):
+        return 1
+    conn = db.connect(files["db"])
+    try:
+        notes = [r[0] for r in conn.execute("SELECT id FROM customer_delivery_notes ORDER BY id")]
+        received = conn.execute(
+            "SELECT g.id, r.result FROM goods_receipts g JOIN reconciliations r ON r.delivery_note_id = g.delivery_note_id "
+            "WHERE g.status = 'received'"
+        ).fetchall()
+        short = conn.execute(
+            "SELECT COUNT(DISTINCT g.id) FROM goods_receipt_lines l JOIN goods_receipts g ON g.id = l.receipt_id "
+            "JOIN purchase_orders p ON p.id = g.purchase_order_id WHERE g.status = 'received' AND l.quantity < p.quantity"
+        ).fetchone()[0]
+        unlinked = conn.execute("SELECT COUNT(*) FROM supplier_documents WHERE status = 'unlinked'").fetchone()[0]
+        unlinked_receipts = conn.execute(
+            "SELECT COUNT(*) FROM goods_receipts g JOIN supplier_documents d ON d.id = g.delivery_note_id "
+            "WHERE d.status = 'unlinked'"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    for note in notes:
+        if not step("receipts", "show", f"CDN-{note:04d}"):
+            return 1
+    final_receipts, final_orders = counts()
+    late = len(final_receipts - first_receipts)
+    waited = [o for o, status in final_orders.items() if status == "served" and first_orders[o] == "received"]
+    skipped = [o for o, status in final_orders.items() if status == "received"]
+    results = {result for _, result in received}
+    print()
+    print("summary:")
+    print(f"receipts from matched invoices: {sum(r == 'matched' for _, r in received)}")
+    print(f"receipts from discrepancies invoices: {sum(r == 'discrepancies' for _, r in received)}")
+    print(f"receipts only after the later scan: {late}")
+    print(f"short deliveries: {short}")
+    print(f"orders served after waiting for stock: {', '.join(f'ORD-{o:04d}' for o in waited) or 'none'}")
+    print(f"orders skipped for lack of stock at the end: {', '.join(f'ORD-{o:04d}' for o in skipped) or 'none'}")
+    print(f"unlinked documents: {unlinked}  receipts of unlinked documents: {unlinked_receipts}")
+    if (
+        results != {"matched", "discrepancies"}
+        or not late
+        or not short
+        or not waited
+        or not skipped
+        or not unlinked
+        or unlinked_receipts
+    ):
+        print("Error: the demo did not end with every outcome, for example no short delivery", file=sys.stderr)
+        return 1
+    return 0
 
 
 def _reconcile_demo_claims(args, files: dict, step) -> int:
@@ -1827,6 +1968,25 @@ def main(argv=None) -> int:
         help="recordings file for the claim drafting",
     )
     reconcile_demo.set_defaults(handler=cmd_reconcile_demo)
+
+    receipt_demo = sub.add_parser(
+        "receipt-demo",
+        help="run the sample documents and customer orders to the delivery notes, each step in its own process",
+    )
+    receipt_demo.add_argument("--examples", default=str(DEMO_INVOICES), help="folder of sample supplier documents")
+    receipt_demo.add_argument(
+        "--receipts", default=str(DEMO_RECEIPTS), help="folder of purchase_orders.json and customer_orders.json"
+    )
+    receipt_demo.add_argument(
+        "--workdir", default=str(RECEIPT_DEMO_WORKDIR), help="folder for the demo database, checkpoints and notes"
+    )
+    receipt_demo.add_argument(
+        "--mode",
+        choices=config.MODES,
+        default="replay",
+        help="document extraction mode; record needs ANTHROPIC_API_KEY",
+    )
+    receipt_demo.set_defaults(handler=cmd_receipt_demo)
 
     from purchase_cycle.receipts_cli import add_receipts_commands
 
