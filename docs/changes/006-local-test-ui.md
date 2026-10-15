@@ -1,0 +1,115 @@
+# 006 - Local test page for the orders channels
+
+Status: delivered (PR to `main`, pending owner merge)
+
+## Contract
+Goal and reason:
+The owner wants to try the orders module by hand from a browser, without preparing files or typing CLI commands.
+One local page lets the owner pick a channel (web form, email or WhatsApp) and a seeded customer, browse the catalog, send an order and read what the system answers: stored order, clarification question, not an order, under review or rejected.
+When the system asks a question, the owner answers it from the same page and the paused order resumes.
+Everything stays simulated: the page writes the same inputs the channels already read and runs them through the existing router and graphs.
+The owner decided on 2026-10-13 that this is a standalone change, not a phase, and that a real WhatsApp connection (Meta Cloud API with its free test number) is a later step.
+Out of scope:
+The graphs, prompts, recordings, datasets, evaluations and baselines.
+The quotes module beyond starting quote requests (C12) and any later module; a real WhatsApp, email or web connection; authentication, deployment or access from another machine.
+Supplier replies, quote decision and approval on the page (a later change).
+Sample buttons, styling beyond a plain usable page, and a mobile layout.
+Constraints / decisions that need the owner:
+- No new dependency: the server uses the Python standard library (`http.server`) and the page is one HTML file with plain JavaScript, no CDN.
+- Model cost: live mode (Claude Haiku 4.5) is the default, because free text only works live; a few cents per order, and it needs the model key in `.env`.
+  `--mode replay` costs nothing but only understands the recorded sample texts of `examples/orders/`.
+- LangSmith trace cost: none; the command forces tracing off, as the Studio module does, so the page does not spend the trace quota.
+Current authorization and limits:
+Owner request 2026-10-13 to draft this contract; approved by the owner on 2026-10-13.
+Delivery is the work branch `cambio-006-local-test-ui`, created from `main` after phase 07 was merged (PR #13), and a PR to `main`.
+
+| ID | Observable criterion | Evidence when verifying |
+|---|---|---|
+| C1 | `purchase-cycle ui [--mode live\|replay] [--port N]` serves the page on `127.0.0.1` only, on its own database `data/ui/purchase_cycle.db` (seeded on first use), checkpoints and outbox under `data/ui/`, never the business database; LangSmith tracing is forced off | `tests/test_ui.py`; `git diff` |
+| C2 | The page lists the catalog (SKU, name, family, sale unit, price and stock) with a text filter, and the seeded customers with the email and phone each channel uses to identify them | `tests/test_ui.py` (JSON endpoints); owner walkthrough |
+| C3 | Sending from the page writes one input in the channel's own format (web form JSON with catalog-assisted lines, `.eml` from the customer's email, WhatsApp message from the customer's phone) and runs it through `router.run_inbox`; the answer shows the route, the thread id, the outcome and the reply text the customer would get | `tests/test_ui.py` |
+| C4 | A clarification question shows on the page; for WhatsApp the answer is a new message from the same phone, as the router already resumes it, and for web form and email the answer resumes the thread as `clarify answer` does; the resumed order shows its outcome | `tests/test_ui.py` |
+| C5 | In replay, with no key and the network blocked, the sample texts of `examples/orders/` sent through the page give the same outcomes as `purchase-cycle orders-demo` (its recordings `orders_demo.jsonl`) on that folder: stored orders, the WhatsApp doubt paused and then stored with the recorded answer, and the photo message answered as text only | `tests/test_ui.py` |
+| C6 | A malformed request (unknown channel or customer, empty text, missing answer) returns a JSON error that the page shows, never a traceback; a failed graph run shows its error and keeps the server running | `tests/test_ui.py` |
+| C7 | README section "Try the orders by hand": command, URL, live and replay modes with their cost, how to answer a question, how to start over, and the limits | README; followed step by step in item 4 |
+| C8 | Owner walkthrough in live mode: one order per channel, one clarification answered from the page, and the stored orders visible in the outcome | Owner sees it; notes in Delivery |
+| C9 | `npm run check` exits 0 and the replay evaluations are unchanged | Command output |
+| C10 | Each conversation with a stored order shows an "Order" block: per line SKU, name, quantity, unit price (current catalog price), line amount and current stock, with a visible warning when the quantity exceeds the stock, and the order total; lines not recognised or removed in the clarification are listed too. Information only: no business logic changes | tests/test_ui.py |
+| C11 | The page has a read-only "Database" view of its own database `data/ui/purchase_cycle.db`: orders, order lines, stock, quote requests, quote offers and purchase orders, refreshed on demand; it never writes | `tests/test_ui.py` |
+| C12 | A "Check stock shortfalls" button runs the existing `quotes.scan` on the page's database, checkpoints and outbox under `data/ui/`, and shows each shortfall (SKU, units asked, stock, already requested, shortfall) and the quote requests it started with their supplier request emails in the outbox; a second press with nothing new says so; no model call and no change to the quotes graph | `tests/test_ui.py` |
+
+## Plan
+- [x] 1. `tests/test_ui.py` first (failing), then `src/purchase_cycle/ui.py` (server, JSON endpoints, input writers, router call and resume) and the `ui` CLI command; C1 to C6.
+  Evidence: `uv run pytest -q tests/test_ui.py` -> 23 passed (replay, no key, only loopback connections allowed); `ruff check` and `ruff format --check` clean.
+- [x] 2. The page `src/purchase_cycle/ui.html`: catalog with filter, channel and customer pickers, one input form per channel, the conversation with outcomes and the answer box; C2 to C4.
+  Evidence: `uv run pytest -q tests/test_ui.py` -> 25 passed (page served with its controls, no external URL; wheel built with `uv build --wheel` holds `purchase_cycle/ui.html`); script checked with `node --check`.
+- [x] 3. README section and `.gitignore` for `data/ui/`; C7.
+  Evidence: README section "Try the orders by hand" added; `data/` is already ignored (`git check-ignore -v data/ui/x` -> .gitignore:13). Real server on port 8766 in replay: the WhatsApp doubt sample asked its question, the answer message resumed it and stored order 1; an unknown channel returned a JSON error. `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py` -> 138 passed; `npm run --silent eval` -> failures: 0, no file changed.
+- [x] 4. Order block on each conversation (tests first, then `ui.py` and `ui.html`); C10.
+  Evidence: the 5 new `test_c10_*` tests failed first, then `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py` -> 152 passed; `ruff check` and `ruff format --check` clean; script checked with `node --check`. Replay server on port 8772 with a temporary data dir: sample 01 sent to `/api/send` stored, and `/api/conversations` returned the order block (2 lines, total 169.2).
+- [x] 5. Database view and stock shortfall check (tests first, then `ui.py` and `ui.html`); C11, C12.
+  Evidence: the 7 new `test_c11_*` and `test_c12_*` tests failed first (7 failed, 39 deselected); then `uv run pytest -q tests/test_ui.py tests/test_router.py tests/test_clarification.py tests/test_secrets.py tests/test_quote*.py` -> 288 passed; `ruff check` and `ruff format --check` clean (139 files); script checked with `node --check`. Replay server on port 8773 with a temporary data dir: sample 01 sent to `/api/send` stored with stock set to 3, `POST /api/quotes/scan` returned 2 shortfalls and started QR-0001 (3 emails) and QR-0002 (2 emails), a second scan said no new requests, `GET /api/database` returned 6 tables (1 order, 2 lines, 2 quote requests) and the outbox held the 5 `.eml` files; the server was stopped and port 8773 no longer listens.
+- [x] 6. Owner walkthrough in live mode; C8.
+  Evidence: owner decision 2026-10-13: walked through the page in live mode (one order per channel, clarification, order block, database view, shortfall check) and approved the three-column layout ("it is perfect").
+- [x] 7. Adversarial review, `npm run check`, push and PR to `main`; C9.
+  Evidence: review rounds 1-3 in the table above; check result and PR in Delivery.
+
+## Decisions
+The page runs every input through `router.run_inbox`, so it exercises the same path as `purchase-cycle route` and gets idempotency, duplicate handling and WhatsApp resumption for free.
+Each send gets its own inbox folder under `data/ui/inbox/`, which also leaves a record of what was sent.
+Replay is not the default, unlike Studio in change 004: the point of the page is typing new orders, which only live mode understands.
+Replay reuses `studio.StudioModelClient` with `orders_demo.jsonl` plus `studio.jsonl`, so it answers the sample texts and the Studio scenes.
+Sample 06 (a re-delivered message id) is excluded from the C5 test, because the page gives every send a new message id.
+WhatsApp accepts an optional `"type": "image"` and the page a "send a photo" checkbox, so sample 05 can be sent.
+Extra endpoints: `/api/info` (mode) and `/api/conversations` (reads the log `data/ui/conversations.jsonl`); every request also passes a Host header check (127.0.0.1 or localhost).
+Owner walkthrough on 2026-10-13 in live mode: the page works; the owner asked for a three-column layout (new order left, catalog, shortfalls and database centre, conversations right) so the cards are reachable without long scrolling.
+A WhatsApp answer sent to `/api/answer` returns 400, because it is a new message from the same customer.
+Request limits: 100 KB per request, 4000 characters per text, 50 lines per form.
+An occupied port gives a friendly error, and so does a port outside 1-65535.
+Review round 1 decisions: a POST with an `Origin` header other than `http://127.0.0.1:<port>` or `http://localhost:<port>` gets 403, and a POST whose `Content-Type` is not `application/json` gets 415 (CSRF, CWE-352).
+The server is a `ThreadingHTTPServer` with a 30 s handler timeout, so an idle pre-connect socket does not block the page; graph runs and log writes stay serialised by `UiApp.lock`, and reads tolerate a half-written log line.
+An `answer_rejected` entry counts as pending like `question`, and a WhatsApp thread shows its answer control only when it is the customer's latest pending clarification, as the router decides.
+A run parked by recovery shows as `under_review` (status only, no notice text).
+C5 wording changed by the owner on 2026-10-13 from `purchase-cycle route` to `purchase-cycle orders-demo`: `route` in replay has no recordings for the sample texts (review round 1).
+A 500 returns the exception class and a generic message; the detail goes to the server's stderr.
+The `outcome` of a failed run still carries the first line of the exception text (shown on the local page and kept in the log).
+The owner added C10 on 2026-10-13 after the first walkthrough; stock is not checked or reserved when an order is stored, so the stock shown is the current `stock.on_hand` and the warning is informative only; the graph steps path was offered and not chosen.
+The owner added C11 and C12 on 2026-10-13: a read-only database view and a button that runs `quotes scan`; the full quotes cycle on the page was offered and left for a later change; stock is still not reserved when an order is stored.
+Review round 3 decisions: the scan result carries `blocked`, the SKUs still short whose new demand a waiting request holds back (read-only SQL in `ui.py`, same formula as `quotes.shortfalls`), and the message tells apart nothing short, only blocked, and started.
+The order block is computed when the conversations are read, from the entry's `order_id`, so price and stock are current; the log no longer stores it and old log lines keep working.
+The shortage warning compares the order's total per SKU against the stock, and the unmatched list stays empty while a clarification question is pending.
+The request emails listed are those named `<reference>-request-*.eml` that also name the request's SKU, because `quotes.scan` does not return the paths.
+
+## Adversarial review
+| Round | Backend | Range | Lenses | Findings | Status |
+|---|---|---|---|---|---|
+| 1 | Claude Opus 5.5 subagents | `origin/main..0f7da4a` | Security; Correctness (two independent runs) | Important: no Origin or Content-Type check on POST (CWE-352); rejected answer hid the answer control (C4); WhatsApp answer control shown when the router would start a new order (C4); single-threaded server with no timeout; `route` on `examples/orders` fails in replay, so C5 and the README name the wrong command. Minor: truncated log line gives 500; parked run shown as failed; raw exception text in 500s (CWE-209); `data/ui/` growth; port out of range; checkpointer never closed | Fixed in 441faf5 (SEC-012 widened for `data/ui/` growth); C5 wording pending the owner |
+| 2 | Claude Opus 5.5 subagent | `441faf5` | Security; Correctness | Medium: thread parked after a transient error shown as failed. Low: race in `conversations()` could give 500; app closed under an in-flight run and leaked on bind failure; rejected-answer test forced an impossible state. No Critical or High | Fixed in 2c521d2 |
+| 3 | Claude Opus 5.5 subagent | `90aee16..8058388` | Security; Correctness | Medium: false "nothing new" message when extra demand sits behind a waiting request. Medium: missing test coverage (earlier closed request) and a tautological `checkpoints.db exists` assertion. Low/Medium: lines under a pending question listed as not recognised. Low: shortage warning per line, not per SKU. Low: order block frozen in the log. Low: stale `.eml` files of an older database listed. Low: shortfall headers. Not fixed (Low): SKU without a stock row (the seed always creates one); a partly failed scan leaves its emails off the page (they show in the Database view and the outbox) | Fixed in 0e930f6 |
+
+## Delivery
+
+Result: the local test page `purchase-cycle ui` is delivered on branch `cambio-006-local-test-ui` with a PR to `main`, pending the owner's merge.
+PR: https://github.com/mikelju/full-purchase-cycle-agents/pull/16
+
+| ID | Status | Evidence |
+|---|---|---|
+| C1 | Met | `tests/test_ui.py` (loopback only, own database under `data/ui/`, tracing forced off) |
+| C2 | Met | `tests/test_ui.py` JSON endpoints; owner walkthrough |
+| C3 | Met | `tests/test_ui.py`; owner walkthrough, one order per channel in live mode |
+| C4 | Met | `tests/test_ui.py`; owner walkthrough, clarification answered from the page |
+| C5 | Met | `tests/test_ui.py` replay against `orders-demo` samples |
+| C6 | Met | `tests/test_ui.py` (JSON errors, 403 and 415 on POST checks, no traceback) |
+| C7 | Met | README section "Try the orders by hand" |
+| C8 | Met | Owner walkthrough 2026-10-13 in live mode; three-column layout approved |
+| C9 | Met | `npm run check` -> exit=0, 890 passed in 525 s, ruff clean, replay evaluations failures: 0 and no tracked file modified afterwards (output kept outside the repo) |
+| C10 | Met | `tests/test_ui.py` `test_c10_*`; owner walkthrough |
+| C11 | Met | `tests/test_ui.py` `test_c11_*`; owner walkthrough |
+| C12 | Met | `tests/test_ui.py` `test_c12_*`; owner walkthrough |
+
+Review: three adversarial rounds (table above), no Critical or High finding open.
+Open items:
+- Latent inconsistency: a SKU without a stock row (the seed always creates one) is not handled by the order block.
+- A partly failed scan leaves its request emails off the shortfall list; they show only in the outbox and the Database view.
+- A real WhatsApp connection (Meta Cloud API test number) is a later change.
+- The full quotes cycle on the page (supplier replies, decision, approval) is a later change.

@@ -7,10 +7,13 @@
 // el repositorio entero y ensuciaria la contribucion.
 // Sin comando el hook sale al instante. Un formateador que falla no bloquea nada
 // (la edicion ya ocurrio); con codigo 2 su salida llega al agente.
+// Solo se formatean archivos del proyecto, y un .json solo conserva el resultado si sigue
+// siendo JSON valido con el mismo contenido (cambio 009).
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { isAbsolute, join, relative } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { conComandosFiables, configProyecto, leerEntrada } from "./lib.mjs";
 
 const entrada = await leerEntrada().catch(() => ({}));
@@ -18,6 +21,10 @@ const archivo = entrada?.tool_input?.file_path;
 if (typeof archivo !== "string" || !archivo) process.exit(0);
 
 const raiz = process.env.CLAUDE_PROJECT_DIR || entrada.cwd || process.cwd();
+
+// Un archivo fuera del proyecto no es asunto de su formateador.
+const relativa = relative(raiz, archivo);
+if (!relativa || /^\.\.([\\/]|$)/.test(relativa) || isAbsolute(relativa)) process.exit(0);
 
 let config = null;
 try { config = configProyecto(raiz); } catch { process.exit(0); }
@@ -27,7 +34,7 @@ config = fiable.config;
 if (fiable.aviso) process.stderr.write(fiable.aviso);
 
 // Los documentos de trabajo del modo aporte no son parte del repositorio.
-if (config?.aporte && /^\.sdd([\\/]|$)/.test(relative(raiz, archivo))) process.exit(0);
+if (config?.aporte && /^\.sdd([\\/]|$)/.test(relativa)) process.exit(0);
 
 let plantilla;
 if (config?.formatear) {
@@ -56,9 +63,22 @@ if (!/^[\p{L}\p{N} _.,+\-\\/:@()[\]]+$/u.test(archivo)) {
   process.exit(2);
 }
 
+// Un formateador de Python aplicado a un .json deja comas finales: JSON invalido.
+const antes = /\.json$/i.test(archivo) && existsSync(archivo) ? readFileSync(archivo, "utf8") : null;
+
 const r = spawnSync(plantilla.replaceAll("{archivo}", `"${archivo}"`), {
   cwd: raiz, encoding: "utf8", shell: true, timeout: 30000,
 });
+
+if (antes !== null) {
+  let equivalente = false;
+  try { equivalente = isDeepStrictEqual(JSON.parse(readFileSync(archivo, "utf8")), JSON.parse(antes)); } catch {}
+  if (!equivalente) {
+    writeFileSync(archivo, antes);
+    process.stderr.write(`[SDD Lite] El formateador no dejo JSON valido y equivalente en ${archivo}; se restauro lo editado.\n`);
+    process.exit(2);
+  }
+}
 if (r.status === 0) process.exit(0);
 
 const salida = `${r.stdout || ""}\n${r.stderr || ""}`.trim().split(/\r?\n/).slice(-15).join("\n");
