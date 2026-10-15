@@ -114,6 +114,8 @@ def test_launcher_keeps_the_server_on_loopback_with_the_assistant_off():
     # The MCP server answers any browser origin without authentication; code sandboxes run code.
     assert env["PHOENIX_ENABLE_MCP_SERVER"] == "false"
     assert env["PHOENIX_ALLOWED_SANDBOX_PROVIDERS"] == "NONE"
+    # Without trusted origins Phoenix does not check `Origin`, so any web page could post to the API.
+    assert env["PHOENIX_CSRF_TRUSTED_ORIGINS"] == "http://127.0.0.1:6006,http://localhost:6006"
 
 
 def test_launcher_disables_the_grpc_receiver_or_refuses_to_start():

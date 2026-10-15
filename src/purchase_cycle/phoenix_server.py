@@ -8,6 +8,8 @@ so the launcher disables that receiver; traces go to the HTTP collector on 127.0
 Phoenix mounts an unauthenticated MCP server at `/mcp` that answers any browser origin
 (`Access-Control-Allow-Origin: *`), so a web page could read or delete traces; the launcher turns it off.
 Code sandboxes, the AI assistant and its tools are off too.
+Phoenix checks the `Origin` and `Referer` hostnames only when trusted origins are listed,
+so the launcher lists the local UI and a cross-origin request gets 401.
 """
 
 import inspect
@@ -27,6 +29,7 @@ SERVER_ENV = {
     "PHOENIX_AGENTS_DISABLE_GITHUB": "true",
     "PHOENIX_ENABLE_MCP_SERVER": "false",
     "PHOENIX_ALLOWED_SANDBOX_PROVIDERS": "NONE",
+    "PHOENIX_CSRF_TRUSTED_ORIGINS": "http://127.0.0.1:6006,http://localhost:6006",
 }
 
 
