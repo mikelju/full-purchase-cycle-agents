@@ -20,6 +20,8 @@ from langgraph.types import RetryPolicy
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from purchase_cycle.config import (
+    CLAIM_DRAFTING_MAX_TOKENS,
+    CLAIM_DRAFTING_RECORDINGS_PATH,
     CLARIFICATION_ANSWER_RECORDINGS_PATH,
     CLARIFICATION_MAX_TOKENS,
     CLARIFICATION_QUESTION_RECORDINGS_PATH,
@@ -322,6 +324,28 @@ class SupplierDocument(BaseModel):
     lines: list[SupplierDocumentLine] = Field(description="Every product line of the document")
 
 
+CLAIM_DRAFTING_INSTRUCTIONS = """You write the body of a claim email from a medical supplies distributor to a supplier about one invoice that differs from the purchase order.
+
+The user message is one JSON object with the facts: the invoice number, the purchase order, the supplier, every difference and the amount in dispute.
+Return the email body as plain ASCII English text, with no recipient or subject line.
+Rules:
+- Name the invoice number and the purchase order number.
+- List every difference by its SKU (or by its product text when the SKU is null) with its amount.
+- Write every amount as a number with two decimals followed by EUR, for example 1234.56 EUR, with no thousands separator.
+- State the amount in dispute.
+- Ask the supplier for a corrected invoice or a credit note.
+- Use only the numbers in the facts; never invent an amount, a date or a promise.
+"""
+
+
+class ClaimBody(BaseModel):
+    """Structured answer of the claim drafting node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    body: str = Field(description="The email body in plain ASCII English")
+
+
 @dataclass(frozen=True)
 class Task:
     """What the model is asked to do and where its recorded answers live."""
@@ -420,6 +444,15 @@ SUPPLIER_DOCUMENT_EXTRACTION = Task(
     SupplierDocument,
     SUPPLIER_DOCUMENT_RECORDINGS_PATH,
     SUPPLIER_DOCUMENT_MAX_TOKENS,
+)
+CLAIM_DRAFTING = Task(
+    "claim_drafting",
+    CLAIM_DRAFTING_INSTRUCTIONS,
+    "record_claim_body",
+    "Record the body of the claim email to the supplier.",
+    ClaimBody,
+    CLAIM_DRAFTING_RECORDINGS_PATH,
+    CLAIM_DRAFTING_MAX_TOKENS,
 )
 
 

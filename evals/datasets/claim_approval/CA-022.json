@@ -1,0 +1,42 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "claims": {
+      "INV-0001": null
+    },
+    "failures": 0,
+    "model_calls": 0,
+    "outbox": []
+  },
+  "id": "CA-022",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "invoices": [
+    {
+      "dispute": 0.0,
+      "draft": null,
+      "later": false,
+      "number": "F-2601",
+      "order": null,
+      "result": "unlinked",
+      "rows": [],
+      "supplier": "SUP-001"
+    }
+  ],
+  "steps": [
+    {
+      "exit": 0,
+      "op": "claims"
+    },
+    {
+      "exit": 1,
+      "invoice": "INV-0001",
+      "op": "reject"
+    }
+  ],
+  "tags": [
+    "no_claim_unlinked",
+    "no_claim_command"
+  ]
+}

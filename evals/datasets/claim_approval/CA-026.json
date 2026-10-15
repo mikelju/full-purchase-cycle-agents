@@ -1,0 +1,102 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "claims": {
+      "INV-0001": {
+        "edited": 0,
+        "sent_body": "Dear supplier,\n\nInvoice F-2601 does not match purchase order PO-0001:\n- GLV-NIT-XS: quantity 5 ordered, 6 invoiced, difference 4.00 EUR\nThe amount in dispute is 4.00 EUR.\nPlease send us a corrected invoice or a credit note.\n\nBest regards,\nPurchasing department",
+        "source": "model",
+        "status": "sent"
+      },
+      "INV-0002": {
+        "edited": 0,
+        "sent_body": "Dear supplier,\n\nInvoice F-2602 does not match purchase order PO-0002:\n- GLV-NIT-S: invoiced but not ordered, difference 10.00 EUR\nThe amount in dispute is 10.00 EUR.\nPlease send us a corrected invoice or a credit note.\n\nBest regards,\nPurchasing department",
+        "source": "model",
+        "status": "sent"
+      }
+    },
+    "failures": 0,
+    "model_calls": 2,
+    "outbox": [
+      "CLAIM-INV-0001-SUP-001.eml",
+      "CLAIM-INV-0002-SUP-002.eml"
+    ]
+  },
+  "id": "CA-026",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "invoices": [
+    {
+      "dispute": 4.0,
+      "draft": "Dear supplier,\n\nInvoice F-2601 does not match purchase order PO-0001:\n- GLV-NIT-XS: quantity 5 ordered, 6 invoiced, difference 4.00 EUR\nThe amount in dispute is 4.00 EUR.\nPlease send us a corrected invoice or a credit note.\n\nBest regards,\nPurchasing department",
+      "later": true,
+      "number": "F-2601",
+      "order": "PO-0001",
+      "result": "awaiting_delivery_note",
+      "rows": [
+        [
+          "GLV-NIT-XS",
+          "quantity",
+          5,
+          6,
+          4.0,
+          4.0,
+          null
+        ]
+      ],
+      "supplier": "SUP-001"
+    },
+    {
+      "dispute": 10.0,
+      "draft": "Dear supplier,\n\nInvoice F-2602 does not match purchase order PO-0002:\n- GLV-NIT-S: invoiced but not ordered, difference 10.00 EUR\nThe amount in dispute is 10.00 EUR.\nPlease send us a corrected invoice or a credit note.\n\nBest regards,\nPurchasing department",
+      "later": false,
+      "number": "F-2602",
+      "order": "PO-0002",
+      "result": "discrepancies",
+      "rows": [
+        [
+          "GLV-NIT-S",
+          "extra_line",
+          null,
+          null,
+          null,
+          10.0,
+          null
+        ]
+      ],
+      "supplier": "SUP-002"
+    }
+  ],
+  "steps": [
+    {
+      "exit": 0,
+      "op": "claims"
+    },
+    {
+      "exit": 0,
+      "invoice": "INV-0002",
+      "op": "approve"
+    },
+    {
+      "exit": 0,
+      "invoice": "INV-0001",
+      "op": "deliver"
+    },
+    {
+      "exit": 0,
+      "op": "claims"
+    },
+    {
+      "exit": 0,
+      "invoice": "INV-0001",
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "discrepancy_claim",
+    "later_delivery",
+    "approve",
+    "claims_rerun"
+  ]
+}

@@ -9,12 +9,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import config, db, quote_decision, quotes, reconciliation, router, sim_clock
+from purchase_cycle import claims, config, db, quote_decision, quotes, reconciliation, router, sim_clock
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import build_email_order_graph
 from purchase_cycle.graph import build_graph, sqlite_checkpointer
 from purchase_cycle.llm import (
+    CLAIM_DRAFTING,
     CLARIFICATION_ANSWER,
     CLARIFICATION_QUESTION,
     EMAIL_EXTRACTION,
@@ -46,7 +47,10 @@ QUOTES_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "quotes_demo.jsonl"  
 QUOTES_DEMO_WORKDIR = config.DATA_DIR / "quotes-demo"
 DEMO_INVOICES = config.ROOT / "examples" / "invoices"
 RECONCILE_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "reconcile_demo.jsonl"  # the document extraction
+RECONCILE_DEMO_CLAIM_RECORDINGS = config.EVALS_DIR / "recordings" / "claim_demo.jsonl"  # the claim drafting
 RECONCILE_DEMO_WORKDIR = config.DATA_DIR / "reconcile-demo"
+# Which discrepancies invoice gets which decision; the fourth stays awaiting approval.
+RECONCILE_DEMO_CLAIMS = {"approve": "N-77002", "edit": "LV-0303", "reject": "F-2026-1004", "wait": "N-77005"}
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
 EXCEPTIONS_RECORDINGS = {
     MATCHING.name: config.CLARIFICATION_DETECTION_MATCHING_RECORDINGS_PATH,
@@ -224,6 +228,7 @@ def cmd_reconcile_list(args) -> int:
     conn = _seeded(args.db)
     try:
         listing = reconciliation.list_results(conn)
+        claim_status = {row["invoice_id"]: claims.claim_of(conn, row["invoice_id"]) for row in listing["rows"]}
     finally:
         conn.close()
     counts = "  ".join(f"{name}={n}" for name, n in listing["by_result"].items())
@@ -234,6 +239,7 @@ def cmd_reconcile_list(args) -> int:
         print(
             f"  {reconciliation.invoice_reference(row['invoice_id'])}  {reconciliation.order_reference(row['order_id'])}"
             f"  supplier={row['supplier_code']}  {row['result']}  differences={row['differences']} ({types})"
+            + (f"  claim={claim['status']}" if (claim := claim_status[row["invoice_id"]]) else "")
         )
     if listing["unreconciled"]:
         print(f"not reconciled: {len(listing['unreconciled'])}")
@@ -248,6 +254,19 @@ def _amount(value, places: int) -> str:
     return "-" if value is None else f"{value:.{places}f}"
 
 
+def _print_claim(claim: dict) -> None:
+    print(f"claim: status={claim['status']}  source={claim['draft_source']}  edited={bool(claim['edited'])}")
+    print(f"  to: {claim['recipient']}  subject: {claim['subject']}")
+    print("  draft body:")
+    for line in claim["draft_body"].splitlines():
+        print(f"    {line}")
+    if claim["final_body"] is not None:
+        print("  final body:")
+        for line in claim["final_body"].splitlines():
+            print(f"    {line}")
+    print(f"  outbox file: {claim['outbox_file'] or '-'}")
+
+
 def cmd_reconcile_show(args) -> int:
     invoice_id = reconciliation.invoice_id_from_reference(args.reference)
     if invoice_id is None:
@@ -256,6 +275,7 @@ def cmd_reconcile_show(args) -> int:
     conn = _seeded(args.db)
     try:
         shown = reconciliation.show_result(conn, invoice_id)
+        claim = claims.claim_of(conn, invoice_id)
     finally:
         conn.close()
     if shown is None:
@@ -279,7 +299,83 @@ def cmd_reconcile_show(args) -> int:
             f"found={_amount(row['found'], 4)}  per unit={_amount(row['unit_amount'], 4)}  "
             f"amount={_amount(row['amount'], 2)}"
         )
+    if claim:
+        _print_claim(claim)
     return 0
+
+
+def cmd_reconcile_claims(args) -> int:
+    _seeded(args.db).close()
+    client = ModelClient(args.mode, [], args.recordings, task=CLAIM_DRAFTING)
+    try:
+        drafted = claims.draft_claims(args.db, sqlite_checkpointer(args.checkpoints), client)
+    except MissingRecording as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    saved = client.save_recordings()
+    print(
+        f"mode={args.mode}  claims drafted: {len(drafted)}" if drafted else f"mode={args.mode}  nothing to be drafted"
+    )
+    for item in drafted:
+        facts, claim = item["facts"], item["claim"]
+        print(
+            f"{facts['invoice']}  to {claim['recipient']}  subject: {claim['subject']}  "
+            f"amount in dispute={facts['amount_in_dispute']:.2f} EUR  source={claim['draft_source']}  {claim['status']}"
+        )
+        for row in facts["differences"]:
+            print(
+                f"  {row['type']}  {row['sku'] or row['text'] or '-'}  expected={_amount(row['expected'], 4)}  "
+                f"found={_amount(row['found'], 4)}  amount={_amount(row['amount'], 2)}"
+            )
+        print("  draft:")
+        print("\n".join(f"    {line}" for line in claim["draft_body"].splitlines()))
+    if client.calls:
+        _print_usage(client)
+    if saved:
+        print(f"recordings saved: {saved}")
+    return 0
+
+
+def _claim_decision(args, decide) -> int:
+    invoice_id = reconciliation.invoice_id_from_reference(args.reference)
+    if invoice_id is None:
+        print(f"Error: '{args.reference}' is not an invoice reference like INV-0001", file=sys.stderr)
+        return 1
+    _seeded(args.db).close()
+    try:
+        done = decide(invoice_id)
+    except claims.DecisionRefused as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    ref = reconciliation.invoice_reference(invoice_id)
+    if done["status"] == claims.SENT:
+        how = "edited" if done["edited"] else "as drafted"
+        print(f"{ref} claim sent ({how})  to {done['recipient']}  file={done['outbox_file']}")
+    else:
+        print(f"{ref} claim rejected  no email")
+    return 0
+
+
+def cmd_reconcile_approve(args) -> int:
+    body = None
+    if args.body_file is not None:
+        try:
+            body = Path(args.body_file).read_text(encoding="utf-8")
+        except OSError as error:
+            print(f"Error: cannot read {args.body_file}: {error}", file=sys.stderr)
+            return 1
+    return _claim_decision(
+        args,
+        lambda invoice_id: claims.approve_claim(
+            args.db, sqlite_checkpointer(args.checkpoints), args.outbox, invoice_id, body
+        ),
+    )
+
+
+def cmd_reconcile_reject(args) -> int:
+    return _claim_decision(
+        args, lambda invoice_id: claims.reject_claim(args.db, sqlite_checkpointer(args.checkpoints), invoice_id)
+    )
 
 
 def _request_id(text: str) -> int | None:
@@ -544,9 +640,13 @@ def cmd_reconcile_demo(args) -> int:
     if workdir.resolve() == config.DATA_DIR.resolve():
         print(f"Error: --workdir {args.workdir} is the data folder; pick another folder", file=sys.stderr)
         return 1
-    files = {"db": workdir / "business.db", "checkpoints": workdir / "checkpoints.sqlite"}
+    files = {
+        "db": workdir / "business.db",
+        "checkpoints": workdir / "checkpoints.sqlite",
+        "outbox": workdir / "supplier_outbox",
+    }
     workdir.mkdir(parents=True, exist_ok=True)
-    for path in files.values():
+    for path in (files["db"], files["checkpoints"]):
         path.unlink(missing_ok=True)
     conn = db.connect(files["db"])
     try:
@@ -629,6 +729,68 @@ def cmd_reconcile_demo(args) -> int:
         or not unlinked
     ):
         print("Error: the demo did not end with every outcome", file=sys.stderr)
+        return 1
+    return _reconcile_demo_claims(args, files, step)
+
+
+def _reconcile_demo_claims(args, files: dict, step) -> int:
+    """Draft the claims, then send one as drafted, one edited and reject one; the fourth waits."""
+    recordings = Path(args.claim_recordings)
+    if args.mode == "replay" and not recordings.is_file():
+        print(f"Error: claim recordings not found: {recordings}; record them once with --mode record", file=sys.stderr)
+        return 1
+    conn = db.connect(files["db"])
+    try:
+        refs = {}
+        for action, number in RECONCILE_DEMO_CLAIMS.items():
+            row = conn.execute("SELECT id FROM supplier_documents WHERE kind = 'invoice' AND number = ?", (number,))
+            refs[action] = reconciliation.invoice_reference(row.fetchone()["id"])
+    finally:
+        conn.close()
+    checkpoints = ["--checkpoints", str(files["checkpoints"])]
+    outbox = ["--outbox", str(files["outbox"])]
+    for old in files["outbox"].glob("*.eml") if files["outbox"].is_dir() else []:
+        old.unlink()
+    print()
+    print("claims:")
+    edit_file = Path(args.examples) / "claim_edit.txt"
+    steps = [
+        ["reconcile", "claims", "--mode", args.mode, "--recordings", str(recordings), *checkpoints],
+        ["reconcile", "list"],
+        ["reconcile", "approve", refs["approve"], *checkpoints, *outbox],
+        ["reconcile", "approve", refs["edit"], "--body-file", str(edit_file), *checkpoints, *outbox],
+        ["reconcile", "reject", refs["reject"], *checkpoints],
+        *(["reconcile", "show", refs[action]] for action in ("approve", "edit", "reject")),
+    ]
+    for command in steps:
+        if not step(*command):
+            return 1
+    conn = db.connect(files["db"])
+    try:
+        decided = {
+            reconciliation.invoice_reference(r["invoice_id"]): f"{r['status']}{' edited' if r['edited'] else ''}"
+            for r in conn.execute(
+                "SELECT r.invoice_id, c.status, c.edited FROM claims c JOIN reconciliations r ON r.id = c.reconciliation_id ORDER BY r.invoice_id"
+            )
+        }
+    finally:
+        conn.close()
+    print()
+    print("claim summary:")
+    print(f"claims: {', '.join(f'{ref}={state}' for ref, state in decided.items())}")
+    emails = sorted(p.name for p in files["outbox"].glob("CLAIM-*.eml"))
+    print(f"claim emails: {', '.join(emails) or 'none'}")
+    print(f"still awaiting approval: {refs['wait']}")
+    expected = {
+        refs["approve"]: "sent",
+        refs["edit"]: "sent edited",
+        refs["reject"]: "rejected",
+        refs["wait"]: "awaiting_approval",
+    }
+    if decided != expected or len(emails) != 2:
+        print(
+            "Error: the demo did not end with one sent, one edited, one rejected and one waiting claim", file=sys.stderr
+        )
         return 1
     return 0
 
@@ -1369,6 +1531,12 @@ def cmd_failures_resume(args) -> int:
             f"Error: thread {args.thread_id} is not parked (status {row['status']}); nothing changed", file=sys.stderr
         )
         return 1
+    if row["channel"] == claims.CHANNEL:
+        print(
+            f"Error: thread {args.thread_id} is a claim; use purchase-cycle reconcile approve|reject; nothing changed",
+            file=sys.stderr,
+        )
+        return 1
     steps = []
     graph, clients = _clarify_graph(args, row["channel"], recovery=True, channel_clients=steps)
     run_config = {"configurable": {"thread_id": args.thread_id}, "run_name": f"{row['channel']}_order"}
@@ -1610,6 +1778,22 @@ def main(argv=None) -> int:
     reconcile_show = reconcile_sub.add_parser("show", help="show the result and each difference of one invoice")
     reconcile_show.add_argument("reference", help="invoice reference like INV-0001")
     reconcile_show.set_defaults(handler=cmd_reconcile_show)
+    reconcile_claims = reconcile_sub.add_parser("claims", help="draft one claim per invoice with discrepancies")
+    reconcile_claims.add_argument("--mode", choices=config.MODES, default="replay")
+    reconcile_claims.add_argument("--recordings", default=None, help="recordings file for the claim drafting")
+    reconcile_claims.set_defaults(handler=cmd_reconcile_claims)
+    reconcile_approve = reconcile_sub.add_parser("approve", help="send the claim as drafted, or with --body-file")
+    reconcile_approve.add_argument("reference", help="invoice reference like INV-0001")
+    reconcile_approve.add_argument("--body-file", default=None, help="text file that replaces the drafted body")
+    reconcile_approve.add_argument(
+        "--outbox", default=str(config.SUPPLIER_OUTBOX_DIR), help="folder for the supplier emails"
+    )
+    reconcile_approve.set_defaults(handler=cmd_reconcile_approve)
+    reconcile_reject = reconcile_sub.add_parser("reject", help="close a claim with no email")
+    reconcile_reject.add_argument("reference", help="invoice reference like INV-0001")
+    reconcile_reject.set_defaults(handler=cmd_reconcile_reject)
+    for command in (reconcile_claims, reconcile_approve, reconcile_reject):
+        command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
     quotes_demo = sub.add_parser(
         "quotes-demo",
         help="run the sample quote timeline, each scan, clock, receive, tick, decide, approve and list step in its own process",
@@ -1635,7 +1819,12 @@ def main(argv=None) -> int:
         "--mode",
         choices=config.MODES,
         default="replay",
-        help="document extraction mode; record needs ANTHROPIC_API_KEY",
+        help="document extraction and claim drafting mode; record needs ANTHROPIC_API_KEY",
+    )
+    reconcile_demo.add_argument(
+        "--claim-recordings",
+        default=str(RECONCILE_DEMO_CLAIM_RECORDINGS),
+        help="recordings file for the claim drafting",
     )
     reconcile_demo.set_defaults(handler=cmd_reconcile_demo)
 

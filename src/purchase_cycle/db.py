@@ -182,6 +182,20 @@ CREATE TABLE IF NOT EXISTS discrepancies (
     text TEXT,
     UNIQUE (reconciliation_id, sku, type)
 );
+CREATE TABLE IF NOT EXISTS claims (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reconciliation_id INTEGER NOT NULL UNIQUE REFERENCES reconciliations (id),
+    recipient TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    draft_body TEXT NOT NULL,
+    draft_source TEXT NOT NULL CHECK (draft_source IN ('model', 'template')),
+    final_body TEXT,
+    edited INTEGER NOT NULL DEFAULT 0 CHECK (edited IN (0, 1)),
+    status TEXT NOT NULL CHECK (status IN ('awaiting_approval', 'sent', 'rejected')),
+    drafted_at TEXT NOT NULL,
+    decided_at TEXT,
+    outbox_file TEXT
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")

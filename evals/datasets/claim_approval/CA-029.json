@@ -1,0 +1,60 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "claims": {
+      "INV-0001": {
+        "edited": 0,
+        "sent_body": "<template>",
+        "source": "template",
+        "status": "sent"
+      }
+    },
+    "failures": 1,
+    "model_calls": 1,
+    "outbox": [
+      "CLAIM-INV-0001-SUP-001.eml"
+    ]
+  },
+  "id": "CA-029",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers, suppliers and the clock at 2026-10-12 09:00"
+  },
+  "invoices": [
+    {
+      "dispute": 4.0,
+      "draft": "<invalid>",
+      "later": false,
+      "number": "F-2601",
+      "order": "PO-0001",
+      "result": "discrepancies",
+      "rows": [
+        [
+          "GLV-NIT-XS",
+          "quantity",
+          5,
+          6,
+          4.0,
+          4.0,
+          null
+        ]
+      ],
+      "supplier": "SUP-001"
+    }
+  ],
+  "steps": [
+    {
+      "exit": 0,
+      "op": "claims"
+    },
+    {
+      "exit": 0,
+      "invoice": "INV-0001",
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "discrepancy_claim",
+    "template_fallback",
+    "approve"
+  ]
+}

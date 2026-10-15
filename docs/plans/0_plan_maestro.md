@@ -5,7 +5,7 @@ Approved by the owner: 2026-10-06
 
 ## Vision
 Public portfolio project that demonstrates multi-agent orchestration with LangGraph (Python) over the full purchase cycle of a fictional company.
-Three independent modules (multichannel customer orders, supplier quotes and invoice reconciliation) share one database and are composed by an orchestrator graph.
+Three independent modules (multichannel customer orders, supplier quotes and reconciliation of order, delivery note and invoice on both the purchase and the sales side) share one database and are composed by an orchestrator graph.
 It must make five capabilities visible, with code and evidence: persistent state, human-in-the-loop, failure recovery, observability and structured evaluation.
 It works when every module has a one-command reproducible demo, tests and an evaluation with metrics and thresholds that runs in `npm run check`.
 Latency is not critical; code clarity and reproducibility are.
@@ -24,9 +24,11 @@ Phases 01 to 05 complete the orders module; quotes, reconciliation and the orche
 | 06 | Quotes, request and wait: out-of-stock detection, quote requests to several suppliers and a multi-day wait with saved state, using a simulated clock and reminders | 05 | integrated (merged via PR #11) |
 | 07 | Quotes, decision: offer extraction and comparison, human approval and creation of the purchase order | 06 | integrated (merged via PR #13); C16 pending (LangSmith trace and experiment, blocked by the trace quota until about 2026-11-05) |
 | 08 | Reconciliation, detection: match the supplier invoice against the purchase order and delivery note and classify differences (price, quantity, extra or missing line) | 07 | built, delivered for review via PR; C15 pending (LangSmith trace and experiment, blocked by the trace quota until about 2026-11-05) |
-| 09 | Reconciliation, claim: draft claim to the supplier with human approval, editing or rejection | 08 | pending |
-| 10 | Orchestrator: top-level graph composing the three subgraphs over the shared database, with an end-to-end demo and an evaluation metrics dashboard | 09 | pending |
-| 11 | Portfolio showcase: CV-oriented README with graph diagrams, sample traces, evaluation results and continuous integration on GitHub Actions | 10 | pending |
+| 09 | Reconciliation, claim: draft claim to the supplier with human approval, editing or rejection | 08 | built, delivered for review via PR; C17 pending (LangSmith trace and experiment, blocked by the trace quota until about 2026-11-05) |
+| 10 | Goods receipt and serving: the reconciled supplier delivery note puts the goods into stock, pending customer orders are served and our delivery note to the customer is issued | 09 | pending |
+| 11 | Customer invoicing and sales reconciliation: invoice to the customer and reconciliation of order, delivery note and invoice on the sales side with the same matching, triggered by the signed delivery note the customer returns with incidents (missing, extra, damaged); response to the customer, credit note or corrective invoice with human approval, reusing the phase 09 pattern; payment out of scope | 10 | pending |
+| 12 | Orchestrator: top-level graph composing the three subgraphs over the shared database, with an end-to-end demo and an evaluation metrics dashboard | 11 | pending |
+| 13 | Portfolio showcase: CV-oriented README with graph diagrams, sample traces, evaluation results and continuous integration on GitHub Actions | 12 | pending |
 
 Statuses: pending, spec in review, spec approved, in progress, blocked, ready locally, integrated.
 Only the owner adds, removes or reorders phases; the agent proposes.
@@ -42,6 +44,7 @@ Only the owner adds, removes or reorders phases; the agent proposes.
 | 2026-10-06 | Product documents and code in English; conversation with the owner in Spanish | Owner decision: public portfolio | Spanish documents |
 | 2026-10-06 | Fictional Spanish distributor of medical supplies and parapharmacy products selling to clinics, care homes and pharmacies, with a catalog of common products | Owner decision: close to companies that could hire the owner, with simple vocabulary | Industrial supplies, hospitality food, office supplies, drugs (too hard vocabulary) |
 | 2026-10-06 | Public GitHub repository under the MIT license | Owner decision | Private until finished; no license |
+| 2026-10-14 | Reconciliation works on both sides: purchase (supplier) and sales (customer); two new phases 10 and 11 after the claim phase, before the orchestrator (now 12) | Owner decision of 2026-10-13 and 2026-10-14: any order, delivery note and invoice trio is reconciled whichever side ordered; phase 08 is not reopened | One larger phase; placing them between 08 and 09; customer claim email as trigger; payment reconciliation |
 
 ## Pending
 Out of scope, global criteria, further decisions and milestones are written with the owner phase by phase.

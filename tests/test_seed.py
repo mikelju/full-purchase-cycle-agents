@@ -340,3 +340,110 @@ def test_the_content_hash_is_unique(tmp_path):
     _document(conn, number="A", content_hash="same")
     with pytest.raises(sqlite3.IntegrityError):
         _document(conn, number="B", content_hash="same")
+
+
+CLAIM_COLUMNS = [
+    "id",
+    "reconciliation_id",
+    "recipient",
+    "subject",
+    "draft_body",
+    "draft_source",
+    "final_body",
+    "edited",
+    "status",
+    "drafted_at",
+    "decided_at",
+    "outbox_file",
+]
+
+
+def _reconciliation(conn, number="INV-X"):
+    """One stored reconciliation (with its purchase order) and its id."""
+    _document(conn, number=number, content_hash=number)
+    invoice = conn.execute("SELECT id FROM supplier_documents WHERE number = ?", (number,)).fetchone()[0]
+    sku = conn.execute("SELECT sku FROM products LIMIT 1").fetchone()[0]
+    conn.execute(
+        "INSERT INTO quote_requests (sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
+        "VALUES (?, 5, ?, 'ordered', 't', 't', 't')",
+        (sku, f"th-{number}"),
+    )
+    request = conn.execute("SELECT MAX(id) FROM quote_requests").fetchone()[0]
+    conn.execute(
+        "INSERT INTO purchase_orders (request_id, supplier_code, sku, quantity, unit_price, currency, total, "
+        "expected_delivery, issued_at, status) VALUES (?, (SELECT code FROM suppliers LIMIT 1), ?, 5, 1.0, 'EUR', "
+        "5.0, 't', 't', 'issued')",
+        (request, sku),
+    )
+    order = conn.execute("SELECT MAX(id) FROM purchase_orders").fetchone()[0]
+    conn.execute(
+        "INSERT INTO reconciliations (invoice_id, purchase_order_id, result, reconciled_at) "
+        "VALUES (?, ?, 'discrepancies', 't')",
+        (invoice, order),
+    )
+    return conn.execute("SELECT MAX(id) FROM reconciliations").fetchone()[0]
+
+
+def _claim(conn, reconciliation_id, status="awaiting_approval", source="model", edited=0):
+    conn.execute(
+        "INSERT INTO claims (reconciliation_id, recipient, subject, draft_body, draft_source, edited, status, drafted_at) "
+        "VALUES (?, 'a@b.c', 's', 'b', ?, ?, ?, 't')",
+        (reconciliation_id, source, edited, status),
+    )
+
+
+def test_seed_creates_an_empty_claims_table_and_leaves_the_seed_counts(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    counts = db.seed(conn)
+    assert [r["name"] for r in conn.execute("PRAGMA table_info(claims)")] == CLAIM_COLUMNS
+    assert conn.execute("SELECT COUNT(*) FROM claims").fetchone()[0] == 0
+    assert set(counts) == {"customers", "products", "stock", "orders", "order_lines"}
+
+
+def test_seed_twice_keeps_the_claims_and_the_other_rows(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    _claim(conn, _reconciliation(conn))
+    conn.commit()
+    tables = OLD_TABLES + RECONCILIATION_TABLES + ("claims",)
+    first = {t: _rows(conn, t) for t in tables}
+    db.seed(conn)
+    assert {t: _rows(conn, t) for t in tables} == first
+    assert len(first["claims"]) == 1
+
+
+def test_a_phase_08_database_gains_the_claims_table_without_losing_rows(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    _reconciliation(conn)
+    conn.execute("DROP TABLE claims")
+    conn.commit()
+    tables = OLD_TABLES + RECONCILIATION_TABLES + ("quote_requests",)
+    before = {t: _rows(conn, t) for t in tables}
+    assert before["reconciliations"]
+    db.seed(conn)
+    assert {t: _rows(conn, t) for t in tables} == before
+    assert conn.execute("SELECT COUNT(*) FROM claims").fetchone()[0] == 0
+
+
+def test_claim_status_and_source_checks_reject_unknown_values(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    reconciliation = _reconciliation(conn)
+    with pytest.raises(sqlite3.IntegrityError):
+        _claim(conn, reconciliation, status="done")
+    with pytest.raises(sqlite3.IntegrityError):
+        _claim(conn, reconciliation, source="human")
+    with pytest.raises(sqlite3.IntegrityError):
+        _claim(conn, reconciliation, edited=2)
+    for i, status in enumerate(("awaiting_approval", "sent", "rejected")):
+        _claim(conn, reconciliation if i == 0 else _reconciliation(conn, f"INV-{i}"), status=status)
+
+
+def test_a_second_claim_for_one_reconciliation_is_rejected(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    reconciliation = _reconciliation(conn)
+    _claim(conn, reconciliation)
+    with pytest.raises(sqlite3.IntegrityError):
+        _claim(conn, reconciliation, status="rejected")

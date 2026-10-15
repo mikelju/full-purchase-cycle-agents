@@ -254,6 +254,8 @@ CASES = [
     only(OA, [ln(XS, 10, 4.10)], ("awaiting_delivery_note", []), restart=True),
     pair(OA, [ln(XS, 8, 4.50), ln(M, 1, 2.00)], [delivered(XS, 8)],
          ("discrepancies", [(XS, "price", 3.20), (XS, "quantity", -8.20), (M, "extra_line", 2.00)]), restart=True),
+    # a note that exists but has no line for the invoiced SKU counts as nothing delivered
+    pair(OA, [ln(XS, 10, 4.10)], [delivered(S, 10)], ("discrepancies", [(XS, "quantity", 41.00)])),
 ]  # fmt: skip
 
 

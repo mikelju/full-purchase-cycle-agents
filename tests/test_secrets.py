@@ -250,7 +250,7 @@ def test_phase_08_files_are_tracked_and_hold_no_keys():
     )
     files = sorted(str(p.relative_to(ROOT).as_posix()) for folder in folders for p in folder.rglob("*") if p.is_file())
     assert len([f for f in files if f.startswith("evals/datasets/reconciliation_matching/RM-")]) >= 40
-    assert len([f for f in files if f.startswith("examples/invoices/")]) == 16  # the orders and 15 documents
+    assert len([f for f in files if f.startswith("examples/invoices/")]) == 17  # orders, 15 documents, claim_edit.txt
     assert {Path(f).suffix for f in files if f.startswith("examples/invoices/documents/")} == {".txt", ".pdf", ".xlsx"}
     for name in fixed + files:
         assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
@@ -264,3 +264,28 @@ def test_phase_08_files_are_tracked_and_hold_no_keys():
             decoded += 1
             assert not SECRET_PATTERNS.search(reconciliation.document_text(ROOT / name)), name
     assert decoded >= 40 + 6, "the rendered dataset files and the sample PDF and Excel documents were not decoded"
+
+
+def test_phase_09_files_are_tracked_and_hold_no_keys():
+    tracked = set(_tracked())
+    fixed = [
+        "src/purchase_cycle/claims.py",
+        "src/purchase_cycle/review.py",
+        "src/purchase_cycle/evaluation/claim_dataset.py",
+        "src/purchase_cycle/evaluation/claim_eval.py",
+        "src/purchase_cycle/evaluation/claim_approval_eval.py",
+        "evals/recordings/claim_drafting.jsonl",
+        "evals/recordings/claim_demo.jsonl",
+        "evals/baselines/claim_drafting.json",
+        "examples/invoices/claim_edit.txt",
+    ]
+    folders = (
+        ROOT / "evals" / "datasets" / "claim_drafting",
+        ROOT / "evals" / "datasets" / "claim_approval",
+    )
+    files = sorted(str(p.relative_to(ROOT).as_posix()) for folder in folders for p in folder.rglob("*") if p.is_file())
+    assert len([f for f in files if f.startswith("evals/datasets/claim_approval/CA-")]) >= 24
+    assert len([f for f in files if f.startswith("evals/datasets/claim_drafting/")]) >= 1
+    for name in fixed + files:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
