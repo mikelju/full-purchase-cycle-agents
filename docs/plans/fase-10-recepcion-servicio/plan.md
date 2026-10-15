@@ -58,6 +58,9 @@ Written for the owner decisions D1 to D9 (option A) of 2026-10-15 recorded in th
   - `list_receipts` and `show_delivery_note` do not exist: the SQL of `receipts list` and `receipts show` is inline in `receipts_cli.py`.
   - `receipts run` does not print stock before and after; only `receipt-demo` does.
   - Only `receipts run` takes `--notes-dir`; `receipt-demo` has an extra `--receipts` option.
+- Owner decisions during review round 1 (2026-10-15):
+  - Our company name on the customer delivery note (`COMPANY` in `receipts.py`) changes from "Distribuciones Sanitarias Demo S.L." to "Almacenes Demo S.L." in this phase.
+  - Customer CLI-004 "Policlinica Gipuzkoa Norte" resembles a real hospital; it stays as is in phase 10 and a separate change renames it in the catalog, datasets and recordings (open item).
 
 ## Rules for executors
 - Execution starts from the approved frozen spec; changing a criterion needs a deviation approved by the owner.

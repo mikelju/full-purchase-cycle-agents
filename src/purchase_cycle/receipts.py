@@ -16,7 +16,7 @@ from purchase_cycle import db, sim_clock
 
 CHANNEL = "receipts"
 STEP = "goods_receipt"
-COMPANY = "Distribuciones Sanitarias Demo S.L."
+COMPANY = "Almacenes Demo S.L."
 MAX_QUANTITY = 2**63 - 1  # the largest value of a SQLite INTEGER
 
 

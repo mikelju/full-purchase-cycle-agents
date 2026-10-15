@@ -37,7 +37,7 @@ def test_receipt_demo_ends_with_every_outcome_with_the_network_blocked(tmp_path)
     assert "mode=replay" in out
     assert out.count("stock before:") == 2 and out.count("stock after:") == 2
     assert "receipt RCP-" in out and "served ORD-" in out and "skipped ORD-" in out
-    assert "Distribuciones Sanitarias Demo S.L." in out  # the notes are shown
+    assert "Almacenes Demo S.L." in out  # the notes are shown
 
     conn = sqlite3.connect(workdir / "business.db")
     try:
