@@ -44,11 +44,15 @@ Owner request on 2026-10-15 to open this change; delivery as branch `cambio-012-
 - Owner, 2026-10-15 via Lavish: review every customer name for resemblance to a real centre and propose a list to the owner before renaming; the scope of this change follows that list.
 - Owner, 2026-10-15 via Lavish: rename the six customers with a same-name match in the same city (table above); keep the six weaker matches (CLI-002, CLI-010, RES-001, RES-005, RES-008, RES-015) and the 38 customers with no match unchanged.
 - Coordinator, 2026-10-15: short forms in email subjects that also abbreviate a new name ("San Prudencio order", "Benimaclet order", "Ruzafa dental", "Deusto physio") stay; the two that keep the part of an old name the new name dropped become "Demo Gipuzkoa order" (CLD-0193) and "Order - Fisioterapia Demo Deusto" (EML-0279).
-- Coordinator, 2026-10-15: `record` mode has no skip-existing option, so a scratch script outside the repo called the live model only for missing keys (121 calls, claude-haiku-4-5); the 120 old-name entries left unreachable were then removed from `evals/recordings/`, after a replay of every suite confirmed none of them is requested.
-- Evaluation figures (replay, test split): only `email_order_extraction` moved, because the new recording of EML-0270 now classifies it as an order (intake 98.7% to 99.1%, exact match 94.4% to 94.9%, failures 11 to 10); this is model variation on a re-recorded input, not an effect of the name.
+- Coordinator, 2026-10-15: `record` mode has no skip-existing option, so a scratch script outside the repo called the live model only for missing keys (121 calls, claude-haiku-4-5).
+  Net effect on `evals/recordings/`: 118 old-name entries replaced by new-name entries, 1 new entry (the extraction call of EML-0270, reached now that intake classifies it as an order), and 2 intermediate entries for the two renamed subjects recorded and then removed; a replay of every suite confirmed no removed entry is requested.
+- Evaluation figures (replay, test split): only `email_order_extraction` moved, because the new recording of EML-0270 now classifies it as an order (every metric of that suite moved with it: intake 98.7% to 99.1%, line recall 96.9% to 97.1%, SKU 97.3% to 97.4%, out-of-catalog detection 96.4% to 96.9%, exact match 94.4% to 94.9%, failures 11 to 10); this is model variation on a re-recorded input, not an effect of the name.
+  The baseline check reports one gained case and no drop, so `evals/baselines/` is unchanged.
+- Re-recorded answers that differ from the old ones without moving any figure: 23 entries, mostly a different `reason` wording; in the dev cases EML-0063 and EML-0219 `source_text` changed but SKUs and quantities did not, and the dev figures equal `main`.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | Opus subagent | origin/main..HEAD | contract C1-C4, decoded content of emails and attachments, recording keys, seed, evals test and dev | 3 minor, documentation counts and eval detail | fixed in this commit |
 
 ## Delivery
