@@ -21,7 +21,11 @@ def _units(lines) -> str:
 def cmd_receipts_run(args) -> int:
     conn = _seeded(args.db)
     conn.close()
-    state = receipts.run_receipts(args.db, args.notes_dir, sqlite_checkpointer(args.checkpoints))
+    checkpointer = sqlite_checkpointer(args.checkpoints)
+    try:
+        state = receipts.run_receipts(args.db, args.notes_dir, checkpointer)
+    finally:
+        checkpointer.conn.close()
     done = state.get("receipts", [])
     served = state.get("served", [])
     skipped = state.get("skipped", [])
