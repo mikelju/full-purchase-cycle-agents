@@ -31,6 +31,9 @@ Owner request on 2026-10-15 to open this change; delivery as branch `cambio-012-
 - [ ] `npm run check`, adversarial review, delivery.
 
 ## Decisions
+- Owner, 2026-10-15 via Lavish: CLI-004 becomes "Clinica Demo Gipuzkoa".
+- Owner, 2026-10-15 via Lavish: the affected recordings are recorded again with the live model (new API cost, small); any change in the evaluation figures is recorded and explained.
+- Owner, 2026-10-15 via Lavish: review every customer name for resemblance to a real centre and propose a list to the owner before renaming; the scope of this change follows that list.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
