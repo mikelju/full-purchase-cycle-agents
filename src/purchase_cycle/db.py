@@ -196,6 +196,35 @@ CREATE TABLE IF NOT EXISTS claims (
     decided_at TEXT,
     outbox_file TEXT
 );
+CREATE TABLE IF NOT EXISTS goods_receipts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    delivery_note_id INTEGER NOT NULL UNIQUE REFERENCES supplier_documents (id),
+    purchase_order_id INTEGER NOT NULL REFERENCES purchase_orders (id),
+    received_at TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('received', 'failed'))
+);
+CREATE TABLE IF NOT EXISTS goods_receipt_lines (
+    receipt_id INTEGER NOT NULL REFERENCES goods_receipts (id),
+    line_no INTEGER NOT NULL,
+    sku TEXT NOT NULL REFERENCES products (sku),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    PRIMARY KEY (receipt_id, line_no)
+);
+CREATE TABLE IF NOT EXISTS customer_delivery_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL UNIQUE REFERENCES orders (id),
+    customer_code TEXT NOT NULL REFERENCES customers (code),
+    issued_at TEXT NOT NULL,
+    document_file TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS customer_delivery_note_lines (
+    note_id INTEGER NOT NULL REFERENCES customer_delivery_notes (id),
+    line_no INTEGER NOT NULL,
+    sku TEXT NOT NULL REFERENCES products (sku),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    sale_unit TEXT NOT NULL,
+    PRIMARY KEY (note_id, line_no)
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")
@@ -222,7 +251,7 @@ def seed(conn: sqlite3.Connection) -> dict[str, int]:
         [(p.sku, p.family, p.name, p.sale_unit, round(p.price_eur, 2), int(p.latex), int(p.sterile)) for p in PRODUCTS],
     )
     conn.executemany(
-        "INSERT OR REPLACE INTO stock VALUES (?, ?)",
+        "INSERT OR IGNORE INTO stock VALUES (?, ?)",
         [(p.sku, (i * 37) % 250) for i, p in enumerate(PRODUCTS)],
     )
     conn.executemany("INSERT OR IGNORE INTO suppliers VALUES (?, ?, ?)", [(s.code, s.name, s.email) for s in SUPPLIERS])
