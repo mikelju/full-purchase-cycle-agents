@@ -4,11 +4,14 @@ Deterministic: no model is called here.
 """
 
 import sqlite3
+import unicodedata
+from pathlib import Path
 
 from purchase_cycle import db, sim_clock
 
 CHANNEL = "receipts"
 STEP = "goods_receipt"
+COMPANY = "Sanitas Distribuciones S.L."
 
 
 def candidates(conn: sqlite3.Connection) -> list[int]:
@@ -91,8 +94,29 @@ def _needs(conn: sqlite3.Connection, order_id: int) -> dict[str, int]:
     return {r["sku"]: r["quantity"] for r in rows}
 
 
-def serve(conn: sqlite3.Connection) -> dict:
-    """Serve the `received` orders by ascending id when stock covers every line; a skipped order reports its missing units."""
+def _insert_note(conn: sqlite3.Connection, order_id: int, notes_dir: Path | str) -> int:
+    customer = conn.execute("SELECT customer_code FROM orders WHERE id = ?", (order_id,)).fetchone()[0]
+    note_id = conn.execute(
+        "INSERT INTO customer_delivery_notes (order_id, customer_code, issued_at, document_file) VALUES (?, ?, ?, '')",
+        (order_id, customer, sim_clock.now(conn).strftime(sim_clock.FORMAT)),
+    ).lastrowid
+    conn.execute(
+        "UPDATE customer_delivery_notes SET document_file = ? WHERE id = ?",
+        (str(Path(notes_dir) / f"CDN-{note_id:04d}.txt"), note_id),
+    )
+    conn.execute(
+        "INSERT INTO customer_delivery_note_lines SELECT ?, ROW_NUMBER() OVER (ORDER BY l.id), l.sku, l.quantity, "
+        "p.sale_unit FROM order_lines l JOIN products p ON p.sku = l.sku WHERE l.order_id = ? ORDER BY l.id",
+        (note_id, order_id),
+    )
+    return note_id
+
+
+def serve(conn: sqlite3.Connection, notes_dir: Path | str) -> dict:
+    """Serve the `received` orders by ascending id when stock covers every line; a skipped order reports its missing units.
+
+    A served order gets its customer delivery note rows in the same transaction; the file is written by `issue`.
+    """
     served, skipped = [], []
     for order in conn.execute("SELECT id FROM orders WHERE status = 'received' ORDER BY id").fetchall():
         needs = _needs(conn, order["id"])
@@ -108,6 +132,47 @@ def serve(conn: sqlite3.Connection) -> dict:
             if done:
                 for sku, need in needs.items():
                     conn.execute("UPDATE stock SET on_hand = on_hand - ? WHERE sku = ?", (need, sku))
+                note_id = _insert_note(conn, order["id"], notes_dir)
         if done:
-            served.append({"order_id": order["id"], "lines": list(needs.items())})
+            served.append({"order_id": order["id"], "note_id": note_id, "lines": list(needs.items())})
     return {"served": served, "skipped": skipped}
+
+
+def ascii_text(text: str) -> str:
+    """Accents are dropped and any other non-ASCII character becomes a question mark."""
+    plain = "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c))
+    return plain.encode("ascii", "replace").decode("ascii")
+
+
+def _note_text(conn: sqlite3.Connection, note: sqlite3.Row) -> str:
+    customer = conn.execute("SELECT * FROM customers WHERE code = ?", (note["customer_code"],)).fetchone()
+    lines = conn.execute(
+        "SELECT l.sku, p.name, l.quantity, l.sale_unit FROM customer_delivery_note_lines l "
+        "JOIN products p ON p.sku = l.sku WHERE l.note_id = ? ORDER BY l.line_no",
+        (note["id"],),
+    ).fetchall()
+    out = [
+        COMPANY,
+        f"Delivery note CDN-{note['id']:04d}",
+        f"Date: {note['issued_at'][:10]}",
+        f"Order: ORD-{note['order_id']:04d}",
+        f"Customer: {customer['name']} ({customer['code']}), {customer['city']}",
+        "",
+        *(f"{r['sku']}  {r['name']}  {r['quantity']} x {r['sale_unit']}" for r in lines),
+        "",
+        "Signature of the customer: ______________________",
+    ]
+    return ascii_text("\n".join(out)) + "\n"
+
+
+def issue(conn: sqlite3.Connection) -> list[Path]:
+    """Write the file of every customer delivery note whose file is missing; existing files are left alone."""
+    written = []
+    for note in conn.execute("SELECT * FROM customer_delivery_notes ORDER BY id").fetchall():
+        path = Path(note["document_file"])
+        if path.exists():
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(_note_text(conn, note), encoding="ascii", newline="\n")
+        written.append(path)
+    return written

@@ -35,6 +35,7 @@ CLARIFICATION_MAX_TOKENS = 1024  # a question or a resolution list covers every 
 MODES = ("live", "record", "replay")
 OUTBOX_DIR = DATA_DIR / "outbox"  # simulated WhatsApp replies
 SUPPLIER_OUTBOX_DIR = DATA_DIR / "supplier_outbox"  # simulated quote request and reminder emails
+CUSTOMER_DELIVERY_NOTES_DIR = DATA_DIR / "customer_delivery_notes"  # customer delivery note text files
 
 
 def default_db_path() -> Path:

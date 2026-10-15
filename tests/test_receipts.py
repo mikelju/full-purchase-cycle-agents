@@ -262,7 +262,7 @@ def test_serving_takes_orders_by_id_and_a_covered_order_is_served_before_any_rec
     before = _stock(conn, A)
     first = _order(conn, [(A, 10)])
     second = _order(conn, [(A, 5), (B, 1)])
-    result = receipts.serve(conn)
+    result = receipts.serve(conn, tmp_path / "notes")
     assert [o["order_id"] for o in result["served"]] == [first, second]
     assert result["skipped"] == []
     assert _status(conn, first) == _status(conn, second) == "served"
@@ -273,7 +273,7 @@ def test_an_order_with_one_short_line_is_skipped_and_reports_the_missing_units(t
     conn = _conn(tmp_path)
     before = (_stock(conn, A), _stock(conn, B))
     order = _order(conn, [(A, 1), (B, before[1] + 7), (B, 1)])
-    result = receipts.serve(conn)
+    result = receipts.serve(conn, tmp_path / "notes")
     assert result["served"] == []
     assert result["skipped"] == [{"order_id": order, "missing": {B: 8}}]
     assert _status(conn, order) == "received"
@@ -286,7 +286,7 @@ def test_a_large_older_order_is_skipped_while_a_later_one_is_served(tmp_path):
     large = _order(conn, [(A, on_hand + 1)])
     small = _order(conn, [(A, on_hand)])
     later = _order(conn, [(A, 1)])
-    result = receipts.serve(conn)
+    result = receipts.serve(conn, tmp_path / "notes")
     assert [o["order_id"] for o in result["served"]] == [small]
     assert [o["order_id"] for o in result["skipped"]] == [large, later]
     assert result["skipped"][0]["missing"] == {A: 1}
@@ -297,17 +297,93 @@ def test_a_large_older_order_is_skipped_while_a_later_one_is_served(tmp_path):
 def test_a_receipt_makes_a_waiting_order_servable_and_a_second_pass_serves_nothing(tmp_path):
     conn = _conn(tmp_path)
     order = _order(conn, [(EMPTY, 60)])
-    assert [o["order_id"] for o in receipts.serve(conn)["skipped"]] == [order]
+    assert [o["order_id"] for o in receipts.serve(conn, tmp_path / "notes")["skipped"]] == [order]
     _note(conn, "DN-1", lines=((EMPTY, 100),), sku=EMPTY, quantity=100)
     receipts.receive(conn)
-    assert [o["order_id"] for o in receipts.serve(conn)["served"]] == [order]
+    assert [o["order_id"] for o in receipts.serve(conn, tmp_path / "notes")["served"]] == [order]
     assert _stock(conn, EMPTY) == 40
-    assert receipts.serve(conn) == {"served": [], "skipped": []}
+    assert receipts.serve(conn, tmp_path / "notes") == {"served": [], "skipped": []}
     assert _stock(conn, EMPTY) == 40
 
 
 def test_orders_that_are_not_received_are_not_served(tmp_path):
     conn = _conn(tmp_path)
     done = _order(conn, [(A, 1)], status="served")
-    assert receipts.serve(conn) == {"served": [], "skipped": []}
+    assert receipts.serve(conn, tmp_path / "notes") == {"served": [], "skipped": []}
     assert _status(conn, done) == "served"
+
+
+def _served_note(tmp_path, conn, lines, customer=CUSTOMER):
+    order = db.insert_order(conn, customer, "web_form", "received", lines)
+    result = receipts.serve(conn, tmp_path / "notes")
+    return order, result
+
+
+def test_every_served_order_gets_one_note_with_its_order_lines_and_catalog_sale_units(tmp_path):
+    conn = _conn(tmp_path)
+    first, _ = _served_note(tmp_path, conn, [(A, 3), (B, 2), (A, 1)])
+    second, result = _served_note(tmp_path, conn, [(C, 4)])
+    notes = conn.execute("SELECT * FROM customer_delivery_notes ORDER BY id").fetchall()
+    assert [(n["order_id"], n["customer_code"]) for n in notes] == [(first, CUSTOMER), (second, CUSTOMER)]
+    assert result["served"][0]["note_id"] == notes[1]["id"]
+    lines = conn.execute(
+        "SELECT l.line_no, l.sku, l.quantity, l.sale_unit, p.sale_unit AS unit FROM customer_delivery_note_lines l "
+        "JOIN products p ON p.sku = l.sku WHERE l.note_id = ? ORDER BY l.line_no",
+        (notes[0]["id"],),
+    ).fetchall()
+    assert [(r["line_no"], r["sku"], r["quantity"]) for r in lines] == [(1, A, 3), (2, B, 2), (3, A, 1)]
+    assert all(r["sale_unit"] == r["unit"] for r in lines)
+    assert notes[0]["document_file"] == str(tmp_path / "notes" / f"CDN-{notes[0]['id']:04d}.txt")
+    assert notes[0]["issued_at"] == receipts.sim_clock.now(conn).strftime(receipts.sim_clock.FORMAT)
+
+
+def test_issue_writes_the_ascii_file_with_the_listed_fields_and_no_price(tmp_path):
+    conn = _conn(tmp_path)
+    order, _ = _served_note(tmp_path, conn, [(A, 3), (B, 2)])
+    written = receipts.issue(conn)
+    note = conn.execute("SELECT * FROM customer_delivery_notes").fetchone()
+    path = Path(note["document_file"])
+    assert written == [path] and path.name == f"CDN-{note['id']:04d}.txt"
+    raw = path.read_bytes()
+    raw.decode("ascii")
+    text = raw.decode("ascii")
+    customer = next(c for c in CUSTOMERS if c.code == CUSTOMER)
+    for expected in (receipts.COMPANY, customer.name, customer.code, customer.city, f"ORD-{order:04d}"):
+        assert expected in text
+    assert note["issued_at"][:10] in text
+    for sku, quantity in ((A, 3), (B, 2)):
+        product = next(p for p in PRODUCTS if p.sku == sku)
+        assert any(
+            sku in line and product.name in line and str(quantity) in line and product.sale_unit in line
+            for line in text.splitlines()
+        )
+    assert "Signature" in text
+    assert not any(str(p.price_eur) in text for p in PRODUCTS[1:3]) and "EUR" not in text
+
+
+def test_an_existing_file_is_not_rewritten_and_a_missing_one_is_written_again(tmp_path):
+    conn = _conn(tmp_path)
+    _served_note(tmp_path, conn, [(A, 1)])
+    [path] = receipts.issue(conn)
+    path.write_text("kept", encoding="ascii")
+    assert receipts.issue(conn) == []
+    assert path.read_text(encoding="ascii") == "kept"
+    path.unlink()
+    assert receipts.issue(conn) == [path]
+
+
+def test_the_files_are_ascii_for_every_catalog_product_and_customer(tmp_path):
+    conn = _conn(tmp_path)
+    for customer in CUSTOMERS:
+        db.insert_order(conn, customer.code, "web_form", "received", [(p.sku, 1) for p in PRODUCTS])
+        receipts.serve(conn, tmp_path / "notes")
+        for path in receipts.issue(conn):
+            path.read_bytes().decode("ascii")
+        conn.execute("UPDATE stock SET on_hand = 5")
+        conn.commit()
+    assert conn.execute("SELECT COUNT(*) FROM customer_delivery_notes").fetchone()[0] == len(CUSTOMERS)
+    assert len(list((tmp_path / "notes").glob("CDN-*.txt"))) == len(CUSTOMERS)
+
+
+def test_non_ascii_text_is_transliterated_by_a_fixed_rule():
+    assert receipts.ascii_text("Cl\u00ednica Sant Mart\u00ed \u2013 Pe\u00f1a \u20ac") == "Clinica Sant Marti ? Pena ?"
