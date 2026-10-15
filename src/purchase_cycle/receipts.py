@@ -4,6 +4,7 @@ Deterministic: no model is called here.
 """
 
 import math
+import os
 import sqlite3
 import unicodedata
 from pathlib import Path
@@ -180,7 +181,14 @@ def issue(conn: sqlite3.Connection) -> list[Path]:
         if path.exists():
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(_note_text(conn, note), encoding="ascii", newline="\n")
+        temp = path.with_name(
+            path.name + ".tmp"
+        )  # a crash while writing never leaves a partial file under the real name
+        try:
+            temp.write_text(_note_text(conn, note), encoding="ascii", newline="\n")
+            os.replace(temp, path)
+        finally:
+            temp.unlink(missing_ok=True)
         written.append(path)
     return written
 

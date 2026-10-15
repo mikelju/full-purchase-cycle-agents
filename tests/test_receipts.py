@@ -481,3 +481,21 @@ def test_an_infinite_or_oversized_quantity_is_parked_and_the_next_note_is_receiv
     assert _stock(conn, A) == before + 7
     assert receipts.candidates(conn) == []
 
+
+def test_a_crash_while_writing_a_delivery_note_leaves_no_file_and_a_run_writes_it_whole(tmp_path, monkeypatch):
+    conn = _conn(tmp_path)
+    _served_note(tmp_path, conn, [(A, 1)])
+    path = Path(conn.execute("SELECT document_file FROM customer_delivery_notes").fetchone()[0])
+    real = Path.write_text
+
+    def half(self, text, *args, **kwargs):
+        real(self, text[: len(text) // 2], *args, **kwargs)
+        raise OSError("disk full")
+
+    monkeypatch.setattr(Path, "write_text", half)
+    with pytest.raises(OSError):
+        receipts.issue(conn)
+    assert list(path.parent.iterdir()) == []  # no truncated file under the real name, no temporary file
+    monkeypatch.setattr(Path, "write_text", real)
+    assert receipts.issue(conn) == [path]
+    assert "Signature" in path.read_text(encoding="ascii") and [p.name for p in path.parent.iterdir()] == [path.name]
