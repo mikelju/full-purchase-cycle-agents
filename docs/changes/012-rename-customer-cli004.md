@@ -1,6 +1,6 @@
 # 012 - Rename customer CLI-004 and five more customers
 
-Status: proposed
+Status: ready locally (PR to `main`, pending owner merge)
 
 ## Contract
 Goal and reason:
@@ -36,7 +36,7 @@ Owner request on 2026-10-15 to open this change; delivery as branch `cambio-012-
 - [x] Owner decisions on the new name, the recordings method and the scope.
 - [x] Rename in `catalog.py`, datasets, source texts and audit CSVs through their generators where they exist, by hand only where the file is not generated.
 - [x] Recordings per the owner's decision; eval figures before and after.
-- [ ] `npm run check`, adversarial review, delivery.
+- [x] `npm run check`, adversarial review, delivery.
 
 ## Decisions
 - Owner, 2026-10-15 via Lavish: CLI-004 becomes "Clinica Demo Gipuzkoa".
