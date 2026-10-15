@@ -57,6 +57,7 @@ Only changes of approach or scope with their reason.
 - C2 real path first used a replay `demo`, which shows the graph and node spans but no model-call span, since replay answers from recordings without `ChatAnthropic`.
 - Owner decision of 2026-10-15: one live run of the order demo with the real model is authorized, with LangSmith off.
   It ran once with the four LangSmith tracing variables `false` and both LangSmith keys empty in its environment, which `load_dotenv` does not override from `.env`; Phoenix received 3 CHAIN spans (graph, `extract`, `match`) and 1 LLM span (`ChatAnthropic`, `claude-haiku-4-5-20251001`), and no recording changed (`.evidence/cambio-013/c2-spans.txt`).
+- Owner decision of 2026-10-15: the launcher sets `PHOENIX_CSRF_TRUSTED_ORIGINS=http://127.0.0.1:6006,http://localhost:6006`, so Phoenix answers 401 to any request whose `Origin` or `Referer` is another host, and the always-on wildcard CORS of the anonymous OAuth and `/.well-known/` paths is accepted as SEC-026 in `docs/security.md` (`.evidence/cambio-013/c1.txt`).
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
