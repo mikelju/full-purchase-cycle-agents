@@ -42,6 +42,13 @@ def _problem(conn: sqlite3.Connection, lines: list[sqlite3.Row]) -> str | None:
             return f"line {line['line_no']} has quantity {quantity:g}, not a number that fits the stock"
         if quantity != int(quantity) or quantity <= 0:
             return f"line {line['line_no']} has quantity {quantity:g}, not a whole positive number"
+    added: dict[str, int] = {}
+    for line in lines:
+        added[line["sku"]] = added.get(line["sku"], 0) + int(line["quantity"])
+    for sku, units in added.items():
+        on_hand = conn.execute("SELECT on_hand FROM stock WHERE sku = ?", (sku,)).fetchone()
+        if (on_hand[0] if on_hand else 0) + units > MAX_QUANTITY:
+            return f"receiving {units} units of {sku} would take its stock past {MAX_QUANTITY}"
     return None
 
 

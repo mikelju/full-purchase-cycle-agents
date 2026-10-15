@@ -482,6 +482,18 @@ def test_an_infinite_or_oversized_quantity_is_parked_and_the_next_note_is_receiv
     assert receipts.candidates(conn) == []
 
 
+def test_a_note_that_would_overflow_the_stock_is_parked(tmp_path):
+    conn = _conn(tmp_path)
+    before = _stock(conn, A)
+    first = _note(conn, "DN-1", lines=((A, 2**62),))  # each note fits the cap on its own; together they overflow
+    second = _note(conn, "DN-2", lines=((A, 2**62),))
+    done = receipts.receive(conn)
+    assert [d["status"] for d in done] == ["received", "failed"]
+    assert _receipt_rows(conn) == [(first, "received"), (second, "failed")]
+    assert _stock(conn, A) == before + 2**62
+    assert "past" in db.list_failures(conn)[0]["error"]
+
+
 def test_a_crash_while_writing_a_delivery_note_leaves_no_file_and_a_run_writes_it_whole(tmp_path, monkeypatch):
     conn = _conn(tmp_path)
     _served_note(tmp_path, conn, [(A, 1)])
