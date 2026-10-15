@@ -14,7 +14,7 @@
     "format": "uv run --quiet ruff format --quiet",
     "eval": "uv run --quiet purchase-cycle eval --mode replay --split test",
     "eval:live": "uv run --quiet purchase-cycle eval --mode live --split test",
-    "phoenix": "uvx --from arize-phoenix==20.18.0 python src/purchase_cycle/phoenix_server.py"
+    "phoenix": "uvx --exclude-newer 2026-10-01 --from arize-phoenix==20.18.0 python src/purchase_cycle/phoenix_server.py"
   },
   "devDependencies": {
     "gh-axi": "0.1.35",

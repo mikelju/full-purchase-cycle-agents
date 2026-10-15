@@ -1,9 +1,13 @@
-"""Start a local Phoenix server that listens on loopback only, with its OTLP gRPC receiver and AI assistant off.
+"""Start a local Phoenix server on loopback only, with every feature this project does not use turned off.
 
-`npm run phoenix` runs this file inside the Phoenix environment of `uvx --from arize-phoenix==20.18.0 python`,
-so it imports nothing from this project.
-Phoenix 20.18.0 binds its gRPC receiver (port 4317) on every interface and has no setting for its host,
+`npm run phoenix` runs this file inside the Phoenix environment of `uvx --from arize-phoenix==<pinned version>`,
+with the version pinned in `package.json`, so it imports nothing from this project.
+Checked against that pinned version:
+Phoenix binds its gRPC receiver (port 4317) on every interface and has no setting for its host,
 so the launcher disables that receiver; traces go to the HTTP collector on 127.0.0.1:6006.
+Phoenix mounts an unauthenticated MCP server at `/mcp` that answers any browser origin
+(`Access-Control-Allow-Origin: *`), so a web page could read or delete traces; the launcher turns it off.
+Code sandboxes, the AI assistant and its tools are off too.
 """
 
 import inspect
@@ -21,6 +25,8 @@ SERVER_ENV = {
     "PHOENIX_AGENTS_DISABLE_BASH": "true",
     "PHOENIX_AGENTS_DISABLE_WEB_ACCESS": "true",
     "PHOENIX_AGENTS_DISABLE_GITHUB": "true",
+    "PHOENIX_ENABLE_MCP_SERVER": "false",
+    "PHOENIX_ALLOWED_SANDBOX_PROVIDERS": "NONE",
 }
 
 

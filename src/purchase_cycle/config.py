@@ -65,6 +65,7 @@ def configure_tracing(mode: str) -> None:
 
 PHOENIX_ENDPOINT = "http://127.0.0.1:6006/v1/traces"  # the server started by `npm run phoenix`
 PHOENIX_PROJECT = "purchase-cycle"
+PHOENIX_EXPORT_TIMEOUT_SECONDS = 1  # local server; a longer wait only delays the exit when it is down
 _phoenix_provider = None
 
 
@@ -87,9 +88,14 @@ def configure_phoenix_tracing():
     if _phoenix_provider is not None or not phoenix_tracing_allowed():
         return _phoenix_provider
     from openinference.instrumentation.langchain import LangChainInstrumentor
-    from phoenix.otel import register
+    from phoenix.otel import PROJECT_NAME, BatchSpanProcessor, HTTPSpanExporter, Resource, TracerProvider
 
-    # Spans are exported one by one so a short CLI run loses none at exit.
-    _phoenix_provider = register(project_name=PHOENIX_PROJECT, endpoint=PHOENIX_ENDPOINT, batch=False, verbose=False)
+    # Spans leave in a background batch, so a run never waits on each span when Phoenix is down.
+    # The SDK flushes the batch at interpreter exit, so a short CLI run still delivers every span;
+    # the short export timeout caps that last flush when nothing listens.
+    provider = TracerProvider(resource=Resource.create({PROJECT_NAME: PHOENIX_PROJECT}), verbose=False)
+    exporter = HTTPSpanExporter(endpoint=PHOENIX_ENDPOINT, timeout=PHOENIX_EXPORT_TIMEOUT_SECONDS)
+    provider.add_span_processor(BatchSpanProcessor(span_exporter=exporter))  # replaces Phoenix's default processor
+    _phoenix_provider = provider
     LangChainInstrumentor().instrument(tracer_provider=_phoenix_provider)
     return _phoenix_provider
