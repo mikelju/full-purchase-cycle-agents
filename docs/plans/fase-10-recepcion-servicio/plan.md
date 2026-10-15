@@ -52,6 +52,12 @@ Written for the owner decisions D1 to D9 (option A) of 2026-10-15 recorded in th
   Seed stock at `06e4397`: GLV-NIT-M 74, MASK-IIR 221, GAUZE-NS-5 54, GEL-500 118, SAL-500 244, THERM-DIG 15, BND-ELA-10 107.
   Proposed customer orders, in id order: CLI-001 GLV-NIT-M 150 (waits for A-5001, served on run 1); CLI-002 MASK-IIR 10 (covered before any receipt, served on run 1); CLI-003 GAUZE-NS-5 120 (never covered, skipped on both runs with its missing units); CLI-004 THERM-DIG 25 (skipped on run 1, served on run 2 after E-0306 arrives with the later scan); CLI-001 GEL-500 20 plus SAL-500 30 (two lines, served on run 1).
   The executor confirms the exact numbers against the seed before writing the file.
+- As built (differences from the notes above; this plan is not the frozen spec):
+  - Printed receipt references are `RCP-NNNN`, not `GR-NNNN`.
+  - The registration function is `add_receipts_commands(sub)`, not `add_receipt_commands`.
+  - `list_receipts` and `show_delivery_note` do not exist: the SQL of `receipts list` and `receipts show` is inline in `receipts_cli.py`.
+  - `receipts run` does not print stock before and after; only `receipt-demo` does.
+  - Only `receipts run` takes `--notes-dir`; `receipt-demo` has an extra `--receipts` option.
 
 ## Rules for executors
 - Execution starts from the approved frozen spec; changing a criterion needs a deviation approved by the owner.
@@ -99,7 +105,6 @@ This file is the durable state: a new session resumes from here and from Git.
   - Evidence: `uv run pytest -q tests/test_goods_receipt_eval.py` 20 passed (failed first at collection, no module); 39 scenarios `GR-001` to `GR-039` and 20 coverage tags (at least 2 each), expectations and printed lines from an independent simulator of the rules in `_simulate`; the 9 critical-error injections and 2 wrong-expectation cases exit 1; replay `purchase-cycle eval --suite goods_receipt` 100.0% [91.0, 100.0] n=39, critical errors 0, saved as `.evidence/fase-10/eval-goods-receipt.txt`; 111 passed over the other eval/harness test files; ruff check and format clean; suite in `SUITES` and `_suite`, left out of `UPLOAD_SUITES` and `ALL_SUITES`.
 - [x] 11. Registration in `ALL_SUITES` (C1, C11) - files: `src/purchase_cycle/evaluation/harness.py`, `tests/test_whatsapp_eval.py` (DV-B); check: `uv run pytest -q tests/test_goods_receipt_eval.py tests/test_whatsapp_eval.py tests/test_offer_eval.py tests/test_document_eval.py tests/test_reconcile_eval.py tests/test_claim_eval.py`: `goods_receipt` is in `SUITES`, in `ALL_SUITES` right before `offer_extraction`, not in `UPLOAD_SUITES`; only the full-order list of `tests/test_whatsapp_eval.py` changes; `npm run eval` replays seventeen evaluations with every gate PASS, saved as `.evidence/fase-10/eval-after-11.txt`.
   - Evidence: `uv run pytest -q` of the six listed files 95 passed; `goods_receipt` in `ALL_SUITES` right before `offer_extraction` (not in `UPLOAD_SUITES`); only the full-order list of `tests/test_whatsapp_eval.py` changed (DV-B); `npm run eval` exit 0 with seventeen evaluation tables and no gate FAIL, saved as `.evidence/fase-10/eval-after-11.txt`; ruff check and format clean.
-  - Evidence:
 
 ### Batch E - Demo
 Before increment 12 the owner decides DV-A; without an answer the batch does not start.
