@@ -1,7 +1,11 @@
 """C10: `receipts run`, `receipts list` and `receipts show`; C9: the restart between processes."""
 
+import os
+import subprocess
+import sys
+
 from purchase_cycle import cli, db
-from test_receipts import _scenario
+from test_receipts import EMPTY, _dump, _note, _scenario
 
 
 def _args(folder, *words):
@@ -102,3 +106,48 @@ def test_reconcile_list_output_is_unchanged_by_the_receipts_tables(tmp_path, cap
     _run(tmp_path, capsys, "run")
     cli.main(["--db", str(tmp_path / "r.db"), "reconcile", "list"])
     assert capsys.readouterr().out == first
+
+
+def _later_note(folder):
+    """A later delivery note and reconciliation, as a scan between two runs would store them."""
+    conn = db.connect(folder / "r.db")
+    try:
+        _note(conn, "DN-3", lines=((EMPTY, 500),), sku=EMPTY, quantity=500)
+    finally:
+        conn.close()
+
+
+def _subprocess_run(folder):
+    env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "LANGSMITH_API_KEY")}
+    command = [sys.executable, "-m", "purchase_cycle.cli", *_args(folder, "run")]
+    done = subprocess.run(command, capture_output=True, text=True, env=env)
+    assert done.returncode == 0, done.stderr
+
+
+def _final(folder):
+    conn = db.connect(folder / "r.db")
+    try:
+        final = _dump(conn, folder / "notes")
+    finally:
+        conn.close()
+    threads = db.connect(folder / "checkpoints.sqlite").execute("SELECT DISTINCT thread_id FROM checkpoints")
+    final["threads"] = sorted(r[0] for r in threads)
+    return final
+
+
+def test_run_a_later_insert_and_run_in_separate_processes_equal_the_same_steps_in_one_process(tmp_path, capsys):
+    separate, single = tmp_path / "separate", tmp_path / "single"
+    for folder in (separate, single):
+        _scenario(folder)
+    _subprocess_run(separate)
+    _later_note(separate)
+    _subprocess_run(separate)
+    cli.main(_args(single, "run"))
+    _later_note(single)
+    cli.main(_args(single, "run"))
+    capsys.readouterr()
+    final = _final(separate)
+    assert final == _final(single)
+    assert final["threads"] == ["receipt-run-0001", "receipt-run-0002"]
+    assert [r[1] for r in final["orders"]] == ["served", "served", "served"]  # the later note served the waiting order
+    assert sorted(final["files"]) == ["CDN-0001.txt", "CDN-0002.txt", "CDN-0003.txt"]
