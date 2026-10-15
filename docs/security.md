@@ -26,6 +26,9 @@ Since phase 05, SEC-003, SEC-004 and SEC-007 also affect the WhatsApp channel: t
 | SEC-018 | Low | `reconcile claims`, `show` and `approve` output in `src/purchase_cycle/cli.py` | The `fill_template` output and the claim text are printed unescaped, so control characters from supplier text reach the terminal; this extends SEC-004 | open - revisit when claims are sent over a real channel | phase 09, review round 1 |
 | SEC-019 | Low | `failures.error` for step `claim_drafting` | The error text holds supplier text or model output and is printed by `failures list`; this extends SEC-011 and SEC-012 | open - owner decision | phase 09, review round 1 |
 | SEC-020 | Low | `--body-file` of `reconcile approve` in `src/purchase_cycle/cli.py` | The edited text is read with no size limit and is not run through the draft fact check, so a very large or unchecked file is stored and sent as the approver's own text | open - accepted for a local operator | phase 09, review round 1 |
+| SEC-021 | Low | `issue` in `src/purchase_cycle/receipts.py` and the `customer_delivery_notes` folder (default `data/customer_delivery_notes/`) | Each served order writes a local text file with the customer name, code and city, the order number and the quantities delivered; the files have no retention period or purge command and nothing restricts who can read the folder, which extends SEC-012; they hold no price and no contact data, and the data is synthetic today | open - before real customer data | phase 10 |
+| SEC-022 | Medium | `_receive_one` and `_problem` in `src/purchase_cycle/receipts.py` | The delivered quantity read by the model from a linked delivery note goes straight into `stock.on_hand` and then decides which customer orders are served; code checks only that the SKU is in the catalog and the quantity is a whole positive number, with no upper bound and no human check, and a note linked to a `discrepancies` invoice is received too; a wrong extracted quantity (the document extraction errors DOC-060 and DOC-112 are an example) therefore inflates stock and can serve an order the goods do not cover, and no command reverses a receipt | open - before real stock is managed | phase 10 |
+| SEC-023 | Low | `--notes-dir` of `receipts run` in `src/purchase_cycle/receipts_cli.py` and `_insert_note` and `issue` in `src/purchase_cycle/receipts.py` | The folder is taken as given: it is not checked or confined to `data/`, missing parents are created, and the path is stored in `customer_delivery_notes.document_file` as typed (a relative path is stored relative), so `receipts show` later reads whatever path the table holds; the file name is always `CDN-NNNN.txt` from the row id and the text is ASCII only, so customer text never reaches the file name, and a file that already exists is not rewritten, but a file of that name left by someone else is shown as the note | open - accepted for a single local operator | phase 10 |
 
 ## Options
 
@@ -37,3 +40,15 @@ SEC-001:
 SEC-002:
 - Keep it, since the git history already carries the author identity.
 - Replace it with a GitHub noreply address or remove the email field; the history keeps the earlier value either way.
+
+SEC-021:
+- Accept the risk while the data is synthetic.
+- Add a retention period and a purge command with the one for SEC-012; `data/` is git-ignored, so the files are not versioned.
+
+SEC-022:
+- Accept the risk for the demo and keep receiving only reconciled notes.
+- Hold a note for a person to confirm when its quantity exceeds the purchase order quantity or when its invoice has a quantity difference, and add a command that reverses a receipt.
+
+SEC-023:
+- Accept the risk for a single local operator.
+- Resolve the folder under `data/` and refuse any path outside it, and store the path relative to that folder.
