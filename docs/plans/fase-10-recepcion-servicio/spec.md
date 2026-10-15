@@ -1,7 +1,7 @@
 # Phase 10 - Goods receipt and serving: specification
 
-Status: spec in review
-Approved by the owner: -
+Status: approved (frozen)
+Approved by the owner: 2026-10-15 (option A chosen for D1 to D9)
 Master plan: `../0_plan_maestro.md`
 
 ## Goal
@@ -114,7 +114,11 @@ Frozen on approval. Changing them requires a deviation approved by the owner.
 - The phase 08 limitations remain: one invoice and one delivery note per order, fixed tolerances, and the DOC-060 and DOC-112 extraction errors until their change lands.
 
 ## Open decisions
-Each decision lists 2 to 4 options with their trade-off; the scope and criteria above follow the option marked (recommended).
+None; every decision was resolved on approval.
+
+## Resolved decisions
+Owner 2026-10-15: option A (the recommended one) for D1 to D9; the scope and criteria above already follow it.
+Each decision keeps its options and trade-offs for the record.
 - D1 - What counts as a reconciled delivery note:
   - A (recommended): any delivery note referenced by a reconciliation with result `matched` or `discrepancies`, whatever the claim status; follows the master plan wording and does not hold goods that are physically in the warehouse while a money claim is open.
   - B: only `matched`, or `discrepancies` once the claim is decided (`sent` or `rejected`); stricter, but goods wait on a person's claim decision and the demo needs the claim steps first.
