@@ -81,3 +81,33 @@ def _receive_one(conn: sqlite3.Connection, doc_id: int) -> dict:
 def receive(conn: sqlite3.Connection) -> list[dict]:
     """Receive every candidate note, one transaction per note; a note that cannot be received is parked and the rest go on."""
     return [_receive_one(conn, doc_id) for doc_id in candidates(conn)]
+
+
+def _needs(conn: sqlite3.Connection, order_id: int) -> dict[str, int]:
+    rows = conn.execute(
+        "SELECT sku, SUM(quantity) AS quantity FROM order_lines WHERE order_id = ? GROUP BY sku ORDER BY sku",
+        (order_id,),
+    ).fetchall()
+    return {r["sku"]: r["quantity"] for r in rows}
+
+
+def serve(conn: sqlite3.Connection) -> dict:
+    """Serve the `received` orders by ascending id when stock covers every line; a skipped order reports its missing units."""
+    served, skipped = [], []
+    for order in conn.execute("SELECT id FROM orders WHERE status = 'received' ORDER BY id").fetchall():
+        needs = _needs(conn, order["id"])
+        on_hand = {sku: conn.execute("SELECT on_hand FROM stock WHERE sku = ?", (sku,)).fetchone()[0] for sku in needs}
+        missing = {sku: need - on_hand[sku] for sku, need in needs.items() if need > on_hand[sku]}
+        if missing:
+            skipped.append({"order_id": order["id"], "missing": missing})
+            continue
+        with conn:
+            done = conn.execute(
+                "UPDATE orders SET status = 'served' WHERE id = ? AND status = 'received'", (order["id"],)
+            ).rowcount
+            if done:
+                for sku, need in needs.items():
+                    conn.execute("UPDATE stock SET on_hand = on_hand - ? WHERE sku = ?", (need, sku))
+        if done:
+            served.append({"order_id": order["id"], "lines": list(needs.items())})
+    return {"served": served, "skipped": skipped}

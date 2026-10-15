@@ -251,3 +251,63 @@ def test_after_an_exact_delivery_that_covers_the_orders_no_request_starts(tmp_pa
     receipts.receive(conn)
     assert quotes.shortfalls(conn) == []
     assert _scan(tmp_path, conn) == []
+
+
+def _status(conn, order_id):
+    return conn.execute("SELECT status FROM orders WHERE id = ?", (order_id,)).fetchone()[0]
+
+
+def test_serving_takes_orders_by_id_and_a_covered_order_is_served_before_any_receipt(tmp_path):
+    conn = _conn(tmp_path)
+    before = _stock(conn, A)
+    first = _order(conn, [(A, 10)])
+    second = _order(conn, [(A, 5), (B, 1)])
+    result = receipts.serve(conn)
+    assert [o["order_id"] for o in result["served"]] == [first, second]
+    assert result["skipped"] == []
+    assert _status(conn, first) == _status(conn, second) == "served"
+    assert _stock(conn, A) == before - 15
+
+
+def test_an_order_with_one_short_line_is_skipped_and_reports_the_missing_units(tmp_path):
+    conn = _conn(tmp_path)
+    before = (_stock(conn, A), _stock(conn, B))
+    order = _order(conn, [(A, 1), (B, before[1] + 7), (B, 1)])
+    result = receipts.serve(conn)
+    assert result["served"] == []
+    assert result["skipped"] == [{"order_id": order, "missing": {B: 8}}]
+    assert _status(conn, order) == "received"
+    assert (_stock(conn, A), _stock(conn, B)) == before
+
+
+def test_a_large_older_order_is_skipped_while_a_later_one_is_served(tmp_path):
+    conn = _conn(tmp_path)
+    on_hand = _stock(conn, A)
+    large = _order(conn, [(A, on_hand + 1)])
+    small = _order(conn, [(A, on_hand)])
+    later = _order(conn, [(A, 1)])
+    result = receipts.serve(conn)
+    assert [o["order_id"] for o in result["served"]] == [small]
+    assert [o["order_id"] for o in result["skipped"]] == [large, later]
+    assert result["skipped"][0]["missing"] == {A: 1}
+    assert [_status(conn, o) for o in (large, small, later)] == ["received", "served", "received"]
+    assert _stock(conn, A) == 0
+
+
+def test_a_receipt_makes_a_waiting_order_servable_and_a_second_pass_serves_nothing(tmp_path):
+    conn = _conn(tmp_path)
+    order = _order(conn, [(EMPTY, 60)])
+    assert [o["order_id"] for o in receipts.serve(conn)["skipped"]] == [order]
+    _note(conn, "DN-1", lines=((EMPTY, 100),), sku=EMPTY, quantity=100)
+    receipts.receive(conn)
+    assert [o["order_id"] for o in receipts.serve(conn)["served"]] == [order]
+    assert _stock(conn, EMPTY) == 40
+    assert receipts.serve(conn) == {"served": [], "skipped": []}
+    assert _stock(conn, EMPTY) == 40
+
+
+def test_orders_that_are_not_received_are_not_served(tmp_path):
+    conn = _conn(tmp_path)
+    done = _order(conn, [(A, 1)], status="served")
+    assert receipts.serve(conn) == {"served": [], "skipped": []}
+    assert _status(conn, done) == "served"
