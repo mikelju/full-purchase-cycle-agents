@@ -1,0 +1,73 @@
+{
+  "dataset_version": "1.0",
+  "description": "an unlinked document next to a matched note",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [],
+    "orders": [],
+    "receipts": [
+      [
+        "DN-2",
+        "received"
+      ]
+    ],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 3,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-010",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-S",
+          10
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        10
+      ],
+      "result": "unlinked"
+    },
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-L",
+          3
+        ]
+      ],
+      "number": "DN-2",
+      "po": [
+        "GLV-NIT-L",
+        3
+      ],
+      "result": "matched"
+    }
+  ],
+  "orders": [],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-2  PO-0001  received  GLV-NIT-L=3"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "matched_received",
+    "no_receipt_unlinked"
+  ]
+}

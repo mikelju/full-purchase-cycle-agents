@@ -344,7 +344,7 @@ class UiApp:
         marks = ", ".join("?" for _ in quotes.ORDER_STATUSES)
         rows = conn.execute(
             "SELECT l.sku, SUM(l.quantity) AS demand, s.on_hand, "
-            "(SELECT COALESCE(SUM(q.quantity), 0) FROM quote_requests q WHERE q.sku = l.sku) AS requested, "
+            f"{quotes.REQUESTED_NOT_RECEIVED} AS requested, "
             "(SELECT MIN(q.id) FROM quote_requests q WHERE q.sku = l.sku AND q.status = ?) AS waiting_id "
             "FROM order_lines l JOIN orders o ON o.id = l.order_id JOIN stock s ON s.sku = l.sku "
             f"WHERE o.status IN ({marks}) "

@@ -1,0 +1,56 @@
+{
+  "dataset_version": "1.0",
+  "description": "a matched note with no waiting order only adds stock",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [],
+    "orders": [],
+    "receipts": [
+      [
+        "DN-1",
+        "received"
+      ]
+    ],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 20,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-002",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-M",
+          20
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-M",
+        20
+      ],
+      "result": "matched"
+    }
+  ],
+  "orders": [],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-1  PO-0001  received  GLV-NIT-M=20"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "matched_received"
+  ]
+}

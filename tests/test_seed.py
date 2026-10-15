@@ -447,3 +447,136 @@ def test_a_second_claim_for_one_reconciliation_is_rejected(tmp_path):
     _claim(conn, reconciliation)
     with pytest.raises(sqlite3.IntegrityError):
         _claim(conn, reconciliation, status="rejected")
+
+
+RECEIPT_TABLES = ("goods_receipts", "goods_receipt_lines", "customer_delivery_notes", "customer_delivery_note_lines")
+
+
+def _delivery_note_and_purchase_order(conn, number="DN-X"):
+    """One stored delivery note with its purchase order: (document id, purchase order id)."""
+    reconciliation = _reconciliation(conn, number=f"INV-{number}")
+    purchase_order = conn.execute(
+        "SELECT purchase_order_id FROM reconciliations WHERE id = ?", (reconciliation,)
+    ).fetchone()[0]
+    _document(conn, number=number, content_hash=number, status="linked", kind="delivery_note")
+    return conn.execute("SELECT MAX(id) FROM supplier_documents").fetchone()[0], purchase_order
+
+
+def _receipt(conn, note, purchase_order, status="received"):
+    conn.execute(
+        "INSERT INTO goods_receipts (delivery_note_id, purchase_order_id, received_at, status) VALUES (?, ?, 't', ?)",
+        (note, purchase_order, status),
+    )
+
+
+def _customer_note(conn, order_id, number_hint="x"):
+    conn.execute(
+        "INSERT INTO customer_delivery_notes (order_id, customer_code, issued_at, document_file) "
+        "VALUES (?, (SELECT code FROM customers LIMIT 1), 't', ?)",
+        (order_id, f"{number_hint}.txt"),
+    )
+
+
+def _customer_order(conn):
+    conn.execute(
+        "INSERT INTO orders (customer_code, channel, status) VALUES ((SELECT code FROM customers LIMIT 1), 'demo', 'received')"
+    )
+    return conn.execute("SELECT MAX(id) FROM orders").fetchone()[0]
+
+
+def test_seed_creates_the_four_receipt_tables_empty(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    counts = db.seed(conn)
+    for table in RECEIPT_TABLES:
+        assert conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0
+    assert [r["name"] for r in conn.execute("PRAGMA table_info(goods_receipts)")] == [
+        "id",
+        "delivery_note_id",
+        "purchase_order_id",
+        "received_at",
+        "status",
+    ]
+    assert set(counts) == {"customers", "products", "stock", "orders", "order_lines"}
+
+
+def test_seed_twice_gives_the_same_rows_in_every_table(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    names = [
+        r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+    ]
+    first = {t: _rows(conn, t) for t in names}
+    db.seed(conn)
+    assert {t: _rows(conn, t) for t in names} == first
+
+
+def test_a_phase_09_database_gains_the_receipt_tables_without_losing_rows(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    _claim(conn, _reconciliation(conn))
+    for table in reversed(RECEIPT_TABLES):
+        conn.execute(f"DROP TABLE {table}")
+    conn.commit()
+    tables = OLD_TABLES + RECONCILIATION_TABLES + ("claims", "quote_requests")
+    before = {t: _rows(conn, t) for t in tables}
+    assert before["claims"]
+    db.seed(conn)
+    assert {t: _rows(conn, t) for t in tables} == before
+    for table in RECEIPT_TABLES:
+        assert conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0
+
+
+def test_a_changed_stock_survives_a_reseed(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    sku = conn.execute("SELECT sku FROM stock LIMIT 1").fetchone()[0]
+    original = conn.execute("SELECT on_hand FROM stock WHERE sku = ?", (sku,)).fetchone()[0]
+    conn.execute("UPDATE stock SET on_hand = ? WHERE sku = ?", (original + 17, sku))
+    conn.commit()
+    db.seed(conn)
+    assert conn.execute("SELECT on_hand FROM stock WHERE sku = ?", (sku,)).fetchone()[0] == original + 17
+
+
+def test_receipt_status_check_rejects_unknown_values(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    note, purchase_order = _delivery_note_and_purchase_order(conn)
+    with pytest.raises(sqlite3.IntegrityError):
+        _receipt(conn, note, purchase_order, status="done")
+    _receipt(conn, note, purchase_order, status="failed")
+
+
+def test_a_second_receipt_for_one_delivery_note_is_rejected(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    note, purchase_order = _delivery_note_and_purchase_order(conn)
+    _receipt(conn, note, purchase_order)
+    with pytest.raises(sqlite3.IntegrityError):
+        _receipt(conn, note, purchase_order, status="failed")
+
+
+def test_a_second_customer_delivery_note_for_one_order_is_rejected(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    order = _customer_order(conn)
+    _customer_note(conn, order, "a")
+    with pytest.raises(sqlite3.IntegrityError):
+        _customer_note(conn, order, "b")
+
+
+def test_receipt_line_quantities_must_be_positive_whole_numbers(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    note, purchase_order = _delivery_note_and_purchase_order(conn)
+    _receipt(conn, note, purchase_order)
+    receipt = conn.execute("SELECT MAX(id) FROM goods_receipts").fetchone()[0]
+    sku = conn.execute("SELECT sku FROM products LIMIT 1").fetchone()[0]
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("INSERT INTO goods_receipt_lines VALUES (?, 1, ?, 0)", (receipt, sku))
+    conn.execute("INSERT INTO goods_receipt_lines VALUES (?, 1, ?, 3)", (receipt, sku))
+    order = _customer_order(conn)
+    _customer_note(conn, order)
+    cdn = conn.execute("SELECT MAX(id) FROM customer_delivery_notes").fetchone()[0]
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("INSERT INTO customer_delivery_note_lines VALUES (?, 1, ?, 0, 'box')", (cdn, sku))
+    conn.execute("INSERT INTO customer_delivery_note_lines VALUES (?, 1, ?, 2, 'box')", (cdn, sku))

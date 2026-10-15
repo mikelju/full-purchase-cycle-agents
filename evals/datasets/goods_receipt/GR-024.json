@@ -1,0 +1,69 @@
+{
+  "dataset_version": "1.0",
+  "description": "a fractional quantity is parked",
+  "expected": {
+    "failures": 1,
+    "model_calls": 0,
+    "notes": [],
+    "orders": [
+      "received"
+    ],
+    "receipts": [
+      [
+        "DN-1",
+        "failed"
+      ]
+    ],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-024",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-S",
+          2.5
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        3
+      ],
+      "result": "matched"
+    }
+  ],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-S",
+          3
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-1  PO-0001  failed  reason: line 1 has quantity 2.5, not a whole positive number",
+        "skipped ORD-0001  missing GLV-NIT-S=3"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "parked_fractional"
+  ]
+}

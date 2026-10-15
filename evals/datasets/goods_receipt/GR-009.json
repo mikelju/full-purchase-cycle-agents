@@ -1,0 +1,64 @@
+{
+  "dataset_version": "1.0",
+  "description": "an unlinked document receives nothing",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [],
+    "orders": [
+      "received"
+    ],
+    "receipts": [],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-009",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-S",
+          10
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        10
+      ],
+      "result": "unlinked"
+    }
+  ],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-S",
+          10
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "skipped ORD-0001  missing GLV-NIT-S=10",
+        "nothing changed"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "no_receipt_unlinked"
+  ]
+}

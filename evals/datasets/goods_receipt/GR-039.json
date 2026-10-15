@@ -1,0 +1,76 @@
+{
+  "dataset_version": "1.0",
+  "description": "lines of the same SKU are summed to serve",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [
+      1
+    ],
+    "orders": [
+      "served"
+    ],
+    "receipts": [
+      [
+        "DN-1",
+        "received"
+      ]
+    ],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 2,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-039",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-S",
+          14
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        14
+      ],
+      "result": "matched"
+    }
+  ],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-S",
+          6
+        ],
+        [
+          "GLV-NIT-S",
+          6
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-1  PO-0001  received  GLV-NIT-S=14",
+        "served ORD-0001  CDN-0001  GLV-NIT-S=12",
+        "delivery note file: <notes>/CDN-0001.txt"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "matched_received"
+  ]
+}

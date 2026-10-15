@@ -1,0 +1,85 @@
+{
+  "dataset_version": "1.0",
+  "description": "a short delivery leaves a shortfall",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [],
+    "orders": [
+      "received"
+    ],
+    "receipts": [
+      [
+        "DN-1",
+        "received"
+      ]
+    ],
+    "shortfalls": [
+      [],
+      [
+        [
+          "GLV-NIT-S",
+          40
+        ]
+      ]
+    ],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 60,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-016",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-S",
+          60
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        100
+      ],
+      "result": "matched"
+    }
+  ],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-S",
+          100
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "op": "quotes_scan"
+    },
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-1  PO-0001  received  GLV-NIT-S=60",
+        "skipped ORD-0001  missing GLV-NIT-S=40"
+      ]
+    },
+    {
+      "op": "quotes_scan"
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "matched_received",
+    "short_delivery",
+    "shortfall_scan"
+  ]
+}

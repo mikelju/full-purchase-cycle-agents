@@ -1,0 +1,60 @@
+{
+  "dataset_version": "1.0",
+  "description": "a note with one unknown SKU adds nothing",
+  "expected": {
+    "failures": 1,
+    "model_calls": 0,
+    "notes": [],
+    "orders": [],
+    "receipts": [
+      [
+        "DN-1",
+        "failed"
+      ]
+    ],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-023",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-S",
+          5
+        ],
+        [
+          null,
+          2
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        5
+      ],
+      "result": "matched"
+    }
+  ],
+  "orders": [],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-1  PO-0001  failed  reason: line 2 has no catalog SKU: Unknown item"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "parked_unknown_sku"
+  ]
+}

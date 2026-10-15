@@ -289,3 +289,22 @@ def test_phase_09_files_are_tracked_and_hold_no_keys():
     for name in fixed + files:
         assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
         assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
+
+
+def test_phase_10_files_are_tracked_and_hold_no_keys():
+    tracked = set(_tracked())
+    fixed = [
+        "src/purchase_cycle/receipts.py",
+        "src/purchase_cycle/receipts_cli.py",
+        "src/purchase_cycle/evaluation/goods_receipt_eval.py",
+        "examples/receipts/customer_orders.json",
+        "examples/receipts/purchase_orders.json",
+    ]
+    folder = ROOT / "evals" / "datasets" / "goods_receipt"
+    files = sorted(str(p.relative_to(ROOT).as_posix()) for p in folder.rglob("*") if p.is_file())
+    assert len(files) >= 30
+    for name in fixed + files:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
+    # The sample documents of phase 08 stay as they were: no file is added under examples/invoices/.
+    assert len([f for f in tracked if f.startswith("examples/invoices/")]) == 17

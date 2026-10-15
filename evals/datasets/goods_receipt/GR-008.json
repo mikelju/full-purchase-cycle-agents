@@ -1,0 +1,81 @@
+{
+  "dataset_version": "1.0",
+  "description": "only the matched note is received",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [],
+    "orders": [
+      "received"
+    ],
+    "receipts": [
+      [
+        "DN-2",
+        "received"
+      ]
+    ],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 5,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-008",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        10
+      ],
+      "result": "awaiting"
+    },
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-M",
+          5
+        ]
+      ],
+      "number": "DN-2",
+      "po": [
+        "GLV-NIT-M",
+        5
+      ],
+      "result": "matched"
+    }
+  ],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-S",
+          10
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-2  PO-0002  received  GLV-NIT-M=5",
+        "skipped ORD-0001  missing GLV-NIT-S=10"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "matched_received",
+    "no_receipt_awaiting_invoice"
+  ]
+}

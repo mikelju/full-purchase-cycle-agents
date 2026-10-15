@@ -1,0 +1,126 @@
+{
+  "dataset_version": "1.0",
+  "description": "a crash after receive with several notes and orders",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "served",
+      "served",
+      "served"
+    ],
+    "receipts": [
+      [
+        "DN-1",
+        "received"
+      ],
+      [
+        "DN-2",
+        "received"
+      ]
+    ],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 0,
+      "GLV-NIT-S": 0,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-040",
+  "notes": [
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-S",
+          15
+        ]
+      ],
+      "number": "DN-1",
+      "po": [
+        "GLV-NIT-S",
+        15
+      ],
+      "result": "matched"
+    },
+    {
+      "claim": null,
+      "later": false,
+      "lines": [
+        [
+          "GLV-NIT-M",
+          4
+        ]
+      ],
+      "number": "DN-2",
+      "po": [
+        "GLV-NIT-M",
+        4
+      ],
+      "result": "matched"
+    }
+  ],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-S",
+          10
+        ]
+      ]
+    },
+    {
+      "customer": "CLI-002",
+      "lines": [
+        [
+          "GLV-NIT-M",
+          4
+        ]
+      ]
+    },
+    {
+      "customer": "CLI-003",
+      "lines": [
+        [
+          "GLV-NIT-S",
+          5
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "after": "receive",
+      "op": "crash"
+    },
+    {
+      "op": "run",
+      "out": [
+        "receipt RCP-0001  DN-1  PO-0001  received  GLV-NIT-S=15",
+        "receipt RCP-0002  DN-2  PO-0002  received  GLV-NIT-M=4",
+        "served ORD-0001  CDN-0001  GLV-NIT-S=10",
+        "served ORD-0002  CDN-0002  GLV-NIT-M=4",
+        "served ORD-0003  CDN-0003  GLV-NIT-S=5",
+        "delivery note file: <notes>/CDN-0001.txt",
+        "delivery note file: <notes>/CDN-0002.txt",
+        "delivery note file: <notes>/CDN-0003.txt"
+      ]
+    }
+  ],
+  "stock": {},
+  "tags": [
+    "matched_received",
+    "serve_in_order",
+    "crash_resume",
+    "crash_after_receive"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "dataset_version": "1.0",
+  "description": "a two-line order with one short line is skipped",
+  "expected": {
+    "failures": 0,
+    "model_calls": 0,
+    "notes": [],
+    "orders": [
+      "received"
+    ],
+    "receipts": [],
+    "shortfalls": [],
+    "stock": {
+      "GLV-NIT-L": 0,
+      "GLV-NIT-M": 4,
+      "GLV-NIT-S": 10,
+      "GLV-NIT-XL": 0,
+      "GLV-NIT200-S": 0
+    }
+  },
+  "id": "GR-031",
+  "notes": [],
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-S",
+          10
+        ],
+        [
+          "GLV-NIT-M",
+          10
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "op": "run",
+      "out": [
+        "skipped ORD-0001  missing GLV-NIT-M=6",
+        "nothing changed"
+      ]
+    }
+  ],
+  "stock": {
+    "GLV-NIT-M": 4,
+    "GLV-NIT-S": 10
+  },
+  "tags": [
+    "multi_line_short"
+  ]
+}

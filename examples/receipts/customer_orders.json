@@ -1,0 +1,51 @@
+[
+  {
+    "customer_code": "CLI-001",
+    "lines": [
+      {
+        "sku": "GLV-NIT-M",
+        "quantity": 150
+      }
+    ]
+  },
+  {
+    "customer_code": "CLI-002",
+    "lines": [
+      {
+        "sku": "MASK-IIR",
+        "quantity": 10
+      }
+    ]
+  },
+  {
+    "customer_code": "CLI-003",
+    "lines": [
+      {
+        "sku": "GAUZE-NS-5",
+        "quantity": 120
+      }
+    ]
+  },
+  {
+    "customer_code": "CLI-004",
+    "lines": [
+      {
+        "sku": "THERM-DIG",
+        "quantity": 25
+      }
+    ]
+  },
+  {
+    "customer_code": "CLI-001",
+    "lines": [
+      {
+        "sku": "GEL-500",
+        "quantity": 20
+      },
+      {
+        "sku": "SAL-500",
+        "quantity": 30
+      }
+    ]
+  }
+]

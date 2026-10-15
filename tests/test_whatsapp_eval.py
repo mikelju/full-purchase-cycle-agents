@@ -200,6 +200,7 @@ def test_eval_all_runs_the_whatsapp_suite_after_its_baseline(monkeypatch):
         "failure_recovery",
         "order_scenarios",
         "quote_wait",
+        "goods_receipt",
         "offer_extraction",
         "quote_decision",
         "reconciliation_matching",
