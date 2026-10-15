@@ -58,6 +58,7 @@ To call the real model, copy `.env.example` to `.env` and fill it in:
 
 - `ANTHROPIC_API_KEY`: an Anthropic API key that belongs to a workspace.
 - `LANGSMITH_API_KEY`, `LANGSMITH_TRACING=true` and `LANGSMITH_PROJECT`: optional; with them, live runs are traced in LangSmith. `LANGSMITH_ENDPOINT` is only needed for EU accounts.
+- `PHOENIX_TRACING=true`: optional; sends the traces of each run to a local Phoenix (see "See local traces in Phoenix").
 
 ## Seed the database
 
@@ -546,6 +547,29 @@ By default (`--mode replay`) it reads the extraction answers from the phase 08 r
 - The customer delivery note is a local text file; nothing is sent to the customer.
 - The delivered quantity read by the model goes into stock with no human check (SEC-022 in `docs/security.md`).
 - The phase 08 limitations remain: one invoice and one delivery note per order, fixed tolerances, and the DOC-060 and DOC-112 extraction errors until their change lands.
+
+## See local traces in Phoenix
+
+During development the graph runs can be traced in a local Arize Phoenix instead of LangSmith; LangSmith tracing works as before.
+
+```
+npm run phoenix
+```
+
+Starts Phoenix 20.18.0 through `uvx` on `http://127.0.0.1:6006`, with its telemetry off; the first run downloads it.
+Its data lives in `data/phoenix/`, which is ignored by Git; delete that folder to start empty.
+Phoenix also opens an OTLP gRPC receiver on port 4317, which it binds on every network interface with no setting to change it.
+
+In another terminal, turn tracing on for one run with `PHOENIX_TRACING=true` (or set it in `.env`):
+
+```
+PHOENIX_TRACING=true uv run purchase-cycle demo
+```
+
+Every LangGraph node and LangChain model call of that run is sent to the project `purchase-cycle`; open `http://127.0.0.1:6006`, choose that project and open a trace to see its spans.
+Replay runs show the graph nodes only, because their model answers come from recordings; live runs also show the model calls.
+Without the variable, or with any other value, nothing is set up and the Phoenix packages are not even imported.
+Tests and `npm run check` never send traces to Phoenix, even when `.env` sets the variable.
 
 ## Watch the graphs in LangGraph Studio
 
