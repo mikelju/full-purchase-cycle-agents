@@ -1828,6 +1828,10 @@ def main(argv=None) -> int:
     )
     reconcile_demo.set_defaults(handler=cmd_reconcile_demo)
 
+    from purchase_cycle.receipts_cli import add_receipts_commands
+
+    add_receipts_commands(sub)
+
     from purchase_cycle.evaluation.cli import add_eval_commands
 
     add_eval_commands(sub)
