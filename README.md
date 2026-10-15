@@ -558,7 +558,9 @@ npm run phoenix
 
 Starts Phoenix 20.18.0 through `uvx` on `http://127.0.0.1:6006`, with its telemetry off; the first run downloads it.
 Its data lives in `data/phoenix/`, which is ignored by Git; delete that folder to start empty.
-Phoenix also opens an OTLP gRPC receiver on port 4317, which it binds on every network interface with no setting to change it.
+The launcher `src/purchase_cycle/phoenix_server.py` keeps every port on loopback: Phoenix binds its OTLP gRPC receiver (port 4317) on every network interface with no setting to change it, so the launcher turns that receiver off and traces go over HTTP to port 6006.
+The startup banner still lists the gRPC address; nothing listens there.
+The launcher also turns off Phoenix's AI assistant, with its server-side bash, web access and GitHub tools.
 
 In another terminal, turn tracing on for one run with `PHOENIX_TRACING=true` (or set it in `.env`):
 
