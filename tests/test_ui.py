@@ -752,3 +752,33 @@ def test_c12_a_failing_scan_returns_a_json_500_with_the_class_only(server, monke
     status, body = call(server, "POST", "/api/quotes/scan", {})
     assert status == 500 and "RuntimeError" in body["error"] and "secret" not in body["error"]
     assert call(server, "GET", "/api/info")[0] == 200  # the server keeps answering
+
+
+def test_c12_blocked_nets_only_requests_not_yet_received(server):
+    _short_order(server, quantity=190, stock=0)
+    conn = db.connect(server.app.db_path)
+    sku = conn.execute("SELECT sku FROM order_lines LIMIT 1").fetchone()[0]
+    for n, (quantity, status) in enumerate([(100, "ordered"), (140, "waiting")], 1):
+        conn.execute(
+            "INSERT INTO quote_requests (sku, quantity, thread_id, status, created_at, reminder_at, deadline) "
+            "VALUES (?, ?, ?, ?, 't', 't', 't')",
+            (sku, quantity, f"th-{n}", status),
+        )
+    conn.execute(
+        "INSERT INTO purchase_orders (request_id, supplier_code, sku, quantity, unit_price, currency, total, "
+        "expected_delivery, issued_at, status) VALUES (1, (SELECT code FROM suppliers LIMIT 1), ?, 100, 1.0, 'EUR', "
+        "1.0, 't', 't', 'issued')",
+        (sku,),
+    )
+    note = conn.execute(
+        "INSERT INTO supplier_documents (kind, number, purchase_order_id, source_file, content_hash, status, created_at) "
+        "VALUES ('delivery_note', 'DN-1', 1, 'f.txt', 'h', 'linked', 't')"
+    ).lastrowid
+    conn.execute(
+        "INSERT INTO goods_receipts (delivery_note_id, purchase_order_id, received_at, status) VALUES (?, 1, 't', 'received')",
+        (note,),
+    )
+    conn.commit()
+    [blocked] = ui.UiApp._blocked(conn)  # request 1 is received: only the 140 of request 2 is still on its way
+    conn.close()
+    assert (blocked["demand"], blocked["requested"], blocked["shortfall"]) == (190, 140, 50)

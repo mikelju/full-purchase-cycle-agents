@@ -57,6 +57,14 @@ def thread_id(request_id: int) -> str:
     return f"quote-{reference(request_id)}"
 
 
+# Units of the requests of the SKU `l.sku` whose purchase order has no received goods receipt (their goods are not in stock yet).
+REQUESTED_NOT_RECEIVED = (
+    "(SELECT COALESCE(SUM(q.quantity), 0) FROM quote_requests q WHERE q.sku = l.sku AND NOT EXISTS "
+    "(SELECT 1 FROM purchase_orders p JOIN goods_receipts g ON g.purchase_order_id = p.id "
+    "WHERE p.request_id = q.id AND g.status = 'received'))"
+)
+
+
 def shortfalls(conn: sqlite3.Connection) -> list[dict]:
     """Per SKU, units asked by stored orders minus `on_hand` minus the units of every earlier request not yet received.
 
@@ -66,9 +74,7 @@ def shortfalls(conn: sqlite3.Connection) -> list[dict]:
     marks = ", ".join("?" for _ in ORDER_STATUSES)
     rows = conn.execute(
         "SELECT l.sku, SUM(l.quantity) AS demand, s.on_hand, "
-        "(SELECT COALESCE(SUM(q.quantity), 0) FROM quote_requests q WHERE q.sku = l.sku AND NOT EXISTS "
-        "(SELECT 1 FROM purchase_orders p JOIN goods_receipts g ON g.purchase_order_id = p.id "
-        "WHERE p.request_id = q.id AND g.status = 'received')) AS requested "
+        f"{REQUESTED_NOT_RECEIVED} AS requested "
         "FROM order_lines l JOIN orders o ON o.id = l.order_id JOIN stock s ON s.sku = l.sku "
         f"WHERE o.status IN ({marks}) "
         "AND l.sku NOT IN (SELECT sku FROM quote_requests WHERE status = ?) "
