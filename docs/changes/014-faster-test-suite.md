@@ -1,6 +1,6 @@
 # 014 - Faster test suite
 
-Status: delivered, in review
+Status: integrated (merged via PR #24)
 
 ## Contract
 Goal and reason:
