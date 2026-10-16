@@ -10,12 +10,12 @@ as a live one.
 
 import hashlib
 import json
+import sys
 import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-import anthropic
 from langgraph.types import RetryPolicy
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -497,6 +497,9 @@ def recording_key(system_prompt: str, sentence: str, task: Task = EXTRACTION) ->
 
 def transient_model_error(error: BaseException) -> bool:
     """Connection, timeout, rate limit and 5xx API errors; authentication, bad request and the rest are final."""
+    anthropic = sys.modules.get("anthropic")  # not imported means no Anthropic error can exist; the import is slow
+    if anthropic is None:
+        return False
     if isinstance(error, (anthropic.APIConnectionError, anthropic.RateLimitError)):  # a timeout is a connection error
         return True
     return isinstance(error, anthropic.APIStatusError) and error.status_code >= 500
