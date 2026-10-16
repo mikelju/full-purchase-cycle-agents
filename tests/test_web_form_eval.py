@@ -92,6 +92,8 @@ def test_missing_recordings_exit_with_error(tmp_path, capsys):
 
 
 def test_eval_command_runs_both_suites_and_keeps_the_worst_exit(monkeypatch, capsys):
+    for name in harness.ALL_SUITES:  # every suite is stubbed, so none runs for real; the eval stage covers that
+        monkeypatch.setattr(harness._suite(name), "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(harness, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(web_form_eval, "evaluate", lambda *args, **kwargs: 1)
     monkeypatch.setattr(email_eval, "evaluate", lambda *args, **kwargs: 0)

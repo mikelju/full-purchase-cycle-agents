@@ -322,6 +322,8 @@ def test_a_stopped_run_keeps_the_intake_decision_and_counts_no_lines():
 
 
 def test_eval_command_runs_every_suite_and_keeps_the_worst_exit(monkeypatch):
+    for name in harness.ALL_SUITES:  # every suite is stubbed, so none runs for real; the eval stage covers that
+        monkeypatch.setattr(harness._suite(name), "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(harness, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(web_form_eval, "evaluate", lambda *args, **kwargs: 0)
     monkeypatch.setattr(email_eval, "evaluate", lambda *args, **kwargs: 1)
