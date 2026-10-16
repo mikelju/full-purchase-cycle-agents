@@ -19,6 +19,11 @@ SCENARIOS = {
 }
 
 
+def model_text(facts):
+    """A valid model draft that differs from the template, so a draft that fell back to the template shows."""
+    return cr.fill_template(facts) + "\nThank you for your patience."
+
+
 def _scenario(tmp_path, name="both"):
     conn, _ = _planned(tmp_path, _incidents(*SCENARIOS[name]))
     return conn, cr.response_facts(conn, 1)
@@ -84,10 +89,10 @@ def test_the_task_is_separate_and_existing_keys_are_unchanged():
 
 def test_one_call_per_response_and_recipient_and_subject_come_from_code(tmp_path):
     conn, facts = _scenario(tmp_path)
-    client = _client(tmp_path, [facts], [cr.fill_template(facts)])
+    client = _client(tmp_path, [facts], [model_text(facts)])
     draft = cr.draft_response(conn, client, facts)
     assert client.calls == 1
-    assert draft["source"] == "model"
+    assert draft["source"] == "model" and draft["body"] == model_text(facts) != cr.fill_template(facts)
     assert draft["recipient"] == facts["recipient"]
     assert draft["subject"] == "Response to your delivery note CDN-0001 on invoice SINV-0001"
     assert db.list_failures(conn) == []
@@ -194,7 +199,7 @@ def test_a_failed_draft_stores_the_template_and_one_failures_row(tmp_path, faili
 def test_a_failed_draft_does_not_stop_the_next_one(tmp_path):
     conn, facts = _scenario(tmp_path)
     other = {**facts, "invoice": "SINV-0002"}
-    client = _client(tmp_path, [facts, other], ["bad", cr.fill_template(other)])
+    client = _client(tmp_path, [facts, other], ["bad", model_text(other)])
     first = cr.draft_response(conn, client, facts)
     second = cr.draft_response(conn, client, other)
     assert (first["source"], second["source"]) == ("template", "model")
@@ -212,14 +217,14 @@ def test_the_facts_plan_the_corrections_once(tmp_path):
 
 
 class Counter:
-    """A model double that answers with the template and counts its calls."""
+    """A model double that answers with a valid model draft and counts its calls."""
 
     def __init__(self, facts):
         self.facts, self.calls = facts, 0
 
     def extract(self, text, case_id=None):
         self.calls += 1
-        return llm.ResponseBody(body=cr.fill_template(self.facts))
+        return llm.ResponseBody(body=model_text(self.facts))
 
 
 class Flow:
@@ -267,7 +272,7 @@ def test_drafting_stores_an_awaiting_row_and_the_thread_waits_at_review(flow):
     flow.graph().invoke({"invoice_id": 1}, flow.run)
     [row] = flow.row()
     assert (row["status"], row["draft_source"], row["edited"]) == ("awaiting_approval", "model", 0)
-    assert row["recipient"] == flow.facts["recipient"] and row["draft_body"] == cr.fill_template(flow.facts)
+    assert row["recipient"] == flow.facts["recipient"] and row["draft_body"] == model_text(flow.facts)
     assert flow.graph(client=False).get_state(flow.run).next == ("review",)
     assert flow.client.calls == 1 and flow.emails() == [] and flow.documents() == []
     assert {r["document_file"] for r in flow.conn.execute("SELECT * FROM customer_corrections")} == {None}
@@ -280,7 +285,7 @@ def test_approve_writes_one_email_and_the_document_files_and_sets_sent(flow):
     assert path.name == "RESPONSE-SINV-0001.eml" and row["outbox_file"] == str(path) and row["decided_at"]
     message = message_from_bytes(path.read_bytes(), policy=policy.default)
     assert message["To"] == flow.facts["recipient"] and message["Subject"] == row["subject"]
-    assert message.get_content().strip() == row["draft_body"].strip()
+    assert message.get_content().strip() == row["draft_body"].strip() == model_text(flow.facts).strip()
     assert [p.name for p in flow.documents()] == ["CI-0002.txt", "CN-0001.txt"]
     for doc in flow.conn.execute("SELECT * FROM customer_corrections"):
         assert doc["document_file"] == str(flow.invoices / f"{doc['number']}.txt")
@@ -292,7 +297,7 @@ def test_edit_sends_the_given_text_keeps_the_draft_and_leaves_amounts_unchanged(
     totals = [tuple(r) for r in flow.conn.execute("SELECT number, total FROM customer_corrections ORDER BY id")]
     row = flow.decide({"action": "edit", "body": "My own words."})
     assert (row["status"], row["edited"], row["final_body"]) == ("sent", 1, "My own words.")
-    assert row["draft_body"] == cr.fill_template(flow.facts)
+    assert row["draft_body"] == model_text(flow.facts)
     assert message_from_bytes(flow.emails()[0].read_bytes(), policy=policy.default).get_content().strip() == (
         "My own words."
     )

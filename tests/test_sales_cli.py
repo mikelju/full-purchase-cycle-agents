@@ -2,10 +2,11 @@
 
 import subprocess
 import sys
+from email import message_from_bytes, policy
 
 from purchase_cycle import cli, db
 from purchase_cycle import customer_responses as cr
-from test_customer_responses import _client
+from test_customer_responses import _client, model_text
 from test_sales import A, B, C, _form, _inbox, _incidents, _served
 
 SNAPSHOT = ("customer_invoices", "signed_delivery_notes", "sales_reconciliations", "customer_corrections")
@@ -51,13 +52,13 @@ class World:
         )
 
     def record(self):
-        """Write the response recordings (the template as the model answer) for the stored facts."""
+        """Write the response recordings (a model draft that differs from the template) for the stored facts."""
         conn = db.connect(self.db)
         try:
             facts = [cr.response_facts(conn, i) for i in (1, 2)]
         finally:
             conn.close()
-        client = _client(self.tmp, facts, [cr.fill_template(f) for f in facts])
+        client = _client(self.tmp, facts, [model_text(f) for f in facts])
         assert client.mode == "replay"
 
     def responses(self):
@@ -196,6 +197,14 @@ def test_approve_sends_the_draft_and_edit_sends_the_file_text_with_the_documents
     rows = world.query("SELECT status, edited, final_body FROM customer_responses ORDER BY id")
     assert rows[0][:2] == ("sent", 0) and rows[1] == ("sent", 1, "Your credit is on its way.\n")
     assert world.query("SELECT COUNT(*) FROM customer_corrections WHERE document_file IS NOT NULL") == [(3,)]
+    conn = db.connect(world.db)
+    try:
+        expected = model_text(cr.response_facts(conn, 1))
+    finally:
+        conn.close()
+    assert world.query("SELECT draft_body, final_body FROM customer_responses WHERE id = 1") == [(expected, expected)]
+    sent = message_from_bytes((world.outbox / "RESPONSE-SINV-0001.eml").read_bytes(), policy=policy.default)
+    assert sent.get_content().strip() == expected.strip()
 
 
 def test_reject_closes_the_response_and_writes_nothing(tmp_path, capsys):
