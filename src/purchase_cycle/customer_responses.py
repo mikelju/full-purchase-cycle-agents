@@ -14,7 +14,16 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command
 
 from purchase_cycle import config, db, llm, quotes, review, sales, sim_clock
-from purchase_cycle.claims import DecisionRefused, _near, _own_file_date, _token, mentions, money_amounts
+from purchase_cycle.claims import (
+    AMOUNT_PATTERN,
+    DecisionRefused,
+    _lines,
+    _near,
+    _own_file_date,
+    _read_number,
+    _token,
+    mentions,
+)
 from purchase_cycle.receipts import COMPANY, ascii_text
 
 RESPONSE_SUBJECT = "Response to your delivery note {delivery_note} on invoice {invoice}"
@@ -23,6 +32,7 @@ CHANNEL = "sales"
 STEP = "response_drafting"
 KIND_LABEL = {"credit_note": "Credit note", "corrective_invoice": "Corrective invoice"}
 TYPE_LABEL = {"missing": "missing", "extra": "delivered in excess", "damaged": "damaged"}
+CLASS_WORDS = {"credit_note": r"credit", "corrective_invoice": r"corrective"}
 RESPONSE_TEMPLATE = """Dear {customer},
 
 Thank you for signing delivery note {delivery_note} for invoice {invoice}.
@@ -112,6 +122,36 @@ def _without(text: str, names: set[str]) -> str:
     return text
 
 
+def _figures(text: str, quantities: set[int]) -> list[float]:
+    """Every figure that reads as money: decimals or a currency, and also an integer that is not a known quantity.
+
+    Stricter than phase 09 (where a bare integer is not money): here "9,999" or "a refund of 120" is an amount.
+    """
+    values = []
+    for m in AMOUNT_PATTERN.finditer(text):
+        value, decimals = _read_number(m["num"])
+        if m["pre"] or m["post"] or decimals:
+            values.append(value)
+        elif int(value) not in quantities and not re.match(r"\s*(?:units?|pcs|pieces)\b", text[m.end() :], re.I):
+            values.append(value)
+    return values
+
+
+def _net_total_ok(text: str, net_total: float, quantities: set[int]) -> bool:
+    """Whether every "net total" label is followed, in its sentence, by the net total as its first amount.
+
+    Recorded model drafts that never state the net total are accepted: only a stated one is bound to its label.
+    """
+    labels = list(re.finditer(r"net total", text, re.IGNORECASE))
+    for m in labels:
+        rest = text[m.end() :]
+        stop = re.search(r"(?<=[.!?])\s|\n", rest)
+        values = _figures(rest[: stop.start() if stop else len(rest)], quantities)
+        if not (values and _near(values[0], abs(net_total))):
+            return False
+    return True
+
+
 def check_response(body: str, facts: dict) -> list[str]:
     """Deterministic fact check of a response draft; an empty list means it passes."""
     problems = []
@@ -121,12 +161,16 @@ def check_response(body: str, facts: dict) -> list[str]:
     skus = {row["sku"] for row in facts["incidents"]}
     numbers = {doc["number"] for doc in facts["documents"]}
     products = {row["product"] for row in facts["incidents"]}
+    quantities = {row["units"] for row in facts["incidents"]}
+    quantities |= {int(line["quantity"]) for doc in facts["documents"] for line in doc["lines"]}
+    clean = _without(body, skus | products)
     for row in facts["incidents"]:
         if not mentions(body, row["sku"]):
             problems.append(f"missing incident {row['sku']}")
             continue
         units = rf"(?<![\d.,]){row['units']}(?!\d|[.,]\d)"
-        if not any(re.search(units, _without(part, products)) for part in _segment(body, row["sku"], skus | numbers)):
+        parts = _segment(body, row["sku"], skus | numbers)
+        if not any(re.search(units, _without(part, products)) for part in parts):
             problems.append(f"missing units {row['units']} of {row['sku']}")
     for doc in facts["documents"]:
         if not mentions(body, doc["number"]):
@@ -134,14 +178,22 @@ def check_response(body: str, facts: dict) -> list[str]:
             continue
         parts = _segment(body, doc["number"], numbers)
         if not any(
-            _near(v, abs(doc["total"])) for part in parts for v in money_amounts(_without(part, skus | products))
+            _near(v, abs(doc["total"])) for part in parts for v in _figures(_without(part, skus | products), quantities)
         ):
             problems.append(f"missing total {abs(doc['total']):.2f} of {doc['number']}")
+        near = [  # the class sits just before the number or later in its own sentence
+            body[max(0, m.start() - 20) : m.start()] + re.split(r"(?<=[.!?])\s|\n", part, maxsplit=1)[0]
+            for m, part in zip(re.finditer(_token(doc["number"]), body), parts, strict=True)
+        ]
+        if not any(re.search(CLASS_WORDS[doc["kind"]], text, re.IGNORECASE) for text in near):
+            problems.append(f"wrong class of {doc['number']}")
+    if not _net_total_ok(clean, facts["net_total"], quantities):
+        problems.append(f"wrong net total {abs(facts['net_total']):.2f}")
     known = {abs(facts["net_total"])}
     for doc in facts["documents"]:
         known |= {abs(doc["total"])}
         known |= {abs(line[key]) for line in doc["lines"] for key in ("unit_price", "line_total")}
-    for value in money_amounts(_without(body, skus | products)):
+    for value in _figures(clean, quantities):
         if not any(_near(value, amount) for amount in known):
             problems.append(f"invented amount {value:.2f}")
     if not body.isascii():
@@ -303,11 +355,19 @@ def send_response(db_path: Path | str, invoices_dir: Path | str, outbox: Path | 
         documents = conn.execute(
             "SELECT * FROM customer_corrections WHERE invoice_id = ? ORDER BY id", (state["invoice_id"],)
         ).fetchall()
+        pending = []
         for doc in documents:
             target = Path(invoices_dir) / f"{doc['number']}.txt"
+            text = correction_text(conn, doc)
             if not target.exists():
-                sales._atomic_write(target, correction_text(conn, doc))
+                pending.append((target, text))
+            elif _lines(target.read_text(encoding="utf-8", errors="replace")) != _lines(text):
+                raise DecisionRefused(
+                    f"{target} already exists with a different text; move it away and run approve again, nothing was sent"
+                )
             files.append((str(target), doc["id"]))
+        for target, text in pending:
+            sales._atomic_write(target, text)
         quotes._write_email(path.parent, path.stem, row["recipient"], row["subject"], state["final_body"], decided_at)
         with conn:
             for target, doc_id in files:

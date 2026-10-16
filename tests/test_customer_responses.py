@@ -157,7 +157,8 @@ def test_a_total_next_to_another_document_does_not_count(tmp_path):
     _, facts = _scenario(tmp_path)
     cn, ci = facts["documents"]
     body = (
-        f"Invoice SINV-0001, delivery note CDN-0001. {A} 2 units, {C} 1 units. "
+        f"Invoice SINV-0001, delivery note CDN-0001. {A} damaged 2 units, {C} in excess 1 units. "
+        f"The net total is {facts['net_total']:.2f} EUR. "
         f"Credit note CN-0001 has a total of {abs(ci['total']):.2f} EUR. "
         f"Corrective invoice CI-0002 has a total of {abs(cn['total']):.2f} EUR."
     )
@@ -352,3 +353,52 @@ def test_a_different_file_in_the_outbox_refuses_the_send_and_writes_no_document(
     with pytest.raises(Exception, match="already exists"):
         flow.graph(client=False).invoke(Command(resume={"action": "approve"}), flow.run)
     assert flow.row()[0]["status"] == "awaiting_approval" and flow.documents() == []
+
+
+def test_a_foreign_document_file_refuses_the_send_and_writes_nothing(flow):
+    flow.graph().invoke({"invoice_id": 1}, flow.run)
+    flow.invoices.mkdir()
+    (flow.invoices / "CN-0001.txt").write_text("Not our credit note.\n")
+    with pytest.raises(Exception, match="already exists"):
+        flow.graph(client=False).invoke(Command(resume={"action": "approve"}), flow.run)
+    assert flow.row()[0]["status"] == "awaiting_approval" and flow.emails() == []
+    assert [p.name for p in flow.documents()] == ["CN-0001.txt"]
+
+
+def test_an_own_document_file_is_kept_on_a_resend(flow):
+    flow.decide({"action": "approve"})
+    before = flow.state()[2]
+    cr.send_response(
+        flow.db_path, flow.invoices, flow.outbox, {"invoice_id": 1, "final_body": "x", "decision": "approve"}
+    )
+    assert flow.state()[2] == before
+
+
+def test_a_wrong_net_total_equal_to_another_known_amount_fails(tmp_path):
+    _, facts = _scenario(tmp_path)
+    body = cr.fill_template(facts)
+    net = f"{facts['net_total']:.2f}"
+    wrong = _cn_total(facts)
+    assert net != wrong
+    assert cr.check_response(body.replace(f"is {net} EUR", f"is {wrong} EUR"), facts) == [f"wrong net total {net}"]
+    assert cr.check_response(body.replace("net total", "balance"), facts) == []
+
+
+@pytest.mark.parametrize("text", ["We will refund 9,999.", "A refund of 120 follows.", "Credit of 1.234 now."])
+def test_an_integer_amount_without_decimals_or_currency_is_invented(tmp_path, text):
+    _, facts = _scenario(tmp_path)
+    problems = cr.check_response(cr.fill_template(facts) + "\n" + text, facts)
+    assert problems and all(p.startswith("invented amount") for p in problems)
+
+
+def test_units_and_quantities_are_not_amounts(tmp_path):
+    _, facts = _scenario(tmp_path)
+    assert cr.check_response(cr.fill_template(facts) + "\nWe will resend 2 units soon.", facts) == []
+
+
+def test_the_document_class_must_sit_before_its_number(tmp_path):
+    _, facts = _scenario(tmp_path)
+    body = cr.fill_template(facts)
+    assert cr.check_response(body.replace("Credit note CN-0001", "Corrective invoice CN-0001"), facts) == [
+        "wrong class of CN-0001"
+    ]
