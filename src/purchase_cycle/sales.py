@@ -3,11 +3,14 @@
 Deterministic: no model is called here.
 """
 
+import datetime
+import hashlib
 import os
+import re
 import sqlite3
 from pathlib import Path
 
-from purchase_cycle import sim_clock
+from purchase_cycle import db, sim_clock
 from purchase_cycle.receipts import COMPANY, ascii_text
 
 INVOICE_TABLES = ("customer_invoices", "customer_invoice_lines")
@@ -106,3 +109,170 @@ def invoice(conn: sqlite3.Connection, invoices_dir: Path | str) -> list[dict]:
     issued = [_issue_one(conn, note, invoices_dir) for note in notes]
     write_invoice_files(conn)
     return issued
+
+
+# ---- signed delivery notes: the fixed form, reading and linking (C4) ----
+
+FORM_TITLE = "Signed delivery note"
+INCIDENT_TYPES = ("missing", "extra", "damaged")
+_NOTE_RE = re.compile(r"CDN-(\d{4,})")
+
+
+class FormError(ValueError):
+    """The file does not follow the signed note form."""
+
+
+def _field(lines: list[str], index: int, label: str) -> str:
+    prefix = f"{label}:"
+    if index >= len(lines) or not lines[index].startswith(prefix) or not lines[index][len(prefix) :].strip():
+        raise FormError(f"expected the line '{label}: ...'")
+    return lines[index][len(prefix) :].strip()
+
+
+def _parse_form(conn: sqlite3.Connection, text: str) -> dict:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines or lines[0] != FORM_TITLE:
+        raise FormError(f"the first line must be '{FORM_TITLE}'")
+    number = _field(lines, 1, "Delivery note")
+    match = _NOTE_RE.fullmatch(number)
+    if not match:
+        raise FormError(f"delivery note '{number}' is not of the form CDN-NNNN")
+    customer = _field(lines, 2, "Customer")
+    signer = _field(lines, 3, "Signed by")
+    date = _field(lines, 4, "Signing date")
+    try:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
+            raise ValueError
+        datetime.date.fromisoformat(date)
+    except ValueError:
+        raise FormError(f"the signing date '{date}' is not a valid YYYY-MM-DD date") from None
+    body = lines[5:]
+    incidents: list[tuple[str, str, int]] = []
+    if body == ["Received in full"]:
+        pass
+    elif body and body[0] == "Incidents:" and len(body) > 1:
+        for line in body[1:]:
+            parts = line.split()
+            if len(parts) != 3:
+                raise FormError(f"incident line '{line}' is not 'SKU type units'")
+            sku, kind, units = parts
+            if kind not in INCIDENT_TYPES:
+                raise FormError(f"incident type '{kind}' is not one of {', '.join(INCIDENT_TYPES)}")
+            if not conn.execute("SELECT 1 FROM products WHERE sku = ?", (sku,)).fetchone():
+                raise FormError(f"SKU {sku} is not in the catalog")
+            if not re.fullmatch(r"\d+", units) or int(units) <= 0:
+                raise FormError(f"units '{units}' is not a whole positive number")
+            incidents.append((sku, kind, int(units)))
+    else:
+        raise FormError("the body must be 'Received in full' or 'Incidents:' followed by incident lines")
+    return {
+        "note_id": int(match.group(1)),
+        "number": number,
+        "customer": customer,
+        "signer": signer,
+        "date": date,
+        "incidents": incidents,
+    }
+
+
+def _park(conn: sqlite3.Connection, file_hash: str, path: Path, error: str) -> None:
+    thread = f"signed-note-{file_hash[:12]}"
+    if not db.get_failure(conn, thread):
+        db.park_failure(conn, thread, "sales", str(path), "signed_note", error)
+
+
+def read_notes(conn: sqlite3.Connection, folder: Path | str) -> list[dict]:
+    """Read the `.txt` files of the folder in name order; return `{file, hash, form}` for each new file that follows the form.
+
+    A file already stored or already parked (by content hash) is skipped; a file out of form is parked once.
+    """
+    items: list[dict] = []
+    seen: set[str] = set()
+    for path in sorted(Path(folder).glob("*.txt")):
+        raw = path.read_bytes()
+        file_hash = hashlib.sha256(raw).hexdigest()
+        if file_hash in seen:
+            continue
+        seen.add(file_hash)
+        if conn.execute("SELECT 1 FROM signed_delivery_notes WHERE content_hash = ?", (file_hash,)).fetchone():
+            continue
+        if db.get_failure(conn, f"signed-note-{file_hash[:12]}"):
+            continue
+        try:
+            form = _parse_form(conn, raw.decode("utf-8"))
+        except UnicodeDecodeError:
+            _park(conn, file_hash, path, "the file is not UTF-8 text")
+        except FormError as error:
+            _park(conn, file_hash, path, str(error))
+        else:
+            items.append({"file": str(path), "hash": file_hash, "form": form})
+    return items
+
+
+def _unlink_reason(conn: sqlite3.Connection, form: dict) -> str | None:
+    note = conn.execute("SELECT * FROM customer_delivery_notes WHERE id = ?", (form["note_id"],)).fetchone()
+    if note is None:
+        return f"unknown delivery note {form['number']}"
+    if note["customer_code"] != form["customer"]:
+        return f"{form['number']} belongs to another customer than {form['customer']}"
+    if conn.execute(
+        "SELECT 1 FROM signed_delivery_notes WHERE delivery_note_id = ? AND status = 'linked'", (note["id"],)
+    ).fetchone():
+        return f"{form['number']} is already signed"
+    return None
+
+
+def _excess(conn: sqlite3.Connection, form: dict) -> str | None:
+    delivered = {
+        r["sku"]: r["quantity"]
+        for r in conn.execute(
+            "SELECT sku, quantity FROM customer_delivery_note_lines WHERE note_id = ?", (form["note_id"],)
+        )
+    }
+    lost: dict[str, int] = {}
+    for sku, kind, units in form["incidents"]:
+        if kind != "extra":
+            lost[sku] = lost.get(sku, 0) + units
+    for sku, units in lost.items():
+        if units > delivered.get(sku, 0):
+            return (
+                f"{units} units of {sku} reported missing or damaged, more than the {delivered.get(sku, 0)} delivered"
+            )
+    return None
+
+
+def link_notes(conn: sqlite3.Connection, items: list[dict]) -> list[dict]:
+    """Store each read note as linked or unlinked (with incidents when linked); park the ones reporting more than delivered."""
+    results = []
+    for item in items:
+        form = item["form"]
+        reason = _unlink_reason(conn, form)
+        if reason is None:
+            excess = _excess(conn, form)
+            if excess:
+                _park(conn, item["hash"], Path(item["file"]), excess)
+                results.append({"file": item["file"], "status": "parked", "reason": excess})
+                continue
+        status = "unlinked" if reason else "linked"
+        known = conn.execute("SELECT 1 FROM customer_delivery_notes WHERE id = ?", (form["note_id"],)).fetchone()
+        with conn:
+            signed_id = conn.execute(
+                "INSERT INTO signed_delivery_notes (delivery_note_id, signer, signing_date, source_file, content_hash, "
+                "status, reason) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    form["note_id"] if known else None,
+                    form["signer"],
+                    form["date"],
+                    item["file"],
+                    item["hash"],
+                    status,
+                    reason,
+                ),
+            ).lastrowid
+            if status == "linked":
+                conn.executemany(
+                    "INSERT INTO signed_note_incidents VALUES (?, ?, ?, ?, ?)",
+                    [(signed_id, n, *inc) for n, inc in enumerate(form["incidents"], 1)],
+                )
+        results.append({"file": item["file"], "status": status, "reason": reason, "signed_note_id": signed_id})
+    return results

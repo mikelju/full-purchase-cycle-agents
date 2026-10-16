@@ -120,3 +120,186 @@ def test_the_module_imports_no_llm_symbol():
         elif isinstance(node, ast.ImportFrom):
             names |= {node.module or ""} | {a.name for a in node.names}
     assert not any("llm" in n or "anthropic" in n for n in names)
+
+
+# ---- increment 5: the signed note form, linking and failures (C4) ----
+
+
+def _form(note_id, body="Received in full", customer=CUSTOMER, signer="Laura Etxeberria", date="2026-10-14"):
+    return (
+        f"Signed delivery note\nDelivery note: CDN-{note_id:04d}\nCustomer: {customer}\n"
+        f"Signed by: {signer}\nSigning date: {date}\n{body}\n"
+    )
+
+
+def _incidents(*rows):
+    return "Incidents:\n" + "\n".join(f"{sku} {kind} {units}" for sku, kind, units in rows)
+
+
+def _inbox(tmp_path, **files):
+    folder = tmp_path / "inbox"
+    folder.mkdir(exist_ok=True)
+    for name, text in files.items():
+        (folder / f"{name}.txt").write_text(text, encoding="utf-8")
+    return folder
+
+
+def _signed(conn):
+    return [dict(r) for r in conn.execute("SELECT * FROM signed_delivery_notes ORDER BY id")]
+
+
+def _incident_rows(conn):
+    return [tuple(r) for r in conn.execute("SELECT line_no, sku, type, units FROM signed_note_incidents ORDER BY 1, 2")]
+
+
+def _failures(conn):
+    return [(r["thread_id"], r["channel"], r["step"], r["status"]) for r in conn.execute("SELECT * FROM failures")]
+
+
+def _scan(conn, folder):
+    return sales.link_notes(conn, sales.read_notes(conn, folder))
+
+
+def _setup(tmp_path, lines=((A, 5), (B, 4))):
+    conn = _conn(tmp_path)
+    note = _served(tmp_path, conn, list(lines))
+    sales.invoice(conn, tmp_path / "inv")
+    return conn, note
+
+
+def test_received_in_full_is_stored_linked_with_no_incidents(tmp_path):
+    conn, note = _setup(tmp_path)
+    _scan(conn, _inbox(tmp_path, one=_form(note)))
+    (row,) = _signed(conn)
+    assert (row["delivery_note_id"], row["signer"], row["signing_date"], row["status"], row["reason"]) == (
+        note,
+        "Laura Etxeberria",
+        "2026-10-14",
+        "linked",
+        None,
+    )
+    assert row["source_file"].endswith("one.txt") and len(row["content_hash"]) == 64
+    assert _incident_rows(conn) == [] and _failures(conn) == []
+
+
+def test_each_incident_type_is_stored_with_its_units(tmp_path):
+    conn, note = _setup(tmp_path)
+    body = _incidents((A, "missing", 2), (B, "damaged", 1), (A, "extra", 3))
+    _scan(conn, _inbox(tmp_path, one=_form(note, body)))
+    assert _incident_rows(conn) == [(1, A, "missing", 2), (2, B, "damaged", 1), (3, A, "extra", 3)]
+    assert _signed(conn)[0]["status"] == "linked"
+
+
+def test_an_extra_sku_outside_the_delivery_note_is_accepted(tmp_path):
+    conn, note = _setup(tmp_path)
+    _scan(conn, _inbox(tmp_path, one=_form(note, _incidents((C, "extra", 2)))))
+    assert _incident_rows(conn) == [(1, C, "extra", 2)] and _failures(conn) == []
+
+
+def test_a_file_is_stored_once_by_content_hash(tmp_path):
+    conn, note = _setup(tmp_path)
+    folder = _inbox(tmp_path, one=_form(note))
+    (folder / "copy.txt").write_text(_form(note), encoding="utf-8")
+    _scan(conn, folder)
+    _scan(conn, folder)
+    assert len(_signed(conn)) == 1
+
+
+def test_an_unknown_note_is_unlinked_with_its_reason(tmp_path):
+    conn, _ = _setup(tmp_path)
+    _scan(conn, _inbox(tmp_path, one=_form(99)))
+    (row,) = _signed(conn)
+    assert row["delivery_note_id"] is None and row["status"] == "unlinked" and "CDN-0099" in row["reason"]
+    assert _failures(conn) == []
+
+
+def test_a_note_already_signed_is_unlinked(tmp_path):
+    conn, note = _setup(tmp_path)
+    _scan(conn, _inbox(tmp_path, a=_form(note)))
+    _scan(conn, _inbox(tmp_path, b=_form(note, signer="Someone Else")))
+    first, second = _signed(conn)
+    assert first["status"] == "linked"
+    assert (second["status"], second["delivery_note_id"]) == ("unlinked", note)
+    assert "already signed" in second["reason"]
+
+
+def test_a_note_of_another_customer_is_unlinked(tmp_path):
+    conn, note = _setup(tmp_path)
+    _scan(conn, _inbox(tmp_path, one=_form(note, customer=CUSTOMERS[1].code)))
+    (row,) = _signed(conn)
+    assert row["status"] == "unlinked" and "another customer" in row["reason"]
+    assert _incident_rows(conn) == []
+
+
+def _parked(tmp_path, text, lines=((A, 5), (B, 4))):
+    conn, note = _setup(tmp_path, lines)
+    _scan(conn, _inbox(tmp_path, bad=text(note) if callable(text) else text, good=_form(note)))
+    return conn
+
+
+def _one_failure(conn):
+    (thread, channel, step, status) = _failures(conn)[0]
+    assert thread.startswith("signed-note-") and (channel, step, status) == ("sales", "signed_note", "needs_review")
+    assert len(_failures(conn)) == 1
+    return conn.execute("SELECT error FROM failures").fetchone()[0]
+
+
+def test_a_file_out_of_form_is_parked_and_the_others_are_still_read(tmp_path):
+    conn = _parked(tmp_path, "I got everything, thanks\n")
+    assert _one_failure(conn)
+    assert [r["status"] for r in _signed(conn)] == ["linked"]  # the good file
+
+
+def test_a_form_with_neither_statement_nor_incidents_is_out_of_form(tmp_path):
+    conn = _parked(tmp_path, lambda n: _form(n, ""))
+    assert _one_failure(conn)
+
+
+def test_a_bad_date_is_out_of_form(tmp_path):
+    conn = _parked(tmp_path, lambda n: _form(n, date="14/10/2026"))
+    assert "date" in _one_failure(conn)
+
+
+def test_an_unknown_sku_is_parked(tmp_path):
+    conn = _parked(tmp_path, lambda n: _form(n, _incidents(("NOPE-1", "missing", 1))))
+    assert "NOPE-1" in _one_failure(conn)
+
+
+def test_an_unknown_incident_type_is_parked(tmp_path):
+    conn = _parked(tmp_path, lambda n: _form(n, _incidents((A, "lost", 1))))
+    assert "lost" in _one_failure(conn)
+
+
+def test_a_non_whole_or_non_positive_quantity_is_parked(tmp_path):
+    for units in ("1.5", "0", "-2", "x"):
+        conn = _parked(tmp_path / units.replace(".", "_"), lambda n, u=units: _form(n, _incidents((A, "missing", u))))
+        assert _one_failure(conn)
+
+
+def test_more_missing_or_damaged_than_delivered_is_parked_and_stores_nothing(tmp_path):
+    conn = _parked(tmp_path, lambda n: _form(n, _incidents((A, "missing", 4), (A, "damaged", 2))))
+    assert "more" in _one_failure(conn)
+    assert [r["status"] for r in _signed(conn)] == ["linked"]  # only the good file
+    assert _incident_rows(conn) == []
+
+
+def test_missing_units_of_a_sku_not_delivered_are_parked(tmp_path):
+    conn = _parked(tmp_path, lambda n: _form(n, _incidents((C, "missing", 1))))
+    assert _one_failure(conn)
+
+
+def test_a_parked_file_is_not_parked_again_and_changes_no_row(tmp_path):
+    conn, note = _setup(tmp_path)
+    folder = _inbox(tmp_path, bad="nonsense\n")
+    _scan(conn, folder)
+    before = [tuple(r) for r in conn.execute("SELECT * FROM failures")]
+    _scan(conn, folder)
+    assert [tuple(r) for r in conn.execute("SELECT * FROM failures")] == before
+
+
+def test_a_file_that_is_not_text_is_parked(tmp_path):
+    conn, note = _setup(tmp_path)
+    folder = _inbox(tmp_path, good=_form(note))
+    (folder / "binary.txt").write_bytes(b"\xff\xfe\x00bad")
+    _scan(conn, folder)
+    assert _one_failure(conn) and len(_signed(conn)) == 1
