@@ -1,4 +1,7 @@
-"""Phase 11 C3, C4, C8, C9 and C12: the sales commands on a temporary database with recordings."""
+"""Phase 11 C3, C4, C8, C9, C11 and C12: the sales commands on a temporary database with recordings."""
+
+import subprocess
+import sys
 
 from purchase_cycle import cli, db
 from purchase_cycle import customer_responses as cr
@@ -300,3 +303,55 @@ def test_list_on_an_empty_database_prints_zero_invoices(tmp_path, capsys):
     world = World(tmp_path)
     assert world.main("list") == 0
     assert capsys.readouterr().out.splitlines()[0] == "invoices: 0"
+
+
+def _process(world, *words):
+    run = subprocess.run(
+        [sys.executable, "-m", "purchase_cycle.cli", "--db", str(world.db), "sales", *words],
+        capture_output=True,
+        text=True,
+    )
+    assert run.returncode == 0, run.stderr
+    return run.stdout
+
+
+def _final(world):
+    root = str(world.tmp)
+    tables = ("customer_invoices", "signed_delivery_notes", "sales_reconciliations", "customer_corrections")
+    rows = {
+        t: [tuple(str(v).replace(root, "ROOT") for v in r) for r in world.query(f"SELECT * FROM {t} ORDER BY 1")]
+        for t in (*tables, "customer_responses", "failures")
+    }
+    files = {
+        folder.name + "/" + p.name: p.read_bytes()
+        for folder in (world.invoices, world.outbox)
+        if folder.exists()
+        for p in sorted(folder.iterdir())
+    }
+    return rows, files
+
+
+def test_each_sales_step_and_decision_in_separate_processes_equals_one_process_with_no_model_call(tmp_path):
+    (tmp_path / "single").mkdir()
+    (tmp_path / "split").mkdir()
+    single, split = World(tmp_path / "single"), World(tmp_path / "split")
+    body = tmp_path / "edit.txt"
+    body.write_text("Your credit is on its way.\n", encoding="utf-8")
+    single.ready()
+    assert single.responses() == 0
+    assert single.approve("SINV-0001") == 0
+    assert single.approve("SINV-0002", "--body-file", str(body)) == 0
+    cp = ["--checkpoints", str(split.checkpoints)]
+    inv = ["--invoices-dir", str(split.invoices)]
+    _process(split, "invoice", *inv)
+    _process(split, "scan", str(split.inbox), *inv, *cp)
+    split.record()
+    _process(split, "responses", *cp, "--recordings", str(split.recordings))
+    split.recordings.unlink()  # from here any model call fails
+    _process(split, "approve", "SINV-0001", *cp, *inv, "--outbox", str(split.outbox))
+    _process(split, "approve", "SINV-0002", *cp, *inv, "--outbox", str(split.outbox), "--body-file", str(body))
+    assert "nothing to be drafted" in _process(split, "responses", *cp, "--recordings", str(split.recordings))
+    rows, files = _final(split)
+    assert (rows, files) == _final(single)
+    assert [r[0] for r in split.query("SELECT status FROM customer_responses ORDER BY id")] == ["sent", "sent"]
+    assert len(files) >= 5
