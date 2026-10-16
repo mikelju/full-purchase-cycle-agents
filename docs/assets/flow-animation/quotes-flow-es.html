@@ -1,0 +1,581 @@
+<meta charset="utf-8">
+<title>Flujo de presupuestos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;600;700&display=swap">
+<style>
+/* Layout: one fixed 16:9 stage (GIF-ready) - two customers | orders graph + quotes graph | database. Single deliberate light, high-contrast look, independent of the OS theme. */
+:root {
+  --ground: #EDF1F7;
+  --panel: #FFFFFF;
+  --panel-edge: #B9C4D4;
+  --ink: #0F172A;
+  --muted: #475569;
+  --line: #8A99AF;
+  --node: #FFFFFF;
+  --node-edge: #5B6B82;
+  --active: #0891B2;
+  --title: #4338CA;
+  --done: #0D9488;
+  --done-soft: #CCFBF1;
+  --done-ink: #134E4A;
+  --msg: #D97706;
+  --msg-soft: #FEF3C7;
+  --msg-ink: #92400E;
+  --ask: #2563EB;
+  --idle: #F4F6FA;
+  --wa: #25D366;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --sans: "Inter", system-ui, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+html, body { background: var(--ground); color: var(--ink); }
+body { font-family: var(--sans); padding-block: 16px; padding-inline: 16px; }
+.wrap { max-width: 1280px; margin: 0 auto; display: grid; gap: 10px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font: 600 14px/1.3 var(--mono); letter-spacing: .02em; margin: 0; text-wrap: balance; color: var(--title); }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; }
+button { font: 500 12px var(--mono); color: var(--ink); background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: var(--active); color: var(--title); }
+button:focus-visible { outline: 2px solid var(--active); outline-offset: 2px; }
+.stage { overflow-x: auto; }
+svg { display: block; width: 100%; min-width: 0; height: auto; background: var(--ground); }
+body.clean header { display: none; }
+
+.frame { fill: var(--panel); stroke: var(--panel-edge); stroke-width: 1.2; filter: url(#shadow); }
+.subframe { fill: var(--idle); stroke: var(--node-edge); stroke-dasharray: 4 4; transition: fill .4s, stroke .4s; }
+.subframe.open { fill: #ECFEFF; stroke: var(--active); stroke-width: 1.6; }
+.flabel { font: 700 12px var(--mono); fill: var(--title); letter-spacing: .16em; text-transform: uppercase; }
+.small { font: 400 11px var(--mono); fill: var(--muted); }
+.cond { font: 700 11.5px var(--mono); fill: var(--ink); }
+
+.node rect { fill: var(--node); stroke: var(--node-edge); stroke-width: 1.4; transition: fill .3s, stroke .3s; }
+.node text { font: 600 13px var(--mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; transition: fill .3s; }
+.node.sub rect { stroke-width: 1.4; }
+.node.sub .inner { fill: none; stroke: var(--node-edge); }
+.node circle { fill: var(--node); stroke: var(--muted); stroke-width: 1.6; transition: fill .3s, stroke .3s; }
+.node.endc circle.dot { fill: var(--muted); stroke: none; }
+.node.active rect { fill: var(--oc, var(--active)); stroke: var(--oc, var(--active)); }
+.node.active rect:not(.ring):not(.inner) { filter: url(#glow); }
+.node.active .inner { stroke: var(--ot, #0F172A); stroke-opacity: .6; fill: none; }
+.node.active text { fill: var(--ot, #0F172A); font-weight: 700; }
+.node.active circle { stroke: var(--oc, var(--active)); }
+.node.active circle.dot { fill: var(--oc, var(--active)); }
+.node rect.ring, .node.active rect.ring, .node.done rect.ring, .node.paused rect.ring { fill: none; stroke: var(--rc, var(--active)); stroke-width: 2.4; stroke-dasharray: none; animation: none; opacity: 0; transition: opacity .3s; filter: url(#glow-s); }
+.node.dual rect.ring { opacity: 1; }
+.node.done rect { fill: var(--done-soft); stroke: var(--done); stroke-width: 1.8; }
+.node.done .inner { fill: none; stroke: var(--done); stroke-opacity: .5; }
+.node.done text { fill: var(--done-ink); }
+.node.done circle { stroke: var(--done); }
+.node.done circle.dot { fill: var(--done); }
+.node.paused rect { fill: var(--msg-soft); stroke: var(--msg); stroke-width: 2; stroke-dasharray: 5 3; animation: dash 1s linear infinite; }
+.node.paused .inner { fill: none; }
+.node.paused text { fill: var(--msg-ink); font-weight: 700; }
+@keyframes dash { to { stroke-dashoffset: -16; } }
+.idlegroup { opacity: .45; }
+
+.edge { fill: none; stroke: var(--line); stroke-width: 1.6; transition: stroke .3s; }
+.edge.hot { stroke: var(--oc, var(--active)); stroke-width: 2.6; stroke-dasharray: 9 5; animation: flow .45s linear infinite; filter: url(#glow-e); }
+@keyframes flow { to { stroke-dashoffset: -14; } }
+.edge.done { stroke: var(--done); stroke-opacity: .9; stroke-width: 2; }
+.link { stroke: var(--node-edge); stroke-dasharray: 3 4; fill: none; }
+
+.table rect.t { fill: #F8FAFC; stroke: var(--panel-edge); transition: stroke .3s; }
+.table text.tn { font: 700 11px var(--mono); fill: #1E293B; }
+.table.flash rect.t { stroke: var(--active); stroke-width: 2; filter: url(#glow-s); }
+.chip { opacity: 0; transition: opacity .4s; }
+.chip.on { opacity: 1; }
+.chip rect { stroke-width: 1; }
+.chip text { font: 500 10.5px var(--mono); dominant-baseline: central; white-space: pre; }
+.chip.pending rect:first-child { fill: var(--msg-soft); stroke: var(--msg); }
+.chip.ok rect:first-child { fill: var(--done-soft); stroke: var(--done); }
+.chip.zero rect:first-child { fill: var(--idle); stroke: var(--line); }
+.chip text { fill: var(--ink); }
+
+.tok { opacity: 0; transition: opacity .25s; filter: url(#glow-t); }
+.tok.on { opacity: 1; }
+.typing circle { fill: var(--title); opacity: 0; }
+.typing.on circle { animation: blink 1s infinite; }
+.typing.on circle:nth-child(2) { animation-delay: .2s; }
+.typing.on circle:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%,100% { opacity: .15; } 50% { opacity: 1; } }
+.clock { opacity: 0; transition: opacity .3s; filter: url(#glow-s); }
+.clock.on { opacity: 1; }
+.clock.on .hand { animation: spin 1.2s linear infinite; transform-origin: 0 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.check { opacity: 0; transition: opacity .3s; filter: url(#glow-s); }
+.check.on { opacity: 1; }
+.progress { fill: url(#prog); }
+@media (prefers-reduced-motion: reduce) {
+  .node.paused rect, .clock.on .hand, .typing.on circle, .edge.hot { animation: none; }
+}
+.fx { opacity: 0; transition: opacity .4s; }
+.fx.on { opacity: 1; }
+.card .cr { fill: #fff; stroke: var(--panel-edge); stroke-width: 1.4; transition: stroke .3s, fill .3s; }
+.card.bad .cr { stroke: #E11D48; stroke-dasharray: 5 3; fill: #FFF1F2; }
+.card.win .cr { stroke: var(--done); stroke-width: 2.6; fill: #F0FDFA; filter: url(#glow-s); }
+.card .ch { font: 700 12px var(--mono); fill: var(--ink); }
+.card .cn { font: 400 10.5px var(--sans); fill: var(--muted); }
+.card .cq { font: 400 11px var(--sans); fill: #334155; }
+.card .cf { font: 500 10.5px var(--mono); fill: var(--ink); }
+.pillt { font: 700 10px var(--mono); fill: #fff; dominant-baseline: central; text-anchor: middle; }
+.rule rect { fill: var(--idle); stroke: var(--panel-edge); transition: fill .4s, stroke .4s; }
+.rule text { font: 600 10.5px var(--mono); fill: var(--muted); dominant-baseline: central; text-anchor: middle; transition: fill .4s; }
+.rule.lit rect { fill: var(--done-soft); stroke: var(--done); stroke-width: 2; }
+.rule.lit text { fill: var(--done-ink); font-weight: 700; }
+.rule.dim { opacity: .55; }
+.box { fill: #fff; stroke: var(--panel-edge); stroke-width: 1.4; }
+.bt { font: 700 12px var(--mono); fill: var(--ink); }
+.bs { font: 400 11px var(--mono); fill: var(--muted); }
+.bm { font: 500 11px var(--mono); fill: var(--ink); }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>grafo de pedidos &rarr; grafo de presupuestos &rarr; grafo de decisión (solicitudes de presupuesto, ofertas, aprobación humana, orden de compra)</h1>
+    <div class="controls">
+      <button id="btn-pause" type="button">Pausa</button>
+      <button id="btn-restart" type="button">Reiniciar</button>
+      <button id="btn-speed" type="button">Velocidad 1x</button>
+      <button id="btn-clean" type="button">Fotograma limpio</button>
+    </div>
+  </header>
+  <div class="stage">
+  <svg id="svg" viewBox="0 0 1280 720" role="img" aria-label="Flujo animado de un pedido por formulario web con déficit de stock por el grafo de presupuestos: solicitudes de presupuesto a tres proveedores, tres respuestas, extracción de ofertas con Claude Haiku 4.5, una regla fija de comparación, una pausa para la aprobación humana y la orden de compra">
+    <defs>
+      <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#EDF1F7"/><circle cx="12" cy="12" r="1.1" fill="#D3DAE5"/></pattern>
+      <linearGradient id="prog" x1="0" x2="1"><stop offset="0" stop-color="#7C3AED"/><stop offset=".5" stop-color="#0891B2"/><stop offset="1" stop-color="#0D9488"/></linearGradient>
+      <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1E293B" flood-opacity=".14"/></filter>
+      <filter id="glow" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".55"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".6"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-t" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".4"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-e" filterUnits="userSpaceOnUse" x="0" y="0" width="1280" height="720"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A99AF"/></marker>
+      <marker id="arr-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+      <marker id="arr-done" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0D9488"/></marker>
+    </defs>
+
+    <rect width="1280" height="720" fill="url(#dots)"/>
+    <g id="panels"></g>
+
+    <!-- three graphs -->
+    <rect class="frame" x="220" y="56" width="800" height="84" rx="10"/>
+    <text class="flabel" x="232" y="78">grafo de pedidos</text>
+    <text class="small" x="1008" y="78" text-anchor="end">pedido por formulario web, sin aclaración</text>
+    <rect class="frame" x="220" y="152" width="800" height="106" rx="10"/>
+    <text class="flabel" x="232" y="174">grafo de presupuestos</text>
+    <text class="small" x="1008" y="174" text-anchor="end">hilo quote-QR-0001</text>
+    <rect class="frame" x="220" y="274" width="800" height="416" rx="10"/>
+    <text class="flabel" x="232" y="296">grafo de decisión</text>
+    <text class="small" x="1008" y="296" text-anchor="end">quotes decide - hilo decision-QR-0001</text>
+
+    <!-- database -->
+    <rect class="frame" x="1046" y="56" width="210" height="428" rx="10"/>
+    <ellipse cx="1068" cy="76" rx="10" ry="4" fill="none" stroke="#4338CA"/>
+    <path d="M1058,76 v12 a10,4 0 0 0 20,0 v-12" fill="none" stroke="#4338CA"/>
+    <text class="flabel" x="1086" y="86">purchase_cycle.db</text>
+    <rect class="frame" x="1046" y="496" width="210" height="194" rx="10"/>
+    <path d="M1058,512 h9 l3,4 h12 v13 h-24 z" fill="none" stroke="#4338CA" stroke-width="1.4"/>
+    <text class="flabel" x="1092" y="526" style="letter-spacing:.06em;text-transform:none">supplier_outbox/</text>
+
+    <g id="graphs"></g>
+    <g id="cards"></g>
+    <g id="tables"></g>
+    <g id="outbox"></g>
+
+    <g class="clock" id="qclock" transform="translate(790,198)"><circle r="10" fill="#FEF3C7" stroke="#D97706" stroke-width="1.8"/><line class="hand" x1="0" y1="0" x2="0" y2="-7" stroke="#B45309" stroke-width="2" stroke-linecap="round"/></g>
+    <g class="clock" id="aclock" transform="translate(661,313)"><circle r="10" fill="#FEF3C7" stroke="#D97706" stroke-width="1.8"/><line class="hand" x1="0" y1="0" x2="0" y2="-7" stroke="#B45309" stroke-width="2" stroke-linecap="round"/></g>
+
+    <!-- tokens -->
+    <g class="tok" id="t-wf"><rect x="-16" y="-12" width="32" height="24" rx="3" fill="#7C3AED"/><circle cx="-11" cy="-7.5" r="1.4" fill="#fff"/><circle cx="-7" cy="-7.5" r="1.4" fill="#fff"/><rect x="-11" y="-2" width="22" height="4" rx="1" fill="#fff"/><rect x="-11" y="4" width="13" height="4" rx="1" fill="#fff"/><rect x="5" y="4" width="6" height="4" rx="1" fill="#DDD6FE"/></g>
+    <g class="tok" id="t-cardf"><rect x="-17" y="-13" width="34" height="26" rx="3" fill="#fff" stroke="#7C3AED" stroke-width="1.6"/><line x1="-11" y1="-6" x2="7" y2="-6" stroke="#64748B" stroke-width="2"/><line x1="-11" y1="0" x2="7" y2="0" stroke="#64748B" stroke-width="2"/><circle cx="11" cy="-6" r="3.5" fill="#7C3AED"/><circle cx="11" cy="0" r="3.5" fill="#7C3AED"/></g>
+    <g class="tok" id="t-okf"><rect x="-16" y="-12" width="32" height="24" rx="3" fill="#7C3AED"/><circle cx="-11" cy="-7.5" r="1.4" fill="#fff"/><circle cx="-7" cy="-7.5" r="1.4" fill="#fff"/><path d="M-6,2 L-2,6 L6,-2" stroke="#fff" stroke-width="2.2" fill="none"/></g>
+    <g id="ptoks"></g>
+
+    <rect x="24" y="704" width="1232" height="4" rx="2" fill="#D5DCE6"/>
+    <rect class="progress" id="progress" x="24" y="704" width="0" height="4" rx="2"/>
+  </svg>
+  </div>
+</div>
+
+<script>
+const SVGNS = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+const el = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const txt = (attrs, s, parent) => { const e = el("text", attrs, parent); e.textContent = s; return e; };
+
+const TEAL = "#0D9488", AMBER = "#D97706", ROSE = "#E11D48", PURPLE = "#7C3AED";
+
+// ---------- left column: one customer and three suppliers ----------
+function person(g, y0, supplier) {
+  el("circle", {cx: 109, cy: y0 + 52, r: 22, fill: "#E2E8F0", stroke: "#8A99AF"}, g);
+  if (supplier) {
+    el("path", {d: `M95,${y0 + 66} V${y0 + 48} L109,${y0 + 38} L123,${y0 + 48} V${y0 + 66} Z`, fill: "#64748B"}, g);
+    el("rect", {x: 104, y: y0 + 55, width: 10, height: 11, fill: "#E2E8F0"}, g);
+  } else {
+    el("circle", {cx: 109, cy: y0 + 45, r: 8, fill: "#64748B"}, g);
+    el("path", {d: `M94,${y0 + 69} a15,12 0 0 1 30,0`, fill: "#64748B"}, g);
+    el("g", {transform: `translate(87,${y0 + 70})`}, g).innerHTML = '<rect x="-10" y="-8" width="20" height="16" rx="2" fill="#7C3AED"/><circle cx="-6.5" cy="-4.5" r="1" fill="#fff"/><circle cx="-3.5" cy="-4.5" r="1" fill="#fff"/><rect x="-7" y="-1" width="14" height="2.6" rx="1" fill="#fff"/><rect x="-7" y="3" width="8" height="2.6" rx="1" fill="#fff"/>';
+  }
+}
+function panel(y0, h, label, lines, code, supplier, typingId, checkId) {
+  const g = el("g", {}, $("panels"));
+  el("rect", {class: "frame", x: 24, y: y0, width: 170, height: h, rx: 10}, g);
+  txt({class: "flabel", x: 36, y: y0 + 24}, label, g);
+  person(g, y0, supplier);
+  let y = y0 + 92;
+  for (const t of lines) { txt({x: 109, y, "text-anchor": "middle", style: "font:600 12px var(--sans);fill:var(--ink)"}, t, g); y += 14; }
+  txt({class: "small", x: 109, y: y + 1, "text-anchor": "middle"}, code, g);
+  if (typingId) { const t = el("g", {class: "typing", id: typingId, transform: `translate(109,${y0 + 136})`}, g); [-12, 0, 12].forEach(cx => el("circle", {cx, r: 3.5}, t)); }
+  if (checkId) el("g", {class: "check", id: checkId, transform: `translate(131,${y0 + 34})`}, g).innerHTML = '<circle r="10" fill="#0D9488"/><path d="M-5,0 L-1,4 L5,-4" stroke="#fff" stroke-width="2.2" fill="none"/>';
+}
+panel(56, 150, "cliente", ["Clinica Dental Arenal"], "CLI-001", false, "typing", "cust-check");
+panel(216, 148, "proveedor", ["Suministros Medicos", "Iberia S.L."], "SUP-001", true, "typing1", "chk1");
+panel(374, 148, "proveedor", ["Distribuciones Sanitarias", "del Norte S.A."], "SUP-002", true, "typing2", "chk2");
+panel(532, 148, "proveedor", ["Material Clinico", "Levante S.L."], "SUP-003", true, "typing3", "chk3");
+const CUST = [109, 108];
+const SUPY = {1: 216 + 52, 2: 374 + 52, 3: 532 + 52};
+
+// ---------- graph rows ----------
+const NH = 38, NW = 92;
+const RY = {o: 108, q: 216, d: 330};
+const N = {
+  o_start: {x: 250, row: "o", c: 1}, o_intake: {x: 360, row: "o", label: "canal web_form", w: 130}, o_extract: {x: 500, row: "o", label: "extraer"},
+  o_clarify: {x: 615, row: "o", label: "aclarar", sub: 1}, o_store: {x: 730, row: "o", label: "guardar"}, o_reply: {x: 845, row: "o", label: "responder"}, o_end: {x: 945, row: "o", c: 2},
+  q_start: {x: 250, row: "q", c: 1}, scan: {x: 360, row: "q", label: "revisar stock", w: 130}, short: {x: 500, row: "q", label: "déficit", w: 100},
+  send: {x: 615, row: "q", label: "enviar"}, qwait: {x: 730, row: "q", label: "esperar"}, qclose: {x: 845, row: "q", label: "cerrar"}, q_end: {x: 945, row: "q", c: 2},
+  d_start: {x: 250, row: "d", c: 1}, extract: {x: 360, row: "d", label: "extraer"}, compare: {x: 500, row: "d", label: "comparar"},
+  approve: {x: 615, row: "d", label: "aprobar"}, issue: {x: 730, row: "d", label: "emitir"}, d_end: {x: 845, row: "d", c: 2},
+  dclose: {x: 945, row: "d", label: "cerrar", dim: 1},
+};
+for (const k in N) N[k].y = RY[N[k].row];
+const rad = n => n.c ? 9 : (n.w || NW) / 2;
+const E = [
+  ["o_start", "o_intake"], ["o_intake", "o_extract"], ["o_extract", "o_clarify"], ["o_clarify", "o_store"], ["o_store", "o_reply"], ["o_reply", "o_end"],
+  ["q_start", "scan"], ["scan", "short"], ["short", "send"], ["send", "qwait"], ["qwait", "qclose"], ["qclose", "q_end"],
+  ["d_start", "extract"], ["extract", "compare"], ["compare", "approve"], ["approve", "issue"], ["issue", "d_end"],
+  ["approve", "dclose", [[615, 311], [615, 304], [945, 304], [945, 311]]],
+];
+const GRP = {};
+for (const r of ["o", "q", "d"]) { GRP[r] = el("g", {id: "grp-" + r, style: "transition:opacity .5s"}, $("graphs")); }
+const edgeEls = {};
+for (const [a, b, pts] of E) {
+  const A = N[a], B = N[b];
+  const p = pts || [[A.x + rad(A), A.y], [B.x - rad(B) - 1, B.y]];
+  edgeEls[a + ">" + b] = el("polyline", {class: "edge", points: p.map(q => q.join(",")).join(" "), "marker-end": "url(#arr)"}, GRP[A.row]);
+}
+const nodeEls = {};
+for (const k in N) {
+  const n = N[k];
+  const g = el("g", {class: "node" + (n.sub ? " sub" : "") + (n.c === 2 ? " endc" : ""), transform: `translate(${n.x},${n.y})`}, GRP[n.row]);
+  g.style.setProperty("--oc", PURPLE); g.style.setProperty("--ot", "#FFFFFF");
+  if (n.c) { el("circle", {r: 9}, g); if (n.c === 2) el("circle", {class: "dot", r: 5}, g); }
+  else {
+    const w = n.w || NW;
+    el("rect", {class: "ring", x: -w / 2 - 4, y: -NH / 2 - 4, width: w + 8, height: NH + 8, rx: 11}, g);
+    el("rect", {x: -w / 2, y: -NH / 2, width: w, height: NH, rx: 8}, g);
+    if (n.sub) el("rect", {class: "inner", x: -w / 2 + 4, y: -NH / 2 + 4, width: w - 8, height: NH - 8, rx: 5}, g);
+    txt({}, n.label, g);
+  }
+  if (n.dim) g.style.opacity = .4;
+  nodeEls[k] = g;
+}
+txt({class: "small", x: 690, y: 300, "text-anchor": "middle", style: "fill:#94A3B8"}, "rechazar", GRP.d);
+const shortTxt = txt({class: "cond fx", x: 500, y: 251, "text-anchor": "middle", style: "fill:#BE123C"}, "pide 12, stock 0: faltan 12", GRP.q);
+const waitTxt = txt({class: "small fx", x: 730, y: 252, "text-anchor": "middle"}, "espera de días (reloj simulado)", GRP.q);
+
+function node(k, state) {
+  const g = nodeEls[k];
+  g.classList.remove("active", "done", "paused");
+  if (state) g.classList.add(state);
+}
+function edge(a, b, state) {
+  const e = edgeEls[a + ">" + b];
+  e.classList.remove("hot", "done");
+  if (state) e.classList.add(state);
+  e.setAttribute("marker-end", state === "hot" ? "url(#arr-hot)" : state === "done" ? "url(#arr-done)" : "url(#arr)");
+}
+
+// ---------- database ----------
+const TB = {orders: {y: 96, h: 44}, order_lines: {y: 148, h: 44}, stock: {y: 200, h: 48}, quote_requests: {y: 256, h: 44}, quote_offers: {y: 308, h: 100}, purchase_orders: {y: 416, h: 44}};
+const tableEls = {};
+for (const k in TB) {
+  const t = TB[k], g = el("g", {class: "table"}, $("tables"));
+  el("rect", {class: "t", x: 1054, y: t.y, width: 194, height: t.h, rx: 6}, g);
+  txt({class: "tn", x: 1062, y: t.y + 16}, k, g);
+  tableEls[k] = g;
+}
+function chip(parent, y, text, cls, color, x0, w) {
+  const g = el("g", {class: "chip " + cls}, parent);
+  el("rect", {x: x0, y: y - 10, width: w, height: 20, rx: 4}, g);
+  if (color) el("rect", {x: x0, y: y - 10, width: 5, height: 20, rx: 2, fill: color, style: "stroke:none"}, g);
+  txt({x: x0 + (color ? 11 : 8), y}, text, g);
+  return g;
+}
+const dbchip = (t, y, text, cls, color) => chip(tableEls[t], y, text, cls, color, 1062, 178);
+const setChip = (c, text, cls) => { c.setAttribute("class", "chip " + cls + (c.classList.contains("on") ? " on" : "")); c.querySelector("text").textContent = text; };
+const chips = {
+  order: dbchip("orders", 124, "web_form . recibido", "ok", PURPLE),
+  line: dbchip("order_lines", 176, "GLV-NIT-XS           12", "ok", PURPLE),
+  qr: dbchip("quote_requests", 284, "QR-0001 enviada", "pending", PURPLE),
+  off: {1: dbchip("quote_offers", 336, "SUP-001 declinada", "zero", ROSE), 2: dbchip("quote_offers", 360, "SUP-002 12 x 4.10 total", "ok", TEAL), 3: dbchip("quote_offers", 384, "SUP-003  8 x 3.95 parcial", "pending", AMBER)},
+  po: dbchip("purchase_orders", 444, "PO-0001 SUP-002 emitida", "ok", TEAL),
+};
+const BX = 1150, BW = 86, SROWY = 232;
+txt({class: "small", x: 1062, y: SROWY + 4}, "GLV-NIT-XS", tableEls.stock);
+const barH = el("rect", {x: BX, y: SROWY + 1, width: 0, height: 5, rx: 2, fill: "#94A3B8"}, tableEls.stock);
+const barO = el("rect", {x: BX, y: SROWY - 6, width: 0, height: 5, rx: 1, fill: "#E11D48"}, tableEls.stock);
+
+// supplier outbox files
+const OBX = [];
+[["QR-0001-request-SUP-001.eml", 552], ["QR-0001-request-SUP-002.eml", 578], ["QR-0001-request-SUP-003.eml", 604], ["PO-0001-SUP-002.eml", 640]].forEach(([n, y], i) => {
+  const c = chip($("outbox"), y, n, i === 3 ? "ok" : "pending", i === 3 ? TEAL : PURPLE, 1056, 190);
+  c.querySelector("text").style.fontSize = "10px"; OBX.push(c);
+});
+
+// ---------- decision section: few words, big type ----------
+const CARDS = [
+  {n: 1, sup: "SUP-001", fig: "sin oferta", pill: ["DECLINADA", ROSE]},
+  {n: 2, sup: "SUP-002", fig: "12/12  4.10", pill: ["TOTAL", TEAL]},
+  {n: 3, sup: "SUP-003", fig: "8/12  3.95", pill: ["PARCIAL", AMBER]},
+];
+const CY = 362, CW = 244, CH = 96;
+const card = {};
+CARDS.forEach((c, i) => {
+  const x0 = 240 + i * 256, y0 = CY;
+  const g = el("g", {class: "card fx"}, $("cards"));
+  el("rect", {class: "cr", x: x0, y: y0, width: CW, height: CH, rx: 10}, g);
+  txt({x: x0 + 14, y: y0 + 26, style: "font:700 18px var(--mono);fill:var(--ink)"}, c.sup, g);
+  const ex = el("g", {class: "fx"}, g);
+  txt({x: x0 + 14, y: y0 + 62, style: "font:500 15px var(--sans);fill:var(--muted)"}, "respuesta email", ex);
+  const tp = el("g", {class: "fx"}, g);
+  el("rect", {x: x0 + CW - 88, y: y0 + 10, width: 76, height: 22, rx: 11, fill: "#EEF2FF", stroke: "#4338CA", "stroke-width": 1.6}, tp);
+  txt({x: x0 + CW - 50, y: y0 + 21, style: "font:700 11.5px var(--mono);fill:#4338CA;dominant-baseline:central;text-anchor:middle"}, "Haiku 4.5", tp);
+  const out = el("g", {class: "fx"}, g);
+  txt({x: x0 + 14, y: y0 + 64, style: "font:700 20px var(--mono);fill:var(--ink)"}, c.fig, out);
+  const pw = c.pill[0].length * 9 + 20;
+  el("rect", {x: x0 + CW - 12 - pw, y: y0 + 8, width: pw, height: 26, rx: 13, fill: c.pill[1]}, out).setAttribute("class", "pillbg");
+  txt({x: x0 + CW - 12 - pw / 2, y: y0 + 21, style: "font:700 13px var(--mono);fill:#fff;dominant-baseline:central;text-anchor:middle"}, c.pill[0], out);
+  card[c.n] = {g, ex, tp, out, x0};
+});
+const rule = el("g", {class: "rule fx"}, $("cards"));
+el("rect", {x: 460, y: 472, width: 316, height: 34, rx: 17, style: "fill:#CCFBF1;stroke:#0D9488;stroke-width:2"}, rule);
+txt({x: 618, y: 489, style: "font:700 16px var(--mono);fill:#134E4A"}, "regla: total antes que parcial", rule);
+const rules = [rule];
+const rec = el("g", {class: "fx"}, $("cards"));
+el("rect", {class: "box", x: 240, y: 520, width: 756, height: 52, rx: 10, style: "stroke:#0D9488;stroke-width:2"}, rec);
+txt({x: 256, y: 546, style: "font:700 20px var(--mono);fill:#0F766E"}, "Recomendada SUP-002 - única oferta total", rec);
+const recChipG = el("g", {class: "fx"}, $("cards"));
+const recRect = el("rect", {x: 240, y: 584, width: 250, height: 36, rx: 18, fill: "#FEF3C7", stroke: "#D97706", "stroke-width": 2.2}, recChipG);
+el("g", {transform: "translate(264,602)"}, recChipG).innerHTML = '<rect x="-7" y="-9" width="5" height="18" rx="1.5" fill="#92400E"/><rect x="2" y="-9" width="5" height="18" rx="1.5" fill="#92400E"/>';
+const recChipT = txt({x: 282, y: 603, style: "font:700 17px var(--mono);fill:#92400E;dominant-baseline:central"}, "awaiting_approval", recChipG);
+
+const term = el("g", {class: "fx"}, $("cards"));
+el("rect", {class: "box", x: 240, y: 630, width: 500, height: 52, rx: 10}, term);
+el("g", {transform: "translate(270,656)"}, term).innerHTML = '<circle r="16" fill="#E2E8F0" stroke="#8A99AF"/><circle cy="-5" r="5.5" fill="#64748B"/><path d="M-10,11 a10,9 0 0 1 20,0" fill="#64748B"/>';
+const cmd = txt({x: 298, y: 657, style: "font:700 15px var(--mono);fill:var(--ink);dominant-baseline:central"}, "", term);
+const cmdLine = txt({x: 0, y: 0, style: "display:none"}, "", term);
+const poc = el("g", {class: "fx"}, $("cards"));
+el("rect", {class: "box", x: 760, y: 584, width: 236, height: 98, rx: 10, style: "stroke:#0D9488;stroke-width:2.2"}, poc);
+txt({x: 878, y: 616, style: "font:700 22px var(--mono);fill:#0F766E;text-anchor:middle"}, "PO-0001", poc);
+txt({x: 878, y: 646, style: "font:600 16px var(--mono);fill:var(--ink);text-anchor:middle"}, "a SUP-002", poc);
+txt({x: 878, y: 668, style: "font:500 13px var(--mono);fill:var(--muted);text-anchor:middle"}, "email de salida", poc);
+
+// tokens: request envelopes, replies, order dots
+function env(id, color) {
+  el("g", {class: "tok", id}, $("ptoks")).innerHTML = `<rect x="-15" y="-10" width="30" height="20" rx="3" fill="${color}"/><path d="M-14,-8 L0,2 L14,-8" stroke="#fff" stroke-width="1.8" fill="none"/>`;
+}
+[1, 2, 3].forEach(i => env("req" + i, PURPLE));
+env("rep1", ROSE); env("rep2", TEAL); env("rep3", AMBER); env("po", TEAL);
+el("g", {class: "tok", id: "dot"}, $("ptoks")).innerHTML = `<circle r="6" fill="${PURPLE}"/>`;
+el("g", {class: "tok", id: "dot2"}, $("ptoks")).innerHTML = `<circle r="6" fill="${PURPLE}"/>`;
+
+// ---------- timeline engine ----------
+let runId = 0, paused = false, speed = 1;
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function tween(dur, fn) {
+  const my = runId;
+  return new Promise((res, rej) => {
+    let t = 0, last = null;
+    function f(ts) {
+      if (my !== runId) return rej("restart");
+      if (last === null) last = ts;
+      if (!paused) t += (ts - last) * speed;
+      last = ts;
+      const p = Math.min(1, t / dur);
+      fn(p);
+      p < 1 ? requestAnimationFrame(f) : res();
+    }
+    requestAnimationFrame(f);
+  });
+}
+const wait = ms => tween(ms, () => {});
+const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+function place(id, x, y) { $(id).setAttribute("transform", `translate(${x},${y})`); }
+function show(id, x, y) { if (x !== undefined) place(id, x, y); $(id).classList.add("on"); }
+function hide(id) { $(id).classList.remove("on"); }
+function move(id, pts, dur) {
+  const segs = []; let total = 0;
+  for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); segs.push(l); total += l; }
+  show(id, pts[0][0], pts[0][1]);
+  return tween(RM ? 1 : dur, p => {
+    let d = ease(p) * total, i = 0;
+    while (i < segs.length - 1 && d > segs[i]) { d -= segs[i]; i++; }
+    const r = segs[i] ? d / segs[i] : 1;
+    place(id, pts[i][0] + (pts[i + 1][0] - pts[i][0]) * r, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * r);
+  });
+}
+async function hop(id, a, b, dur) {
+  edge(a, b, "hot");
+  const pts = edgeEls[a + ">" + b].getAttribute("points").split(" ").map(s => s.split(",").map(Number));
+  pts[0] = [N[a].x, N[a].y]; pts[pts.length - 1] = [N[b].x, N[b].y];
+  await move(id, pts, dur);
+  edge(a, b, "done");
+}
+async function pulse(a, b) { edge(a, b, "hot"); await wait(350); edge(a, b, "done"); }
+function flash(t) { tableEls[t].classList.add("flash"); setTimeout(() => tableEls[t].classList.remove("flash"), 700); }
+const on = id => $(id).classList.add("on"), off = id => $(id).classList.remove("on");
+const fxOn = e => e.classList.add("on"), fxOff = e => e.classList.remove("on");
+
+// progress follows the story clock
+let LOOP = 37250;
+let vt = 0, lastTs = null, storyStart = null;
+function ticker(ts) {
+  if (lastTs !== null && !paused) vt += (ts - lastTs) * speed;
+  lastTs = ts;
+  if (storyStart !== null) $("progress").setAttribute("width", Math.min(1, (vt - storyStart) / LOOP) * 1232);
+  requestAnimationFrame(ticker);
+}
+requestAnimationFrame(ticker);
+
+function reset() {
+  for (const k in nodeEls) node(k, null);
+  for (const k in edgeEls) { const [a, b] = k.split(">"); edge(a, b, null); }
+  document.querySelectorAll(".tok, .chip, .check, .clock, .typing, .fx").forEach(e => e.classList.remove("on"));
+  GRP.q.style.opacity = .45; GRP.d.style.opacity = .45;
+  for (const n in card) card[n].g.classList.remove("bad", "win");
+  
+  setChip(chips.qr, "QR-0001 enviada", "pending");
+  for (const b of [barH, barO]) b.setAttribute("width", 0);
+  recRect.setAttribute("fill", "#FEF3C7"); recRect.setAttribute("stroke", "#D97706"); recChipT.style.fill = "#92400E"; recChipT.textContent = "awaiting_approval"; recChipG.querySelector("g").style.display = "";
+  cmd.textContent = "";
+  storyStart = vt; $("progress").setAttribute("width", 0);
+}
+
+// ---------- story ----------
+async function orderIntake() {
+  const c = CUST;
+  on("typing"); await wait(600); off("typing");
+  await move("t-wf", [c, [210, c[1]], [238, c[1]]], 800); node("o_start", "done");
+  await hop("t-wf", "o_start", "o_intake", 400); node("o_intake", "active"); await wait(450); node("o_intake", "done");
+  await hop("t-wf", "o_intake", "o_extract", 450); node("o_extract", "active"); await wait(250);
+  hide("t-wf"); show("t-cardf", N.o_extract.x, N.o_extract.y); await wait(450); node("o_extract", "done");
+  await hop("t-cardf", "o_extract", "o_clarify", 400); node("o_clarify", "active"); await wait(350); node("o_clarify", "done");
+  await hop("t-cardf", "o_clarify", "o_store", 400); node("o_store", "active");
+  await move("t-cardf", [[730, 108], [730, 148], [1032, 148], [1032, 124], [1066, 124]], 900);
+  hide("t-cardf"); flash("orders"); fxOn(chips.order); await wait(250);
+  flash("order_lines"); fxOn(chips.line); await wait(350); node("o_store", "done");
+}
+async function replyToCustomer() {
+  await pulse("o_store", "o_reply"); node("o_reply", "active");
+  await move("t-okf", [[845, 108], [845, 44], [210, 44], [210, CUST[1]], [150, CUST[1]]], 1300);
+  node("o_reply", "done"); edge("o_reply", "o_end", "done"); node("o_end", "done"); on("cust-check"); hide("t-okf");
+}
+async function requestAndWait() {
+  GRP.q.style.opacity = 1; node("q_start", "done");
+  await hop("dot", "q_start", "scan", 350); node("scan", "active"); await wait(350); hide("dot");
+  await hop("dot", "scan", "short", 450); node("scan", "done"); node("short", "active"); hide("dot");
+  await Promise.all([
+    move("dot", [[1070, 176], [1032, 176], [1032, 266], [500, 266], [500, 216]], 1200),
+    move("dot2", [[1070, 232], [1032, 232], [1032, 266], [500, 266], [500, 216]], 1200),
+  ]);
+  hide("dot"); hide("dot2"); flash("stock"); flash("order_lines");
+  await tween(800, p => barO.setAttribute("width", ease(p) * BW));
+  fxOn(shortTxt); await wait(550); node("short", "done");
+  await hop("dot", "short", "send", 450); hide("dot"); node("send", "active"); await wait(250);
+  const lane = i => [[615, 216], [615, 266], [212, 266], [212, SUPY[i]], [140, SUPY[i]]];
+  const outs = [1, 2, 3].map((i, k) => wait(k * 380).then(() => { fxOn(OBX[i - 1]); if (i === 1) { fxOn(chips.qr); flash("quote_requests"); } return move("req" + i, lane(i), 1500); }));
+  await Promise.all(outs);
+  [1, 2, 3].forEach(i => hide("req" + i));
+  node("send", "done");
+  await hop("dot", "send", "qwait", 450); hide("dot"); node("qwait", "paused"); on("qclock"); fxOn(waitTxt);
+  const order = [2, 3, 1];
+  let replied = 0;
+  const arrivals = order.map((i, k) => wait(k * 650).then(async () => {
+    on("typing" + i); await wait(700); off("typing" + i);
+    await move("rep" + i, [[140, SUPY[i]], [212, SUPY[i]], [212, 266], [730, 266], [730, 216]], 1400);
+    hide("rep" + i); replied++; setChip(chips.qr, "QR-0001 esperando " + replied + "/3", "pending"); flash("quote_requests");
+  }));
+  await Promise.all(arrivals);
+  off("qclock"); fxOff(waitTxt); node("qwait", "done");
+  await hop("dot", "qwait", "qclose", 400); node("qclose", "active");
+  setChip(chips.qr, "QR-0001 ready_for_decision", "ok"); flash("quote_requests"); await wait(550); node("qclose", "done");
+  await hop("dot", "qclose", "q_end", 300); hide("dot"); node("q_end", "done");
+}
+async function extractOffers() {
+  GRP.d.style.opacity = 1; node("d_start", "done");
+  await hop("dot", "d_start", "extract", 450); hide("dot"); node("extract", "active");
+  for (const n of [1, 2, 3]) { fxOn(card[n].g); fxOn(card[n].ex); await wait(250); }
+  await wait(500);
+  for (const n of [1, 2, 3]) fxOn(card[n].tp);
+  await wait(1300);
+  for (const n of [2, 3, 1]) {
+    const c = card[n];
+    fxOff(c.tp); fxOff(c.ex); fxOn(c.out);
+    if (n === 1) c.g.classList.add("bad");
+    flash("quote_offers"); fxOn(chips.off[n]); await wait(550);
+  }
+  await wait(400); node("extract", "done");
+}
+async function compareOffers() {
+  await hop("dot", "extract", "compare", 450); hide("dot"); node("compare", "active");
+  fxOn(rule); await wait(1500);
+  card[2].g.classList.add("win"); fxOn(rec); await wait(1900);
+  node("compare", "done");
+}
+async function awaitApproval() {
+  await hop("dot", "compare", "approve", 450); hide("dot"); node("approve", "paused"); on("aclock");
+  fxOn(recChipG); setChip(chips.qr, "QR-0001 awaiting_approval", "pending"); flash("quote_requests");
+  await wait(1900);
+  fxOn(term); await wait(400);
+  const full = "$ quotes approve QR-0001";
+  await tween(1400, p => { cmd.textContent = full.slice(0, Math.round(p * full.length)); });
+  await wait(700);
+}
+async function issueOrder() {
+  off("aclock"); node("approve", "done");
+  await hop("dot", "approve", "issue", 450); hide("dot"); node("issue", "active");
+  flash("purchase_orders"); fxOn(chips.po); await wait(500);
+  setChip(chips.qr, "QR-0001 con pedido", "ok"); flash("quote_requests");
+  recRect.setAttribute("fill", "#CCFBF1"); recRect.setAttribute("stroke", "#0D9488"); recChipT.style.fill = "#134E4A"; recChipT.textContent = "con pedido";
+  recChipG.querySelector("g").style.display = "none";
+  fxOn(poc); fxOn(OBX[3]); await wait(700);
+  await move("po", [[730, 330], [730, 266], [212, 266], [212, SUPY[2]], [140, SUPY[2]]], 1800);
+  hide("po"); on("chk2"); node("issue", "done");
+  edge("issue", "d_end", "hot"); await wait(400); edge("issue", "d_end", "done"); node("d_end", "done");
+}
+
+async function story() {
+  reset();
+  await wait(300);
+  await orderIntake();
+  await Promise.all([replyToCustomer(), requestAndWait()]);
+  await wait(300);
+  await extractOffers();
+  await compareOffers();
+  await awaitApproval();
+  await issueOrder();
+  window.lastStoryMs = vt - storyStart;
+  $("progress").setAttribute("width", 1232); storyStart = null;
+  await wait(3500);
+}
+async function loop() {
+  const my = ++runId;
+  try { while (my === runId) await story(); } catch (e) { if (e !== "restart") throw e; }
+}
+$("btn-pause").onclick = () => { paused = !paused; $("btn-pause").textContent = paused ? "Reanudar" : "Pausa"; };
+$("btn-restart").onclick = () => { paused = false; $("btn-pause").textContent = "Pausa"; loop(); };
+$("btn-speed").onclick = () => { speed = speed === 1 ? 2 : speed === 2 ? 0.5 : 1; $("btn-speed").textContent = "Velocidad " + speed + "x"; };
+$("btn-clean").onclick = () => document.body.classList.toggle("clean");
+if (location.hash === "#clean") document.body.classList.add("clean");
+loop();
+</script>

@@ -54,7 +54,18 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 1400, "height": 900}, device_scale_factor=1)
     pg.add_init_script(INIT)
     pg.goto(PAGE, wait_until="networkidle")
-    pg.evaluate("document.fonts.ready.then(() => document.fonts.size)")
+    # load every declared family and weight for Latin text with Spanish accents up front, so no
+    # frame shows a fallback font while a weight or accented glyph range loads mid-capture
+    faces = pg.evaluate(
+        """(async () => {
+          const sample = "AaZz09 áéíóúüñ ÁÉÍÓÚÜÑ ¿¡";
+          const specs = [...new Set([...document.fonts].map(f => `${f.style} ${f.weight} 16px ${f.family}`))];
+          for (const s of specs) if (!(await document.fonts.load(s, sample)).length) throw new Error("font not loaded: " + s);
+          await document.fonts.ready;
+          return [...document.fonts].filter(f => f.status === "loaded").length;
+        })()"""
+    )
+    print("font faces loaded", faces)
     pg.add_style_tag(
         content="body{margin:0} #svg{width:1280px!important;height:720px!important;max-width:none!important}"
     )
