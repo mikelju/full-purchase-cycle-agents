@@ -1,11 +1,15 @@
 """C8: response facts, the response_drafting task, the fact check and the template fallback."""
 
 import json
+from email import message_from_bytes, policy
+from pathlib import Path
 
 import pytest
+from langgraph.types import Command
 
 from purchase_cycle import customer_responses as cr
 from purchase_cycle import db, llm
+from purchase_cycle.graph import sqlite_checkpointer
 from test_sales import A, B, C, _incidents, _planned
 
 SCENARIOS = {
@@ -202,3 +206,144 @@ def test_the_facts_plan_the_corrections_once(tmp_path):
     again = cr.response_facts(conn, 1)
     assert again == facts
     assert conn.execute("SELECT COUNT(*) FROM customer_corrections").fetchone()[0] == 2
+
+
+# ---- the graph: C8 pause, C9 decisions, C10 idempotence ----
+
+
+class Counter:
+    """A model double that answers with the template and counts its calls."""
+
+    def __init__(self, facts):
+        self.facts, self.calls = facts, 0
+
+    def extract(self, text, case_id=None):
+        self.calls += 1
+        return llm.ResponseBody(body=cr.fill_template(self.facts))
+
+
+class Flow:
+    def __init__(self, tmp_path):
+        self.conn, self.facts = _scenario(tmp_path)
+        self.db_path = tmp_path / "s.db"
+        self.client = Counter(self.facts)
+        self.invoices = tmp_path / "docs"
+        self.outbox = tmp_path / "outbox"
+        self.checkpointer = sqlite_checkpointer(tmp_path / "cp.sqlite")
+        self.run = {"configurable": {"thread_id": "response-SINV-0001"}}
+
+    def graph(self, client=True):
+        return cr.build_response_graph(
+            self.db_path, self.client if client else None, self.invoices, self.outbox, self.checkpointer
+        )
+
+    def row(self):
+        return self.conn.execute("SELECT * FROM customer_responses").fetchall()
+
+    def emails(self):
+        return sorted(self.outbox.glob("*.eml")) if self.outbox.exists() else []
+
+    def documents(self):
+        return sorted(self.invoices.glob("*.txt")) if self.invoices.exists() else []
+
+    def state(self):
+        rows = [tuple(r) for r in self.row()]
+        docs = [tuple(r) for r in self.conn.execute("SELECT * FROM customer_corrections ORDER BY id")]
+        files = {p.name: p.read_bytes() for p in self.emails() + self.documents()}
+        return rows, docs, files
+
+    def decide(self, answer):
+        self.graph().invoke({"invoice_id": 1}, self.run)
+        self.graph(client=False).invoke(Command(resume=answer), self.run)
+        return self.row()[0]
+
+
+@pytest.fixture
+def flow(tmp_path):
+    return Flow(tmp_path)
+
+
+def test_drafting_stores_an_awaiting_row_and_the_thread_waits_at_review(flow):
+    flow.graph().invoke({"invoice_id": 1}, flow.run)
+    [row] = flow.row()
+    assert (row["status"], row["draft_source"], row["edited"]) == ("awaiting_approval", "model", 0)
+    assert row["recipient"] == flow.facts["recipient"] and row["draft_body"] == cr.fill_template(flow.facts)
+    assert flow.graph(client=False).get_state(flow.run).next == ("review",)
+    assert flow.client.calls == 1 and flow.emails() == [] and flow.documents() == []
+    assert {r["document_file"] for r in flow.conn.execute("SELECT * FROM customer_corrections")} == {None}
+
+
+def test_approve_writes_one_email_and_the_document_files_and_sets_sent(flow):
+    row = flow.decide({"action": "approve"})
+    assert (row["status"], row["edited"], row["final_body"]) == ("sent", 0, row["draft_body"])
+    [path] = flow.emails()
+    assert path.name == "RESPONSE-SINV-0001.eml" and row["outbox_file"] == str(path) and row["decided_at"]
+    message = message_from_bytes(path.read_bytes(), policy=policy.default)
+    assert message["To"] == flow.facts["recipient"] and message["Subject"] == row["subject"]
+    assert message.get_content().strip() == row["draft_body"].strip()
+    assert [p.name for p in flow.documents()] == ["CI-0002.txt", "CN-0001.txt"]
+    for doc in flow.conn.execute("SELECT * FROM customer_corrections"):
+        assert doc["document_file"] == str(flow.invoices / f"{doc['number']}.txt")
+        assert f"Total: {doc['total']:.2f} EUR" in Path(doc["document_file"]).read_text()
+
+
+def test_edit_sends_the_given_text_keeps_the_draft_and_leaves_amounts_unchanged(flow):
+    flow.graph().invoke({"invoice_id": 1}, flow.run)
+    totals = [tuple(r) for r in flow.conn.execute("SELECT number, total FROM customer_corrections ORDER BY id")]
+    row = flow.decide({"action": "edit", "body": "My own words."})
+    assert (row["status"], row["edited"], row["final_body"]) == ("sent", 1, "My own words.")
+    assert row["draft_body"] == cr.fill_template(flow.facts)
+    assert message_from_bytes(flow.emails()[0].read_bytes(), policy=policy.default).get_content().strip() == (
+        "My own words."
+    )
+    assert totals == [tuple(r) for r in flow.conn.execute("SELECT number, total FROM customer_corrections ORDER BY id")]
+
+
+def test_reject_writes_nothing(flow):
+    row = flow.decide({"action": "reject"})
+    assert (row["status"], row["final_body"], row["outbox_file"]) == ("rejected", None, None)
+    assert row["decided_at"] and flow.emails() == [] and flow.documents() == []
+    assert {r["document_file"] for r in flow.conn.execute("SELECT * FROM customer_corrections")} == {None}
+
+
+def test_rerunning_the_nodes_writes_nothing_twice_and_calls_no_model(flow):
+    flow.decide({"action": "approve"})
+    before, calls = flow.state(), flow.client.calls
+    state = {"invoice_id": 1, "decision": "approve", "final_body": "other text"}
+    cr.send_response(flow.db_path, flow.invoices, flow.outbox, state)
+    cr.close_response(flow.db_path, state)
+    cr.draft_message(flow.db_path, None, 1)
+    assert (flow.state(), flow.client.calls) == (before, calls)
+    assert flow.graph(client=False).get_state(flow.run).next == ()
+
+
+def test_a_crash_after_the_files_and_the_email_resumes_to_the_same_result(flow, tmp_path, monkeypatch):
+    flow.graph().invoke({"invoice_id": 1}, flow.run)
+    real = cr.quotes._write_email
+
+    def crash(*args):
+        real(*args)
+        raise RuntimeError("stop after the email")
+
+    monkeypatch.setattr(cr.quotes, "_write_email", crash)
+    with pytest.raises(RuntimeError):
+        flow.graph(client=False).invoke(Command(resume={"action": "approve"}), flow.run)
+    assert flow.row()[0]["status"] == "awaiting_approval" and len(flow.emails()) == 1
+    monkeypatch.undo()
+    flow.graph(client=False).invoke(None, flow.run)
+    other = Flow(tmp_path / "clean")
+    other.decide({"action": "approve"})
+    assert flow.client.calls == 1
+    assert flow.row()[0]["status"] == "sent" and len(flow.emails()) == 1
+    mine, clean = flow.state(), other.state()
+    assert set(mine[2]) == set(clean[2]) and mine[2]["CN-0001.txt"] == clean[2]["CN-0001.txt"]
+
+
+def test_a_different_file_in_the_outbox_refuses_the_send_and_writes_no_document(flow):
+    flow.graph().invoke({"invoice_id": 1}, flow.run)
+    cr.quotes._write_email(
+        flow.outbox, "RESPONSE-SINV-0001", "x@y.z", "other", "Some other text.", "2026-10-12 09:00:00"
+    )
+    with pytest.raises(Exception, match="already exists"):
+        flow.graph(client=False).invoke(Command(resume={"action": "approve"}), flow.run)
+    assert flow.row()[0]["status"] == "awaiting_approval" and flow.documents() == []
