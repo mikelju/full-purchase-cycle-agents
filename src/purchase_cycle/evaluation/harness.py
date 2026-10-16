@@ -386,6 +386,7 @@ SUITES = (
     "goods_receipt",
     "sales_reconciliation",
     "customer_response",
+    "response_drafting",
 )
 # The deterministic phase 05 suites run locally only, so `eval-upload` leaves them out; `order_scenarios` stays out
 # of `eval-upload` too (phase 05, increment 24).
@@ -404,6 +405,7 @@ UPLOAD_SUITES = tuple(
         "goods_receipt",
         "sales_reconciliation",
         "customer_response",
+        "response_drafting",
     )
 )
 # `all` runs every suite with a baseline; the WhatsApp suite joined once its baseline was recorded (increment 16)
@@ -416,6 +418,8 @@ UPLOAD_SUITES = tuple(
 # `claim_approval` (phase 09) is deterministic and local, so it joined with its scenarios (increment 14).
 # `sales_reconciliation` (phase 11) is deterministic and local, so it joined with its scenarios (increment 13).
 # `customer_response` (phase 11) is deterministic and local, so it joined with its scenarios (increment 14).
+# `response_drafting` (phase 11) is in `SUITES` from increment 17 and joins `ALL_SUITES` with its baseline (increment 20);
+# LangSmith is left to a later change, so it is not in `UPLOAD_SUITES`.
 ALL_SUITES = (
     "order_line_extraction",
     "web_form_matching",
@@ -470,6 +474,10 @@ def _suite(name: str):
         from purchase_cycle.evaluation import claim_eval
 
         return claim_eval
+    if name == "response_drafting":
+        from purchase_cycle.evaluation import response_eval
+
+        return response_eval
     if name == "claim_approval":
         from purchase_cycle.evaluation import claim_approval_eval
 
