@@ -133,7 +133,7 @@ def _failures(tmp_path):
         (body.replace("SINV-0001", "SINV-0009"), "missing invoice number SINV-0001"),
         (body.replace("CDN-0001", "CDN-0009"), "missing delivery note number CDN-0001"),
         (body.replace(A, "SKU-OTHER"), f"missing incident {A}"),
-        (body.replace(", 2 units", ", 3 units"), f"missing units 2 of {A}"),
+        (body.replace(", 2 units", ", 3 units"), [f"missing units 2 of {A}", "invented amount 3.00"]),
         (body.replace("CN-0001", "CN-0009"), "missing document CN-0001"),
         (body.replace(f"{total} EUR", f"{other} EUR"), [f"missing total {total} of CN-0001", "invented amount 999.99"]),
         (
@@ -402,3 +402,33 @@ def test_the_document_class_must_sit_before_its_number(tmp_path):
     assert cr.check_response(body.replace("Credit note CN-0001", "Corrective invoice CN-0001"), facts) == [
         "wrong class of CN-0001"
     ]
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "number"),
+    [
+        ("Credit note CN-0001", "Corrective invoice CN-0001, the credit we owe you,", "CN-0001"),
+        ("Corrective invoice CI-0002", "Credit note CI-0002 (a corrective document)", "CI-0002"),
+    ],
+)
+def test_a_class_word_elsewhere_nearby_does_not_give_the_document_its_class(tmp_path, old, new, number):
+    _, facts = _scenario(tmp_path)
+    body = cr.fill_template(facts)
+    assert cr.check_response(body.replace(old, new), facts) == [f"wrong class of {number}"]
+
+
+def test_a_bare_integer_equal_to_a_quantity_is_an_amount_without_a_unit_word(tmp_path):
+    _, facts = _scenario(tmp_path)
+    body = cr.fill_template(facts)
+    assert cr.check_response(body + "\nWe will refund 2 to you.", facts) == ["invented amount 2.00"]
+    assert cr.check_response(body + "\nWe will resend 2 units soon.", facts) == []
+    assert cr.check_response(body + "\nWe will resend 777 units soon.", facts) == ["invented amount 777.00"]
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["We will send it by 15 November 2026.", "Payment within 30 days.", "Expect it on 2026-11-15 or 15/11/2026."],
+)
+def test_dates_and_periods_are_not_amounts(tmp_path, text):
+    _, facts = _scenario(tmp_path)
+    assert cr.check_response(cr.fill_template(facts) + "\n" + text, facts) == []

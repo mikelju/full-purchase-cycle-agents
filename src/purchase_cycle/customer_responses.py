@@ -122,17 +122,33 @@ def _without(text: str, names: set[str]) -> str:
     return text
 
 
+_MONTH = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?"
+_DAY = r"\d{1,2}(?:st|nd|rd|th)?"
+_NOT_AMOUNT = re.compile(
+    rf"\b\d{{4}}-\d{{2}}-\d{{2}}\b|\b\d{{1,2}}[/.]\d{{1,2}}[/.]\d{{2,4}}\b"
+    rf"|\b{_DAY}\s+(?:of\s+)?{_MONTH}(?:,?\s+\d{{4}})?|\b{_MONTH}\s+{_DAY}(?:,?\s+\d{{4}})?|\b{_MONTH}\s+\d{{4}}\b"
+    r"|\b\d+\s*(?:business |working |calendar )?(?:days?|weeks?|months?|years?)\b",
+    re.IGNORECASE,
+)
+_QUANTITY_AFTER = re.compile(
+    r"\s*(?:(?:missing|extra|damaged|excess|additional)\s+){0,2}(?:units?|pcs|pieces)\b", re.IGNORECASE
+)
+
+
 def _figures(text: str, quantities: set[int]) -> list[float]:
-    """Every figure that reads as money: decimals or a currency, and also an integer that is not a known quantity.
+    """Every figure that reads as money: decimals or a currency, and also an integer that is not a quantity.
 
     Stricter than phase 09 (where a bare integer is not money): here "9,999" or "a refund of 120" is an amount.
+    A bare integer is a quantity only when a unit word follows and it equals a known quantity; dates and periods
+    ("by 15 November 2026", "within 30 days") are not figures.
     """
+    text = _NOT_AMOUNT.sub(" ", text)
     values = []
     for m in AMOUNT_PATTERN.finditer(text):
         value, decimals = _read_number(m["num"])
         if m["pre"] or m["post"] or decimals:
             values.append(value)
-        elif int(value) not in quantities and not re.match(r"\s*(?:units?|pcs|pieces)\b", text[m.end() :], re.I):
+        elif not (int(value) in quantities and _QUANTITY_AFTER.match(text, m.end())):
             values.append(value)
     return values
 
@@ -150,6 +166,25 @@ def _net_total_ok(text: str, net_total: float, quantities: set[int]) -> bool:
         if not (values and _near(values[0], abs(net_total))):
             return False
     return True
+
+
+_CLASS_BEFORE = re.compile(r"\b(credit|corrective)\b(?:\s+\w+){0,2}\s*[:#]?\s*$", re.IGNORECASE)
+_CLASS_AFTER = re.compile(
+    r"\s*[,(]?\s*(?:(?:is|as|being)\s+)?(?:an?|the|our)\s+(?:\w+\s+)?(credit|corrective)\b"
+    r"(?!\s*(?:\w+\s+)?[A-Z]{2,4}-\d)",
+    re.IGNORECASE,
+)
+
+
+def _class_ok(kind: str, body: str, number: re.Match) -> bool:
+    """The class phrase bound to this mention: just before the number or just after it, and none may contradict."""
+    found = []
+    before = _CLASS_BEFORE.search(body[max(0, number.start() - 30) : number.start()])
+    after = _CLASS_AFTER.match(body, number.end())
+    for hit in (before, after):
+        if hit:
+            found.append(hit.group(1).lower())
+    return bool(found) and all(re.fullmatch(CLASS_WORDS[kind], word) for word in found)
 
 
 def check_response(body: str, facts: dict) -> list[str]:
@@ -181,11 +216,7 @@ def check_response(body: str, facts: dict) -> list[str]:
             _near(v, abs(doc["total"])) for part in parts for v in _figures(_without(part, skus | products), quantities)
         ):
             problems.append(f"missing total {abs(doc['total']):.2f} of {doc['number']}")
-        near = [  # the class sits just before the number or later in its own sentence
-            body[max(0, m.start() - 20) : m.start()] + re.split(r"(?<=[.!?])\s|\n", part, maxsplit=1)[0]
-            for m, part in zip(re.finditer(_token(doc["number"]), body), parts, strict=True)
-        ]
-        if not any(re.search(CLASS_WORDS[doc["kind"]], text, re.IGNORECASE) for text in near):
+        if not any(_class_ok(doc["kind"], body, m) for m in re.finditer(_token(doc["number"]), body)):
             problems.append(f"wrong class of {doc['number']}")
     if not _net_total_ok(clean, facts["net_total"], quantities):
         problems.append(f"wrong net total {abs(facts['net_total']):.2f}")
