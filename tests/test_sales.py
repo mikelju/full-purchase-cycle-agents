@@ -635,3 +635,41 @@ def test_the_sales_graph_never_reaches_a_model_client(tmp_path, monkeypatch):
     monkeypatch.setattr(llm.ModelClient, "_call_model", boom)
     db_path, inv, inbox, saver = _sales_scenario(tmp_path / "nomodel")
     assert sales.run_sales(db_path, inv, inbox, saver)["invoiced"]
+
+
+# ---- increment 23: review findings (idempotent linking, repeated SKUs) ----
+
+
+def test_linking_the_same_items_again_stores_nothing_new(tmp_path):
+    conn, note = _setup(tmp_path)
+    items = sales.read_notes(conn, _inbox(tmp_path, one=_form(note, _incidents((A, "missing", 2)))))
+    first = sales.link_notes(conn, items)
+    before = (_signed(conn), _incident_rows(conn))
+    again = sales.link_notes(conn, items)
+    assert (_signed(conn), _incident_rows(conn)) == before
+    assert again == first
+
+
+def test_linking_resumes_after_a_crash_between_notes(tmp_path):
+    conn, note = _setup(tmp_path)
+    other = _served(tmp_path, conn, [(C, 2)])
+    sales.invoice(conn, tmp_path / "inv")
+    items = sales.read_notes(conn, _inbox(tmp_path, one=_form(note), two=_form(other)))
+    assert len(items) == 2
+    sales.link_notes(conn, items[:1])  # the process died after the first note committed
+    sales.link_notes(conn, items)
+    assert [(r["delivery_note_id"], r["status"]) for r in _signed(conn)] == [(note, "linked"), (other, "linked")]
+
+
+def test_a_sku_on_two_note_lines_is_summed(tmp_path):
+    conn, note = _setup(tmp_path, lines=((A, 2), (A, 3)))
+    _scan(conn, _inbox(tmp_path, one=_form(note, _incidents((A, "missing", 4)))))
+    assert _failures(conn) == [] and len(_signed(conn)) == 1  # 4 of the 5 delivered is not excess
+    (signed,) = _signed(conn)
+    assert sales.accepted(conn, signed["id"]) == {A: 1}
+
+
+def test_received_in_full_with_a_repeated_sku_is_matched(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, "Received in full", lines=((A, 2), (A, 3)))
+    (row,) = _recon(conn)
+    assert row["result"] == "matched" and _diffs(conn) == []

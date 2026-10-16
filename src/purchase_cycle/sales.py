@@ -225,13 +225,16 @@ def _unlink_reason(conn: sqlite3.Connection, form: dict) -> str | None:
     return None
 
 
+def _delivered(conn: sqlite3.Connection, note_id: int) -> dict[str, int]:
+    """Units delivered per SKU; a SKU on several lines is summed."""
+    delivered: dict[str, int] = {}
+    for r in conn.execute("SELECT sku, quantity FROM customer_delivery_note_lines WHERE note_id = ?", (note_id,)):
+        delivered[r["sku"]] = delivered.get(r["sku"], 0) + r["quantity"]
+    return delivered
+
+
 def _excess(conn: sqlite3.Connection, form: dict) -> str | None:
-    delivered = {
-        r["sku"]: r["quantity"]
-        for r in conn.execute(
-            "SELECT sku, quantity FROM customer_delivery_note_lines WHERE note_id = ?", (form["note_id"],)
-        )
-    }
+    delivered = _delivered(conn, form["note_id"])
     lost: dict[str, int] = {}
     for sku, kind, units in form["incidents"]:
         if kind != "extra":
@@ -249,6 +252,19 @@ def link_notes(conn: sqlite3.Connection, items: list[dict]) -> list[dict]:
     results = []
     for item in items:
         form = item["form"]
+        stored = conn.execute(
+            "SELECT id, status, reason FROM signed_delivery_notes WHERE content_hash = ?", (item["hash"],)
+        ).fetchone()
+        if stored:  # a resumed run: the note is already stored
+            results.append(
+                {
+                    "file": item["file"],
+                    "status": stored["status"],
+                    "reason": stored["reason"],
+                    "signed_note_id": stored["id"],
+                }
+            )
+            continue
         reason = _unlink_reason(conn, form)
         if reason is None:
             excess = _excess(conn, form)
@@ -289,10 +305,7 @@ def accepted(conn: sqlite3.Connection, signed_note_id: int) -> dict[str, int]:
     note_id = conn.execute(
         "SELECT delivery_note_id FROM signed_delivery_notes WHERE id = ?", (signed_note_id,)
     ).fetchone()[0]
-    units = {
-        r["sku"]: r["quantity"]
-        for r in conn.execute("SELECT sku, quantity FROM customer_delivery_note_lines WHERE note_id = ?", (note_id,))
-    }
+    units = _delivered(conn, note_id)
     for r in conn.execute(
         "SELECT sku, type, units FROM signed_note_incidents WHERE signed_note_id = ?", (signed_note_id,)
     ):
