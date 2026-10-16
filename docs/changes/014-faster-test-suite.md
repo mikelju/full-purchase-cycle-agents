@@ -1,6 +1,6 @@
 # 014 - Faster test suite
 
-Status: in progress
+Status: delivered, in review
 
 ## Contract
 Goal and reason:
@@ -25,14 +25,30 @@ Owner approval of 2026-10-16 ("go ahead with the slow tests change"): build the 
 
 ## Plan
 - [x] Mark change 013 as integrated (merged via PR #23)
-- [ ] Measure durations at the base commit and find the causes (C1)
-- [ ] Speed up the slowest tests or their shared setup (C2, C3)
-- [ ] Verification, adversarial review and delivery (C4)
+- [x] Measure durations at the base commit and find the causes (C1)
+- [x] Speed up the slowest tests or their shared setup (C2, C3) (1b9c0f6, 3834d2f, fee8475)
+- [x] Verification, adversarial review and delivery (C4)
 
 ## Decisions
+Causes measured at 73797ad (C1): `pytest -q` took 1674.66 s and about 24 tests took about 1250 s of it.
+Every child process paid about 3.8 s to import `purchase_cycle.cli`, 2.65 s of it the `anthropic` SDK, imported at top level only for `isinstance` checks; about 260 child processes run across the suite.
+The two eval-command tests stubbed 5 suites while `suite="all"` runs 17, so 12 ran for real and duplicated the eval stage of `npm run check` (about 350 s).
+Several demo tests and fixtures ran the identical demo command more than once (about 140 s).
+No sleeps, retry backoff or network timeouts were found.
+- `anthropic` is imported lazily: an Anthropic error can only exist once the SDK is imported, so the checks look it up in `sys.modules`; `STEP_FAILURES` became `step_failures()`, evaluated in the `except` clause.
+- The eval-command tests stub every suite and keep their assertions; the real replay of every suite now runs only in the eval stage of `npm run check`, not in pytest.
+  As a result the Stop hook gate `check:puerta` (ruff and pytest, no eval stage) no longer catches a broken suite replay; `npm run check` before every delivery still does.
+- Identical demo runs are shared through session and module fixtures used only for reading; tests that write work on a copy, and tests that vary inputs keep their own runs.
+- No parallel runner was added: pytest-xdist would need owner approval and the target was met without it.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | Opus subagents | f1a616e..fee8475 | correctness, evidence | correctness none; evidence 1 important (the subset after-timings were not comparable with the full-suite before-timing) and 1 minor (the eval replay left pytest without a recorded decision) | the important one closed by the full-suite timing below; the minor one recorded in Decisions |
 
 ## Delivery
+- Branch `cambio-014-slow-tests`.
+- `npm run check` exit 0 at fee8475 in 770 s, with 1288 pytest tests passed in 639.67 s against 1674.66 s at 73797ad on the same machine (38 percent of the base time, C2).
+- Collected tests: 1288 before and after; no assertion changed (C3).
+- Only the known critical eval cases DOC-060, DOC-112, CLM-044, CLM-066 and CLM-072 are listed, as in change 013.
+- Evidence in the ignored `.evidence/cambio-014/`: `durations-before.txt`, `durations-touched.txt`, `check.txt`.
