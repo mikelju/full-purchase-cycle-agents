@@ -1,6 +1,6 @@
 # Phase 11 - Customer invoicing and sales reconciliation: plan and results
 
-Status: in progress
+Status: delivered (PR to `main` awaiting review)
 Spec: `spec.md` (approved 2026-10-16, frozen)
 Base: branch `fase-11-facturacion-ventas` at `36d47ec` (change 014 merged into `main` through PR #24); the unchanged-behaviour reference of C6 and C16 is the code at `36d47ec`.
 
@@ -107,8 +107,10 @@ All live spend of the phase happens here, once, after `npm run check` is green w
 ### Batch H - Validation and closing
 - [x] 22. `npm run check`, unchanged-behaviour evidence and fresh-clone run with no key and no `.env` (C1, C6, C16) - check: `npm ci`, `uv sync` and `npm run check` in a fresh clone outside the repo, twenty evaluations in replay with every gate PASS; `git diff --stat 36d47ec -- evals/recordings evals/datasets evals/baselines` lists added files only; outputs saved as evidence.
   - Evidence: fresh clone of the branch at 2404000 outside the repo (`--no-hardlinks`, no `.env`, Anthropic and LangSmith variables unset): `npm ci`, `uv sync` and `npm run check` exit 0 in 1608 s (pytest 1491 passed in 1288 s, 0 failed, 0 skipped; ruff check and format clean; hooks tests OK); twenty evaluations in replay with 38 PASS gate lines and 0 FAIL (`.evidence/fase-11/fresh-clone-check.txt`); `git diff --stat 36d47ec -- evals/recordings evals/datasets evals/baselines`: 92 files changed, 9409 insertions, and `--diff-filter=MDR` empty (added files only); pytest prints no per-test durations, so slowest tests were not recorded.
-- [ ] 23. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
-- [ ] 24. Results per criterion, master plan row 11 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+- [x] 23. Adversarial review with `sdd-review` through `sdd-delivery` (at most two rounds), findings and fixes recorded below with regression tests; re-run `npm run check` after the fixes.
+  - Evidence: two rounds plus a bounded verification (owner decision 2026-10-16), all closed, in the table below; the fix commits after 67d74dc are 6fda576 (month and period patterns need word boundaries and no adjacent currency) and 32fedf9 (only a currency before a date keeps it as money), and 87c669a records the rounds and pending items. Clean clone at 87c669a (`.evidence/fase-11/check-clean-clone-87c669a.log`, git-ignored, not committed): `npm run check` exit 0 (`EXIT=0`), ruff clean, `1604 passed in 1419.52s`, 38 PASS gate lines and 0 FAIL in the replay evaluations.
+- [x] 24. Results per criterion, master plan row 11 status, open items and limitations, candidate learnings; delivery on the branch and a PR to `main`, never a merge.
+  - Evidence: results per criterion below; delivery on the branch with a PR to `main`, not merged.
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
@@ -132,6 +134,36 @@ All live spend of the phase happens here, once, after `npm run check` is green w
 ## Results
 Per criterion: command or path run, observed result and reference to the evidence.
 Open items, limitations and what could not be checked, said plainly.
+Evidence of the whole phase: clean clone at 87c669a, `npm run check` exit 0, 1604 pytest passed, 38 PASS gate lines and 0 FAIL (`.evidence/fase-11/check-clean-clone-87c669a.log`, git-ignored); `.evidence/` files are local and not committed.
+
+| ID | Result | Evidence |
+|---|---|---|
+| C1 | Met | Increment 22 fresh clone at 2404000 with no `.env` and no keys (`fresh-clone-check.txt`) and the clean clone at 87c669a (`check-clean-clone-87c669a.log`): `uv sync` and `npm run check` exit 0, twenty evaluations in replay, every gate PASS. |
+| C2 | Met | Increment 2: `tests/test_seed.py` (tables exist and empty, seeding twice equal, other tables unchanged, phase 10 database gains the tables); inside the 1604 passed. |
+| C3 | Met | Increment 4: `tests/test_sales.py` (one `SINV-NNNN` per note with none, prices from `products.price_eur`, cent rounding, simulated clock, one ASCII file, second run issues nothing). |
+| C4 | Met | Increment 5: one test per case of C4 in `tests/test_sales.py`; review round 2 added the foreign-file stop (e9d302d). |
+| C5 | Met | Increment 6: `tests/test_sales.py` and `tests/test_sales_match.py`; the `sales_reconciliation` evaluation, 46/46 scenarios, 0 critical errors (`sales-reconciliation-replay.txt`). |
+| C6 | Met | Increments 3, 16 and 22: phase 08 tests unchanged apart from deviation D1 (additive suite-list edits only), `reconciliation_matching` PASS in replay, `eval-before.txt` against the replay in the check log. |
+| C7 | Met | Increment 7: `tests/test_sales.py` (credit note only, corrective invoice only and both, lines and totals from the difference rows). |
+| C8 | Met | Increments 9 and 10: `tests/test_customer_responses.py` (recorded valid and failing answers, template fallback with `failures` row, paused `review` thread, second run calls no model); `customer_response` 40/40 (`customer-response-replay.txt`); review fixes to the fact check (document class bound to its number, quantities with units, dates and periods are not amounts). |
+| C9 | Met | Increments 10 and 11: `tests/test_customer_responses.py`, `tests/test_sales_cli.py` (approve, edit with `--body-file`, empty file refused, reject, decided or missing response refused). |
+| C10 | Met | Increments 8 and 10: crash after each node and resumption give the same rows and files, model double never touched (`tests/test_sales.py`, `tests/test_customer_responses.py`). |
+| C11 | Met | Increment 12 and review fix ec71a3b: `tests/test_sales_cli.py` runs invoice, scan, responses and each decision (approve, approve with edit, reject) as subprocesses with the recordings file removed, compared with the in-process run. |
+| C12 | Met | Increment 11: `tests/test_sales_cli.py` (`list`, `show`, unknown reference exits 1 and changes nothing). |
+| C13 | Met | Increments 13 and 14: `sales_reconciliation` 46 scenarios and `customer_response` 40 scenarios (minimums 30 and 24), Wilson interval reported, each critical error injected gives exit 1 (19 and 16 tests); reports in `sales-reconciliation-replay.txt` and `customer-response-replay.txt`. |
+| C14 | Met | Increments 15 and 21: `tests/test_sales_demo.py` (13 own-process steps, network blocked, versioned recording `evals/recordings/sales_demo.jsonl`); replay `sales-demo-replay-recorded.txt` exit 0 with matched, awaiting, credit notes, corrective invoice, sent as drafted, sent edited, rejected and an unlinked note. |
+| C15 | Met | Increment 21: live `sales-demo --mode record` with `PHOENIX_TRACING=true`, LangSmith off (`sales-demo-record.txt`, `c15-spans.txt`): 34 spans in 8 traces, a `ChatAnthropic` span of `claude-haiku-4-5-20251001` per drafting trace, `draft` and `review` spans, decision traces with `review`, `send` and `close`; 0 spans without `metadata.thread_id`. Offline shape in `c15-replay-spans.txt`. |
+| C16 | Met | Increments 1, 16 and 22: the four demos replay identically once run ids and paths are masked (`*-before.txt` against `*-after.txt`), the seventeen earlier evaluations PASS, `git diff --stat 36d47ec -- evals/recordings evals/datasets evals/baselines` lists added files only (`--diff-filter=MDR` empty); earlier test edits are deviation D1. |
+| C17 | Met | Increment 18: `test_phase_11_files_are_tracked_and_hold_no_keys` in `tests/test_secrets.py` covers the new source, examples, scenarios, recordings and baseline. |
+| C18 | Met, with a limit | Increments 18 and 21: README section "Invoice customers and answer their incidents" with commands, demo, Phoenix, evaluations, limitations and the `response_drafting` figures; row 11 of the master plan shows the phase status. The step-by-step README follow in a clean clone was not run as a separate exercise: the commands and demo are covered by the replay tests. |
+| C19 | Met | Increment 17: 80 responses (20 development, 60 test) in ten categories, fixed stratified split, same seed gives the same plan (`tests/test_response_dataset.py`, `response-dataset.txt`); blind second-pass review of 80 cases with 0 discrepancies (`second_pass_review.jsonl`). |
+| C20 | Met | Increments 17 and 20: `response_drafting` replay PASS with metrics, Wilson intervals globally and per category, critical errors with upper bound (`response-baseline-replay.txt`); tests force each gate to fail and give a non-zero exit (`tests/test_response_eval.py`). |
+| C21 | Met | Increments 19 and 20: development round 1 20/20 (`response-dev-r1.txt`), Haiku 4.5 baseline on the 60 test responses 100.0% [94.0, 100.0], 0 critical errors, gate 95% PASS (`response-baseline-live.txt`, `evals/baselines/response_drafting.json`); phase total 83 calls, about 0.18 USD of the 5 USD ceiling. |
+
+### Open items and limitations
+- The pending items listed under "Adversarial review" stay open: E5, E6, E7, E12, A2 deferred; E8 and E10 not enforced to keep the recorded good responses valid; the file ownership and class-binding limits.
+- The LangSmith trace and experiments are out of scope (D8): the trace evidence is local to the owner's Phoenix and is not committed.
+- Increment 17 evidence was recorded as partial when written; its second-pass review is closed there and the recordings and baseline by increments 20 and 21.
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
