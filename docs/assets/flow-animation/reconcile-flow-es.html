@@ -511,7 +511,7 @@ function showResult(c) {
       d.tx.setAttribute("x", 256 + w2 + 16); d.tx.textContent = s; fxOn(d.g);
     });
   } else {
-    note.textContent = c.result === "matched" ? "sin diferencias: pedido, albarán y factura coinciden" : "aún no hay albarán: el resultado sigue abierto";
+    note.textContent = c.result === "matched" ? "sin diferencias: orden de compra, albarán y factura coinciden" : "aún no hay albarán: el resultado sigue abierto";
     note.style.fill = c.result === "matched" ? "#0F766E" : "#92400E"; fxOn(note);
   }
   fxOn(diffG);

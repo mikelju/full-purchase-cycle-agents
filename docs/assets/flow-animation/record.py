@@ -60,11 +60,7 @@ with sync_playwright() as p:
         """(async () => {
           const sample = "AaZz09 áéíóúüñ ÁÉÍÓÚÜÑ ¿¡";
           const specs = [...new Set([...document.fonts].map(f => `${f.style} ${f.weight} 16px ${f.family}`))];
-          for (const s of specs) {
-            let got = [];
-            for (let i = 0; i < 3 && !got.length; i++) got = await document.fonts.load(s, sample).catch(() => []);
-            if (!got.length) throw new Error("font not loaded: " + s);
-          }
+          for (const s of specs) if (!(await document.fonts.load(s, sample)).length) throw new Error("font not loaded: " + s);
           await document.fonts.ready;
           return [...document.fonts].filter(f => f.status === "loaded").length;
         })()"""
