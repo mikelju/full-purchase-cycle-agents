@@ -27,10 +27,21 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 
 ## Plan
 - [x] Script approved by the owner in a Lavish page (2026-10-16, all five answers as recommended)
-- [ ] English page built and recorded
-- [ ] Spanish page built and recorded
-- [ ] References updated (README, folder README, LinkedIn plan if approved)
+- [x] English page built and recorded (`c890b76`): 499 frames at 15 fps, 33.27 s, story 31.25 s
+- [x] Spanish page built and recorded (`c890b76`): same timeline, same length
+- [x] References updated (README, folder README, LinkedIn plan if approved) (`cb630dd`)
 - [ ] Adversarial review and `npm run check`
+
+Build notes and evidence (frames, contact sheets and probes in `.evidence/cambio-017/`, git-ignored):
+- C1: both GIFs are 960x540, loop count 0, 1.48 MB (EN) and 1.51 MB (ES); both MP4s are 1280x720, h264, yuv420p, 499 frames.
+- C2: 499 frames at 15 fps = 33.27 s (story 31.25 s, `LOOP` = 31250 ms); exactly two reconciliations, then the claim scene.
+- C3: measured holds, case 1 read 1.43, extract 2.23, link 1.42, match 2.62, store 1.43 s; case 2 read 0.92, extract 1.64, link 0.94, match 3.62, store 1.41 s.
+  The token is shown only between nodes and hides on arrival.
+- C4: the Spanish page differs from the English one only in its strings block, charset and title; contact sheet and accent crops show no overflow.
+- Deviations from the approved table: from case 1 on, scenes start about 1 s later (token travel and case title cards; node holds are exact).
+  The Spanish `reconciliations` chip says "discrepancias" to fit the chip; the stamp says "CON DISCREPANCIAS".
+  The long Spanish closing caption shrinks itself to about 17 px to fit the strip.
+- C5: `git grep reconcile-flow` shows the README, the folder README and the LinkedIn plan pointing to the replaced files; changes 011 and 016 keep their historical figures.
 
 ## Decisions
 Owner answers of 2026-10-16 in the Lavish script page:
