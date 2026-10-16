@@ -24,8 +24,14 @@ def run_receipt_demo(tmp_path, *extra):
     return subprocess.run(command, capture_output=True, text=True, env=env), log, workdir
 
 
-def test_receipt_demo_ends_with_every_outcome_with_the_network_blocked(tmp_path):
-    run, log, workdir = run_receipt_demo(tmp_path)
+@pytest.fixture(scope="module")
+def receipt_demo(tmp_path_factory):
+    """One demo run shared by the tests that only read its output, log and database."""
+    return run_receipt_demo(tmp_path_factory.mktemp("demo"))
+
+
+def test_receipt_demo_ends_with_every_outcome_with_the_network_blocked(receipt_demo):
+    run, log, workdir = receipt_demo
     out = run.stdout
     assert run.returncode == 0, out + run.stderr
     assert run.stderr == ""
@@ -83,8 +89,8 @@ FIRST_ORDERS = {1: "served", 2: "served", 3: "received", 4: "received", 5: "serv
 
 
 @pytest.fixture(scope="module")
-def demo_db(tmp_path_factory):
-    run, _, workdir = run_receipt_demo(tmp_path_factory.mktemp("demo"))
+def demo_db(receipt_demo):
+    run, _, workdir = receipt_demo
     assert run.returncode == 0, run.stdout + run.stderr
     return workdir / "business.db"
 

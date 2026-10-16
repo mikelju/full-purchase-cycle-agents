@@ -3,7 +3,7 @@
 import subprocess
 import sys
 
-from conftest import ROWS, _invoice, _two_claims_from, run_reconcile_demo
+from conftest import ROWS, _invoice, _two_claims_from
 from purchase_cycle import claims, cli, db
 
 SNAPSHOT = ("reconciliations", "discrepancies", "purchase_orders", "stock", "supplier_documents")
@@ -216,9 +216,9 @@ def test_an_invoice_with_no_claim_prints_the_phase_08_output(tmp_path, capsys):
     assert "claim=" not in capsys.readouterr().out
 
 
-def test_the_demo_ends_with_one_claim_sent_one_edited_one_rejected_and_one_waiting(tmp_path, claim_recordings):
+def test_the_demo_ends_with_one_claim_sent_one_edited_one_rejected_and_one_waiting(reconcile_demo):
 
-    run, _, workdir = run_reconcile_demo(tmp_path, "--claim-recordings", str(claim_recordings))
+    run, _, workdir = reconcile_demo
     assert run.returncode == 0, run.stdout + run.stderr
     conn = db.connect(workdir / "business.db")
     try:
@@ -246,9 +246,9 @@ def test_the_demo_ends_with_one_claim_sent_one_edited_one_rejected_and_one_waiti
     )
 
 
-def test_the_demo_fails_clearly_when_the_claim_recordings_are_missing(tmp_path):
+def test_the_demo_fails_clearly_when_the_claim_recordings_are_missing(demo_without_claim_recordings):
 
-    run, _, _ = run_reconcile_demo(tmp_path, "--claim-recordings", str(tmp_path / "none.jsonl"))
+    run, _ = demo_without_claim_recordings
     assert run.returncode == 1
     assert "claim recordings not found" in run.stderr and "still awaiting a delivery note at the end: 1" in run.stdout
 
