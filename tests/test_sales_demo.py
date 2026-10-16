@@ -1,6 +1,5 @@
 """Phase 11 C14: `sales-demo` runs from the customer orders to the decided responses, each step in its own process, with the network blocked."""
 
-import json
 import os
 import shutil
 import sqlite3
@@ -10,48 +9,7 @@ import sys
 import pytest
 
 from conftest import SITECUSTOMIZE
-from purchase_cycle import cli, db
-from purchase_cycle import customer_responses as cr
-from test_customer_responses import _client
-
-# Until the live recording of increment 21 is versioned, the drafts replay a temporary recording whose model answer is the template.
-
-
-def write_recordings(tmp_path):
-    """Run the demo steps up to the drafts on a scratch database and record the template as the model answer."""
-    work = tmp_path / "scratch"
-    work.mkdir()
-    sales = cli.DEMO_SALES
-    conn = db.connect(work / "b.db")
-    try:
-        db.seed(conn)
-        for order in json.loads((sales / "customer_orders.json").read_text(encoding="utf-8")):
-            lines = [(x["sku"], x["quantity"]) for x in order["lines"]]
-            db.insert_order(conn, order["customer_code"], "demo", "received", lines)
-    finally:
-        conn.close()
-    main = lambda *words: cli.main(["--db", str(work / "b.db"), *words])  # noqa: E731
-    docs = str(work / "docs")
-    assert main("receipts", "run", "--checkpoints", str(work / "r.sqlite"), "--notes-dir", str(work / "notes")) == 0
-    assert main("sales", "invoice", "--invoices-dir", docs) == 0
-    scan = [
-        "sales",
-        "scan",
-        str(sales / "signed_notes"),
-        "--invoices-dir",
-        docs,
-        "--checkpoints",
-        str(work / "s.sqlite"),
-    ]
-    assert main(*scan) == 0
-    conn = db.connect(work / "b.db")
-    try:
-        facts = [f for f in (cr.response_facts(conn, i) for i in cr.candidates(conn)) if f]
-    finally:
-        conn.close()
-    assert len(facts) == 3
-    _client(tmp_path, facts, [cr.fill_template(f) for f in facts])
-    return tmp_path / "response_recordings.jsonl"
+from purchase_cycle import cli
 
 
 def run_sales_demo(tmp_path, recordings, *extra):
@@ -71,7 +29,7 @@ def run_sales_demo(tmp_path, recordings, *extra):
 def sales_demo(tmp_path_factory):
     """One demo run shared by the tests that only read its output, log and database."""
     tmp = tmp_path_factory.mktemp("sales")
-    return run_sales_demo(tmp, write_recordings(tmp))
+    return run_sales_demo(tmp, cli.SALES_DEMO_RECORDINGS)
 
 
 def test_sales_demo_ends_with_every_outcome_with_the_network_blocked(sales_demo):
