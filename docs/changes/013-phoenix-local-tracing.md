@@ -1,6 +1,6 @@
 # 013 - Local tracing with Arize Phoenix
 
-Status: ready locally
+Status: delivered, in review (PR #23)
 
 ## Contract
 Goal and reason:
@@ -27,7 +27,7 @@ Owner approval of 2026-10-15 ("go ahead, Phoenix first"): build the change, push
 - [x] Phoenix server command and ignored data folder (C1)
 - [x] Opt-in instrumentation and its tests (C2, C3, C4)
 - [x] README section (C5)
-- [ ] Verification, adversarial review and delivery
+- [x] Verification, adversarial review and delivery
 
 ## Decisions
 Only changes of approach or scope with their reason.
@@ -69,3 +69,5 @@ Only changes of approach or scope with their reason.
 | 2 | Opus subagent | 10c207b..aacc4aa | correctness, security, evidence, scope and docs | 3 minor: origin check limits not recorded, export timings without evidence, model-call span evidence older than the batch exporter | fixed in 30561f2, 6308aca (SEC-027 accepted by the owner) and 7f535f3 (one more live run authorized by the owner) |
 
 ## Delivery
+- Branch `cambio-013-phoenix-tracing`, pull request https://github.com/mikelju/full-purchase-cycle-agents/pull/23 to `main`.
+- `npm run check` exit 0 at 1226c16 with 1288 pytest tests passed; only the known critical eval cases CLM-044, CLM-066 and CLM-072 listed.
