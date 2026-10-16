@@ -554,7 +554,7 @@ By default (`--mode replay`) it reads the extraction answers from the phase 08 r
 Phase 11 is the sales side of the cycle: every customer delivery note of phase 10 gets our invoice, the customer returns the delivery note signed with its incidents, and each invoice with differences gets a response and a correcting document that a person approves, edits or rejects.
 It reuses the phase 08 matching (`reconcile_match.classify`, generalised to an order of several lines with the same results on the purchase side), the phase 09 drafting pattern and the phase 09 `review` node unchanged.
 Two graphs do it: `sales` (`src/purchase_cycle/sales.py`, nodes `invoice`, `read`, `link`, `match` and `store`, no model call and no pause) and `customer_response` (`src/purchase_cycle/customer_responses.py`, nodes `draft`, `review`, then `send` or `close`, one thread `response-SINV-NNNN` per invoice).
-The new tables are `customer_invoices`, `customer_invoice_lines`, `signed_delivery_notes`, `signed_note_incidents`, `sales_reconciliations`, `sales_discrepancies`, `customer_corrections` and `customer_responses`; the purchase-side tables are not altered.
+The new tables are `customer_invoices`, `customer_invoice_lines`, `signed_delivery_notes`, `signed_note_incidents`, `sales_reconciliations`, `sales_discrepancies`, `customer_corrections`, `customer_correction_lines` and `customer_responses`; the purchase-side tables are not altered.
 
 ### The invoice
 
@@ -1093,7 +1093,7 @@ The Claude Haiku 4.5 baseline on the 60 test responses (`evals/baselines/respons
 All ten categories pass at 100%, with only six responses each, so the per-category intervals are wide.
 The phase spent about 0.18 USD over 83 calls on live drafting and the demo recording, estimated at Haiku 4.5 list prices.
 
-`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the nine dataset evaluations once; `--suite <name>` uploads one; `offer_extraction` and `claim_drafting` are uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait`, `quote_decision`, `reconciliation_matching`, `claim_approval` and `goods_receipt` are not).
+`npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the nine dataset evaluations once; `--suite <name>` uploads one; `offer_extraction`, `document_extraction` and `claim_drafting` are uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait`, `quote_decision`, `reconciliation_matching`, `claim_approval`, `goods_receipt`, `sales_reconciliation`, `customer_response` and `response_drafting` are not).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
 Recordings in `evals/recordings/` are tied to the exact prompt and model: changing either needs a new recording and a new comparison against the baseline.
 
