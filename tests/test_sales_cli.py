@@ -13,10 +13,12 @@ SNAPSHOT = ("customer_invoices", "signed_delivery_notes", "sales_reconciliations
 
 
 class World:
-    """Three delivered orders: SINV-0001 and SINV-0002 report incidents, SINV-0003 is received in full."""
+    """Three delivered orders: SINV-0001 and SINV-0002 report incidents, SINV-0003 is received in full
+    (unless third_incidents)."""
 
-    def __init__(self, tmp_path):
+    def __init__(self, tmp_path, third_incidents=False):
         self.tmp = tmp_path
+        self.count = 3 if third_incidents else 2  # invoices with a response
         self.db = tmp_path / "w.db"
         self.checkpoints = tmp_path / "cp.sqlite"
         self.invoices = tmp_path / "docs"
@@ -31,7 +33,7 @@ class World:
             tmp_path,
             n1=_form(self.notes[0], _incidents((A, "missing", 2), (B, "damaged", 1))),
             n2=_form(self.notes[1], _incidents((A, "damaged", 2), (C, "extra", 1))),
-            n3=_form(self.notes[2]),
+            n3=_form(self.notes[2], *([_incidents((B, "missing", 1))] if third_incidents else [])),
         )
         self.recordings = tmp_path / "response_recordings.jsonl"
 
@@ -55,7 +57,7 @@ class World:
         """Write the response recordings (a model draft that differs from the template) for the stored facts."""
         conn = db.connect(self.db)
         try:
-            facts = [cr.response_facts(conn, i) for i in (1, 2)]
+            facts = [cr.response_facts(conn, i) for i in range(1, self.count + 1)]
         finally:
             conn.close()
         client = _client(self.tmp, facts, [model_text(f) for f in facts])
@@ -349,13 +351,14 @@ def _final(world):
 def test_each_sales_step_and_decision_in_separate_processes_equals_one_process_with_no_model_call(tmp_path):
     (tmp_path / "single").mkdir()
     (tmp_path / "split").mkdir()
-    single, split = World(tmp_path / "single"), World(tmp_path / "split")
+    single, split = World(tmp_path / "single", True), World(tmp_path / "split", True)
     body = tmp_path / "edit.txt"
     body.write_text("Your credit is on its way.\n", encoding="utf-8")
     single.ready()
     assert single.responses() == 0
-    assert single.approve("SINV-0001", "--body-file", str(body)) == 0
-    assert single.reject("SINV-0002") == 0
+    assert single.approve("SINV-0001") == 0
+    assert single.approve("SINV-0002", "--body-file", str(body)) == 0
+    assert single.reject("SINV-0003") == 0
     cp = ["--checkpoints", str(split.checkpoints)]
     inv = ["--invoices-dir", str(split.invoices)]
     _process(split, "invoice", *inv)
@@ -363,10 +366,24 @@ def test_each_sales_step_and_decision_in_separate_processes_equals_one_process_w
     split.record()
     _process(split, "responses", *cp, "--recordings", str(split.recordings))
     split.recordings.unlink()  # from here any model call fails
-    _process(split, "approve", "SINV-0001", *cp, *inv, "--outbox", str(split.outbox), "--body-file", str(body))
-    _process(split, "reject", "SINV-0002", *cp)
+    _process(split, "approve", "SINV-0001", *cp, *inv, "--outbox", str(split.outbox))
+    _process(split, "approve", "SINV-0002", *cp, *inv, "--outbox", str(split.outbox), "--body-file", str(body))
+    _process(split, "reject", "SINV-0003", *cp)
     assert "nothing to be drafted" in _process(split, "responses", *cp, "--recordings", str(split.recordings))
     rows, files = _final(split)
     assert (rows, files) == _final(single)
-    assert [r[0] for r in split.query("SELECT status FROM customer_responses ORDER BY id")] == ["sent", "rejected"]
-    assert len(files) >= 5
+    assert [r[0] for r in split.query("SELECT status FROM customer_responses ORDER BY id")] == [
+        "sent",
+        "sent",
+        "rejected",
+    ]
+    assert sorted(files) == [
+        "docs/CI-0003.txt",
+        "docs/CN-0001.txt",
+        "docs/CN-0002.txt",
+        "docs/SINV-0001.txt",
+        "docs/SINV-0002.txt",
+        "docs/SINV-0003.txt",
+        "outbox/RESPONSE-SINV-0001.eml",
+        "outbox/RESPONSE-SINV-0002.eml",
+    ]
