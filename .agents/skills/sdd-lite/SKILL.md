@@ -23,6 +23,8 @@ Plantillas en `docs/templates/`. Todo cambio sustancial sube: desviación a spec
    Declara suposiciones y lleva las dudas a "Decisiones abiertas"; al aprobarla queda congelada.
 3. Planear: `plan.md` con incrementos verificables ligados a criterios. No requiere nueva aprobación.
 4. Ejecutar: crea la rama de trabajo (`fase-NN-nombre` o `cambio-NNN`) y relee los incrementos pendientes de `plan.md`.
+   En el primer commit de la rama, pon en «integrated (merged via PR #N)» el estado de lo que el usuario fusionó desde la última entrega
+   (plan maestro, `plan.md` de fase, documento de cambio): compruébalo con `gh pr list --state merged`.
    Una lista de tareas del harness, si existe, es copia efímera; la fuente es `plan.md`.
    Implementa uno a uno; reproduce bugs antes de corregirlos; al cerrar cada incremento marca el plan con su evidencia.
 5. Validar: carga `../sdd-delivery/SKILL.md`, que incluye la revisión adversarial de `../sdd-review/SKILL.md`.

@@ -1,6 +1,6 @@
 # Phase 07 - Quotes, decision: plan and results
 
-Status: built, delivered for review via PR on 2026-10-13
+Status: integrated (merged via PR #13); C16 pending (LangSmith trace quota until about 2026-11-05)
 Spec: `spec.md` (approved 2026-10-13, frozen)
 Base: branch `fase-07-decision-presupuestos` from `main` at commit `723109c`.
 

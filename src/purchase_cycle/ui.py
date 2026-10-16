@@ -88,7 +88,7 @@ class UiApp:
         self.lock = threading.Lock()
         if mode == "live":
             load_dotenv()  # the key lives in .env
-        config.configure_tracing("replay")  # forces tracing off, also in live mode
+        config.configure_tracing("replay")  # forces LangSmith tracing off, also in live mode; Phoenix keeps its opt-in
         conn = db.connect(self.db_path)
         try:
             # First use is a database without catalog, also one a failed first seed left behind.

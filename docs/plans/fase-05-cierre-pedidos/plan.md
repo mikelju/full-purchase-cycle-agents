@@ -1,6 +1,6 @@
 # Phase 05 - Orders module wrap-up: plan and results
 
-Status: built and delivered for review on 2026-10-10; every increment done except 21 (LangSmith trace and experiment, C17), pending under decision D10 option B until the trace quota resets about 2026-11-05, so the phase is ready locally but not closed
+Status: integrated (merged via PR #9); C17 pending (LangSmith trace quota until about 2026-11-05)
 Spec: `spec.md` (frozen, approved by the owner on 2026-10-09; amended by deviation 05.1 and deviation 05.2 on 2026-10-09)
 Base: branch `fase-05-cierre-pedidos` from `main` at commit `f1a1e4f`.
 

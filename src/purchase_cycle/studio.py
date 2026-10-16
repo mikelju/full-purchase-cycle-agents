@@ -60,7 +60,7 @@ def build(channel: str, checkpointer=None):
     mode = studio_mode()
     if mode == "live":
         load_dotenv()  # the key lives in .env, which the dev server does not load
-    config.configure_tracing("replay")  # forces tracing off, also in live mode
+    config.configure_tracing("replay")  # forces LangSmith tracing off, also in live mode; Phoenix keeps its opt-in
     conn = db.connect(DB_PATH)
     try:
         # First use is a database without catalog, also one a failed first seed left behind.

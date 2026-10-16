@@ -1,6 +1,6 @@
 # 007 - Purchase cycle flow animation source
 
-Status: ready locally (PR to `main`, pending owner merge)
+Status: integrated (merged via PR #14)
 
 ## Contract
 Goal and reason:

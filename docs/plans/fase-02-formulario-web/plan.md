@@ -1,6 +1,6 @@
 # Phase 02 - Web form orders: plan and results
 
-Status: ready locally; C13 pending (LangSmith trace quota exhausted), so the phase does not close yet
+Status: integrated (merged via PR #4); C13 pending (LangSmith trace quota)
 Spec: `spec.md` (frozen)
 Base: branch `fase-02-formulario-web` from `origin/main` at commit `f148c70`; the spec was frozen in `953e618`.
 

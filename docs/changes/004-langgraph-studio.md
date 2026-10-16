@@ -1,6 +1,6 @@
 # 004 - Watch the orders graphs in LangGraph Studio
 
-Status: delivered (PR to `main`, pending owner merge)
+Status: integrated (merged via PR #10)
 
 ## Contract
 Goal and reason:
