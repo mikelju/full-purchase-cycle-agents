@@ -118,6 +118,16 @@ All live spend of the phase happens here, once, after `npm run check` is green w
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | opus | 2404000..1e9b658 | Per `.agents/skills/sdd-review/references/lentes.md` | B1-B2, S1-S4, E1-E4, E8-E11, A3-A4 fixed in 9eba9c2, f0bd616, f849ae0, 533438b, 4ceebb5, 9d4876d, 079a3c3, 66b5069, 67d74dc | Closed |
+| 2 | opus | 1e9b658..67d74dc | Per `.agents/skills/sdd-review/references/lentes.md` | Confirmed round 1 fixed; five gaps (document class bound to its number; bare integer equal to a quantity; dates and periods as amounts; parked invoice continuing; C11 multi-process test) plus deviation A1 on C6/C16; fixed in 2697cab, 0635f77, e9d302d, ec71a3b | Closed |
+| Bounded verification (not a round 3, owner decision 2026-10-16) | opus | 67d74dc..32fedf9 | Per `.agents/skills/sdd-review/references/lentes.md` | All six items closed; found that the date fix hid amounts next to month-prefixed words and that a currency after a date kept it as money; fixed in 6fda576 and 32fedf9, rechecked | Closed |
+
+### Pending items
+- E5, E6, E7, E12, A2: deferred, outside the phase criteria.
+- E8: the net total is not mandatory in a response because 11 recorded good responses do not mention it and requiring it drops response_drafting to 71.7%; requiring it needs re-recording with live calls.
+- E10: the incident type is not bound to its document because binding it rejected 7 recorded good responses.
+- Gap 4 limit: file ownership is checked by regenerating the text from the current catalog, which fails safe (a catalog change parks our own file).
+- Class-binding limit: "CN-0001, a corrective invoice CI-0002" in a list is not read as a contradiction, on purpose.
 
 ## Results
 Per criterion: command or path run, observed result and reference to the evidence.
