@@ -146,7 +146,7 @@ def _plan_lines(rng, category: str, n: int) -> tuple[list[dict], list[dict]]:
 
 
 def _price(sku: str) -> float:
-    return next(p.price_eur for p in PRODUCTS_SORTED if p.sku == sku)
+    return next(round(p.price_eur, 2) for p in PRODUCTS_SORTED if p.sku == sku)  # as `db.seed` stores it
 
 
 def _name(sku: str) -> str:
