@@ -3,8 +3,11 @@
 import ast
 from pathlib import Path
 
-from purchase_cycle import db, receipts, sales, sim_clock
+import pytest
+
+from purchase_cycle import db, llm, receipts, sales, sim_clock
 from purchase_cycle.catalog import CUSTOMERS, PRODUCTS
+from purchase_cycle.graph import sqlite_checkpointer
 
 A, B, C = PRODUCTS[1].sku, PRODUCTS[2].sku, PRODUCTS[3].sku
 CUSTOMER = CUSTOMERS[0].code
@@ -525,3 +528,110 @@ def test_numbers_follow_the_row_id_across_invoices(tmp_path):
     sales.reconcile(conn)
     sales.plan_corrections(conn)
     assert [(c["invoice_id"], c["number"]) for c in _corrections(conn)] == [(2, "CN-0001"), (1, "CI-0002")]
+
+
+# ---- increment 8: the sales graph, crash and resumption (C10) ----
+
+SALES_TABLES = (
+    *sales.INVOICE_TABLES,
+    "signed_delivery_notes",
+    "signed_note_incidents",
+    "sales_reconciliations",
+    "sales_discrepancies",
+    "customer_corrections",
+    "customer_correction_lines",
+)
+
+
+def _sales_dump(conn, folder):
+    root = str(Path(folder).parent)  # paths are compared relative to the scenario folder
+    rows = {
+        t: [
+            tuple(v.replace(root, "") if isinstance(v, str) else v for v in r)
+            for r in conn.execute(f"SELECT * FROM {t} ORDER BY 1, 2")
+        ]
+        for t in SALES_TABLES
+    }
+    rows["failures"] = [tuple(r) for r in conn.execute("SELECT thread_id, step, status FROM failures ORDER BY 1")]
+    rows["files"] = {p.name: p.read_text(encoding="ascii") for p in sorted(Path(folder).glob("*"))}
+    return rows
+
+
+def _sales_scenario(folder):
+    """Three served orders; the first signed with incidents, the second awaiting its note, plus a file out of form."""
+    folder.mkdir()
+    conn = db.connect(folder / "s.db")
+    db.seed(conn)
+    first = _served(folder, conn, [(A, 5), (B, 4)])
+    _served(folder, conn, [(C, 2)])
+    conn.close()
+    inbox = folder / "inbox"
+    inbox.mkdir()
+    (inbox / "a.txt").write_text(_form(first, _incidents((A, "missing", 2), (C, "extra", 1))), encoding="utf-8")
+    (inbox / "b.txt").write_text("not a signed note", encoding="utf-8")
+    return folder / "s.db", folder / "inv", inbox, sqlite_checkpointer(folder / "checkpoints.sqlite")
+
+
+def test_one_run_invoices_reads_links_matches_and_plans(tmp_path):
+    db_path, inv, inbox, saver = _sales_scenario(tmp_path / "one")
+    state = sales.run_sales(db_path, inv, inbox, saver)
+    assert [i["number"] for i in state["invoiced"]] == ["SINV-0001", "SINV-0002"]
+    assert [r["status"] for r in state["linked"]] == ["linked"]
+    assert [(r["invoice_id"], r["result"]) for r in state["reconciled"]] == [
+        (1, "discrepancies"),
+        (2, "awaiting_delivery_note"),
+    ]
+    assert [c["number"] for c in state["corrections"]] == ["CN-0001", "CI-0002"]
+    conn = db.connect(db_path)
+    assert len(_failures(conn)) == 1
+
+
+def test_a_second_run_changes_no_row_and_writes_no_file(tmp_path):
+    db_path, inv, inbox, saver = _sales_scenario(tmp_path / "one")
+    sales.run_sales(db_path, inv, inbox, saver)
+    conn = db.connect(db_path)
+    before = _sales_dump(conn, inv)
+    second = sales.run_sales(db_path, inv, inbox, saver)
+    assert _sales_dump(conn, inv) == before
+    assert second["invoiced"] == second["linked"] == second["reconciled"] == second["corrections"] == []
+
+
+def test_a_note_arriving_later_is_handled_by_the_next_run(tmp_path):
+    db_path, inv, inbox, saver = _sales_scenario(tmp_path / "one")
+    sales.run_sales(db_path, inv, inbox, saver)
+    (inbox / "c.txt").write_text(_form(2, _incidents((C, "damaged", 1))), encoding="utf-8")
+    state = sales.run_sales(db_path, inv, inbox, saver)
+    assert [(r["invoice_id"], r["result"]) for r in state["reconciled"]] == [(2, "discrepancies")]
+    assert [c["number"] for c in state["corrections"]] == ["CN-0003"]
+
+
+def test_the_thread_sales_run_nnnn_is_stored_in_the_sqlite_checkpoint(tmp_path):
+    db_path, inv, inbox, saver = _sales_scenario(tmp_path / "one")
+    sales.run_sales(db_path, inv, inbox, saver)
+    sales.run_sales(db_path, inv, inbox, saver)
+    assert {c.config["configurable"]["thread_id"] for c in saver.list(None)} == {"sales-run-0001", "sales-run-0002"}
+
+
+@pytest.mark.parametrize("node", ["invoice", "read", "link", "match"])
+def test_a_run_interrupted_after_a_node_and_resumed_ends_like_an_uninterrupted_run(tmp_path, node):
+    db_path, inv, inbox, saver = _sales_scenario(tmp_path / "crash")
+    sales.run_sales(db_path, inv, inbox, saver, interrupt_after=[node])
+    conn = db.connect(db_path)
+    assert _sales_dump(conn, inv) != _sales_dump(
+        db.connect(_sales_scenario(tmp_path / "ref0")[0]), tmp_path / "ref0" / "inv"
+    )
+    sales.run_sales(db_path, inv, inbox, saver)
+    ref_db, ref_inv, ref_inbox, ref_saver = _sales_scenario(tmp_path / "plain")
+    sales.run_sales(ref_db, ref_inv, ref_inbox, ref_saver)
+    assert _sales_dump(conn, inv) == _sales_dump(db.connect(ref_db), ref_inv)
+    assert {c.config["configurable"]["thread_id"] for c in saver.list(None)} == {"sales-run-0001"}
+
+
+def test_the_sales_graph_never_reaches_a_model_client(tmp_path, monkeypatch):
+    def boom(*args, **kwargs):
+        raise AssertionError("a model call")
+
+    monkeypatch.setattr(llm.ModelClient, "__init__", boom)
+    monkeypatch.setattr(llm.ModelClient, "_call_model", boom)
+    db_path, inv, inbox, saver = _sales_scenario(tmp_path / "nomodel")
+    assert sales.run_sales(db_path, inv, inbox, saver)["invoiced"]

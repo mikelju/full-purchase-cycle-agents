@@ -9,6 +9,9 @@ import os
 import re
 import sqlite3
 from pathlib import Path
+from typing import TypedDict
+
+from langgraph.graph import END, START, StateGraph
 
 from purchase_cycle import db, reconcile_match, sim_clock
 from purchase_cycle.receipts import COMPANY, ascii_text
@@ -480,3 +483,71 @@ def plan_corrections(conn: sqlite3.Connection) -> list[dict]:
                     {"correction_id": correction_id, "number": number, "kind": kind, "invoice_id": rec["invoice_id"]}
                 )
     return created
+
+
+# ---- the sales graph: invoice, read, link, match, store; no interrupt and no model call (C10) ----
+
+
+class SalesState(TypedDict, total=False):
+    invoiced: list[dict]
+    items: list[dict]
+    linked: list[dict]
+    reconciled: list[dict]
+    corrections: list[dict]
+
+
+def build_sales_graph(
+    db_path: Path | str, invoices_dir: Path | str, inbox: Path | str, checkpointer=None, interrupt_after=None
+):
+    """One thread per run. Every node reads the database before acting, so a re-run or a resumption repeats no effect.
+
+    `read` hands the notes it found to `link` through the state; `match` reconciles and `store` plans the documents.
+    """
+
+    def _node(action):
+        def run(state: SalesState) -> SalesState:
+            conn = db.connect(db_path)
+            try:
+                return action(conn, state)
+            finally:
+                conn.close()
+
+        return run
+
+    builder = StateGraph(SalesState)
+    builder.add_node("invoice", _node(lambda conn, state: {"invoiced": invoice(conn, invoices_dir)}))
+    builder.add_node("read", _node(lambda conn, state: {"items": read_notes(conn, inbox)}))
+    builder.add_node("link", _node(lambda conn, state: {"linked": link_notes(conn, state.get("items", []))}))
+    builder.add_node("match", _node(lambda conn, state: {"reconciled": reconcile(conn)}))
+    builder.add_node("store", _node(lambda conn, state: {"corrections": plan_corrections(conn)}))
+    builder.add_edge(START, "invoice")
+    for before, after in (("invoice", "read"), ("read", "link"), ("link", "match"), ("match", "store"), ("store", END)):
+        builder.add_edge(before, after)
+    return builder.compile(checkpointer=checkpointer, interrupt_after=interrupt_after, name="sales")
+
+
+THREAD_PREFIX = "sales-run-"
+
+
+def _last_run(checkpointer) -> int:
+    numbers = [
+        int(c.config["configurable"]["thread_id"].removeprefix(THREAD_PREFIX))
+        for c in checkpointer.list(None)
+        if c.config["configurable"]["thread_id"].startswith(THREAD_PREFIX)
+    ]
+    return max(numbers, default=0)
+
+
+def run_sales(
+    db_path: Path | str, invoices_dir: Path | str, inbox: Path | str, checkpointer, interrupt_after=None
+) -> SalesState:
+    """Resume the last run when it stopped before its end, otherwise start the next one; returns what the run did."""
+    graph = build_sales_graph(db_path, invoices_dir, inbox, checkpointer, interrupt_after)
+    last = _last_run(checkpointer)
+    config = {"configurable": {"thread_id": f"{THREAD_PREFIX}{last:04d}"}}
+    if last and graph.get_state(config).next:
+        graph.invoke(None, config)
+    else:
+        config = {"configurable": {"thread_id": f"{THREAD_PREFIX}{last + 1:04d}"}}
+        graph.invoke({}, config)
+    return graph.get_state(config).values
