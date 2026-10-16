@@ -11,7 +11,7 @@ Phase 07 (quotes, decision) integrated (merged via PR #13): offer extraction wit
 Phase 08 (reconciliation, detection) integrated (merged via PR #18): supplier invoices and delivery notes in text, PDF and Excel are read with Claude Haiku 4.5, linked to a purchase order, matched in plain code with a stated tolerance and stored with each difference, with two new evaluations; its LangSmith trace evidence is pending.
 Phase 09 (reconciliation, claim) integrated (merged via PR #20): a claim email to the supplier is drafted with Claude Haiku 4.5, checked by code, approved, edited or rejected by a person after a pause with saved state, and written to the outbox, with two new evaluations; its LangSmith trace evidence is pending.
 Phase 10 (goods receipt and serving) integrated (merged via PR #21): a reconciled supplier delivery note puts its goods into stock, the waiting customer orders that stock covers are served and a customer delivery note is written as a local file, in plain code with no model call and one new evaluation; its LangSmith trace evidence is pending.
-Phase 11 (customer invoicing and sales reconciliation) is built on its branch, not yet delivered: each customer delivery note gets an invoice, the signed delivery note the customer returns with incidents is reconciled with the phase 08 matching, and each invoice with differences gets a response and a credit note or corrective invoice that a person approves, edits or rejects, with two new deterministic evaluations; the `response_drafting` evaluation and the live drafting recording are still to come, and its trace evidence is local only.
+Phase 11 (customer invoicing and sales reconciliation) is built on its branch, not yet delivered: each customer delivery note gets an invoice, the signed delivery note the customer returns with incidents is reconciled with the phase 08 matching, and each invoice with differences gets a response and a credit note or corrective invoice that a person approves, edits or rejects, with two new deterministic evaluations and a third one on the model drafting (`response_drafting`), and a demo that replays a versioned live recording; its trace evidence is local only.
 
 ![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
 
@@ -645,7 +645,7 @@ uv run purchase-cycle sales-demo [--mode replay|record|live] [--workdir DIR] [--
 It seeds the five customer orders of `examples/sales/customer_orders.json`, serves them with `receipts run`, then runs each step as its own process: `sales invoice`, `sales scan examples/sales/signed_notes`, `sales list`, `sales responses`, one `sales approve` as drafted, one `sales approve --body-file examples/sales/response_edit.txt`, one `sales reject`, and a `sales show` of each invoice.
 It ends with a summary of one `matched`, one `awaiting_delivery_note` and three `discrepancies` invoices, three credit notes, one corrective invoice, the three decisions (sent as drafted, sent edited, rejected) and one unlinked signed note; it exits non-zero when any of these is missing.
 By default (`--mode replay`) it reads the drafts from `evals/recordings/sales_demo.jsonl` and needs no key and no network.
-That recording is made once with `--mode record` and the owner's key in increment 21 of the phase plan; until it is versioned, replay needs `--recordings <file>` with a recording of the `response_drafting` task.
+That recording was made once with `--mode record` (3 Haiku 4.5 calls, one per invoice with incidents) and is versioned; `--recordings <file>` picks another one.
 `--mode record` and `--mode live` need `ANTHROPIC_API_KEY`.
 
 To see the trace of a run in the local Phoenix, start `npm run phoenix` in one terminal and run the demo in another with `PHOENIX_TRACING=true` (see "See local traces in Phoenix"): each `sales` node and each `customer_response` thread (its spans carry `session.id` and `metadata.thread_id`) appear in `http://127.0.0.1:6006`, and the model call too in a live or record run.
@@ -655,8 +655,8 @@ Phoenix tracing is never set up inside `npm run check`.
 
 - `sales_reconciliation` (46 hand-built scripted scenarios, deterministic, no model) runs invoicing, signed note reading, matching and the correcting documents through the CLI functions on a temporary database; gate: 100% scenario success and 0 critical errors.
 - `customer_response` (40 hand-built scripted scenarios, deterministic) runs drafting, the template fallback and the decisions with a test double of the model client that counts calls; the same gate.
-- `response_drafting` (the model draft scored by the fact check, with its dataset, split, metrics, baseline and gates) is built in increments 17 and 21 of the phase plan: figures pending.
-- Run them with `uv run purchase-cycle eval --suite sales_reconciliation` or `--suite customer_response`; both are part of `npm run eval` and `npm run check`.
+- `response_drafting` (the model draft scored by the fact check, 80 responses: 20 development, 60 test) runs the real drafting call; see "Response drafting cases" below.
+- Run them with `uv run purchase-cycle eval --suite sales_reconciliation`, `--suite customer_response` or `--suite response_drafting`; all three are part of `npm run eval` and `npm run check`.
 
 ### Limitations of the sales step
 
@@ -792,7 +792,7 @@ Limits:
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and the nineteen evaluations in replay mode (twenty once `response_drafting` lands).
+Runs the method's hook tests, ruff, pytest and the twenty evaluations in replay mode.
 
 ## The golden dataset
 
@@ -939,7 +939,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the nineteen evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
+`npm run eval` replays the twenty evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:
@@ -1076,6 +1076,22 @@ They cover receipts from matched and discrepancies invoices, every claim status,
 The grader reads the database, the files and `failures` against an oracle apart from the module (the stock check reads the units from the note lines and the serve checks replay each pass from the stock before it) and counts nine critical errors: negative stock, a stock change different from received minus served, a note received twice or a non-candidate received, an order served twice or with two notes, a served order not covered, note lines different from the order lines, an order served out of arrival order, a file without its row or a row without its file, and a model call.
 Scenario success is 100.0% (91.2% to 100.0%, 40 of 40) with 0 critical errors; the gate is 100% success and 0 critical errors.
 It runs in seconds and costs nothing.
+
+### Response drafting cases
+
+`uv run purchase-cycle eval --suite response_drafting` runs the 80 responses of `evals/datasets/response_drafting/` (20 development, 60 test) through the real drafting call and fact check.
+The grader scores the model draft before any template fallback: reference accuracy, incident coverage, document accuracy, invented amount rate and case pass rate, with Wilson intervals, globally and per category.
+The instructions were tuned on the development split only (one live round, 20 of 20, 95% interval 83.9% to 100.0%, 0 critical errors, no prompt change) and not changed after the test run.
+The Claude Haiku 4.5 baseline on the 60 test responses (`evals/baselines/response_drafting.json`):
+
+| Metric | Value | 95% interval | Threshold |
+|---|---|---|---|
+| Case pass rate (60 responses) | 100.0% | 94.0% to 100.0% | at least 95% |
+| Critical errors (60 responses) | 0 | 0.0% to 6.0% | target 0, met |
+| Invented amount rate | 0.0% | 0.0% to 6.0% | reported |
+
+All ten categories pass at 100%, with only six responses each, so the per-category intervals are wide.
+The phase spent about 0.18 USD over 83 calls on live drafting and the demo recording, estimated at Haiku 4.5 list prices.
 
 `npm run eval:live` runs the same cases against the real model and logs a LangSmith experiment against the uploaded dataset splits (`uv run purchase-cycle eval-upload` uploads the splits of the nine dataset evaluations once; `--suite <name>` uploads one; `offer_extraction` and `claim_drafting` are uploaded; `channel_routing`, `failure_recovery`, `order_scenarios`, `quote_wait`, `quote_decision`, `reconciliation_matching`, `claim_approval` and `goods_receipt` are not).
 Other useful forms: `uv run purchase-cycle eval --suite <name> --split dev --mode live` for prompt tuning without traces, and `uv run purchase-cycle eval --suite <name> --mode record --split test --set-baseline` to re-record the test split of one evaluation and store a new baseline in `evals/baselines/`.
