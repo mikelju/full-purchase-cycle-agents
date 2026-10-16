@@ -432,3 +432,25 @@ def test_a_bare_integer_equal_to_a_quantity_is_an_amount_without_a_unit_word(tmp
 def test_dates_and_periods_are_not_amounts(tmp_path, text):
     _, facts = _scenario(tmp_path)
     assert cr.check_response(cr.fill_template(facts) + "\n" + text, facts) == []
+
+
+@pytest.mark.parametrize(
+    ("text", "amount"),
+    [
+        ("We will refund 45 separately.", "45.00"),
+        ("A separate 40 EUR refund follows.", "40.00"),
+        ("A further 60 may be credited.", "60.00"),
+        ("Refund 12 marked as urgent.", "12.00"),
+        ("We add EUR 30 days.", "30.00"),
+        ("We add EUR 15 November.", "15.00"),
+        ("Refund 75 in April.", "75.00"),
+    ],
+)
+def test_month_words_and_adjacent_currency_do_not_hide_an_amount(tmp_path, text, amount):
+    _, facts = _scenario(tmp_path)
+    assert cr.check_response(cr.fill_template(facts) + "\n" + text, facts) == [f"invented amount {amount}"]
+
+
+def test_dotted_month_dates_are_not_amounts(tmp_path):
+    _, facts = _scenario(tmp_path)
+    assert cr.check_response(cr.fill_template(facts) + "\nWe will send it by Nov. 15, 2026.", facts) == []

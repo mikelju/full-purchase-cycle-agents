@@ -122,14 +122,32 @@ def _without(text: str, names: set[str]) -> str:
     return text
 
 
-_MONTH = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?"
-_DAY = r"\d{1,2}(?:st|nd|rd|th)?"
+_MONTH = (
+    r"(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may(?![ ]+[a-z])|june?|july?|aug(?:ust)?"
+    r"|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b\.?"
+)
+_DAY = r"(?:[12]\d|3[01]|0?[1-9])(?:st|nd|rd|th)?\b"
 _NOT_AMOUNT = re.compile(
     rf"\b\d{{4}}-\d{{2}}-\d{{2}}\b|\b\d{{1,2}}[/.]\d{{1,2}}[/.]\d{{2,4}}\b"
-    rf"|\b{_DAY}\s+(?:of\s+)?{_MONTH}(?:,?\s+\d{{4}})?|\b{_MONTH}\s+{_DAY}(?:,?\s+\d{{4}})?|\b{_MONTH}\s+\d{{4}}\b"
+    rf"|\b{_DAY}\s+(?:of\s+)?{_MONTH}(?:,?\s+\d{{4}}\b)?|\b{_MONTH}\s+{_DAY}(?:,?\s+\d{{4}}\b)?|\b{_MONTH}\s+\d{{4}}\b"
     r"|\b\d+\s*(?:business |working |calendar )?(?:days?|weeks?|months?|years?)\b",
     re.IGNORECASE,
 )
+_CURRENCY_BEFORE = re.compile(r"(?:EUR|euros?|€)\s*$", re.IGNORECASE)
+_CURRENCY_AFTER = re.compile(r"\s*(?:EUR|euros?|€)(?![A-Za-z])", re.IGNORECASE)
+
+
+def _strip_dates(text: str) -> str:
+    """Blank dates and periods, except a match with a currency marker right before or after it: that is money."""
+
+    def blank(m: re.Match) -> str:
+        if _CURRENCY_BEFORE.search(text, 0, m.start()) or _CURRENCY_AFTER.match(text, m.end()):
+            return m.group(0)
+        return " "
+
+    return _NOT_AMOUNT.sub(blank, text)
+
+
 _QUANTITY_AFTER = re.compile(
     r"\s*(?:(?:missing|extra|damaged|excess|additional)\s+){0,2}(?:units?|pcs|pieces)\b", re.IGNORECASE
 )
@@ -142,7 +160,7 @@ def _figures(text: str, quantities: set[int]) -> list[float]:
     A bare integer is a quantity only when a unit word follows and it equals a known quantity; dates and periods
     ("by 15 November 2026", "within 30 days") are not figures.
     """
-    text = _NOT_AMOUNT.sub(" ", text)
+    text = _strip_dates(text)
     values = []
     for m in AMOUNT_PATTERN.finditer(text):
         value, decimals = _read_number(m["num"])
