@@ -1,6 +1,6 @@
 # 017 - Simple reconcile animation
 
-Status: in progress
+Status: delivered, in review
 
 ## Contract
 Goal and reason:
@@ -30,13 +30,13 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 - [x] English page built and recorded (`c890b76`): 499 frames at 15 fps, 33.27 s, story 31.25 s
 - [x] Spanish page built and recorded (`c890b76`): same timeline, same length
 - [x] References updated (README, folder README, LinkedIn plan if approved) (`cb630dd`)
-- [ ] Adversarial review and `npm run check`
+- [x] Adversarial review and `npm run check` (two rounds, see below; `npm run check` on `f0d6f41`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017.txt`; the later commit only touches this document)
 
 Build notes and evidence (frames, contact sheets and probes in `.evidence/cambio-017/`, git-ignored):
 - C1: both GIFs are 960x540, loop count 0, 1.48 MB (EN) and 1.50 MB (ES, re-recorded after review round 1); both MP4s are 1280x720, h264, yuv420p, 499 frames.
 - C2: 499 frames at 15 fps = 33.27 s (story 31.25 s, `LOOP` = 31250 ms); exactly two reconciliations, then the claim scene.
 - C3: node holds logged by the browser during recording (`scene-times-en.txt`), case 1 read 1.43, extract 2.23, link 1.42, match 2.62, store 1.43 s; case 2 read 0.92, extract 1.64, link 0.94, match 3.62, store 1.41 s.
-  Measured on the delivered GIF, the caption of each node stays on screen at least 1.6 s in case 1 and 1.07 s for case 2 read and link; the fully lit node is shorter (about 0.8 s for case 2 read) because of the 0.3 s fill transition.
+  Measured on the delivered GIF, the caption of each node stays on screen at least 1.6 s for every case 1 node and 1.07 s for case 2 read and link (re-checked on the case 2 contact sheet in review round 2); the fully lit node is shorter (about 0.8 s for case 2 read) because of the 0.3 s fill transition.
   The token is shown only between nodes and hides on arrival.
 - C4: the Spanish page differs from the English one only in its strings block, charset and title; contact sheet and accent crops show no overflow.
 - Deviations from the approved table: from case 1 on, scenes start about 1 s later (token travel and case title cards; node holds are exact).
@@ -77,5 +77,8 @@ Conceptual simplifications (as in change 011, the flow is conceptual): the deliv
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
 | 1 | Local, two subagents in clean context | `b42d833..aae58ae` | Correctness; evidence | Correctness: 3 menor (Spanish captions said `pedido` next to the `orden de compra` header, against change 016; `store` timers not tied to `runId`, so a restart could light the discrepancy rows of the previous pass; missing comma in the folder README). Evidence: 1 menor (C3 holds quoted from the browser log without saying so) | All confirmed and fixed: `orden de compra` in every Spanish caption (the participle "pedido 40, facturado 35" stays), intro title shortened to fit, timers guarded by `runId` in both pages, comma added, C3 provenance stated; Spanish page re-recorded and frames checked (English recording unchanged, the timer guard does not change it) |
+| 2 | Local, one subagent in clean context | `aae58ae..f0d6f41` (fix commit) | Correctness | None blocking; 1 menor: the C3 caption hold measured on the GIF was not re-checked by the reviewer, and its sentence mixed "in case 1" and "for case 2" | Confirmed as wording only: the case 2 contact sheet shows the `read` and `link` captions on screen about 1.07 s, sentence reworded |
 
 ## Delivery
+Branch `cambio-017-simple-reconcile-animation`, PR to `main` (see the PR description for results per criterion).
+Pending: owner review of the Spanish captions (own translation); the post 3 questions inherited from change 015 are outside this change.
