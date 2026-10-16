@@ -9,7 +9,7 @@ from purchase_cycle.claims import DecisionRefused
 from purchase_cycle.graph import sqlite_checkpointer
 from purchase_cycle.llm import RESPONSE_DRAFTING, MissingRecording, ModelClient
 
-REFERENCE = re.compile(r"SINV-(\d+)", re.IGNORECASE)
+REFERENCE = re.compile(r"SINV-(\d{1,9})", re.IGNORECASE)
 INCIDENT_TYPES = ("missing", "extra", "damaged")
 
 

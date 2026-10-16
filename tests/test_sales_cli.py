@@ -159,10 +159,12 @@ def test_responses_draft_one_per_discrepancies_invoice_and_a_second_run_calls_no
     out = capsys.readouterr().out
     assert "responses drafted: 2" in out and "SINV-0001" in out and "SINV-0002" in out and "SINV-0003" not in out
     assert "source=model" in out and "incident" in out and "document CN-0001" in out
+    assert out.count("Thank you for your patience.") == 2  # the model text is what is shown
     assert (
         world.query("SELECT status, draft_source FROM customer_responses ORDER BY id")
         == [("awaiting_approval", "model")] * 2
     )
+    assert all(r[0].endswith("Thank you for your patience.") for r in world.query("SELECT draft_body FROM customer_responses"))
     assert world.snapshot() == before
     rows = world.query("SELECT * FROM customer_responses")
     world.recordings.unlink()
@@ -302,9 +304,11 @@ def test_unknown_or_malformed_reference_in_show_fails_and_changes_nothing(tmp_pa
     world = World(tmp_path)
     world.ready()
     before = world.snapshot()
-    for reference in ("SINV-0099", "nonsense"):
+    for reference in ("SINV-0099", "nonsense", "SINV-99999999999999999999"):
         assert world.main("show", reference) == 1
         assert capsys.readouterr().err.startswith("Error:")
+        assert world.approve(reference) == 1 and world.reject(reference) == 1
+        assert capsys.readouterr().err.count("Error:") == 2
     assert world.snapshot() == before
 
 
@@ -348,8 +352,8 @@ def test_each_sales_step_and_decision_in_separate_processes_equals_one_process_w
     body.write_text("Your credit is on its way.\n", encoding="utf-8")
     single.ready()
     assert single.responses() == 0
-    assert single.approve("SINV-0001") == 0
-    assert single.approve("SINV-0002", "--body-file", str(body)) == 0
+    assert single.approve("SINV-0001", "--body-file", str(body)) == 0
+    assert single.reject("SINV-0002") == 0
     cp = ["--checkpoints", str(split.checkpoints)]
     inv = ["--invoices-dir", str(split.invoices)]
     _process(split, "invoice", *inv)
@@ -357,10 +361,10 @@ def test_each_sales_step_and_decision_in_separate_processes_equals_one_process_w
     split.record()
     _process(split, "responses", *cp, "--recordings", str(split.recordings))
     split.recordings.unlink()  # from here any model call fails
-    _process(split, "approve", "SINV-0001", *cp, *inv, "--outbox", str(split.outbox))
-    _process(split, "approve", "SINV-0002", *cp, *inv, "--outbox", str(split.outbox), "--body-file", str(body))
+    _process(split, "approve", "SINV-0001", *cp, *inv, "--outbox", str(split.outbox), "--body-file", str(body))
+    _process(split, "reject", "SINV-0002", *cp)
     assert "nothing to be drafted" in _process(split, "responses", *cp, "--recordings", str(split.recordings))
     rows, files = _final(split)
     assert (rows, files) == _final(single)
-    assert [r[0] for r in split.query("SELECT status FROM customer_responses ORDER BY id")] == ["sent", "sent"]
+    assert [r[0] for r in split.query("SELECT status FROM customer_responses ORDER BY id")] == ["sent", "rejected"]
     assert len(files) >= 5
