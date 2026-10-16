@@ -10,7 +10,7 @@ import re
 import sqlite3
 from pathlib import Path
 
-from purchase_cycle import db, sim_clock
+from purchase_cycle import db, reconcile_match, sim_clock
 from purchase_cycle.receipts import COMPANY, ascii_text
 
 INVOICE_TABLES = ("customer_invoices", "customer_invoice_lines")
@@ -276,3 +276,130 @@ def link_notes(conn: sqlite3.Connection, items: list[dict]) -> list[dict]:
                 )
         results.append({"file": item["file"], "status": status, "reason": reason, "signed_note_id": signed_id})
     return results
+
+
+# ---- sales matching: accepted quantities and one reconciliation per invoice (C5) ----
+
+
+def accepted(conn: sqlite3.Connection, signed_note_id: int) -> dict[str, int]:
+    """Units the customer accepts per SKU: delivered minus missing minus damaged plus extra."""
+    note_id = conn.execute(
+        "SELECT delivery_note_id FROM signed_delivery_notes WHERE id = ?", (signed_note_id,)
+    ).fetchone()[0]
+    units = {
+        r["sku"]: r["quantity"]
+        for r in conn.execute("SELECT sku, quantity FROM customer_delivery_note_lines WHERE note_id = ?", (note_id,))
+    }
+    for r in conn.execute(
+        "SELECT sku, type, units FROM signed_note_incidents WHERE signed_note_id = ?", (signed_note_id,)
+    ):
+        units[r["sku"]] = units.get(r["sku"], 0) + (r["units"] if r["type"] == "extra" else -r["units"])
+    return units
+
+
+def _incident(rows_incidents: dict[str, dict[str, int]], sku: str | None, row: dict) -> str:
+    """The incident type behind a difference row: from the net direction, the larger loss type, a tie to missing."""
+    reported = rows_incidents.get(sku, {})
+    invoiced_above = row["type"] == reconcile_match.QUANTITY and (row["found"] or 0) > (row["expected"] or 0)
+    losses = {k: v for k, v in reported.items() if k != "extra"}
+    if (invoiced_above or row["type"] != reconcile_match.QUANTITY) and losses:
+        return "damaged" if losses.get("damaged", 0) > losses.get("missing", 0) else "missing"
+    if reported.get("extra"):
+        return "extra"
+    return "missing"
+
+
+def _reconcile_one(
+    conn: sqlite3.Connection, invoice: sqlite3.Row, signed: sqlite3.Row | None
+) -> tuple[str, list[dict]]:
+    if signed is None:
+        return reconcile_match.AWAITING, []
+    prices = {
+        r["sku"]: r["unit_price"]
+        for r in conn.execute(
+            "SELECT sku, unit_price FROM customer_invoice_lines WHERE invoice_id = ?", (invoice["id"],)
+        )
+    }
+
+    def price(sku: str) -> float:
+        if sku not in prices:
+            prices[sku] = conn.execute("SELECT price_eur FROM products WHERE sku = ?", (sku,)).fetchone()[0]
+        return prices[sku]
+
+    order = {"lines": []}
+    for r in conn.execute(
+        "SELECT sku, quantity FROM order_lines WHERE order_id = ? ORDER BY id", (invoice["order_id"],)
+    ):
+        order["lines"].append({"sku": r["sku"], "quantity": r["quantity"], "unit_price": price(r["sku"])})
+    invoice_lines = [
+        {"sku": r["sku"], "quantity": r["quantity"], "unit_price": r["unit_price"], "line_total": r["line_total"]}
+        for r in conn.execute(
+            "SELECT * FROM customer_invoice_lines WHERE invoice_id = ? ORDER BY line_no", (invoice["id"],)
+        )
+    ]
+    note_lines = [
+        {"sku": sku, "quantity": quantity, "unit_price": price(sku), "line_total": None}
+        for sku, quantity in accepted(conn, signed["id"]).items()
+    ]
+    result, rows = reconcile_match.classify(order, invoice_lines, note_lines)
+    reported: dict[str, dict[str, int]] = {}
+    for r in conn.execute(
+        "SELECT sku, type, units FROM signed_note_incidents WHERE signed_note_id = ?", (signed["id"],)
+    ):
+        reported.setdefault(r["sku"], {}).setdefault(r["type"], 0)
+        reported[r["sku"]][r["type"]] += r["units"]
+    for row in rows:
+        row["incident"] = _incident(reported, row["sku"], row)
+    return result, rows
+
+
+def reconcile(conn: sqlite3.Connection) -> list[dict]:
+    """One reconciliation per invoice: `awaiting_delivery_note` first, updated once its signed note is linked.
+
+    Returns the reconciliations created or changed by this call; a second call with nothing new returns nothing.
+    """
+    changed = []
+    for invoice in conn.execute("SELECT * FROM customer_invoices ORDER BY id").fetchall():
+        signed = conn.execute(
+            "SELECT * FROM signed_delivery_notes WHERE delivery_note_id = ? AND status = 'linked' ORDER BY id LIMIT 1",
+            (invoice["delivery_note_id"],),
+        ).fetchone()
+        existing = conn.execute("SELECT * FROM sales_reconciliations WHERE invoice_id = ?", (invoice["id"],)).fetchone()
+        if existing is not None and (signed is None or existing["signed_note_id"] is not None):
+            continue
+        result, rows = _reconcile_one(conn, invoice, signed)
+        now = sim_clock.now(conn).strftime(sim_clock.FORMAT)
+        signed_id = signed["id"] if signed else None
+        with conn:
+            if existing is None:
+                rec_id = conn.execute(
+                    "INSERT INTO sales_reconciliations (invoice_id, signed_note_id, result, reconciled_at) "
+                    "VALUES (?, ?, ?, ?)",
+                    (invoice["id"], signed_id, result, now),
+                ).lastrowid
+            else:
+                rec_id = existing["id"]
+                conn.execute(
+                    "UPDATE sales_reconciliations SET signed_note_id = ?, result = ?, reconciled_at = ? WHERE id = ?",
+                    (signed_id, result, now, rec_id),
+                )
+            conn.executemany(
+                "INSERT INTO sales_discrepancies (reconciliation_id, sku, type, incident, expected, found, unit_amount, "
+                "amount, text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [
+                    (
+                        rec_id,
+                        r["sku"],
+                        r["type"],
+                        r["incident"],
+                        r["expected"],
+                        r["found"],
+                        r["unit_amount"],
+                        r["amount"],
+                        r["text"],
+                    )
+                    for r in rows
+                ],
+            )
+        changed.append({"reconciliation_id": rec_id, "invoice_id": invoice["id"], "result": result})
+    return changed

@@ -303,3 +303,128 @@ def test_a_file_that_is_not_text_is_parked(tmp_path):
     (folder / "binary.txt").write_bytes(b"\xff\xfe\x00bad")
     _scan(conn, folder)
     assert _one_failure(conn) and len(_signed(conn)) == 1
+
+
+# ---- increment 6: accepted quantities, sales reconciliation, incident per row (C5) ----
+
+
+def _recon(conn):
+    return [dict(r) for r in conn.execute("SELECT * FROM sales_reconciliations ORDER BY id")]
+
+
+def _diffs(conn):
+    return [
+        (r["sku"], r["type"], r["expected"], r["found"], r["unit_amount"], r["amount"], r["incident"])
+        for r in conn.execute("SELECT * FROM sales_discrepancies ORDER BY id")
+    ]
+
+
+def _signed_and_reconciled(tmp_path, body, lines=((A, 5), (B, 4))):
+    conn, note = _setup(tmp_path, lines)
+    _scan(conn, _inbox(tmp_path, one=_form(note, body)))
+    sales.reconcile(conn)
+    return conn
+
+
+def test_an_invoice_with_no_signed_note_is_awaiting_and_has_no_rows(tmp_path):
+    conn, _ = _setup(tmp_path)
+    sales.reconcile(conn)
+    (row,) = _recon(conn)
+    assert (row["invoice_id"], row["signed_note_id"], row["result"]) == (1, None, "awaiting_delivery_note")
+    assert _diffs(conn) == []
+
+
+def test_the_awaiting_row_is_updated_when_the_signed_note_arrives(tmp_path):
+    conn, note = _setup(tmp_path)
+    sales.reconcile(conn)
+    _scan(conn, _inbox(tmp_path, one=_form(note, _incidents((A, "missing", 2)))))
+    changed = sales.reconcile(conn)
+    (row,) = _recon(conn)
+    assert (row["id"], row["signed_note_id"], row["result"]) == (1, 1, "discrepancies")
+    assert [c["result"] for c in changed] == ["discrepancies"]
+
+
+def test_received_in_full_gives_matched(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, "Received in full")
+    (row,) = _recon(conn)
+    assert (row["signed_note_id"], row["result"]) == (1, "matched") and _diffs(conn) == []
+
+
+def test_missing_units_give_a_quantity_row_with_the_missing_incident(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, _incidents((A, "missing", 2)))
+    assert _recon(conn)[0]["result"] == "discrepancies"
+    assert _diffs(conn) == [(A, "quantity", 3, 5, None, round(2 * _price(conn, A), 4), "missing")]
+
+
+def test_damaged_units_give_a_quantity_row_with_the_damaged_incident(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, _incidents((B, "damaged", 1)))
+    assert _diffs(conn) == [(B, "quantity", 3, 4, None, round(1 * _price(conn, B), 4), "damaged")]
+
+
+def test_extra_units_of_a_delivered_sku_give_a_negative_amount(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, _incidents((A, "extra", 3)))
+    assert _diffs(conn) == [(A, "quantity", 8, 5, None, round(-3 * _price(conn, A), 4), "extra")]
+
+
+def test_an_extra_sku_not_on_the_note_is_priced_from_the_catalog(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, _incidents((C, "extra", 2)))
+    assert _diffs(conn) == [(C, "quantity", 2, 0, None, round(-2 * _price(conn, C), 4), "extra")]
+
+
+def test_several_incident_types_over_several_skus_give_one_row_each(tmp_path):
+    body = _incidents((A, "missing", 1), (B, "damaged", 2), (C, "extra", 1))
+    conn = _signed_and_reconciled(tmp_path, body)
+    got = _diffs(conn)
+    assert [(g[0], g[2], g[3], g[6]) for g in got] == [(A, 4, 5, "missing"), (B, 2, 4, "damaged"), (C, 1, 0, "extra")]
+    assert got[1][5] == round(2 * _price(conn, B), 4)
+
+
+def test_incidents_of_one_sku_net_out_and_the_larger_loss_names_the_row(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, _incidents((A, "missing", 1), (A, "damaged", 2), (A, "extra", 1)))
+    assert _diffs(conn) == [(A, "quantity", 3, 5, None, round(2 * _price(conn, A), 4), "damaged")]
+
+
+def test_a_tie_between_missing_and_damaged_is_missing(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, _incidents((A, "missing", 1), (A, "damaged", 1)))
+    assert _diffs(conn) == [(A, "quantity", 3, 5, None, round(2 * _price(conn, A), 4), "missing")]
+
+
+def test_incidents_that_cancel_out_give_matched(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, _incidents((A, "missing", 1), (A, "extra", 1)))
+    assert _recon(conn)[0]["result"] == "matched" and _diffs(conn) == []
+
+
+def test_all_units_missing_leaves_accepted_zero(tmp_path):
+    conn = _signed_and_reconciled(tmp_path, _incidents((B, "missing", 4)))
+    assert _diffs(conn) == [(B, "quantity", 0, 4, None, round(4 * _price(conn, B), 4), "missing")]
+
+
+def test_accepted_quantities_follow_the_rule(tmp_path):
+    conn, note = _setup(tmp_path)
+    _scan(conn, _inbox(tmp_path, one=_form(note, _incidents((A, "missing", 2), (A, "extra", 1), (C, "extra", 2)))))
+    assert sales.accepted(conn, 1) == {A: 4, B: 4, C: 2}
+
+
+def test_reconcile_twice_changes_nothing_and_unlinked_notes_do_not_reconcile(tmp_path):
+    conn, note = _setup(tmp_path)
+    _scan(conn, _inbox(tmp_path, one=_form(note + 9, _incidents((A, "missing", 2)))))
+    sales.reconcile(conn)
+    assert [r["result"] for r in _recon(conn)] == ["awaiting_delivery_note"]
+    _scan(conn, _inbox(tmp_path, two=_form(note, _incidents((A, "missing", 2)))))
+    sales.reconcile(conn)
+    before = (_recon(conn), _diffs(conn))
+    assert sales.reconcile(conn) == []
+    assert (_recon(conn), _diffs(conn)) == before
+
+
+def test_each_invoice_gets_its_own_reconciliation(tmp_path):
+    conn, note = _setup(tmp_path)
+    other = _served(tmp_path, conn, [(C, 2)])
+    sales.invoice(conn, tmp_path / "inv")
+    _scan(conn, _inbox(tmp_path, one=_form(other, _incidents((C, "damaged", 1)))))
+    sales.reconcile(conn)
+    assert [(r["invoice_id"], r["result"]) for r in _recon(conn)] == [
+        (1, "awaiting_delivery_note"),
+        (2, "discrepancies"),
+    ]
+    assert _diffs(conn) == [(C, "quantity", 1, 2, None, round(_price(conn, C), 4), "damaged")]
