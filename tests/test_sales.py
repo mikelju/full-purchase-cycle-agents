@@ -428,3 +428,100 @@ def test_each_invoice_gets_its_own_reconciliation(tmp_path):
         (2, "discrepancies"),
     ]
     assert _diffs(conn) == [(C, "quantity", 1, 2, None, round(_price(conn, C), 4), "damaged")]
+
+
+# ---- increment 7: correcting documents (C7) ----
+
+
+def _corrections(conn):
+    return [dict(r) for r in conn.execute("SELECT * FROM customer_corrections ORDER BY id")]
+
+
+def _correction_lines(conn, correction_id):
+    return [
+        (r["sku"], r["quantity"], r["unit_price"], r["line_total"])
+        for r in conn.execute(
+            "SELECT * FROM customer_correction_lines WHERE correction_id = ? ORDER BY line_no", (correction_id,)
+        )
+    ]
+
+
+def _planned(tmp_path, body, lines=((A, 5), (B, 4))):
+    conn = _signed_and_reconciled(tmp_path, body, lines)
+    created = sales.plan_corrections(conn)
+    return conn, created
+
+
+def test_missing_and_damaged_units_give_a_credit_note_with_negative_lines(tmp_path):
+    conn, created = _planned(tmp_path, _incidents((A, "missing", 2), (B, "damaged", 1)))
+    (cn,) = _corrections(conn)
+    assert (cn["invoice_id"], cn["number"], cn["kind"], cn["document_file"]) == (1, "CN-0001", "credit_note", None)
+    pa, pb = _price(conn, A), _price(conn, B)
+    assert _correction_lines(conn, cn["id"]) == [(A, -2, pa, round(-2 * pa, 2)), (B, -1, pb, round(-1 * pb, 2))]
+    assert cn["total"] == round(round(-2 * pa, 2) + round(-1 * pb, 2), 2)
+    assert [c["number"] for c in created] == ["CN-0001"]
+
+
+def test_extra_units_give_a_corrective_invoice_with_positive_lines(tmp_path):
+    conn, _ = _planned(tmp_path, _incidents((A, "extra", 3), (C, "extra", 2)))
+    (ci,) = _corrections(conn)
+    assert (ci["number"], ci["kind"]) == ("CI-0001", "corrective_invoice")
+    pa, pc = _price(conn, A), _price(conn, C)
+    assert _correction_lines(conn, ci["id"]) == [(A, 3, pa, round(3 * pa, 2)), (C, 2, pc, round(2 * pc, 2))]
+    assert ci["total"] == round(round(3 * pa, 2) + round(2 * pc, 2), 2)
+
+
+def test_both_documents_for_an_invoice_with_losses_and_extras(tmp_path):
+    conn, _ = _planned(tmp_path, _incidents((A, "damaged", 2), (C, "extra", 1)))
+    cn, ci = _corrections(conn)
+    assert [(c["number"], c["kind"], c["invoice_id"]) for c in (cn, ci)] == [
+        ("CN-0001", "credit_note", 1),
+        ("CI-0002", "corrective_invoice", 1),
+    ]
+    assert _correction_lines(conn, cn["id"]) == [(A, -2, _price(conn, A), round(-2 * _price(conn, A), 2))]
+    assert ci["total"] == round(_price(conn, C), 2) and cn["total"] == round(-2 * _price(conn, A), 2)
+
+
+def test_a_net_zero_or_matched_invoice_gets_no_document(tmp_path):
+    conn, created = _planned(tmp_path, _incidents((A, "missing", 1), (A, "extra", 1)))
+    assert _corrections(conn) == [] and created == []
+
+
+def test_an_awaiting_invoice_gets_no_document(tmp_path):
+    conn, _ = _setup(tmp_path)
+    sales.reconcile(conn)
+    assert sales.plan_corrections(conn) == [] and _corrections(conn) == []
+
+
+def test_planning_twice_changes_nothing_and_writes_no_text_file(tmp_path):
+    conn, _ = _planned(tmp_path, _incidents((A, "missing", 2), (C, "extra", 1)))
+    before = (_corrections(conn), [tuple(r) for r in conn.execute("SELECT * FROM customer_correction_lines")])
+    files = sorted(p.name for p in tmp_path.rglob("*") if p.is_file())
+    assert sales.plan_corrections(conn) == []
+    assert (_corrections(conn), [tuple(r) for r in conn.execute("SELECT * FROM customer_correction_lines")]) == before
+    assert sorted(p.name for p in tmp_path.rglob("*") if p.is_file()) == files
+    assert not any(n.startswith(("CN-", "CI-")) for n in files)
+
+
+def test_totals_are_the_sum_of_lines_rounded_to_the_cent(tmp_path):
+    conn, note = _setup(tmp_path, ((A, 5), (B, 4)))
+    conn.execute("UPDATE customer_invoice_lines SET unit_price = 0.333")
+    conn.commit()
+    _scan(conn, _inbox(tmp_path, one=_form(note, _incidents((A, "missing", 1), (B, "missing", 1)))))
+    sales.reconcile(conn)
+    sales.plan_corrections(conn)
+    (cn,) = _corrections(conn)
+    assert [line[3] for line in _correction_lines(conn, cn["id"])] == [-0.33, -0.33] and cn["total"] == -0.66
+
+
+def test_numbers_follow_the_row_id_across_invoices(tmp_path):
+    conn, note = _setup(tmp_path)
+    other = _served(tmp_path, conn, [(C, 2)])
+    sales.invoice(conn, tmp_path / "inv")
+    _scan(conn, _inbox(tmp_path, one=_form(other, _incidents((C, "damaged", 1)))))
+    sales.reconcile(conn)
+    sales.plan_corrections(conn)
+    _scan(conn, _inbox(tmp_path, two=_form(note, _incidents((A, "extra", 1)))))
+    sales.reconcile(conn)
+    sales.plan_corrections(conn)
+    assert [(c["invoice_id"], c["number"]) for c in _corrections(conn)] == [(2, "CN-0001"), (1, "CI-0002")]

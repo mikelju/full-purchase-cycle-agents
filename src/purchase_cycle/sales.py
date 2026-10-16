@@ -403,3 +403,80 @@ def reconcile(conn: sqlite3.Connection) -> list[dict]:
             )
         changed.append({"reconciliation_id": rec_id, "invoice_id": invoice["id"], "result": result})
     return changed
+
+
+# ---- correcting documents: computed from the difference rows, no file until approval (C7) ----
+
+CORRECTION_KINDS = (("credit_note", "CN"), ("corrective_invoice", "CI"))
+
+
+def _unit_price(conn: sqlite3.Connection, invoice_id: int, sku: str) -> float:
+    row = conn.execute(
+        "SELECT unit_price FROM customer_invoice_lines WHERE invoice_id = ? AND sku = ?", (invoice_id, sku)
+    ).fetchone()
+    return row[0] if row else conn.execute("SELECT price_eur FROM products WHERE sku = ?", (sku,)).fetchone()[0]
+
+
+def correction_lines(
+    conn: sqlite3.Connection, reconciliation_id: int
+) -> dict[str, list[tuple[str, int, float, float]]]:
+    """The lines `(sku, quantity, unit price, line total)` of each correcting document of a reconciliation.
+
+    Units invoiced above accepted give negative credit note lines; units accepted above invoiced give positive
+    corrective invoice lines. Only quantity rows count; a kind with no line is absent.
+    """
+    invoice_id = conn.execute(
+        "SELECT invoice_id FROM sales_reconciliations WHERE id = ?", (reconciliation_id,)
+    ).fetchone()[0]
+    out: dict[str, list[tuple[str, int, float, float]]] = {}
+    rows = conn.execute(
+        "SELECT sku, expected, found FROM sales_discrepancies WHERE reconciliation_id = ? AND type = 'quantity' ORDER BY id",
+        (reconciliation_id,),
+    ).fetchall()
+    for row in rows:
+        units = round(row["found"] - row["expected"])
+        if units == 0:
+            continue
+        price = _unit_price(conn, invoice_id, row["sku"])
+        kind = "credit_note" if units > 0 else "corrective_invoice"
+        signed_units = -units
+        out.setdefault(kind, []).append((row["sku"], signed_units, price, round(signed_units * price, 2)))
+    return out
+
+
+def plan_corrections(conn: sqlite3.Connection) -> list[dict]:
+    """Store the credit note and corrective invoice of each `discrepancies` reconciliation that has none yet.
+
+    Writes no text file: that happens on approval. A second call with nothing new returns nothing.
+    """
+    created = []
+    recs = conn.execute(
+        "SELECT r.id, r.invoice_id FROM sales_reconciliations r WHERE r.result = 'discrepancies' AND NOT EXISTS "
+        "(SELECT 1 FROM customer_corrections c WHERE c.invoice_id = r.invoice_id) ORDER BY r.id"
+    ).fetchall()
+    for rec in recs:
+        documents = correction_lines(conn, rec["id"])
+        with conn:
+            for kind, prefix in CORRECTION_KINDS:
+                lines = documents.get(kind)
+                if not lines:
+                    continue
+                correction_id = conn.execute(
+                    "INSERT INTO customer_corrections (invoice_id, number, kind, total) VALUES (?, ?, ?, ?)",
+                    (
+                        rec["invoice_id"],
+                        f"pending-{rec['invoice_id']}-{kind}",
+                        kind,
+                        round(sum(x[3] for x in lines), 2),
+                    ),
+                ).lastrowid
+                number = _number(prefix, correction_id)
+                conn.execute("UPDATE customer_corrections SET number = ? WHERE id = ?", (number, correction_id))
+                conn.executemany(
+                    "INSERT INTO customer_correction_lines VALUES (?, ?, ?, ?, ?, ?)",
+                    [(correction_id, n, *line) for n, line in enumerate(lines, 1)],
+                )
+                created.append(
+                    {"correction_id": correction_id, "number": number, "kind": kind, "invoice_id": rec["invoice_id"]}
+                )
+    return created
