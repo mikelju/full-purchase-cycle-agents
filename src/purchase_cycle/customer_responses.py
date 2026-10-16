@@ -134,14 +134,13 @@ _NOT_AMOUNT = re.compile(
     re.IGNORECASE,
 )
 _CURRENCY_BEFORE = re.compile(r"(?:EUR|euros?|€)\s*$", re.IGNORECASE)
-_CURRENCY_AFTER = re.compile(r"\s*(?:EUR|euros?|€)(?![A-Za-z])", re.IGNORECASE)
 
 
 def _strip_dates(text: str) -> str:
-    """Blank dates and periods, except a match with a currency marker right before or after it: that is money."""
+    """Blank dates and periods, except a match with a currency marker right before it: that is money."""
 
     def blank(m: re.Match) -> str:
-        if _CURRENCY_BEFORE.search(text, 0, m.start()) or _CURRENCY_AFTER.match(text, m.end()):
+        if _CURRENCY_BEFORE.search(text, 0, m.start()):
             return m.group(0)
         return " "
 

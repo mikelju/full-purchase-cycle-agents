@@ -451,6 +451,20 @@ def test_month_words_and_adjacent_currency_do_not_hide_an_amount(tmp_path, text,
     assert cr.check_response(cr.fill_template(facts) + "\n" + text, facts) == [f"invented amount {amount}"]
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "By 15 November 2026 EUR refunds are issued.",
+        "Within 30 days EUR refunds are issued.",
+        "On 2026-11-15 EUR only.",
+        "Within 30 days EUR-denominated.",
+    ],
+)
+def test_a_currency_after_a_date_does_not_make_it_an_amount(tmp_path, text):
+    _, facts = _scenario(tmp_path)
+    assert cr.check_response(cr.fill_template(facts) + "\n" + text, facts) == []
+
+
 def test_dotted_month_dates_are_not_amounts(tmp_path):
     _, facts = _scenario(tmp_path)
     assert cr.check_response(cr.fill_template(facts) + "\nWe will send it by Nov. 15, 2026.", facts) == []
