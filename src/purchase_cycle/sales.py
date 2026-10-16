@@ -103,15 +103,19 @@ def write_invoice_files(conn: sqlite3.Connection) -> list[Path]:
     for invoice in conn.execute("SELECT * FROM customer_invoices ORDER BY id").fetchall():
         path = Path(invoice["document_file"])
         text = _invoice_text(conn, invoice)
+        thread = f"invoice-file-{invoice['number']}"
+        parked = (db.get_failure(conn, thread) or {}).get("status") == "needs_review"
         if not path.exists():
             _atomic_write(path, text)
             written.append(path)
         elif path.read_bytes() != text.encode("ascii"):
-            thread = f"invoice-file-{invoice['number']}"
-            if not db.get_failure(conn, thread):
+            if not parked:
                 db.park_failure(
                     conn, thread, "sales", str(path), "invoice_file", f"{path} already exists with another text"
                 )
+            continue
+        if parked:  # our file is there now: the invoice goes on
+            db.resolve_failure(conn, thread)
     return written
 
 
@@ -387,7 +391,13 @@ def reconcile(conn: sqlite3.Connection) -> list[dict]:
     Returns the reconciliations created or changed by this call; a second call with nothing new returns nothing.
     """
     changed = []
+    parked = {  # an invoice parked for its foreign file stops here: no reconciliation, response or email
+        r[0]
+        for r in conn.execute("SELECT thread_id FROM failures WHERE step = 'invoice_file' AND status = 'needs_review'")
+    }
     for invoice in conn.execute("SELECT * FROM customer_invoices ORDER BY id").fetchall():
+        if f"invoice-file-{invoice['number']}" in parked:
+            continue
         signed = conn.execute(
             "SELECT * FROM signed_delivery_notes WHERE delivery_note_id = ? AND status = 'linked' ORDER BY id LIMIT 1",
             (invoice["delivery_note_id"],),

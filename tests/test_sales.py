@@ -704,6 +704,36 @@ def test_a_foreign_invoice_file_is_not_overwritten_and_the_invoice_is_parked(tmp
     assert len(_failures(conn)) == 1
 
 
+def test_a_parked_invoice_stops_before_reconciliation_and_stays_in_failures(tmp_path):
+    conn = _conn(tmp_path)
+    parked = _served(tmp_path, conn, [(A, 5)])
+    other = _served(tmp_path, conn, [(B, 4)])
+    foreign = tmp_path / "inv" / "SINV-0001.txt"
+    foreign.parent.mkdir()
+    foreign.write_text("someone else's file\n", encoding="ascii")
+    sales.invoice(conn, tmp_path / "inv")
+    _scan(conn, _inbox(tmp_path, one=_form(parked, _incidents((A, "missing", 2))), two=_form(other)))
+    assert [(r["invoice_id"], r["result"]) for r in sales.reconcile(conn)] == [(2, "matched")]
+    assert [r["invoice_id"] for r in _recon(conn)] == [2]
+    assert sales.plan_corrections(conn) == []
+    assert _failures(conn) == [("invoice-file-SINV-0001", "sales", "invoice_file", "needs_review")]
+
+
+def test_a_parked_invoice_is_released_once_its_own_file_is_written(tmp_path):
+    conn = _conn(tmp_path)
+    parked = _served(tmp_path, conn, [(A, 5)])
+    foreign = tmp_path / "inv" / "SINV-0001.txt"
+    foreign.parent.mkdir()
+    foreign.write_text("someone else's file\n", encoding="ascii")
+    sales.invoice(conn, tmp_path / "inv")
+    _scan(conn, _inbox(tmp_path, one=_form(parked, _incidents((A, "missing", 2)))))
+    assert sales.reconcile(conn) == []
+    foreign.unlink()  # the owner removes the foreign file
+    sales.invoice(conn, tmp_path / "inv")
+    assert _failures(conn) == [("invoice-file-SINV-0001", "sales", "invoice_file", "resolved")]
+    assert [r["result"] for r in sales.reconcile(conn)] == ["discrepancies"]
+
+
 def test_an_identical_existing_invoice_file_is_accepted(tmp_path):
     conn = _conn(tmp_path)
     _served(tmp_path, conn, [(A, 1)])
