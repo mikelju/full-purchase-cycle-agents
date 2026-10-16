@@ -73,9 +73,8 @@ def test_validation_rejects_a_wrong_document_or_category(dataset):
     assert any("delivered" in e for e in rd.validate_case(overloss))
 
 
-@pytest.mark.parametrize("category", rd.CATEGORIES)
-def test_the_facts_equal_the_product_path_on_a_real_database(category, dataset, tmp_path):
-    row = next(r for r in dataset if r["category"] == category)
+@pytest.mark.parametrize("row", rd.load_dataset(), ids=lambda r: r["id"])
+def test_the_facts_equal_the_product_path_on_a_real_database(row, tmp_path):
     body = _incidents(*[(i["sku"], i["type"], i["units"]) for i in row["incidents"]])
     conn, _ = _planned(tmp_path, body, lines=tuple((d["sku"], d["quantity"]) for d in row["delivered"]))
     real = customer_responses.response_facts(conn, 1)
@@ -83,6 +82,9 @@ def test_the_facts_equal_the_product_path_on_a_real_database(category, dataset, 
     assert real["incidents"] == mine["incidents"] and real["net_total"] == mine["net_total"]
     strip = lambda docs: [(d["kind"], d["total"], d["lines"]) for d in docs]  # noqa: E731
     assert strip(real["documents"]) == strip(mine["documents"])
+    # the product checker agrees with the labels: the template of the real facts passes, and the labelled kinds match
+    assert customer_responses.check_response(customer_responses.fill_template(real), real) == []
+    assert [d["kind"] for d in real["documents"]] == [d["kind"] for d in mine["documents"]]
 
 
 def test_review_disagreements_compare_documents_and_totals(dataset):
