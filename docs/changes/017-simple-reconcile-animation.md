@@ -20,7 +20,7 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 |---|---|---|
 | C1 | The English and Spanish animations exist as GIF (960x540, loops forever, under about 4 MB) and MP4 (1280x720, H.264, yuv420p) | `ffprobe` and file sizes |
 | C2 | The recording lasts at most 34 seconds and shows exactly two reconciliations: one labelled as the correct case that ends matched, and one that ends with discrepancies, followed by what happens next | Frame count and extracted frames |
-| C3 | Every node the invoice passes through is highlighted while active, with a one-line caption of what it does in that case, held on screen for at least 1.2 seconds; the moving token never covers a node label | Timeline constants in the page and extracted frames |
+| C3 | Every node the invoice passes through is highlighted while active, with a one-line caption of what it does in that case, held on screen for at least 1.2 seconds (0.9 seconds for `read` and `link` in the second case, already seen in the first); the moving token never covers a node label | Timeline constants in the page and extracted frames |
 | C4 | The Spanish page follows the translation rules of change 016 and its frames show correct, legible accents in a consistent font, with no text overflowing its box | Frames under `.evidence/cambio-017/` (git-ignored) |
 | C5 | Every repository reference to the reconciliation animation matches the approved replace-or-add decision, and the README describes what the new animation shows | `git grep reconcile-flow` and the README diff |
 | C6 | `npm run check` exits 0 | Check output (outside the repository) |
