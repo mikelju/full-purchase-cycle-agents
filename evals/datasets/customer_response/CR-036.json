@@ -1,0 +1,149 @@
+{
+  "dataset_version": "1.0",
+  "drafts": {
+    "SINV-0001": "Dear customer,\n\nThank you for signing delivery note CDN-0001 for invoice SINV-0001.\nYou reported these incidents:\n- GLV-NIT-XS: missing, 2 units\n\nCN-0001 is a credit note with a total of 13.80 EUR.\n\nBest regards,\nSales department",
+    "SINV-0002": "Dear customer,\n\nThank you for signing delivery note CDN-0002 for invoice SINV-0002.\nYou reported these incidents:\n- GLV-NIT-XS: missing, 1 units\n- GLV-NIT200-S: damaged, 2 units\n- GLV-VIN-S: extra, 1 units\n\nCN-0002 is a credit note with a total of 31.90 EUR.\nCI-0003 is a corrective note with a total of 4.10 EUR.\n\nBest regards,\nSales department"
+  },
+  "expected": {
+    "calls": 2,
+    "codes": [
+      0,
+      0,
+      0
+    ],
+    "docs": {
+      "SINV-0001": [
+        [
+          "CN-0001",
+          "credit_note",
+          -13.8
+        ]
+      ],
+      "SINV-0002": [
+        [
+          "CN-0002",
+          "credit_note",
+          -31.9
+        ],
+        [
+          "CI-0003",
+          "corrective_invoice",
+          4.1
+        ]
+      ]
+    },
+    "open_failures": 0,
+    "outputs": [
+      "",
+      "sent (as drafted)",
+      "rejected"
+    ],
+    "responses": {
+      "SINV-0001": {
+        "edited": false,
+        "sent": "Dear customer,\n\nThank you for signing delivery note CDN-0001 for invoice SINV-0001.\nYou reported these incidents:\n- GLV-NIT-XS: missing, 2 units\n\nCN-0001 is a credit note with a total of 13.80 EUR.\n\nBest regards,\nSales department",
+        "source": "model",
+        "status": "sent"
+      },
+      "SINV-0002": {
+        "edited": false,
+        "sent": null,
+        "source": "model",
+        "status": "rejected"
+      }
+    },
+    "results": {
+      "SINV-0001": "discrepancies",
+      "SINV-0002": "discrepancies"
+    }
+  },
+  "forms": {
+    "n1": {
+      "incidents": [
+        [
+          "GLV-NIT-XS",
+          "missing",
+          2
+        ]
+      ],
+      "note": 1,
+      "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT-XS missing 2\n"
+    },
+    "n2": {
+      "incidents": [
+        [
+          "GLV-NIT-XS",
+          "missing",
+          1
+        ],
+        [
+          "GLV-NIT200-S",
+          "damaged",
+          2
+        ],
+        [
+          "GLV-VIN-S",
+          "extra",
+          1
+        ]
+      ],
+      "note": 2,
+      "text": "Signed delivery note\nDelivery note: CDN-0002\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT-XS missing 1\nGLV-NIT200-S damaged 2\nGLV-VIN-S extra 1\n"
+    }
+  },
+  "id": "CR-036",
+  "initial_state": {
+    "seed": "db.seed, the orders served and the signed notes scanned; no response drafted yet"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    },
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "invoice": null,
+      "new_process": false,
+      "op": "responses"
+    },
+    {
+      "invoice": "SINV-0001",
+      "new_process": false,
+      "op": "approve"
+    },
+    {
+      "invoice": "SINV-0002",
+      "new_process": false,
+      "op": "reject"
+    }
+  ],
+  "tags": [
+    "discrepancies_response",
+    "approve",
+    "reject",
+    "both_documents"
+  ]
+}

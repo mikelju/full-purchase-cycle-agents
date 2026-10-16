@@ -1,0 +1,87 @@
+{
+  "dataset_version": "1.0",
+  "drafts": {
+    "SINV-0001": "Dear customer,\n\nThank you for signing delivery note CDN-0001 for invoice SINV-0001.\nYou reported these incidents:\n- GLV-NIT-XS: missing, 2 units\n\nCN-0001 is a credit note with a total of 13.80 EUR.\n\nBest regards,\nSales department"
+  },
+  "expected": {
+    "calls": 1,
+    "codes": [
+      0,
+      0
+    ],
+    "docs": {
+      "SINV-0001": [
+        [
+          "CN-0001",
+          "credit_note",
+          -13.8
+        ]
+      ]
+    },
+    "open_failures": 0,
+    "outputs": [
+      "",
+      "sent (edited)"
+    ],
+    "responses": {
+      "SINV-0001": {
+        "edited": true,
+        "sent": "Dear customer,\n\nWe have reviewed your signed delivery note and will send the documents shortly.\n\nBest regards,\nSales department",
+        "source": "model",
+        "status": "sent"
+      }
+    },
+    "results": {
+      "SINV-0001": "discrepancies"
+    }
+  },
+  "forms": {
+    "n1": {
+      "incidents": [
+        [
+          "GLV-NIT-XS",
+          "missing",
+          2
+        ]
+      ],
+      "note": 1,
+      "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT-XS missing 2\n"
+    }
+  },
+  "id": "CR-007",
+  "initial_state": {
+    "seed": "db.seed, the orders served and the signed notes scanned; no response drafted yet"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "invoice": null,
+      "new_process": false,
+      "op": "responses"
+    },
+    {
+      "body": "Dear customer,\n\nWe have reviewed your signed delivery note and will send the documents shortly.\n\nBest regards,\nSales department",
+      "invoice": "SINV-0001",
+      "new_process": false,
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "discrepancies_response",
+    "approve_edit"
+  ]
+}
