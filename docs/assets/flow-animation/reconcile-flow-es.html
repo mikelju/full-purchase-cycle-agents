@@ -177,7 +177,7 @@ body.clean header { display: none; }
     <g id="graph"></g>
     <rect class="frame" x="220" y="182" width="800" height="508" rx="10"/>
     <text class="flabel" x="232" y="204">cotejo a tres bandas</text>
-    <text class="small" x="1008" y="204" text-anchor="end">pedido vs albarán vs factura</text>
+    <text class="small" x="1008" y="204" text-anchor="end">orden de compra vs albarán vs factura</text>
     <g id="match"></g>
 
     <!-- right: database -->
@@ -239,8 +239,8 @@ const CASES = [
 const LATER = { file: "dn-006-thermometers.pdf", t: "PDF", ext: "albarán  E-0306  PO-0006  THERM-DIG 20", d: "20" };
 const RES = {
   matched: { color: TEAL, label: "CONCILIADA", list: "conciliada", db: "conciliada", cls: "ok" },
-  discrepancies: { color: ROSE, label: "CON DISCREPANCIAS", list: "discrepancias", db: "con discrepancias", cls: "bad" },
-  awaiting_delivery_note: { color: AMBER, label: "PENDIENTE DE ALBARÁN", list: "pendiente", db: "pendiente albarán", cls: "pending" },
+  discrepancies: { color: ROSE, label: "CON DISCREPANCIAS", list: "con discrepancias", db: "con discrepancias", cls: "bad" },
+  awaiting_delivery_note: { color: AMBER, label: "PENDIENTE DE ALBARÁN", list: "pendiente", db: "pendiente de albarán", cls: "pending" },
 };
 
 // ---------- left: file cards ----------
@@ -329,7 +329,7 @@ const chips = {
   rec: dbchip("reconciliations", 254, "", "ok", TEAL),
 };
 const TYPES = ["price", "quantity", "extra_line", "missing_line"];
-const TNAME = {price: "precio", quantity: "cantidad", extra_line: "línea extra", missing_line: "falta línea"};
+const TNAME = {price: "precio", quantity: "cantidad", extra_line: "sobrante", missing_line: "ausente"};
 const counts = {};
 const tchips = {};
 TYPES.forEach((t, i) => { tchips[t] = dbchip("discrepancies", 308 + i * 28, "", "zero", ROSE); fxOn(tchips[t]); });
@@ -605,8 +605,8 @@ async function secondScan() {
       await wait(400);
       resId.textContent = c.id; resRect.setAttribute("width", w); resRect.setAttribute("fill", R.color);
       resTxt.setAttribute("x", 372 + w / 2); resTxt.textContent = R.label;
-      note.textContent = "misma conciliación INV-0011, completada - sin segunda fila"; note.style.fill = "#0F766E";
-      dRows.forEach(d => fxOff(d.g)); fxOn(note);
+      note.textContent = "misma conciliación INV-0011, completada - no añade otra fila"; note.style.fill = "#0F766E";
+      dRows.forEach(d => fxOff(d.g)); fxOn(note); fxOn(diffG); fxOn(resG);
     },
     store: async () => {
       storeDn(c, LATER);

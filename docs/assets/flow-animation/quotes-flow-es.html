@@ -317,7 +317,7 @@ const chips = {
   order: dbchip("orders", 124, "web_form . recibido", "ok", PURPLE),
   line: dbchip("order_lines", 176, "GLV-NIT-XS           12", "ok", PURPLE),
   qr: dbchip("quote_requests", 284, "QR-0001 enviada", "pending", PURPLE),
-  off: {1: dbchip("quote_offers", 336, "SUP-001 declina", "zero", ROSE), 2: dbchip("quote_offers", 360, "SUP-002 12 x 4.10 total", "ok", TEAL), 3: dbchip("quote_offers", 384, "SUP-003  8 x 3.95 parcial", "pending", AMBER)},
+  off: {1: dbchip("quote_offers", 336, "SUP-001 declinada", "zero", ROSE), 2: dbchip("quote_offers", 360, "SUP-002 12 x 4.10 total", "ok", TEAL), 3: dbchip("quote_offers", 384, "SUP-003  8 x 3.95 parcial", "pending", AMBER)},
   po: dbchip("purchase_orders", 444, "PO-0001 SUP-002 emitida", "ok", TEAL),
 };
 const BX = 1150, BW = 86, SROWY = 232;
@@ -334,7 +334,7 @@ const OBX = [];
 
 // ---------- decision section: few words, big type ----------
 const CARDS = [
-  {n: 1, sup: "SUP-001", fig: "sin oferta", pill: ["DECLINA", ROSE]},
+  {n: 1, sup: "SUP-001", fig: "sin oferta", pill: ["DECLINADA", ROSE]},
   {n: 2, sup: "SUP-002", fig: "12/12  4.10", pill: ["TOTAL", TEAL]},
   {n: 3, sup: "SUP-003", fig: "8/12  3.95", pill: ["PARCIAL", AMBER]},
 ];
