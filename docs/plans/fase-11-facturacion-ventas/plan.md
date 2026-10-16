@@ -113,6 +113,7 @@ All live spend of the phase happens here, once, after `npm run check` is green w
 ## Deviations
 | ID | Summary | Affects criteria | Status |
 |---|---|---|---|
+| D1 | Earlier eval tests edited additively: `tests/test_claim_eval.py`, `tests/test_document_eval.py`, `tests/test_offer_eval.py`, `tests/test_reconcile_eval.py` and `tests/test_whatsapp_eval.py` append the three phase 11 suites to their expected lists and tails (the claim_eval assertion is restored to the exact position `ALL_SUITES[-4] == "claim_drafting"`); no assertion is looser than at commit debeb77. Why: those tests pin the exact suite list and the last suite, so no new suite can join `ALL_SUITES` without editing them. | C6, C16 | Approved by the owner on 2026-10-16 |
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
