@@ -1,6 +1,6 @@
 # 015 - LinkedIn series
 
-Status: delivered, in review
+Status: integrated (merged via PR #25)
 
 ## Contract
 Goal and reason:

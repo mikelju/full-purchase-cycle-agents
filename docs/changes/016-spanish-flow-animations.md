@@ -1,6 +1,6 @@
 # 016 - Spanish flow animations
 
-Status: delivered, in review
+Status: integrated (merged via PR #26)
 
 ## Contract
 Goal and reason:
