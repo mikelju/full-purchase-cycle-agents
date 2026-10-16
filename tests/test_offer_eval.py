@@ -177,7 +177,7 @@ def test_eval_all_includes_the_suite_once_its_baseline_is_recorded(monkeypatch):
     )
     args = argparse.Namespace(suite="all", mode="replay", split="test", set_baseline=False, workers=1)
     assert harness.cmd_eval(args) == 0
-    assert ran[-8:] == [
+    assert ran[-9:] == [
         "offer_extraction",
         "quote_decision",
         "reconciliation_matching",
@@ -186,6 +186,7 @@ def test_eval_all_includes_the_suite_once_its_baseline_is_recorded(monkeypatch):
         "claim_drafting",
         "sales_reconciliation",
         "customer_response",
+        "response_drafting",
     ]
     ran.clear()
     args.suite = ["offer_extraction"]

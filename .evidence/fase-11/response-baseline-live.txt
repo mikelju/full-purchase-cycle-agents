@@ -1,0 +1,42 @@
+response_drafting  mode=record  split=test  responses=60  model=claude-haiku-4-5
+metric                      value   95% CI          n     unit              target   target met  threshold  gate
+reference_accuracy          100.0%  [94.0, 100.0]   60    response          none     n/a         none       reported
+incident_coverage           100.0%  [96.7, 100.0]   114   incident          none     n/a         none       reported
+document_accuracy           100.0%  [94.9, 100.0]   72    document          none     n/a         none       reported
+invented_amount_rate        0.0%    [0.0, 6.0]      60    response          <=0.0%   met         none       reported  0 of 60, Wilson upper bound 6.0%
+case_pass_rate              100.0%  [94.0, 100.0]   60    response          >=95.0%  met         95.0%      PASS
+critical_errors             0.0%    [0.0, 6.0]      60    response          <=0.0%   met         none       reported  0 of 60, Wilson upper bound 6.0%
+regression vs baseline 2026-10-16: no significant drop (case_pass_rate lost 0 gained 0 p=1.00)
+per category:
+  missing_only               responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [61.0, 100.0] n=6   document_accuracy 100.0% [61.0, 100.0] n=6
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+  damaged_only               responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [61.0, 100.0] n=6   document_accuracy 100.0% [61.0, 100.0] n=6
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+  extra_delivered_sku        responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [61.0, 100.0] n=6   document_accuracy 100.0% [61.0, 100.0] n=6
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+  extra_sku_not_on_note      responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [61.0, 100.0] n=6   document_accuracy 100.0% [61.0, 100.0] n=6
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+  missing_and_damaged_line   responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [75.8, 100.0] n=12   document_accuracy 100.0% [61.0, 100.0] n=6
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+  several_types              responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [82.4, 100.0] n=18   document_accuracy 100.0% [75.8, 100.0] n=12
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+  credit_note_several_lines  responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [82.4, 100.0] n=18   document_accuracy 100.0% [61.0, 100.0] n=6
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+  corrective_invoice_several_lines responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [82.4, 100.0] n=18   document_accuracy 100.0% [61.0, 100.0] n=6
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+  both_documents             responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [75.8, 100.0] n=12   document_accuracy 100.0% [75.8, 100.0] n=12
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+  decimals_thousands         responses=6
+    reference_accuracy 100.0% [61.0, 100.0] n=6   incident_coverage 100.0% [75.8, 100.0] n=12   document_accuracy 100.0% [61.0, 100.0] n=6
+    invented_amount_rate 0.0% [0.0, 39.0] n=6   case_pass_rate 100.0% [61.0, 100.0] n=6   critical_errors 0.0% [0.0, 39.0] n=6
+failures: 0
+tokens: calls=60  uncached_input=69141  cache_read=0  cache_write=0  output=11390

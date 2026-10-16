@@ -186,7 +186,7 @@ def test_a_wrong_expectation_fails_the_suite_with_exit_one(tmp_path, capsys, mon
 
 
 def test_customer_response_is_a_local_suite():
-    assert "customer_response" in harness.SUITES and harness.ALL_SUITES[-1] == "customer_response"
+    assert "customer_response" in harness.SUITES and harness.ALL_SUITES[-2] == "customer_response"
     assert "customer_response" not in harness.UPLOAD_SUITES
     assert harness._suite("customer_response") is cr
 

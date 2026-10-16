@@ -155,9 +155,9 @@ def test_each_check_and_critical_error_is_graded():
     assert failed["critical_errors"] and not failed["case_pass_rate"] and failed["documents_ok"] == 0
 
 
-def test_the_suite_is_registered_for_run_only_and_outside_all_suites(monkeypatch):
+def test_the_suite_is_registered_in_all_suites_but_not_for_upload(monkeypatch):
     assert harness.SUITES[-1] == "response_drafting"
-    assert "response_drafting" not in harness.UPLOAD_SUITES and "response_drafting" not in harness.ALL_SUITES
+    assert "response_drafting" not in harness.UPLOAD_SUITES and harness.ALL_SUITES[-1] == "response_drafting"
     ran = []
     monkeypatch.setattr(
         harness, "_suite", lambda name: argparse.Namespace(evaluate=lambda *a, **k: ran.append(name) or 0)

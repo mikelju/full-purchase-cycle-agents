@@ -418,7 +418,7 @@ UPLOAD_SUITES = tuple(
 # `claim_approval` (phase 09) is deterministic and local, so it joined with its scenarios (increment 14).
 # `sales_reconciliation` (phase 11) is deterministic and local, so it joined with its scenarios (increment 13).
 # `customer_response` (phase 11) is deterministic and local, so it joined with its scenarios (increment 14).
-# `response_drafting` (phase 11) is in `SUITES` from increment 17 and joins `ALL_SUITES` with its baseline (increment 20);
+# `response_drafting` (phase 11) is in `SUITES` from increment 17 and joined `ALL_SUITES` with its baseline (increment 20);
 # LangSmith is left to a later change, so it is not in `UPLOAD_SUITES`.
 ALL_SUITES = (
     "order_line_extraction",
@@ -440,6 +440,7 @@ ALL_SUITES = (
     "claim_drafting",
     "sales_reconciliation",
     "customer_response",
+    "response_drafting",
 )
 
 
