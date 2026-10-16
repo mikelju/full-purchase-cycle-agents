@@ -156,7 +156,7 @@ const S = {
   nodes: { read: "leer", extract: "extraer", link: "enlazar", match: "cotejar", store: "guardar" },
   subs: { read: "txt pdf xlsx", extract: "Claude Haiku 4.5", link: "PO-NNNN", match: "código determinista", store: "SQLite" },
   heads: ["orden de compra", "albarán", "factura"],
-  introTitle: "Conciliar una factura: pedido, albarán y factura",
+  introTitle: "Conciliar factura, orden de compra y albarán",
   introCap: "el albarán llegó antes y ya está guardado",
   dnChip: "alb  ", invChip: "fac  ",
   res: { matched: { label: "CONCILIADA", db: "conciliada" }, discrepancies: { label: "CON DISCREPANCIAS", db: "discrepancias" } },
@@ -166,16 +166,16 @@ const S = {
       ext: "factura  F-2026-1001  PO-0001  GLV-NIT-M  100 x 4.20",
       caps: { read: "huella del archivo (SHA-256): nunca se procesa dos veces",
               extract: "Claude Haiku lee la factura: GLV-NIT-M, 100 x 4.20 EUR",
-              link: "la factura cita PO-0001: pedido encontrado",
-              match: "pedido 100 x 4.20 / albarán 100 / factura 100 x 4.20: todo coincide",
+              link: "la factura cita PO-0001: orden de compra encontrada",
+              match: "orden de compra 100 x 4.20 / albarán 100 / factura 100 x 4.20: todo coincide",
               store: "conciliación guardada, sin discrepancias" } },
     { title: "Caso 2 - no cuadra",
       ext: "factura  LV-0303  PO-0003  GAUZE-NS-5  35 x 5.00",
       diff: "GAUZE-NS-5  pedido 40, facturado 35  -25.00 EUR",
       caps: { read: "huella nueva",
               extract: "lee: GAUZE-NS-5, 35 x 5.00 EUR",
-              link: "cita PO-0003: pedido encontrado",
-              match: "pedido 40 / albarán 40 / factura 35: diferencia de cantidad, -25.00 EUR",
+              link: "cita PO-0003: orden de compra encontrada",
+              match: "orden de compra 40 / albarán 40 / factura 35: diferencia de cantidad, -25.00 EUR",
               store: "conciliación con discrepancias y una fila de discrepancia" } },
   ],
   nextTitle: "Qué pasa después",
@@ -442,8 +442,9 @@ function hooks(c, k) {
     },
     store: async () => {
       flash("supplier_documents"); fxOn(ch.inv);
-      setTimeout(() => { flash("reconciliations"); fxOn(ch.rec); }, 300);
-      if (c.bad) setTimeout(() => { flash("discrepancies"); fxOn(discChip); }, 600);
+      const my = runId;
+      setTimeout(() => { if (my === runId) { flash("reconciliations"); fxOn(ch.rec); } }, 300);
+      if (c.bad) setTimeout(() => { if (my === runId) { flash("discrepancies"); fxOn(discChip); } }, 600);
     },
   };
 }

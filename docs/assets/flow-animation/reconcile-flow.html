@@ -441,8 +441,9 @@ function hooks(c, k) {
     },
     store: async () => {
       flash("supplier_documents"); fxOn(ch.inv);
-      setTimeout(() => { flash("reconciliations"); fxOn(ch.rec); }, 300);
-      if (c.bad) setTimeout(() => { flash("discrepancies"); fxOn(discChip); }, 600);
+      const my = runId;
+      setTimeout(() => { if (my === runId) { flash("reconciliations"); fxOn(ch.rec); } }, 300);
+      if (c.bad) setTimeout(() => { if (my === runId) { flash("discrepancies"); fxOn(discChip); } }, 600);
     },
   };
 }
