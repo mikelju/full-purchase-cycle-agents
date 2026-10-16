@@ -36,6 +36,9 @@ MODES = ("live", "record", "replay")
 OUTBOX_DIR = DATA_DIR / "outbox"  # simulated WhatsApp replies
 SUPPLIER_OUTBOX_DIR = DATA_DIR / "supplier_outbox"  # simulated quote request and reminder emails
 CUSTOMER_DELIVERY_NOTES_DIR = DATA_DIR / "customer_delivery_notes"  # customer delivery note text files
+CUSTOMER_INVOICES_DIR = DATA_DIR / "customer_invoices"  # customer invoice and correcting document text files
+SIGNED_NOTES_INBOX = DATA_DIR / "signed_notes_inbox"  # demo inbox of signed delivery notes
+CUSTOMER_OUTBOX = DATA_DIR / "customer_outbox"  # simulated emails to customers
 
 
 def default_db_path() -> Path:
