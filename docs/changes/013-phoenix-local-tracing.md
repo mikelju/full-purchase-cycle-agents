@@ -59,6 +59,7 @@ Only changes of approach or scope with their reason.
 - Owner decision of 2026-10-15: one live run of the order demo with the real model is authorized, with LangSmith off.
   It ran once with the four LangSmith tracing variables `false` and both LangSmith keys empty in its environment, which `load_dotenv` does not override from `.env`; Phoenix received 3 CHAIN spans (graph, `extract`, `match`) and 1 LLM span (`ChatAnthropic`, `claude-haiku-4-5-20251001`), and no recording changed (`.evidence/cambio-013/c2-spans.txt`).
 - Owner decision of 2026-10-15: the launcher sets `PHOENIX_CSRF_TRUSTED_ORIGINS=http://127.0.0.1:6006,http://localhost:6006`, so Phoenix answers 401 to any request whose `Origin` or `Referer` is another host, and the always-on wildcard CORS of the anonymous OAuth and `/.well-known/` paths is accepted as SEC-026 in `docs/security.md` (`.evidence/cambio-013/c1.txt`).
+- Owner decision of 2026-10-16: the origin check compares hostnames only, skips requests with neither `Origin` nor `Referer`, and Phoenix never checks `Host`, so a DNS-rebinding page could read spans; this is accepted as SEC-027 (test data, single local operator, Chrome prompts) until Phoenix authentication is used, and SEC-026 now states the check as it is.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
