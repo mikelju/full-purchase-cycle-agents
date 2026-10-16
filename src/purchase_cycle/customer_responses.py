@@ -11,9 +11,10 @@ from pathlib import Path
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command
 
 from purchase_cycle import config, db, llm, quotes, review, sales, sim_clock
-from purchase_cycle.claims import _near, _own_file_date, _token, mentions, money_amounts
+from purchase_cycle.claims import DecisionRefused, _near, _own_file_date, _token, mentions, money_amounts
 from purchase_cycle.receipts import COMPANY, ascii_text
 
 RESPONSE_SUBJECT = "Response to your delivery note {delivery_note} on invoice {invoice}"
@@ -377,3 +378,158 @@ def build_response_graph(
     builder.add_edge("send", END)
     builder.add_edge("close", END)
     return builder.compile(checkpointer=checkpointer, name="customer_response")
+
+
+# ---- drafting for every candidate and the operator decisions ----
+
+
+def _config(conn: sqlite3.Connection, invoice_id: int) -> dict:
+    return {"configurable": {"thread_id": response_thread_id(conn, invoice_id)}}
+
+
+def response_of(conn: sqlite3.Connection, invoice_id: int) -> dict | None:
+    """The stored response of an invoice as a dict, or None."""
+    row = _response_row(conn, invoice_id)
+    return None if row is None else dict(row)
+
+
+def candidates(conn: sqlite3.Connection) -> list[int]:
+    """Invoice ids whose sales reconciliation is `discrepancies` and that have no response yet, in invoice order."""
+    rows = conn.execute(
+        "SELECT r.invoice_id FROM sales_reconciliations r LEFT JOIN customer_responses p ON p.reconciliation_id = r.id "
+        "WHERE r.result = 'discrepancies' AND p.id IS NULL ORDER BY r.invoice_id"
+    )
+    return [row[0] for row in rows]
+
+
+def draft_responses(
+    db_path: Path | str,
+    checkpointer,
+    client: llm.ModelClient,
+    invoices_dir: Path | str | None = None,
+    outbox: Path | str | None = None,
+) -> list[dict]:
+    """Draft one response per candidate and stop each thread at the review; a thread that already exists is resumed."""
+    graph = build_response_graph(db_path, client, invoices_dir, outbox, checkpointer)
+    results = []
+    conn = db.connect(db_path)
+    try:
+        for invoice_id in candidates(conn):
+            run = _config(conn, invoice_id)
+            waiting = graph.get_state(run).next
+            if waiting and waiting[0] != "draft":  # a thread of an earlier database: it has no row to decide
+                checkpointer.delete_thread(run["configurable"]["thread_id"])
+            graph.invoke(None if graph.get_state(run).next else {"invoice_id": invoice_id}, run)
+            results.append(
+                {
+                    "invoice_id": invoice_id,
+                    "facts": response_facts(conn, invoice_id),
+                    "response": response_of(conn, invoice_id),
+                }
+            )
+    finally:
+        conn.close()
+    return results
+
+
+def _check_awaiting(conn: sqlite3.Connection, invoice_id: int) -> None:
+    ref = _invoice_number(conn, invoice_id)
+    row = response_of(conn, invoice_id)
+    if row is None:
+        raise DecisionRefused(f"no response for {ref}; run sales responses first")
+    if row["status"] != AWAITING:
+        raise DecisionRefused(f"response {ref} is {row['status']}, not {AWAITING}")
+
+
+def _paused(db_path: Path | str, checkpointer, invoice_id: int) -> str | None:
+    """The node the response thread waits at, or None when it has no checkpoint or is finished."""
+    graph = build_response_graph(db_path, None, None, None, checkpointer)
+    conn = db.connect(db_path)
+    try:
+        row = response_of(conn, invoice_id)
+        run = _config(conn, invoice_id)
+    finally:
+        conn.close()
+    message = {"to": row["recipient"], "subject": row["subject"], "body": row["draft_body"]}
+    state = graph.get_state(run)
+    node = state.next[0] if state.next else None
+    # A thread of this response waits at the review or the send with the stored draft, or at the close; anything else
+    # (no thread, a stop at the draft, a finished thread, a message of another database) is rebuilt from the stored row.
+    own = node == "close" or (node in ("review", "send") and state.values.get("message") == message)
+    if not own:
+        graph.update_state(run, {"invoice_id": invoice_id, "message": message}, as_node="draft")
+        node = graph.get_state(run).next[0]
+    return node
+
+
+def _resume(db_path: Path | str, checkpointer, invoices_dir, outbox, invoice_id: int, answer: dict | None) -> None:
+    """Resume the thread with an answer for the pause, or with none to finish a node that stopped halfway."""
+    graph = build_response_graph(db_path, None, invoices_dir, outbox, checkpointer)
+    conn = db.connect(db_path)
+    try:
+        run = _config(conn, invoice_id)
+    finally:
+        conn.close()
+    graph.invoke(None if answer is None else Command(resume=answer), run)
+
+
+def _decided(db_path: Path | str, invoice_id: int) -> dict:
+    conn = db.connect(db_path)
+    try:
+        return response_of(conn, invoice_id)
+    finally:
+        conn.close()
+
+
+def approve_response(
+    db_path: Path | str,
+    checkpointer,
+    invoices_dir: Path | str,
+    outbox: Path | str,
+    invoice_id: int,
+    body: str | None = None,
+) -> dict:
+    """Send the draft, or `body` in its place, with the documents; refused commands change nothing."""
+    conn = db.connect(db_path)
+    try:
+        ref = _invoice_number(conn, invoice_id)
+        _check_awaiting(conn, invoice_id)
+        run = _config(conn, invoice_id)
+    finally:
+        conn.close()
+    if body is not None and not body.strip():
+        raise DecisionRefused("the body text is empty")
+    node = _paused(db_path, checkpointer, invoice_id)
+    if node == "close":
+        raise DecisionRefused(f"response {ref} is being rejected; run reject to finish it")
+    if node not in ("review", "send"):
+        raise DecisionRefused(f"no paused response for {ref} in the checkpoints file; run sales responses first")
+    answer = None
+    if node == "send":
+        recorded = build_response_graph(db_path, None, None, None, checkpointer).get_state(run).values
+        if body is not None and body != recorded.get("final_body"):
+            raise DecisionRefused(
+                f"response {ref} already has an earlier decision that is being completed; "
+                "run approve without --body-file to finish it"
+            )
+    if node == "review":
+        answer = {"action": review.APPROVE} if body is None else {"action": review.EDIT, "body": body}
+    _resume(db_path, checkpointer, invoices_dir, outbox, invoice_id, answer)
+    return _decided(db_path, invoice_id)
+
+
+def reject_response(db_path: Path | str, checkpointer, invoice_id: int) -> dict:
+    """Close an awaiting response as `rejected`, with no email and no document file."""
+    conn = db.connect(db_path)
+    try:
+        ref = _invoice_number(conn, invoice_id)
+        _check_awaiting(conn, invoice_id)
+    finally:
+        conn.close()
+    node = _paused(db_path, checkpointer, invoice_id)
+    if node == "send":
+        raise DecisionRefused(f"response {ref} is being sent; run approve to finish it")
+    if node not in ("review", "close"):
+        raise DecisionRefused(f"no paused response for {ref} in the checkpoints file; run sales responses first")
+    _resume(db_path, checkpointer, None, None, invoice_id, {"action": review.REJECT} if node == "review" else None)
+    return _decided(db_path, invoice_id)

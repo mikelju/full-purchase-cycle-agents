@@ -2024,6 +2024,10 @@ def main(argv=None) -> int:
 
     add_receipts_commands(sub)
 
+    from purchase_cycle.sales_cli import add_sales_commands
+
+    add_sales_commands(sub)
+
     from purchase_cycle.evaluation.cli import add_eval_commands
 
     add_eval_commands(sub)
