@@ -1,0 +1,6 @@
+Signed delivery note
+Delivery note: CDN-0099
+Customer: CLI-001
+Signed by: Laura Etxeberria
+Signing date: 2026-10-14
+Received in full

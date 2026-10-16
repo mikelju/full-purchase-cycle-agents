@@ -1,0 +1,7 @@
+[
+  {"customer_code": "CLI-001", "lines": [{"sku": "GLV-NIT-S", "quantity": 20}, {"sku": "GLV-NIT-M", "quantity": 30}]},
+  {"customer_code": "CLI-002", "lines": [{"sku": "GLV-NIT-L", "quantity": 40}, {"sku": "GLV-NIT-XL", "quantity": 50}]},
+  {"customer_code": "CLI-003", "lines": [{"sku": "GLV-NIT200-S", "quantity": 60}, {"sku": "GLV-NIT200-M", "quantity": 30}]},
+  {"customer_code": "CLI-004", "lines": [{"sku": "GLV-NIT-M", "quantity": 20}]},
+  {"customer_code": "CLI-001", "lines": [{"sku": "GLV-NIT200-S", "quantity": 25}]}
+]

@@ -1,0 +1,7 @@
+Signed delivery note
+Delivery note: CDN-0003
+Customer: CLI-003
+Signed by: Maite Urrutia
+Signing date: 2026-10-14
+Incidents:
+GLV-NIT200-M missing 4

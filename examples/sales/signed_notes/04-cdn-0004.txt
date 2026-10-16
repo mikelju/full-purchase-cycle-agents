@@ -1,0 +1,6 @@
+Signed delivery note
+Delivery note: CDN-0004
+Customer: CLI-004
+Signed by: Iker Salaberria
+Signing date: 2026-10-14
+Received in full
