@@ -10,7 +10,8 @@ Phase 06 (quote requests and wait) integrated (merged via PR #11): quote request
 Phase 07 (quotes, decision) integrated (merged via PR #13): offer extraction with Claude Haiku 4.5, a fixed comparison rule, a human approval after a pause with saved state and an issued purchase order, with two new evaluations.
 Phase 08 (reconciliation, detection) integrated (merged via PR #18): supplier invoices and delivery notes in text, PDF and Excel are read with Claude Haiku 4.5, linked to a purchase order, matched in plain code with a stated tolerance and stored with each difference, with two new evaluations; its LangSmith trace evidence is pending.
 Phase 09 (reconciliation, claim) integrated (merged via PR #20): a claim email to the supplier is drafted with Claude Haiku 4.5, checked by code, approved, edited or rejected by a person after a pause with saved state, and written to the outbox, with two new evaluations; its LangSmith trace evidence is pending.
-Phase 10 (goods receipt and serving) is built on its branch, not yet delivered: a reconciled supplier delivery note puts its goods into stock, the waiting customer orders that stock covers are served and a customer delivery note is written as a local file, in plain code with no model call and one new evaluation; its LangSmith trace evidence is pending.
+Phase 10 (goods receipt and serving) integrated (merged via PR #21): a reconciled supplier delivery note puts its goods into stock, the waiting customer orders that stock covers are served and a customer delivery note is written as a local file, in plain code with no model call and one new evaluation; its LangSmith trace evidence is pending.
+Phase 11 (customer invoicing and sales reconciliation) is built on its branch, not yet delivered: each customer delivery note gets an invoice, the signed delivery note the customer returns with incidents is reconciled with the phase 08 matching, and each invoice with differences gets a response and a credit note or corrective invoice that a person approves, edits or rejects, with two new deterministic evaluations; the `response_drafting` evaluation and the live drafting recording are still to come, and its trace evidence is local only.
 
 ![Three orders from email, WhatsApp and the web form run independently through the orders graph; one of them ends in a supplier quote request](docs/assets/purchase-cycle-flow.gif)
 
@@ -548,6 +549,127 @@ By default (`--mode replay`) it reads the extraction answers from the phase 08 r
 - The delivered quantity read by the model goes into stock with no human check (SEC-022 in `docs/security.md`).
 - The phase 08 limitations remain: one invoice and one delivery note per order, fixed tolerances, and the DOC-060 and DOC-112 extraction errors until their change lands.
 
+## Invoice customers and answer their incidents
+
+Phase 11 is the sales side of the cycle: every customer delivery note of phase 10 gets our invoice, the customer returns the delivery note signed with its incidents, and each invoice with differences gets a response and a correcting document that a person approves, edits or rejects.
+It reuses the phase 08 matching (`reconcile_match.classify`, generalised to an order of several lines with the same results on the purchase side), the phase 09 drafting pattern and the phase 09 `review` node unchanged.
+Two graphs do it: `sales` (`src/purchase_cycle/sales.py`, nodes `invoice`, `read`, `link`, `match` and `store`, no model call and no pause) and `customer_response` (`src/purchase_cycle/customer_responses.py`, nodes `draft`, `review`, then `send` or `close`, one thread `response-SINV-NNNN` per invoice).
+The new tables are `customer_invoices`, `customer_invoice_lines`, `signed_delivery_notes`, `signed_note_incidents`, `sales_reconciliations`, `sales_discrepancies`, `customer_corrections` and `customer_responses`; the purchase-side tables are not altered.
+
+### The invoice
+
+`sales invoice` issues one invoice `SINV-NNNN` per customer delivery note that has none, with no pause: one line per delivery note line (SKU, quantity, unit price from `products.price_eur` at issue time, line total) and the net total in EUR, with the issue time from the simulated clock.
+It writes a plain ASCII text file `SINV-NNNN.txt` in `data/customer_invoices/` (`--invoices-dir` to change it).
+Prices are net catalog prices: there is no VAT, discount or customer price list, so a price difference cannot arise on the sales side.
+A second `sales invoice` with nothing new changes nothing.
+
+### The signed delivery note
+
+The customer returns a plain text file in a fixed form, read by code with no model call:
+
+```
+Signed delivery note
+Delivery note: CDN-0001
+Customer: CLI-001
+Signed by: Laura Etxeberria
+Signing date: 2026-10-14
+Incidents:
+GLV-NIT-S missing 5
+GLV-NIT-M damaged 2
+```
+
+A note either lists incidents, one per line as `SKU type units` with the type `missing`, `extra` or `damaged`, or states that it was received in full; `examples/sales/signed_notes/` holds five samples.
+`sales scan <folder>` reads the `.txt` files in name order and processes each content once by its hash.
+A file that names no known delivery note, a note that is already signed or a note of another customer is stored as `unlinked` with its reason.
+A file that does not follow the form, names a SKU outside the catalog, has a non-whole or non-positive quantity or a `missing` or `damaged` count above the delivered units is parked as a `failures` row (`needs_review`, step `signed_note`) and the other files go on.
+The accepted units per SKU are the delivery note units minus `missing` minus `damaged` plus `extra`.
+
+### Sales matching
+
+Once the signed note of an invoice is stored, `sales scan` reconciles it with the phase 08 rules and tolerance: the order is the customer order at the invoice unit prices, the invoice is our invoice and the delivery note is the accepted quantities.
+The result is `matched` (a note received in full), `discrepancies` or, with no signed note yet, `awaiting_delivery_note` with no rows.
+Each difference row keeps the incident type that caused it (`missing`, `extra` or `damaged`) next to the phase 08 type; an `extra` SKU that is not on the delivery note is reported as a quantity difference with 0 invoiced and N accepted, so no new difference type exists.
+
+### The correcting documents
+
+The amounts are computed by code from the difference rows, never by a model or a person.
+Units invoiced and not accepted (`missing`, `damaged`) give a credit note `CN-NNNN` with negative lines and total; units accepted and not invoiced (`extra`) give a corrective invoice `CI-NNNN` with positive lines and total; an invoice with both gets both in one response.
+Each document references its invoice `SINV-NNNN`, is stored in `customer_corrections` and its text file is written only when the response is approved.
+
+### The response and its fact check
+
+`sales responses` drafts one response for every `discrepancies` invoice that has none.
+The recipient and the subject are set by code; Claude Haiku 4.5 (task `response_drafting`, through the same client in live, record and replay modes) writes only the body, one call per response, from the structured facts: customer name, invoice and delivery note numbers, each incident with SKU, product name, type and units, each correcting document with its lines and total, and the invoice net total.
+A deterministic check, in the style of the phase 09 claim check and with its amount pattern, requires the invoice and delivery note numbers, every incident SKU with its units and every document number with its total, allows no money amount outside the facts (half a cent apart) and requires ASCII text under a fixed length.
+A draft that fails the schema check or the fact check is replaced by a fixed English template filled from the same facts, stored with source `template`, and writes a `failures` row (`needs_review`, step `response_drafting`); the other responses go on.
+The drafted response and its planned documents are stored, so a second `sales responses` drafts nothing and calls no model, and a graph resumed after a crash reads the stored response back.
+
+### Approve, edit or reject
+
+Every response pauses at the phase 09 `review` node with its state in the checkpoint file, so the pause survives the end of the process.
+
+```
+uv run purchase-cycle sales approve SINV-0001
+uv run purchase-cycle sales approve SINV-0002 --body-file examples/sales/response_edit.txt
+uv run purchase-cycle sales reject SINV-0003
+```
+
+`approve` writes `RESPONSE-SINV-NNNN.eml` to the customer outbox `data/customer_outbox/` (`--outbox` to change it) and the text files of its documents next to the invoice; `--body-file` replaces only the email body, and the amounts and documents stay the ones computed by code.
+`reject` closes the response and writes nothing.
+An empty edited text, a second decision, an invoice with no response and an unknown or malformed reference are refused with a message and change nothing.
+Nothing is sent to the customer: the `.eml` is a local file.
+
+### Sales commands
+
+```
+uv run purchase-cycle sales invoice [--invoices-dir DIR]
+uv run purchase-cycle sales scan FOLDER [--invoices-dir DIR] [--checkpoints FILE]
+uv run purchase-cycle sales responses [--mode live|record|replay] [--recordings FILE] [--checkpoints FILE]
+uv run purchase-cycle sales approve SINV-0001 [--body-file FILE] [--outbox DIR]
+uv run purchase-cycle sales reject SINV-0001
+uv run purchase-cycle sales list
+uv run purchase-cycle sales show SINV-0001
+```
+
+`sales list` shows each invoice with its delivery note, net total, result, incident counts by type and response status; `sales show` prints the invoice, the incidents, the differences, the documents and the response.
+`--db` is a global option placed before the subcommand, and the state is in the database, so each command can run in its own process.
+A second `sales invoice` or `sales scan` with nothing new changes nothing.
+
+### Run the sales demo
+
+```
+uv run purchase-cycle sales-demo [--mode replay|record|live] [--workdir DIR] [--recordings FILE] [--sales DIR]
+```
+
+`sales-demo` starts from a fresh database in `data/sales-demo/` (`--workdir <folder>` to change it).
+It seeds the five customer orders of `examples/sales/customer_orders.json`, serves them with `receipts run`, then runs each step as its own process: `sales invoice`, `sales scan examples/sales/signed_notes`, `sales list`, `sales responses`, one `sales approve` as drafted, one `sales approve --body-file examples/sales/response_edit.txt`, one `sales reject`, and a `sales show` of each invoice.
+It ends with a summary of one `matched`, one `awaiting_delivery_note` and three `discrepancies` invoices, three credit notes, one corrective invoice, the three decisions (sent as drafted, sent edited, rejected) and one unlinked signed note; it exits non-zero when any of these is missing.
+By default (`--mode replay`) it reads the drafts from `evals/recordings/sales_demo.jsonl` and needs no key and no network.
+That recording is made once with `--mode record` and the owner's key in increment 21 of the phase plan; until it is versioned, replay needs `--recordings <file>` with a recording of the `response_drafting` task.
+`--mode record` and `--mode live` need `ANTHROPIC_API_KEY`.
+
+To see the trace of a run in the local Phoenix, start `npm run phoenix` in one terminal and run the demo in another with `PHOENIX_TRACING=true` (see "See local traces in Phoenix"): each `sales` node and each `customer_response` thread (its spans carry `session.id` and `metadata.thread_id`) appear in `http://127.0.0.1:6006`, and the model call too in a live or record run.
+Phoenix tracing is never set up inside `npm run check`.
+
+### Evaluations of the sales side
+
+- `sales_reconciliation` (46 hand-built scripted scenarios, deterministic, no model) runs invoicing, signed note reading, matching and the correcting documents through the CLI functions on a temporary database; gate: 100% scenario success and 0 critical errors.
+- `customer_response` (40 hand-built scripted scenarios, deterministic) runs drafting, the template fallback and the decisions with a test double of the model client that counts calls; the same gate.
+- `response_drafting` (the model draft scored by the fact check, with its dataset, split, metrics, baseline and gates) is built in increments 17 and 21 of the phase plan: figures pending.
+- Run them with `uv run purchase-cycle eval --suite sales_reconciliation` or `--suite customer_response`; both are part of `npm run eval` and `npm run check`.
+
+### Limitations of the sales step
+
+- The signed note is a fixed text form; a free-text or scanned note is not read.
+- No VAT, discounts or price lists; amounts are net catalog prices, and payment, due dates and reminders are out of scope.
+- One invoice and one signed note per delivery note; no grouped invoices and no later or partial signatures.
+- Incidents change money only: stock, re-delivery of missing or damaged goods and returns are not handled.
+- The response and its documents are local files; nothing is sent to the customer and no answer from the customer is handled.
+- An edited response is sent as written: only an empty text is refused and the fact check does not apply to it (SEC-029 in `docs/security.md`).
+- The tone and wording of a draft are not scored, only its facts, and a person reviews every response before it is written.
+- The trace of this phase is local to the owner's machine; the LangSmith trace and the `response_drafting` experiment come with a later change.
+- The phase 08 limitations remain on the purchase side: one invoice and one delivery note per order, fixed tolerances, and the DOC-060 and DOC-112 extraction errors until their change lands.
+
 ## See local traces in Phoenix
 
 During development the graph runs can be traced in a local Arize Phoenix instead of LangSmith; LangSmith tracing works as before.
@@ -670,7 +792,7 @@ Limits:
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and the seventeen evaluations in replay mode.
+Runs the method's hook tests, ruff, pytest and the nineteen evaluations in replay mode (twenty once `response_drafting` lands).
 
 ## The golden dataset
 
@@ -817,7 +939,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the seventeen evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
+`npm run eval` replays the nineteen evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:

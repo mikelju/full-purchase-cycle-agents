@@ -33,6 +33,8 @@ Since phase 05, SEC-003, SEC-004 and SEC-007 also affect the WhatsApp channel: t
 | SEC-025 | Low | `receipts run` in `src/purchase_cycle/receipts_cli.py` and the receipt graph | Two overlapping `receipts run` processes on one database make the second fail with an `IntegrityError`; the stock stays correct thanks to the `CHECK (on_hand >= 0)` and `UNIQUE` guards, but the second run crashes instead of waiting | open - accepted for a single local operator | phase 10, review round 1 |
 | SEC-026 | Low | Local Phoenix server started by `npm run phoenix` (`src/purchase_cycle/phoenix_server.py`, `arize-phoenix==20.18.0`) | Phoenix's `AnonymousCorsMiddleware` always sends `Access-Control-Allow-Origin: *` on `/oauth2/register`, `/oauth2/token`, `/oauth2/revoke` and `/.well-known/*`, and no setting turns it off; with authentication off the OAuth routes are not mounted and `/.well-known/oauth-protected-resource` serves only static metadata, so a web page can read no trace data there, while every other path compares the hostname of the request's `Origin`, or else its `Referer`, with `PHOENIX_CSRF_TRUSTED_ORIGINS` when the request carries either header (limits in SEC-027) | accepted - owner decision of 2026-10-15; recheck these paths on every Phoenix upgrade | change 013, review |
 | SEC-027 | Low | Local Phoenix server started by `npm run phoenix` (`src/purchase_cycle/phoenix_server.py`, `arize-phoenix==20.18.0`) | Phoenix's `RequestOriginHostnameValidator` compares hostnames only, so any local port on `127.0.0.1` or `localhost` is trusted (`POST /graphql` with `Origin: http://127.0.0.1:9999` answers 200, `.evidence/cambio-013/c1.txt`); it skips requests that carry neither `Origin` nor `Referer`, and Phoenix never checks `Host`; a DNS-rebinding page served as `http://attacker.example:6006` can therefore send same-origin GET requests with `referrerPolicy: 'no-referrer'` and read the stored spans, while its writes carry `Origin` and get 401; Chrome's local network access prompt mitigates it, other browsers may not | accepted - owner decision of 2026-10-16: test data, single local operator, Chrome prompts; closing it needs Phoenix authentication | change 013, review round 2 |
+| SEC-028 | Low | `sales scan` and `sales show` in `src/purchase_cycle/sales_cli.py` and the signed note reader in `src/purchase_cycle/sales.py` | The signer name and the reasons of a rejected or unlinked signed note come from a customer file, are stored in `signed_delivery_notes` and are printed unescaped, so control characters reach the terminal; the file is read with a fixed form and the name never reaches a model prompt, an email or a file name; this extends SEC-004 and SEC-024 | open - accepted for a single local operator | phase 11 |
+| SEC-029 | Low | `--body-file` of `sales approve` in `src/purchase_cycle/sales_cli.py` and the invoice folder (default `data/customer_invoices/`) | The edited text is read with no size limit and is not run through the response fact check, so a very large or unchecked file is sent as the approver's own text (as SEC-020); the invoice and correcting document files hold the customer name, delivered quantities and prices with no retention period or purge command (as SEC-021), and the folder option is not confined to `data/` (as SEC-023); the data is synthetic today | open - before real customer data | phase 11 |
 
 ## Options
 
@@ -64,3 +66,12 @@ SEC-024:
 SEC-025:
 - Accept the risk for a single local operator.
 - Take a database lock (a `BEGIN IMMEDIATE` run lock or a lock file) at the start of `receipts run` so the second process waits or exits with one message.
+
+
+SEC-028:
+- Accept the risk for a single local operator.
+- Print customer text with `ascii_text` or an escape of control characters, as SEC-024 proposes.
+
+SEC-029:
+- Accept the risk while the data is synthetic.
+- Apply a size limit and the response fact check to an edited body, and add a retention period and a purge command with the ones for SEC-012 and SEC-021.

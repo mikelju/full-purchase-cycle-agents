@@ -308,3 +308,38 @@ def test_phase_10_files_are_tracked_and_hold_no_keys():
         assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
     # The sample documents of phase 08 stay as they were: no file is added under examples/invoices/.
     assert len([f for f in tracked if f.startswith("examples/invoices/")]) == 17
+
+
+def test_phase_11_files_are_tracked_and_hold_no_keys():
+    tracked = set(_tracked())
+    fixed = [
+        "src/purchase_cycle/sales.py",
+        "src/purchase_cycle/sales_cli.py",
+        "src/purchase_cycle/customer_responses.py",
+        "src/purchase_cycle/evaluation/sales_reconciliation_eval.py",
+        "src/purchase_cycle/evaluation/customer_response_eval.py",
+        "examples/sales/customer_orders.json",
+        "examples/sales/response_edit.txt",
+    ]
+    folders = [
+        ROOT / "examples" / "sales" / "signed_notes",
+        ROOT / "evals" / "datasets" / "sales_reconciliation",
+        ROOT / "evals" / "datasets" / "customer_response",
+    ]
+    # Increments 17 and 21 add the drafting dataset and the two recordings; they are scanned from the day they exist.
+    optional = [
+        "evals/recordings/response_drafting.jsonl",
+        "evals/recordings/sales_demo.jsonl",
+        "evals/baselines/response_drafting.json",
+    ]
+    fixed += [name for name in optional if (ROOT / name).exists()]
+    drafting = ROOT / "evals" / "datasets" / "response_drafting"
+    if drafting.is_dir():
+        folders.append(drafting)
+    files = sorted(str(p.relative_to(ROOT).as_posix()) for folder in folders for p in folder.rglob("*") if p.is_file())
+    assert len([f for f in files if f.startswith("examples/sales/signed_notes/")]) == 5
+    assert len([f for f in files if f.startswith("evals/datasets/sales_reconciliation/")]) >= 30
+    assert len([f for f in files if f.startswith("evals/datasets/customer_response/")]) >= 24
+    for name in fixed + files:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
