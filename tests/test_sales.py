@@ -673,3 +673,74 @@ def test_received_in_full_with_a_repeated_sku_is_matched(tmp_path):
     conn = _signed_and_reconciled(tmp_path, "Received in full", lines=((A, 2), (A, 3)))
     (row,) = _recon(conn)
     assert row["result"] == "matched" and _diffs(conn) == []
+
+
+# ---- increment 23 review fixes ----
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        lambda n: _form(n, _incidents((A, "extra", "99999999999999999999"))),
+        lambda n: _form(n).replace(f"CDN-{n:04d}", "CDN-99999999999999999999"),
+    ],
+)
+def test_an_oversized_integer_is_parked_as_a_format_failure_and_the_others_are_read(tmp_path, bad):
+    conn = _parked(tmp_path, bad)
+    assert _one_failure(conn)
+    assert [r["status"] for r in _signed(conn)] == ["linked"]  # the good file
+
+
+def test_a_foreign_invoice_file_is_not_overwritten_and_the_invoice_is_parked(tmp_path):
+    conn = _conn(tmp_path)
+    _served(tmp_path, conn, [(A, 1)])
+    foreign = tmp_path / "inv" / "SINV-0001.txt"
+    foreign.parent.mkdir()
+    foreign.write_text("someone else's file\n", encoding="ascii")
+    assert [i["number"] for i in sales.invoice(conn, tmp_path / "inv")] == ["SINV-0001"]
+    assert foreign.read_text(encoding="ascii") == "someone else's file\n"
+    assert _failures(conn) == [("invoice-file-SINV-0001", "sales", "invoice_file", "needs_review")]
+    sales.invoice(conn, tmp_path / "inv")
+    assert len(_failures(conn)) == 1
+
+
+def test_an_identical_existing_invoice_file_is_accepted(tmp_path):
+    conn = _conn(tmp_path)
+    _served(tmp_path, conn, [(A, 1)])
+    sales.invoice(conn, tmp_path / "inv")
+    sales.invoice(conn, tmp_path / "inv")
+    assert _failures(conn) == []
+
+
+def test_resuming_an_interrupted_run_says_that_the_new_folder_is_not_read_yet(tmp_path, capsys):
+    db_path, inv, inbox, saver = _sales_scenario(tmp_path / "resume")
+    sales.run_sales(db_path, inv, inbox, saver, interrupt_after=["invoice"])
+    other = tmp_path / "other"
+    other.mkdir()
+    sales.run_sales(db_path, inv, other, saver)
+    assert "resuming the interrupted run sales-run-0001" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("node", ["invoice", "read", "link", "match", "store"])
+def test_a_run_that_raises_inside_a_node_and_is_resumed_ends_like_an_uninterrupted_run(tmp_path, monkeypatch, node):
+    names = {"invoice": "invoice", "read": "read_notes", "link": "link_notes", "match": "reconcile", "store": "plan_corrections"}
+    original = getattr(sales, names[node])
+    calls = []
+
+    def crash_after_effect(*args, **kwargs):
+        result = original(*args, **kwargs)
+        if not calls:
+            calls.append(1)
+            raise RuntimeError("crash after the effect")
+        return result
+
+    db_path, inv, inbox, saver = _sales_scenario(tmp_path / "crash")
+    monkeypatch.setattr(sales, names[node], crash_after_effect)
+    with pytest.raises(RuntimeError):
+        sales.run_sales(db_path, inv, inbox, saver)
+    sales.run_sales(db_path, inv, inbox, saver)
+    ref_db, ref_inv, ref_inbox, ref_saver = _sales_scenario(tmp_path / "plain")
+    monkeypatch.undo()
+    sales.run_sales(ref_db, ref_inv, ref_inbox, ref_saver)
+    assert _sales_dump(db.connect(db_path), inv) == _sales_dump(db.connect(ref_db), ref_inv)
+    assert {c.config["configurable"]["thread_id"] for c in saver.list(None)} == {"sales-run-0001"}

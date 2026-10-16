@@ -8,6 +8,7 @@ import hashlib
 import os
 import re
 import sqlite3
+import sys
 from pathlib import Path
 from typing import TypedDict
 
@@ -93,13 +94,24 @@ def _issue_one(conn: sqlite3.Connection, note: sqlite3.Row, invoices_dir: Path |
 
 
 def write_invoice_files(conn: sqlite3.Connection) -> list[Path]:
-    """Write the file of every invoice whose file is missing; existing files are left alone."""
+    """Write the file of every invoice whose file is missing.
+
+    An existing file with the same text is ours and is left alone; one with another text is not ours:
+    it is not touched, the invoice is parked for review and no file is written for it.
+    """
     written = []
     for invoice in conn.execute("SELECT * FROM customer_invoices ORDER BY id").fetchall():
         path = Path(invoice["document_file"])
+        text = _invoice_text(conn, invoice)
         if not path.exists():
-            _atomic_write(path, _invoice_text(conn, invoice))
+            _atomic_write(path, text)
             written.append(path)
+        elif path.read_bytes() != text.encode("ascii"):
+            thread = f"invoice-file-{invoice['number']}"
+            if not db.get_failure(conn, thread):
+                db.park_failure(
+                    conn, thread, "sales", str(path), "invoice_file", f"{path} already exists with another text"
+                )
     return written
 
 
@@ -118,7 +130,7 @@ def invoice(conn: sqlite3.Connection, invoices_dir: Path | str) -> list[dict]:
 
 FORM_TITLE = "Signed delivery note"
 INCIDENT_TYPES = ("missing", "extra", "damaged")
-_NOTE_RE = re.compile(r"CDN-(\d{4,})")
+_NOTE_RE = re.compile(r"CDN-(\d{4,9})")
 
 
 class FormError(ValueError):
@@ -163,7 +175,7 @@ def _parse_form(conn: sqlite3.Connection, text: str) -> dict:
                 raise FormError(f"incident type '{kind}' is not one of {', '.join(INCIDENT_TYPES)}")
             if not conn.execute("SELECT 1 FROM products WHERE sku = ?", (sku,)).fetchone():
                 raise FormError(f"SKU {sku} is not in the catalog")
-            if not re.fullmatch(r"\d+", units) or int(units) <= 0:
+            if not re.fullmatch(r"\d{1,9}", units) or int(units) <= 0:
                 raise FormError(f"units '{units}' is not a whole positive number")
             incidents.append((sku, kind, int(units)))
     else:
@@ -559,6 +571,11 @@ def run_sales(
     last = _last_run(checkpointer)
     config = {"configurable": {"thread_id": f"{THREAD_PREFIX}{last:04d}"}}
     if last and graph.get_state(config).next:
+        print(
+            f"Notice: resuming the interrupted run {THREAD_PREFIX}{last:04d}; "
+            f"files the run already read stay as read, run the scan again to read {inbox}",
+            file=sys.stderr,
+        )
         graph.invoke(None, config)
     else:
         config = {"configurable": {"thread_id": f"{THREAD_PREFIX}{last + 1:04d}"}}
