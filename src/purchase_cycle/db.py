@@ -225,6 +225,95 @@ CREATE TABLE IF NOT EXISTS customer_delivery_note_lines (
     sale_unit TEXT NOT NULL,
     PRIMARY KEY (note_id, line_no)
 );
+CREATE TABLE IF NOT EXISTS customer_invoices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    number TEXT NOT NULL UNIQUE,
+    delivery_note_id INTEGER NOT NULL UNIQUE REFERENCES customer_delivery_notes (id),
+    order_id INTEGER NOT NULL REFERENCES orders (id),
+    customer_code TEXT NOT NULL REFERENCES customers (code),
+    issued_at TEXT NOT NULL,
+    net_total REAL NOT NULL,
+    document_file TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS customer_invoice_lines (
+    invoice_id INTEGER NOT NULL REFERENCES customer_invoices (id),
+    line_no INTEGER NOT NULL,
+    sku TEXT NOT NULL REFERENCES products (sku),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price REAL NOT NULL,
+    line_total REAL NOT NULL,
+    PRIMARY KEY (invoice_id, line_no)
+);
+CREATE TABLE IF NOT EXISTS signed_delivery_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    delivery_note_id INTEGER REFERENCES customer_delivery_notes (id),
+    signer TEXT,
+    signing_date TEXT,
+    source_file TEXT NOT NULL,
+    content_hash TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL CHECK (status IN ('linked', 'unlinked')),
+    reason TEXT
+);
+CREATE TABLE IF NOT EXISTS signed_note_incidents (
+    signed_note_id INTEGER NOT NULL REFERENCES signed_delivery_notes (id),
+    line_no INTEGER NOT NULL,
+    sku TEXT NOT NULL REFERENCES products (sku),
+    type TEXT NOT NULL CHECK (type IN ('missing', 'extra', 'damaged')),
+    units INTEGER NOT NULL CHECK (units > 0),
+    PRIMARY KEY (signed_note_id, line_no)
+);
+CREATE TABLE IF NOT EXISTS sales_reconciliations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_id INTEGER NOT NULL UNIQUE REFERENCES customer_invoices (id),
+    signed_note_id INTEGER REFERENCES signed_delivery_notes (id),
+    result TEXT NOT NULL CHECK (result IN ('matched', 'discrepancies', 'awaiting_delivery_note')),
+    reconciled_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sales_discrepancies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reconciliation_id INTEGER NOT NULL REFERENCES sales_reconciliations (id),
+    sku TEXT,
+    type TEXT NOT NULL CHECK (type IN ('price', 'quantity', 'extra_line', 'missing_line')),
+    incident TEXT NOT NULL CHECK (incident IN ('missing', 'extra', 'damaged')),
+    expected REAL,
+    found REAL,
+    unit_amount REAL,
+    amount REAL,
+    text TEXT,
+    UNIQUE (reconciliation_id, sku, type)
+);
+CREATE TABLE IF NOT EXISTS customer_corrections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_id INTEGER NOT NULL REFERENCES customer_invoices (id),
+    number TEXT NOT NULL UNIQUE,
+    kind TEXT NOT NULL CHECK (kind IN ('credit_note', 'corrective_invoice')),
+    total REAL NOT NULL,
+    document_file TEXT,
+    UNIQUE (invoice_id, kind)
+);
+CREATE TABLE IF NOT EXISTS customer_correction_lines (
+    correction_id INTEGER NOT NULL REFERENCES customer_corrections (id),
+    line_no INTEGER NOT NULL,
+    sku TEXT NOT NULL REFERENCES products (sku),
+    quantity INTEGER NOT NULL,
+    unit_price REAL NOT NULL,
+    line_total REAL NOT NULL,
+    PRIMARY KEY (correction_id, line_no)
+);
+CREATE TABLE IF NOT EXISTS customer_responses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reconciliation_id INTEGER NOT NULL UNIQUE REFERENCES sales_reconciliations (id),
+    recipient TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    draft_body TEXT NOT NULL,
+    draft_source TEXT NOT NULL CHECK (draft_source IN ('model', 'template')),
+    final_body TEXT,
+    edited INTEGER NOT NULL DEFAULT 0 CHECK (edited IN (0, 1)),
+    status TEXT NOT NULL CHECK (status IN ('awaiting_approval', 'sent', 'rejected')),
+    drafted_at TEXT NOT NULL,
+    decided_at TEXT,
+    outbox_file TEXT
+);
 """
 
 TABLES = ("customers", "products", "stock", "orders", "order_lines")
