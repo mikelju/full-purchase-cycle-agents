@@ -54,7 +54,12 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 1400, "height": 900}, device_scale_factor=1)
     pg.add_init_script(INIT)
     pg.goto(PAGE, wait_until="networkidle")
-    pg.evaluate("document.fonts.ready.then(() => document.fonts.size)")
+    # load every declared face (each family, weight and unicode subset) up front, so no frame
+    # shows a fallback font while a weight or accented glyph range loads mid-capture
+    faces = pg.evaluate(
+        "Promise.all([...document.fonts].map(f => f.load())).then(() => document.fonts.ready).then(() => document.fonts.size)"
+    )
+    print("font faces", faces)
     pg.add_style_tag(
         content="body{margin:0} #svg{width:1280px!important;height:720px!important;max-width:none!important}"
     )
