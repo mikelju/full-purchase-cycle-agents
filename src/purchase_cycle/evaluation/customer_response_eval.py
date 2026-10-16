@@ -22,16 +22,16 @@ from collections import Counter
 from email import message_from_bytes, policy
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from pydantic import ValidationError
 
-from purchase_cycle import customer_responses, db, llm
+from purchase_cycle import customer_responses, db, llm, sales_cli
 from purchase_cycle.config import EVALS_DIR
 from purchase_cycle.evaluation.email_eval import _ci, _pct
 from purchase_cycle.evaluation.recovery_eval import _rate
 from purchase_cycle.evaluation.sales_reconciliation_eval import O1, O2, X, Y, Z, _command, _serve, form
 from purchase_cycle.evaluation.stats import target_cells, zero_event_note
-from purchase_cycle.graph import sqlite_checkpointer
 
 SUITE = "customer_response"
 DATASET_VERSION = "1.0"
@@ -334,6 +334,9 @@ class DraftDouble:
                 raise llm.InvalidModelOutput(error, case_id) from error
         return SimpleNamespace(body=draft)
 
+    def save_recordings(self) -> int:
+        return 0
+
 
 def _setup(item: dict, paths: dict, folder: Path) -> None:
     conn = db.connect(paths["db"])
@@ -354,13 +357,9 @@ def _setup(item: dict, paths: dict, folder: Path) -> None:
 
 def _run_step(item: dict, op: dict, paths: dict, double: DraftDouble, folder: Path) -> tuple[int, str, str]:
     """The exit code, the printed output and the error output of one step."""
-    if op["op"] == "responses":
-        checkpointer = sqlite_checkpointer(paths["checkpoints"])
-        try:
-            customer_responses.draft_responses(paths["db"], checkpointer, double, paths["invoices"], paths["outbox"])
-        finally:
-            checkpointer.conn.close()
-        return 0, "", ""
+    if op["op"] == "responses":  # the CLI command, with the scenario double in place of the recorded client
+        with patch.object(sales_cli, "ModelClient", lambda *args, **kwargs: double):
+            return _command(paths, "responses", "--checkpoints", str(paths["checkpoints"]), new_process=False)
     words = [op["op"], op["invoice"], "--checkpoints", str(paths["checkpoints"])]
     if op["op"] == "approve":
         words += ["--invoices-dir", str(paths["invoices"]), "--outbox", str(paths["outbox"])]
@@ -511,6 +510,9 @@ def run_item(item: dict, tmp: Path) -> dict:
         if code:
             outputs.append("error" if err.startswith("Error:") else "unexpected")
         else:
+            if op["op"] == "responses" and not out.startswith("mode="):
+                outputs.append("unexpected")
+                continue
             found = re.search(r"response (sent \((?:edited|as drafted)\)|rejected)", out)
             outputs.append(found.group(1) if found else "")
     final = _measure(paths)

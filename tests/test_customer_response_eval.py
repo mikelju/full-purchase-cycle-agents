@@ -7,6 +7,7 @@ measurement by that run's rows, so each test stays fast and only the grader and 
 import copy
 import json
 import re
+import sys
 import tempfile
 from collections import Counter
 from pathlib import Path
@@ -66,7 +67,8 @@ def _stubbed(monkeypatch, baseline, mutate=None, extra_calls=0):
         out = final["outputs"][n]
         return (
             final["codes"][n],
-            ("" if out in ("", "error") else f"response {out}"),
+            ("mode=replay  responses drafted: 1" if op["op"] == "responses" and not out else "")
+            or ("" if out in ("", "error") else f"response {out}"),
             "Error: stub" if out == "error" else "",
         )
 
@@ -199,3 +201,25 @@ def test_the_suite_passes_through_the_cli(capsys, monkeypatch, baseline):
     out = capsys.readouterr().out
     assert "customer_response  mode=replay  scenarios=1" in out
     assert "  discrepancies_response       100.0%" in out
+
+
+def test_the_responses_step_runs_the_cli_command_and_grades_its_exit_code(monkeypatch, baseline):
+    from purchase_cycle import sales_cli
+
+    item = baseline[0]
+    seen = []
+
+    def failing(args):
+        seen.append(args)
+        print("Error: boom", file=sys.stderr)
+        return 1
+
+    monkeypatch.setattr(sales_cli, "cmd_sales_responses", failing)
+    restore = cr._count_calls()
+    try:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            result = cr.run_item(item, Path(tmp))
+    finally:
+        restore()
+    assert len(seen) == 1 and result["got"]["codes"][0] == 1 and result["got"]["outputs"][0] == "error"
+    assert not result["correct"]
