@@ -196,7 +196,7 @@ def test_the_grader_counts_missed_invented_and_swapped_rows():
 
 
 def test_sales_reconciliation_is_a_local_suite():
-    assert "sales_reconciliation" in harness.SUITES and harness.ALL_SUITES[-1] == "sales_reconciliation"
+    assert "sales_reconciliation" in harness.SUITES and harness.ALL_SUITES[-2] == "sales_reconciliation"
     assert "sales_reconciliation" not in harness.UPLOAD_SUITES
     assert harness._suite("sales_reconciliation") is sr
 

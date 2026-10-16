@@ -208,6 +208,7 @@ def test_eval_all_runs_the_whatsapp_suite_after_its_baseline(monkeypatch):
         "claim_approval",
         "claim_drafting",
         "sales_reconciliation",
+        "customer_response",
     ]
     ran.clear()
     args.suite = ["whatsapp_order_extraction"]
