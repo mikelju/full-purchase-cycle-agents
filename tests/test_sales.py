@@ -723,7 +723,13 @@ def test_resuming_an_interrupted_run_says_that_the_new_folder_is_not_read_yet(tm
 
 @pytest.mark.parametrize("node", ["invoice", "read", "link", "match", "store"])
 def test_a_run_that_raises_inside_a_node_and_is_resumed_ends_like_an_uninterrupted_run(tmp_path, monkeypatch, node):
-    names = {"invoice": "invoice", "read": "read_notes", "link": "link_notes", "match": "reconcile", "store": "plan_corrections"}
+    names = {
+        "invoice": "invoice",
+        "read": "read_notes",
+        "link": "link_notes",
+        "match": "reconcile",
+        "store": "plan_corrections",
+    }
     original = getattr(sales, names[node])
     calls = []
 

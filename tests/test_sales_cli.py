@@ -164,7 +164,9 @@ def test_responses_draft_one_per_discrepancies_invoice_and_a_second_run_calls_no
         world.query("SELECT status, draft_source FROM customer_responses ORDER BY id")
         == [("awaiting_approval", "model")] * 2
     )
-    assert all(r[0].endswith("Thank you for your patience.") for r in world.query("SELECT draft_body FROM customer_responses"))
+    assert all(
+        r[0].endswith("Thank you for your patience.") for r in world.query("SELECT draft_body FROM customer_responses")
+    )
     assert world.snapshot() == before
     rows = world.query("SELECT * FROM customer_responses")
     world.recordings.unlink()
