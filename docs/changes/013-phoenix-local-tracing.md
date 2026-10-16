@@ -1,6 +1,6 @@
 # 013 - Local tracing with Arize Phoenix
 
-Status: in progress
+Status: ready locally
 
 ## Contract
 Goal and reason:
@@ -65,5 +65,7 @@ Only changes of approach or scope with their reason.
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | Opus subagents | 7aa3113..c51dd7d | correctness, security, evidence, scope | correctness 3, security 2, evidence 3, scope 4 including a blocker (`.env.example` missing `PHOENIX_TRACING`) | fixed in 10c207b, 8d01abf, c12f9b4, b399f9c; the MCP and wildcard CORS items closed with owner decisions in c9f1238 and aacc4aa |
+| 2 | Opus subagent | 10c207b..aacc4aa | correctness, security, evidence, scope and docs | 3 minor: origin check limits not recorded, export timings without evidence, model-call span evidence older than the batch exporter | fixed in 30561f2, 6308aca (SEC-027 accepted by the owner) and 7f535f3 (one more live run authorized by the owner) |
 
 ## Delivery
