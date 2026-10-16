@@ -1,0 +1,101 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "invoices": {
+      "SINV-0001": {
+        "lines": [
+          [
+            "GLV-NIT-XS",
+            5,
+            6.9,
+            34.5
+          ],
+          [
+            "GLV-NIT200-S",
+            4,
+            12.5,
+            50.0
+          ]
+        ],
+        "net_total": 84.5,
+        "note": 1
+      }
+    },
+    "model_calls": 0,
+    "notes": {
+      "n1": [
+        "linked",
+        1
+      ]
+    },
+    "results": {
+      "SINV-0001": {
+        "diffs": [
+          [
+            "GLV-VIN-S",
+            "extra",
+            -8.2
+          ]
+        ],
+        "docs": [
+          [
+            "corrective_invoice",
+            8.2,
+            [
+              [
+                "GLV-VIN-S",
+                2
+              ]
+            ]
+          ]
+        ],
+        "result": "discrepancies"
+      }
+    }
+  },
+  "id": "SR-016",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers and the clock; the orders of each scenario served"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    }
+  ],
+  "restart": false,
+  "steps": [
+    {
+      "do": "scan",
+      "files": {
+        "n1": {
+          "incidents": [
+            [
+              "GLV-VIN-S",
+              "extra",
+              2
+            ]
+          ],
+          "note": 1,
+          "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-VIN-S extra 2\n"
+        }
+      },
+      "stop": null
+    }
+  ],
+  "tags": [
+    "invoice_per_note",
+    "extra_sku_not_on_note",
+    "corrective_invoice_only"
+  ]
+}

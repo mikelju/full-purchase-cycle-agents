@@ -1,0 +1,123 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "invoices": {
+      "SINV-0001": {
+        "lines": [
+          [
+            "GLV-NIT-XS",
+            5,
+            6.9,
+            34.5
+          ],
+          [
+            "GLV-NIT200-S",
+            4,
+            12.5,
+            50.0
+          ]
+        ],
+        "net_total": 84.5,
+        "note": 1
+      }
+    },
+    "model_calls": 0,
+    "notes": {
+      "n1": [
+        "linked",
+        1
+      ]
+    },
+    "results": {
+      "SINV-0001": {
+        "diffs": [
+          [
+            "GLV-NIT200-S",
+            "missing",
+            12.5
+          ],
+          [
+            "GLV-VIN-S",
+            "extra",
+            -12.3
+          ]
+        ],
+        "docs": [
+          [
+            "credit_note",
+            -12.5,
+            [
+              [
+                "GLV-NIT200-S",
+                -1
+              ]
+            ]
+          ],
+          [
+            "corrective_invoice",
+            12.3,
+            [
+              [
+                "GLV-VIN-S",
+                3
+              ]
+            ]
+          ]
+        ],
+        "result": "discrepancies"
+      }
+    }
+  },
+  "id": "SR-019",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers and the clock; the orders of each scenario served"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    }
+  ],
+  "restart": false,
+  "steps": [
+    {
+      "do": "scan",
+      "files": {
+        "n1": {
+          "incidents": [
+            [
+              "GLV-NIT200-S",
+              "missing",
+              1
+            ],
+            [
+              "GLV-VIN-S",
+              "extra",
+              3
+            ]
+          ],
+          "note": 1,
+          "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT200-S missing 1\nGLV-VIN-S extra 3\n"
+        }
+      },
+      "stop": null
+    }
+  ],
+  "tags": [
+    "invoice_per_note",
+    "missing",
+    "extra_sku_not_on_note",
+    "several_types",
+    "both_documents"
+  ]
+}

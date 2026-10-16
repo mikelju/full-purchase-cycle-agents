@@ -1,0 +1,91 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "invoices": {
+      "SINV-0001": {
+        "lines": [
+          [
+            "GLV-VIN-S",
+            10,
+            4.1,
+            41.0
+          ]
+        ],
+        "net_total": 41.0,
+        "note": 1
+      }
+    },
+    "model_calls": 0,
+    "notes": {
+      "n1": [
+        "linked",
+        1
+      ]
+    },
+    "results": {
+      "SINV-0001": {
+        "diffs": [
+          [
+            "GLV-VIN-S",
+            "missing",
+            12.3
+          ]
+        ],
+        "docs": [
+          [
+            "credit_note",
+            -12.3,
+            [
+              [
+                "GLV-VIN-S",
+                -3
+              ]
+            ]
+          ]
+        ],
+        "result": "discrepancies"
+      }
+    }
+  },
+  "id": "SR-010",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers and the clock; the orders of each scenario served"
+  },
+  "orders": [
+    {
+      "customer": "CLI-002",
+      "lines": [
+        [
+          "GLV-VIN-S",
+          10
+        ]
+      ]
+    }
+  ],
+  "restart": false,
+  "steps": [
+    {
+      "do": "scan",
+      "files": {
+        "n1": {
+          "incidents": [
+            [
+              "GLV-VIN-S",
+              "missing",
+              3
+            ]
+          ],
+          "note": 1,
+          "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-002\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-VIN-S missing 3\n"
+        }
+      },
+      "stop": null
+    }
+  ],
+  "tags": [
+    "invoice_per_note",
+    "missing",
+    "credit_note_only"
+  ]
+}

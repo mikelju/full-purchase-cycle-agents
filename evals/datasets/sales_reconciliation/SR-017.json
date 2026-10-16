@@ -1,0 +1,91 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "invoices": {
+      "SINV-0001": {
+        "lines": [
+          [
+            "GLV-NIT-XS",
+            3,
+            6.9,
+            20.7
+          ]
+        ],
+        "net_total": 20.7,
+        "note": 1
+      }
+    },
+    "model_calls": 0,
+    "notes": {
+      "n1": [
+        "linked",
+        1
+      ]
+    },
+    "results": {
+      "SINV-0001": {
+        "diffs": [
+          [
+            "GLV-NIT200-S",
+            "extra",
+            -12.5
+          ]
+        ],
+        "docs": [
+          [
+            "corrective_invoice",
+            12.5,
+            [
+              [
+                "GLV-NIT200-S",
+                1
+              ]
+            ]
+          ]
+        ],
+        "result": "discrepancies"
+      }
+    }
+  },
+  "id": "SR-017",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers and the clock; the orders of each scenario served"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          3
+        ]
+      ]
+    }
+  ],
+  "restart": false,
+  "steps": [
+    {
+      "do": "scan",
+      "files": {
+        "n1": {
+          "incidents": [
+            [
+              "GLV-NIT200-S",
+              "extra",
+              1
+            ]
+          ],
+          "note": 1,
+          "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT200-S extra 1\n"
+        }
+      },
+      "stop": null
+    }
+  ],
+  "tags": [
+    "invoice_per_note",
+    "extra_sku_not_on_note",
+    "corrective_invoice_only"
+  ]
+}
