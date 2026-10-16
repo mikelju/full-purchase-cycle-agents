@@ -47,7 +47,8 @@ Only changes of approach or scope with their reason.
 - Opt-in variable `PHOENIX_TRACING=true`, project `purchase-cycle`, endpoint `http://127.0.0.1:6006/v1/traces`.
 - Review fix: spans leave through a batch processor with a 1 s export timeout instead of one by one, because with Phoenix down each span blocked about 10 s (OTLP retries).
   The SDK flushes the batch at exit, so a short CLI run still delivers every span (`.evidence/cambio-013/c2-replay-spans.txt`).
-  Replay demo with Phoenix down: 32.5 s one by one, 13-14 s batched with the default 10 s timeout, 6.5 s batched with 1 s, against 3.8 s without tracing.
+  Replay demo with Phoenix down, measured again at `aacc4aa`: 5.8-6.9 s batched with the 1 s timeout, against 3.0-3.2 s without tracing (`.evidence/cambio-013/export-timing.txt`).
+  Measured earlier in the review, without an evidence file: 32.5 s one by one and 13-14 s batched with the default 10 s timeout.
 - Review fix, owner rule that every unused Phoenix feature is off: the launcher also sets `PHOENIX_ENABLE_MCP_SERVER=false`, because `/mcp` had no login and answered any browser origin with `Access-Control-Allow-Origin: *`, and `PHOENIX_ALLOWED_SANDBOX_PROVIDERS=NONE`.
   The pinned version still sends `Access-Control-Allow-Origin: *` on `/oauth2/register`, `/oauth2/token`, `/oauth2/revoke` and `/.well-known/*`, with no setting to stop it; with authentication off they return only the static UI page or static metadata, while `/v1` and `/graphql` send no CORS header (`.evidence/cambio-013/c1.txt`).
 - Review fix: `--exclude-newer 2026-10-01` freezes the launcher's transitive dependencies; the Phoenix version has one source, the `phoenix` script of `package.json`.

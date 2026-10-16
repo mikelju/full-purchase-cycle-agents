@@ -573,7 +573,7 @@ In PowerShell: `$env:PHOENIX_TRACING="true"; uv run purchase-cycle demo`, then `
 
 Every LangGraph node and LangChain model call of that run is sent to the project `purchase-cycle`; open `http://127.0.0.1:6006`, choose that project and open a trace to see its spans.
 Replay runs show the graph nodes only, because their model answers come from recordings; live runs also show the model calls.
-Spans leave in the background and the last ones at exit; if Phoenix is not running, the run still finishes, about two seconds later, and its spans are lost.
+Spans leave in the background and the last ones at exit; if Phoenix is not running, the run still finishes, about three seconds later, and its spans are lost.
 Without the variable, or with any other value, nothing is set up and the Phoenix packages are not even imported.
 Tests and `npm run check` never send traces to Phoenix, even when `.env` sets the variable.
 
