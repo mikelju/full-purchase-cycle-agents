@@ -57,15 +57,18 @@ BLIND_DIR = ROOT / ".runtime" / "response_second_pass"  # gitignored input of th
 REVIEW_DECISIONS = ("agree", "label_fixed", "annotator_wrong")
 AMOUNT_TOLERANCE = 0.005
 BLIND_RULES = """You are the second annotator of a customer response dataset. For each case you get the delivered lines
-of a delivery note (sku, units delivered, unit price) and the incidents the customer signed (sku, type, units).
+of a delivery note (sku, units delivered, unit price), the incidents the customer signed (sku, type, units) and a
+`catalog` list of {sku, unit_price} for every incident SKU that is not on the delivery note.
 Work out, without any tool, the correcting documents of the response:
 - Units accepted per SKU = delivered - missing - damaged + extra; an extra SKU not on the note starts at 0.
 - Units invoiced per SKU = delivered (the invoice has the delivery note lines at the unit price).
 - For each SKU with accepted != invoiced: units = invoiced - accepted. units > 0 goes to the credit note with
   quantity -units; units < 0 goes to the corrective invoice with quantity -units (a positive quantity).
+- An extra SKU that is not on the delivery note is charged at its catalog unit price (the `catalog` list).
 - line total = quantity * unit price, rounded to cents; document total = sum of its line totals, rounded to cents.
 - A kind with no line gives no document. Credit note first, then corrective invoice.
-- net_total of the invoice = sum of delivered units * unit price per line, rounded to cents.
+- net_total is the net of the ORIGINAL invoice (before any correction) = sum over the delivery note lines of
+  delivered units * unit price, each line rounded to cents, then summed and rounded to cents.
 Answer one JSON object per case: {"id": ..., "net_total": ..., "documents": [{"kind": ..., "total": ...,
 "lines": [{"sku": ..., "quantity": ..., "line_total": ...}]}], "notes": "..."}.
 """
@@ -397,15 +400,24 @@ def cmd_build(args) -> int:
     return 0
 
 
+def blind_cases(dataset: list[dict]) -> list[dict]:
+    rows = []
+    for r in dataset:
+        on_note = {d["sku"] for d in r["delivered"]}
+        off_note = sorted({i["sku"] for i in r["incidents"]} - on_note)
+        rows.append(
+            {
+                "id": r["id"],
+                "delivered": [{**d, "unit_price": _price(d["sku"])} for d in r["delivered"]],
+                "incidents": r["incidents"],
+                "catalog": [{"sku": sku, "unit_price": _price(sku)} for sku in off_note],
+            }
+        )
+    return rows
+
+
 def cmd_blind(args) -> int:
-    rows = [
-        {
-            "id": r["id"],
-            "delivered": [{**d, "unit_price": _price(d["sku"])} for d in r["delivered"]],
-            "incidents": r["incidents"],
-        }
-        for r in load_dataset()
-    ]
+    rows = blind_cases(load_dataset())
     BLIND_DIR.mkdir(parents=True, exist_ok=True)
     write_jsonl(BLIND_DIR / "cases.jsonl", rows)
     (BLIND_DIR / "rules.txt").write_text(BLIND_RULES, encoding="utf-8", newline="\n")

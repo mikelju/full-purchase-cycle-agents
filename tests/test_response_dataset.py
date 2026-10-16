@@ -91,3 +91,16 @@ def test_review_disagreements_compare_documents_and_totals(dataset):
     assert rd.review_disagreements(row, read) == []
     assert rd.review_disagreements(row, dict(read, net_total=row["facts"]["net_total"] + 1))
     assert rd.review_disagreements(row, dict(read, documents=[]))
+
+
+def test_every_blind_case_prices_every_sku_it_needs(dataset):
+    blind = rd.blind_cases(dataset)
+    assert len(blind) == len(dataset)
+    off_note_cases = 0
+    for case in blind:
+        priced = {d["sku"]: d["unit_price"] for d in case["delivered"]}
+        priced.update({c["sku"]: c["unit_price"] for c in case["catalog"]})
+        assert {i["sku"] for i in case["incidents"]} <= set(priced), case["id"]
+        assert all(isinstance(v, float) for v in priced.values())
+        off_note_cases += bool(case["catalog"])
+    assert off_note_cases >= 16
