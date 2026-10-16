@@ -1,6 +1,6 @@
 # 013 - Local tracing with Arize Phoenix
 
-Status: delivered, in review (PR #23)
+Status: integrated (merged via PR #23)
 
 ## Contract
 Goal and reason:

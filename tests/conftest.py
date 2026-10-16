@@ -222,11 +222,18 @@ def run_reconcile_demo(tmp_path, *extra):
 
 
 @pytest.fixture(scope="session")
-def claim_recordings(tmp_path_factory):
+def demo_without_claim_recordings(tmp_path_factory):
+    """One demo run with a missing claim recordings file, shared by the tests that only read its output and database."""
+    base = tmp_path_factory.mktemp("demo_without_claim_recordings")
+    run, _, workdir = run_reconcile_demo(base, "--claim-recordings", str(base / "none.jsonl"))
+    return run, workdir
+
+
+@pytest.fixture(scope="session")
+def claim_recordings(tmp_path_factory, demo_without_claim_recordings):
     """A claim recordings file for the four demo prompts, built from the phase 08 part of a demo run that has none."""
     base = tmp_path_factory.mktemp("claim_recordings")
-    missing = base / "none.jsonl"
-    run, _, workdir = run_reconcile_demo(base, "--claim-recordings", str(missing))
+    run, workdir = demo_without_claim_recordings
     assert run.returncode == 1 and "claim recordings not found" in run.stderr
     conn = db.connect(workdir / "business.db")
     try:
@@ -246,3 +253,9 @@ def claim_recordings(tmp_path_factory):
             }
             fh.write(json.dumps(row) + "\n")
     return path
+
+
+@pytest.fixture(scope="session")
+def reconcile_demo(tmp_path_factory, claim_recordings):
+    """One full demo run with the claim recordings, shared by the tests that only read its output, log and database."""
+    return run_reconcile_demo(tmp_path_factory.mktemp("reconcile_demo"), "--claim-recordings", str(claim_recordings))

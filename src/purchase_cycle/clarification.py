@@ -8,10 +8,10 @@ the lines the channel already produced and the catalog.
 
 import json
 import re
+import sys
 from pathlib import Path
 from typing import NamedTuple, TypedDict
 
-from anthropic import APIError
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.runtime import Runtime
@@ -270,7 +270,10 @@ def check_resolutions(resolutions: list, doubts: list[dict], catalog: list) -> N
 
 
 # Failures of one model step that leave the thread waiting; any other error is a defect and stops the run.
-STEP_FAILURES = (MissingRecording, InvalidModelOutput, InvalidQuestion, InvalidAnswer, APIError)
+def step_failures() -> tuple[type[Exception], ...]:
+    failures = (MissingRecording, InvalidModelOutput, InvalidQuestion, InvalidAnswer)
+    anthropic = sys.modules.get("anthropic")  # not imported means no Anthropic error can exist; the import is slow
+    return failures if anthropic is None else (*failures, anthropic.APIError)
 
 
 class ClarificationClients(NamedTuple):
@@ -375,7 +378,7 @@ def build_clarification_graph(
 
         try:
             drafted = reask(draft, (InvalidModelOutput, InvalidQuestion)) if park and rounds == 1 else draft(None)
-        except STEP_FAILURES as error:
+        except step_failures() as error:
             if rounds == 1 or retry_left(error, runtime):
                 raise  # a retry, or round 1 with nothing paused yet, so the run stops with nothing written
             # The answer that led here is undone and the previous question waits again, so the thread
@@ -425,7 +428,7 @@ def build_clarification_graph(
         try:
             read = clients.answer.extract(message, case_id=f"{thread_id}-answer-{state['round']}")
             check_resolutions(read.resolutions, state["doubts"], catalog)
-        except STEP_FAILURES as error:
+        except step_failures() as error:
             if retry_left(error, runtime):
                 raise
             # A rejected answer, an invalid model output, a missing recording or a model error writes nothing;

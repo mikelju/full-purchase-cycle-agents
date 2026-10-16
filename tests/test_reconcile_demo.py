@@ -10,8 +10,8 @@ from conftest import run_reconcile_demo
 from purchase_cycle import claims, config, db, llm
 
 
-def test_reconcile_demo_ends_with_every_outcome_with_the_network_blocked(tmp_path, claim_recordings):
-    run, log, workdir = run_reconcile_demo(tmp_path, "--claim-recordings", str(claim_recordings))
+def test_reconcile_demo_ends_with_every_outcome_with_the_network_blocked(reconcile_demo):
+    run, log, workdir = reconcile_demo
     out = run.stdout
     assert run.returncode == 0, out + run.stderr
     assert run.stderr == ""
