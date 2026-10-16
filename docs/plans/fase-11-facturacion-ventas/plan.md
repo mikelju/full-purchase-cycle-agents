@@ -44,7 +44,8 @@ Each increment leaves the product working and covers concrete criteria.
 This file is the durable state: a new session resumes from here and from Git.
 
 ### Batch A - Baseline, schema and generalised matching (offline)
-- [ ] 1. Unchanged-behaviour baseline before any code change (C16) - check: `orders-demo`, `quotes-demo`, `reconcile-demo` and `receipt-demo` replay output saved as `.evidence/fase-11/<demo>-before.txt`, `npm run eval` output as `eval-before.txt`; files: evidence only.
+- [x] 1. Unchanged-behaviour baseline before any code change (C16) - check: `orders-demo`, `quotes-demo`, `reconcile-demo` and `receipt-demo` replay output saved as `.evidence/fase-11/<demo>-before.txt`, `npm run eval` output as `eval-before.txt`; files: evidence only.
+  - Evidence: `.evidence/fase-11/` orders-demo-before.txt, quotes-demo-before.txt, reconcile-demo-before.txt, receipt-demo-before.txt (all exit=0), eval-before.txt (exit=0); replay with `--workdir` outside the repo, keys unset, from `4381c1c` (code equal to `36d47ec`). `.evidence/` is git-ignored, so nothing to commit but this plan line.
 - [ ] 2. The eight sales tables and seed behaviour (C2) - files: `src/purchase_cycle/db.py`, `tests/test_seed.py` (new tests only); check: `uv run pytest -q tests/test_seed.py`: tables exist and are empty after `seed`, seeding twice gives the same rows, the other tables keep their rows, a phase 10 database gains the tables on reseed.
 - [ ] 3. Generalised `classify` with several order lines (C5, C6) - files: `src/purchase_cycle/reconcile_match.py`, new `tests/test_sales_match.py`; check: `uv run pytest -q tests/test_sales_match.py tests/test_reconcile_match.py tests/test_reconciliation.py` and `uv run purchase-cycle eval --suite reconciliation_matching` with every gate PASS; new tests cover several lines, an accepted SKU with no invoice line, and the one-line form equal to the old output.
 
