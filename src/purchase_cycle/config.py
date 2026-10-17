@@ -28,6 +28,8 @@ OFFER_EXTRACTION_RECORDINGS_PATH = EVALS_DIR / "recordings" / "offer_extraction.
 SUPPLIER_DOCUMENT_RECORDINGS_PATH = EVALS_DIR / "recordings" / "document_extraction.jsonl"
 CLAIM_DRAFTING_RECORDINGS_PATH = EVALS_DIR / "recordings" / "claim_drafting.jsonl"
 CLAIM_DRAFTING_MAX_TOKENS = 1024  # one claim body per call
+RESPONSE_DRAFTING_RECORDINGS_PATH = EVALS_DIR / "recordings" / "response_drafting.jsonl"
+RESPONSE_DRAFTING_MAX_TOKENS = 1024  # one customer response body per call
 SUPPLIER_DOCUMENT_MAX_TOKENS = 4096  # one answer lists every line of an invoice or delivery note
 OFFER_EXTRACTION_MAX_TOKENS = 512  # one offer per supplier reply
 CLARIFICATION_MAX_TOKENS = 1024  # a question or a resolution list covers every doubtful line of an order
@@ -36,6 +38,9 @@ MODES = ("live", "record", "replay")
 OUTBOX_DIR = DATA_DIR / "outbox"  # simulated WhatsApp replies
 SUPPLIER_OUTBOX_DIR = DATA_DIR / "supplier_outbox"  # simulated quote request and reminder emails
 CUSTOMER_DELIVERY_NOTES_DIR = DATA_DIR / "customer_delivery_notes"  # customer delivery note text files
+CUSTOMER_INVOICES_DIR = DATA_DIR / "customer_invoices"  # customer invoice and correcting document text files
+SIGNED_NOTES_INBOX = DATA_DIR / "signed_notes_inbox"  # demo inbox of signed delivery notes
+CUSTOMER_OUTBOX = DATA_DIR / "customer_outbox"  # simulated emails to customers
 
 
 def default_db_path() -> Path:

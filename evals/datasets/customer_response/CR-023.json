@@ -1,0 +1,74 @@
+{
+  "dataset_version": "1.0",
+  "drafts": {
+    "SINV-0001": "Dear customer,\n\nThank you for signing delivery note CDN-0001 for invoice SINV-0001.\nYou reported these incidents:\n- GLV-NIT-XS: missing, 2 units\n\nCN-0001 is a credit note with a total of 13.80 EUR.\n\nBest regards,\nSales department"
+  },
+  "expected": {
+    "calls": 0,
+    "codes": [
+      1
+    ],
+    "docs": {
+      "SINV-0001": [
+        [
+          "CN-0001",
+          "credit_note",
+          -13.8
+        ]
+      ]
+    },
+    "open_failures": 0,
+    "outputs": [
+      "error"
+    ],
+    "responses": {
+      "SINV-0001": null
+    },
+    "results": {
+      "SINV-0001": "discrepancies"
+    }
+  },
+  "forms": {
+    "n1": {
+      "incidents": [
+        [
+          "GLV-NIT-XS",
+          "missing",
+          2
+        ]
+      ],
+      "note": 1,
+      "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT-XS missing 2\n"
+    }
+  },
+  "id": "CR-023",
+  "initial_state": {
+    "seed": "db.seed, the orders served and the signed notes scanned; no response drafted yet"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "invoice": "SINV-0001",
+      "new_process": false,
+      "op": "reject"
+    }
+  ],
+  "tags": [
+    "discrepancies_response",
+    "no_response_command"
+  ]
+}

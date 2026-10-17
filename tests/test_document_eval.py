@@ -247,14 +247,14 @@ def test_delivery_notes_have_no_price_to_grade():
 
 def test_eval_all_runs_the_suite_last_once_its_baseline_is_recorded(monkeypatch):
     assert "document_extraction" in harness.SUITES and "document_extraction" in harness.UPLOAD_SUITES
-    assert harness.ALL_SUITES[-3:] == ("document_extraction", "claim_approval", "claim_drafting")
+    assert harness.ALL_SUITES[-6:-3] == ("document_extraction", "claim_approval", "claim_drafting")
     ran = []
     monkeypatch.setattr(
         harness, "_suite", lambda name: argparse.Namespace(evaluate=lambda *a, **k: ran.append(name) or 0)
     )
     args = argparse.Namespace(suite="all", mode="replay", split="test", set_baseline=False, workers=1)
     assert harness.cmd_eval(args) == 0
-    assert ran[-3] == "document_extraction" and ran.count("document_extraction") == 1
+    assert ran[-6] == "document_extraction" and ran.count("document_extraction") == 1
     ran.clear()
     args.suite = ["document_extraction"]
     assert harness.cmd_eval(args) == 0

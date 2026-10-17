@@ -1,0 +1,103 @@
+{
+  "dataset_version": "1.0",
+  "drafts": {
+    "SINV-0001": "Dear customer,\n\nThank you for signing delivery note CDN-0001 for invoice SINV-0001.\nYou reported these incidents:\n- nothing special\n\nCN-0001 is a credit note with a total of 31.90 EUR.\nCI-0002 is a corrective note with a total of 4.10 EUR.\n\nBest regards,\nSales department"
+  },
+  "expected": {
+    "calls": 1,
+    "codes": [
+      0,
+      0
+    ],
+    "docs": {
+      "SINV-0001": [
+        [
+          "CN-0001",
+          "credit_note",
+          -31.9
+        ],
+        [
+          "CI-0002",
+          "corrective_invoice",
+          4.1
+        ]
+      ]
+    },
+    "open_failures": 0,
+    "outputs": [
+      "",
+      "sent (as drafted)"
+    ],
+    "responses": {
+      "SINV-0001": {
+        "edited": false,
+        "sent": "<fixed template>",
+        "source": "template",
+        "status": "sent"
+      }
+    },
+    "results": {
+      "SINV-0001": "discrepancies"
+    }
+  },
+  "forms": {
+    "n1": {
+      "incidents": [
+        [
+          "GLV-NIT-XS",
+          "missing",
+          1
+        ],
+        [
+          "GLV-NIT200-S",
+          "damaged",
+          2
+        ],
+        [
+          "GLV-VIN-S",
+          "extra",
+          1
+        ]
+      ],
+      "note": 1,
+      "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT-XS missing 1\nGLV-NIT200-S damaged 2\nGLV-VIN-S extra 1\n"
+    }
+  },
+  "id": "CR-027",
+  "initial_state": {
+    "seed": "db.seed, the orders served and the signed notes scanned; no response drafted yet"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "invoice": null,
+      "new_process": false,
+      "op": "responses"
+    },
+    {
+      "invoice": "SINV-0001",
+      "new_process": false,
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "discrepancies_response",
+    "template_fallback",
+    "approve",
+    "both_documents"
+  ]
+}

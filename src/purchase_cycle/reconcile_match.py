@@ -42,6 +42,17 @@ def _merge(lines: list[dict]) -> dict[str | None, dict]:
     return merged
 
 
+def _merge_order(lines: list[dict]) -> dict[str, dict]:
+    """One order entry per SKU: repeated lines add their quantities and keep the first unit price."""
+    merged: dict[str, dict] = {}
+    for line in lines:
+        if line["sku"] in merged:
+            merged[line["sku"]]["quantity"] += line["quantity"]
+        else:
+            merged[line["sku"]] = {"sku": line["sku"], "quantity": line["quantity"], "unit_price": line["unit_price"]}
+    return merged
+
+
 def _row(sku, kind, expected, found, unit_amount, amount, text=None) -> dict:
     return {
         "sku": sku,
@@ -57,17 +68,23 @@ def _row(sku, kind, expected, found, unit_amount, amount, text=None) -> dict:
 def classify(order: dict, invoice_lines: list[dict], note_lines: list[dict] | None) -> tuple[str, list[dict]]:
     """The result and the discrepancy rows of an invoice.
 
-    order: sku, quantity, unit_price. Lines: sku (None when unresolved), quantity, unit_price, line_total.
+    order: sku, quantity, unit_price, or (phase 11) `lines`, a list of such dicts, one per SKU; the one-line form
+    behaves exactly as it always did. With `lines`, a SKU of the note that is on neither the invoice nor the order
+    gives a quantity row with found 0 (an accepted unit nobody invoiced).
+    Lines: sku (None when unresolved), quantity, unit_price, line_total.
     note_lines is None while no delivery note exists: the result is then `awaiting_delivery_note`,
     the price, quantity-against-order and line rows are already returned, and the delivery check is not made.
     A note that exists but has no line for the order SKU counts as delivered quantity 0.
     """
+    multi = "lines" in order
+    ordered = _merge_order(order["lines"]) if multi else {order["sku"]: order}
     invoice = _merge(invoice_lines)
     delivered = _merge(note_lines) if note_lines is not None else {}
     rows: list[dict] = []
     for line in invoice.values():
         sku = line["sku"]
-        if sku != order["sku"]:
+        wanted = ordered.get(sku)
+        if wanted is None:
             total = line["line_total"]
             if total is None and line["unit_price"] is not None:
                 total = line["unit_price"] * line["quantity"]
@@ -77,20 +94,20 @@ def classify(order: dict, invoice_lines: list[dict], note_lines: list[dict] | No
         off = [
             (quantity, price)
             for quantity, price in line["parts"]
-            if price is None or round(abs(price - order["unit_price"]), 6) > PRICE_TOLERANCE
+            if price is None or round(abs(price - wanted["unit_price"]), 6) > PRICE_TOLERANCE
         ]
         if off:
             if any(price is None for _, price in off):
-                rows.append(_row(sku, PRICE, order["unit_price"], None, None, None))  # no price stated: not a match
+                rows.append(_row(sku, PRICE, wanted["unit_price"], None, None, None))  # no price stated: not a match
             else:
                 # Opposite deviations never net out: the row follows the largest deviation and its sign.
-                devs = [(price - order["unit_price"], quantity, price) for quantity, price in off]
+                devs = [(price - wanted["unit_price"], quantity, price) for quantity, price in off]
                 unit, _, found = max(devs, key=lambda d: abs(d[0]))
                 amount = sum(dev * quantity for dev, quantity, _ in devs if (dev > 0) == (unit > 0))
-                rows.append(_row(sku, PRICE, order["unit_price"], found, unit, amount))
+                rows.append(_row(sku, PRICE, wanted["unit_price"], found, unit, amount))
         # When the invoice differs from both the order and the note, the larger difference is the one stored
         # (one quantity row per SKU, as the discrepancies key allows).
-        references = [order["quantity"]]
+        references = [wanted["quantity"]]
         if note_lines is not None:
             # A note without a line for the SKU counts as nothing delivered: the user checks before paying.
             references.append(delivered[sku]["quantity"] if sku in delivered else 0)
@@ -99,20 +116,33 @@ def classify(order: dict, invoice_lines: list[dict], note_lines: list[dict] | No
         if expected is not None:
             rows.append(
                 _row(
-                    sku, QUANTITY, expected, line["quantity"], None, (line["quantity"] - expected) * order["unit_price"]
+                    sku,
+                    QUANTITY,
+                    expected,
+                    line["quantity"],
+                    None,
+                    (line["quantity"] - expected) * wanted["unit_price"],
                 )
             )
-    if order["sku"] not in {line["sku"] for line in invoice.values()}:
-        rows.append(
-            _row(
-                order["sku"],
-                MISSING_LINE,
-                order["quantity"],
-                None,
-                order["unit_price"],
-                order["quantity"] * order["unit_price"],
+    invoiced = {line["sku"] for line in invoice.values()}
+    for sku, wanted in ordered.items():
+        if sku not in invoiced:
+            rows.append(
+                _row(
+                    sku,
+                    MISSING_LINE,
+                    wanted["quantity"],
+                    None,
+                    wanted["unit_price"],
+                    wanted["quantity"] * wanted["unit_price"],
+                )
             )
-        )
+    if multi:
+        for sku, line in delivered.items():
+            if sku is not None and sku not in invoiced and sku not in ordered:
+                price = line["unit_price"]
+                amount = None if price is None else -line["quantity"] * price
+                rows.append(_row(sku, QUANTITY, line["quantity"], 0, None, amount))
     if note_lines is None:
         return AWAITING, rows
     return (DISCREPANCIES if rows else MATCHED), rows

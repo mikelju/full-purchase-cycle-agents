@@ -580,3 +580,158 @@ def test_receipt_line_quantities_must_be_positive_whole_numbers(tmp_path):
     with pytest.raises(sqlite3.IntegrityError):
         conn.execute("INSERT INTO customer_delivery_note_lines VALUES (?, 1, ?, 0, 'box')", (cdn, sku))
     conn.execute("INSERT INTO customer_delivery_note_lines VALUES (?, 1, ?, 2, 'box')", (cdn, sku))
+
+
+SALES_TABLES = (
+    "customer_invoices",
+    "customer_invoice_lines",
+    "signed_delivery_notes",
+    "signed_note_incidents",
+    "sales_reconciliations",
+    "sales_discrepancies",
+    "customer_corrections",
+    "customer_correction_lines",
+    "customer_responses",
+)
+
+
+def _invoice(conn, number="SINV-0001"):
+    """One customer delivery note with its invoice: (delivery note id, invoice id)."""
+    order = _customer_order(conn)
+    _customer_note(conn, order, number)
+    note = conn.execute("SELECT MAX(id) FROM customer_delivery_notes").fetchone()[0]
+    conn.execute(
+        "INSERT INTO customer_invoices (number, delivery_note_id, order_id, customer_code, issued_at, net_total, "
+        "document_file) VALUES (?, ?, ?, (SELECT code FROM customers LIMIT 1), 't', 1.5, 'f.txt')",
+        (number, note, order),
+    )
+    return note, conn.execute("SELECT MAX(id) FROM customer_invoices").fetchone()[0]
+
+
+def _signed(conn, note, status="linked", content_hash="h"):
+    conn.execute(
+        "INSERT INTO signed_delivery_notes (delivery_note_id, signer, signing_date, source_file, content_hash, "
+        "status, reason) VALUES (?, 's', 'd', 'f', ?, ?, NULL)",
+        (note, content_hash, status),
+    )
+    return conn.execute("SELECT MAX(id) FROM signed_delivery_notes").fetchone()[0]
+
+
+def test_seed_creates_the_sales_tables_empty_and_leaves_the_seed_counts(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    counts = db.seed(conn)
+    for table in SALES_TABLES:
+        assert conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0
+    assert set(counts) == {"customers", "products", "stock", "orders", "order_lines"}
+
+
+def test_seed_twice_gives_the_same_rows_with_the_sales_tables_in_place(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    _invoice(conn)
+    names = [
+        r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+    ]
+    assert set(SALES_TABLES) <= set(names)
+    first = {t: _rows(conn, t) for t in names}
+    db.seed(conn)
+    assert {t: _rows(conn, t) for t in names} == first
+
+
+def test_a_phase_10_database_gains_the_sales_tables_without_losing_rows(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    _claim(conn, _reconciliation(conn))
+    _customer_note(conn, _customer_order(conn))
+    for table in reversed(SALES_TABLES):
+        conn.execute(f"DROP TABLE {table}")
+    conn.commit()
+    tables = OLD_TABLES + RECONCILIATION_TABLES + RECEIPT_TABLES + ("claims", "quote_requests")
+    before = {t: _rows(conn, t) for t in tables}
+    assert before["claims"] and before["customer_delivery_notes"]
+    db.seed(conn)
+    assert {t: _rows(conn, t) for t in tables} == before
+    for table in SALES_TABLES:
+        assert conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0
+
+
+def test_a_second_invoice_for_one_delivery_note_or_one_number_is_rejected(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    note, _ = _invoice(conn)
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            "INSERT INTO customer_invoices (number, delivery_note_id, order_id, customer_code, issued_at, net_total, "
+            "document_file) VALUES ('SINV-0002', ?, 1, (SELECT code FROM customers LIMIT 1), 't', 1, 'f')",
+            (note,),
+        )
+    other = _customer_order(conn)
+    _customer_note(conn, other, "o")
+    other_note = conn.execute("SELECT MAX(id) FROM customer_delivery_notes").fetchone()[0]
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            "INSERT INTO customer_invoices (number, delivery_note_id, order_id, customer_code, issued_at, net_total, "
+            "document_file) VALUES ('SINV-0001', ?, ?, (SELECT code FROM customers LIMIT 1), 't', 1, 'f')",
+            (other_note, other),
+        )
+
+
+def test_signed_note_status_incident_type_and_units_checks_reject_bad_values(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    note, _ = _invoice(conn)
+    with pytest.raises(sqlite3.IntegrityError):
+        _signed(conn, note, status="other")
+    signed = _signed(conn, note, status="linked", content_hash="a")
+    with pytest.raises(sqlite3.IntegrityError):
+        _signed(conn, note, status="linked", content_hash="a")
+    sku = conn.execute("SELECT sku FROM products LIMIT 1").fetchone()[0]
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("INSERT INTO signed_note_incidents VALUES (?, 1, ?, 'lost', 1)", (signed, sku))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("INSERT INTO signed_note_incidents VALUES (?, 1, ?, 'missing', 0)", (signed, sku))
+    conn.execute("INSERT INTO signed_note_incidents VALUES (?, 1, ?, 'damaged', 2)", (signed, sku))
+
+
+def test_sales_reconciliation_correction_and_response_checks_reject_bad_values(tmp_path):
+    conn = db.connect(tmp_path / "seed.db")
+    db.seed(conn)
+    note, invoice = _invoice(conn)
+    signed = _signed(conn, note)
+    insert = (
+        "INSERT INTO sales_reconciliations (invoice_id, signed_note_id, result, reconciled_at) VALUES (?, ?, ?, 't')"
+    )
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(insert, (invoice, signed, "unknown"))
+    conn.execute(insert, (invoice, signed, "discrepancies"))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(insert, (invoice, signed, "matched"))
+    rec = conn.execute("SELECT MAX(id) FROM sales_reconciliations").fetchone()[0]
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            "INSERT INTO sales_discrepancies (reconciliation_id, sku, type, incident) VALUES (?, 'S', 'quantity', 'lost')",
+            (rec,),
+        )
+    conn.execute(
+        "INSERT INTO sales_discrepancies (reconciliation_id, sku, type, incident) VALUES (?, 'S', 'quantity', 'missing')",
+        (rec,),
+    )
+    corr = (
+        "INSERT INTO customer_corrections (invoice_id, number, kind, total, document_file) VALUES (?, ?, ?, -1, NULL)"
+    )
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(corr, (invoice, "CN-0001", "refund"))
+    conn.execute(corr, (invoice, "CN-0001", "credit_note"))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(corr, (invoice, "CN-0001", "credit_note"))
+    response = (
+        "INSERT INTO customer_responses (reconciliation_id, recipient, subject, draft_body, draft_source, edited, "
+        "status, drafted_at) VALUES (?, 'a@b', 's', 'b', ?, 0, ?, 't')"
+    )
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(response, (rec, "human", "sent"))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(response, (rec, "model", "other"))
+    conn.execute(response, (rec, "model", "awaiting_approval"))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(response, (rec, "template", "sent"))

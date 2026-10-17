@@ -1,0 +1,116 @@
+{
+  "dataset_version": "1.0",
+  "drafts": {
+    "SINV-0002": "Dear customer,\n\nThank you for signing delivery note CDN-0002 for invoice SINV-0002.\nYou reported these incidents:\n- GLV-NIT200-S: damaged, 2 units\n\nCN-0001 is a credit note with a total of 25.00 EUR.\n\nBest regards,\nSales department"
+  },
+  "expected": {
+    "calls": 1,
+    "codes": [
+      0,
+      1,
+      0
+    ],
+    "docs": {
+      "SINV-0001": [],
+      "SINV-0002": [
+        [
+          "CN-0001",
+          "credit_note",
+          -25.0
+        ]
+      ]
+    },
+    "open_failures": 0,
+    "outputs": [
+      "",
+      "error",
+      "sent (as drafted)"
+    ],
+    "responses": {
+      "SINV-0001": null,
+      "SINV-0002": {
+        "edited": false,
+        "sent": "Dear customer,\n\nThank you for signing delivery note CDN-0002 for invoice SINV-0002.\nYou reported these incidents:\n- GLV-NIT200-S: damaged, 2 units\n\nCN-0001 is a credit note with a total of 25.00 EUR.\n\nBest regards,\nSales department",
+        "source": "model",
+        "status": "sent"
+      }
+    },
+    "results": {
+      "SINV-0001": "matched",
+      "SINV-0002": "discrepancies"
+    }
+  },
+  "forms": {
+    "n1": {
+      "incidents": null,
+      "note": 1,
+      "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nReceived in full\n"
+    },
+    "n2": {
+      "incidents": [
+        [
+          "GLV-NIT200-S",
+          "damaged",
+          2
+        ]
+      ],
+      "note": 2,
+      "text": "Signed delivery note\nDelivery note: CDN-0002\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT200-S damaged 2\n"
+    }
+  },
+  "id": "CR-020",
+  "initial_state": {
+    "seed": "db.seed, the orders served and the signed notes scanned; no response drafted yet"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    },
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "invoice": null,
+      "new_process": false,
+      "op": "responses"
+    },
+    {
+      "invoice": "SINV-0001",
+      "new_process": false,
+      "op": "approve"
+    },
+    {
+      "invoice": "SINV-0002",
+      "new_process": false,
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "discrepancies_response",
+    "none_for_matched",
+    "approve",
+    "no_response_command"
+  ]
+}

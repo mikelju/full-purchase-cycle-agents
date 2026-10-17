@@ -1,0 +1,82 @@
+{
+  "dataset_version": "1.0",
+  "drafts": {
+    "SINV-0001": "Dear customer,\n\nThank you for signing delivery note CDN-0001 for invoice SINV-0001.\nYou reported these incidents:\n- GLV-VIN-S: missing, 3 units\n\nCN-0001 is a credit note with a total of 12.30 EUR.\n\nBest regards,\nSales department"
+  },
+  "expected": {
+    "calls": 1,
+    "codes": [
+      0,
+      0
+    ],
+    "docs": {
+      "SINV-0001": [
+        [
+          "CN-0001",
+          "credit_note",
+          -12.3
+        ]
+      ]
+    },
+    "open_failures": 0,
+    "outputs": [
+      "",
+      "sent (as drafted)"
+    ],
+    "responses": {
+      "SINV-0001": {
+        "edited": false,
+        "sent": "Dear customer,\n\nThank you for signing delivery note CDN-0001 for invoice SINV-0001.\nYou reported these incidents:\n- GLV-VIN-S: missing, 3 units\n\nCN-0001 is a credit note with a total of 12.30 EUR.\n\nBest regards,\nSales department",
+        "source": "model",
+        "status": "sent"
+      }
+    },
+    "results": {
+      "SINV-0001": "discrepancies"
+    }
+  },
+  "forms": {
+    "n1": {
+      "incidents": [
+        [
+          "GLV-VIN-S",
+          "missing",
+          3
+        ]
+      ],
+      "note": 1,
+      "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-002\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-VIN-S missing 3\n"
+    }
+  },
+  "id": "CR-006",
+  "initial_state": {
+    "seed": "db.seed, the orders served and the signed notes scanned; no response drafted yet"
+  },
+  "orders": [
+    {
+      "customer": "CLI-002",
+      "lines": [
+        [
+          "GLV-VIN-S",
+          10
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "invoice": null,
+      "new_process": false,
+      "op": "responses"
+    },
+    {
+      "invoice": "SINV-0001",
+      "new_process": false,
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "discrepancies_response",
+    "approve"
+  ]
+}

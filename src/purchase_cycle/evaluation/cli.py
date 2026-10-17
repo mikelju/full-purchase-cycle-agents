@@ -89,6 +89,10 @@ def add_eval_commands(sub) -> None:
 
     claim_dataset.add_commands(sub)
 
+    from purchase_cycle.evaluation import response_dataset
+
+    response_dataset.add_commands(sub)
+
     from purchase_cycle.evaluation.harness import add_run_commands
 
     add_run_commands(sub, MODES)

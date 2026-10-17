@@ -1,0 +1,67 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "failures": 0,
+    "invoices": {
+      "SINV-0001": {
+        "lines": [
+          [
+            "GLV-VIN-S",
+            10,
+            4.1,
+            41.0
+          ]
+        ],
+        "net_total": 41.0,
+        "note": 1
+      }
+    },
+    "model_calls": 0,
+    "notes": {
+      "n1": [
+        "linked",
+        1
+      ]
+    },
+    "results": {
+      "SINV-0001": {
+        "diffs": [],
+        "docs": [],
+        "result": "matched"
+      }
+    }
+  },
+  "id": "SR-005",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers and the clock; the orders of each scenario served"
+  },
+  "orders": [
+    {
+      "customer": "CLI-002",
+      "lines": [
+        [
+          "GLV-VIN-S",
+          10
+        ]
+      ]
+    }
+  ],
+  "restart": false,
+  "steps": [
+    {
+      "do": "scan",
+      "files": {
+        "n1": {
+          "incidents": null,
+          "note": 1,
+          "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-002\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nReceived in full\n"
+        }
+      },
+      "stop": null
+    }
+  ],
+  "tags": [
+    "invoice_per_note",
+    "received_in_full"
+  ]
+}

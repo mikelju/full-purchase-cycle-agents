@@ -1,0 +1,8 @@
+Signed delivery note
+Delivery note: CDN-0001
+Customer: CLI-001
+Signed by: Laura Etxeberria
+Signing date: 2026-10-14
+Incidents:
+GLV-NIT-S missing 5
+GLV-NIT-M damaged 2

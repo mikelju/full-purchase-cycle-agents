@@ -1,0 +1,8 @@
+Dear customer,
+
+Thank you for signing the delivery note and for telling us about the incidents.
+We have checked them against your invoice and issued the correcting documents attached to this email.
+Please call us if anything in them does not match your records.
+
+Kind regards,
+Sales team

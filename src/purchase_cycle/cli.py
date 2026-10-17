@@ -51,6 +51,10 @@ RECONCILE_DEMO_CLAIM_RECORDINGS = config.EVALS_DIR / "recordings" / "claim_demo.
 RECONCILE_DEMO_WORKDIR = config.DATA_DIR / "reconcile-demo"
 DEMO_RECEIPTS = config.ROOT / "examples" / "receipts"
 RECEIPT_DEMO_WORKDIR = config.DATA_DIR / "receipt-demo"
+DEMO_SALES = config.ROOT / "examples" / "sales"
+SALES_DEMO_WORKDIR = config.DATA_DIR / "sales-demo"
+SALES_DEMO_RECORDINGS = config.EVALS_DIR / "recordings" / "sales_demo.jsonl"  # the response drafting
+SALES_DEMO_DECISIONS = {"approve": "SINV-0001", "edit": "SINV-0002", "reject": "SINV-0003"}
 # Which discrepancies invoice gets which decision; the fourth stays awaiting approval.
 RECONCILE_DEMO_CLAIMS = {"approve": "N-77002", "edit": "LV-0303", "reject": "F-2026-1004", "wait": "N-77005"}
 # The exception samples are detection test items, so their channel steps replay the detection recordings.
@@ -902,6 +906,125 @@ def receipt_outcomes(conn, first_receipts: set, first_orders: dict) -> dict:
         if lacking
     ]
     return figures
+
+
+def cmd_sales_demo(args) -> int:
+    """The sample customer orders through delivery notes, invoices, signed notes, drafts and decisions, each step in its own process."""
+    import subprocess
+
+    sales_dir, workdir = Path(args.sales), Path(args.workdir)
+    if workdir.resolve() == config.DATA_DIR.resolve():
+        print(f"Error: --workdir {args.workdir} is the data folder; pick another folder", file=sys.stderr)
+        return 1
+    recordings = Path(args.recordings)
+    if args.mode == "replay" and not recordings.is_file():
+        print(
+            f"Error: response recordings not found: {recordings}; record them once with --mode record", file=sys.stderr
+        )
+        return 1
+    db_path, outbox = workdir / "business.db", workdir / "customer_outbox"
+    receipts_cp, sales_cp = workdir / "receipts.sqlite", workdir / "sales.sqlite"
+    documents, notes_dir = workdir / "customer_documents", workdir / "customer_delivery_notes"
+    workdir.mkdir(parents=True, exist_ok=True)
+    for path in (db_path, receipts_cp, sales_cp):
+        path.unlink(missing_ok=True)
+    for folder, pattern in ((outbox, "*.eml"), (documents, "*.txt"), (notes_dir, "*.txt")):
+        for old in folder.glob(pattern) if folder.is_dir() else []:
+            old.unlink()
+    orders = json.loads((sales_dir / "customer_orders.json").read_text(encoding="utf-8"))
+    conn = db.connect(db_path)
+    try:
+        db.seed(conn)
+        for order in orders:
+            db.insert_order(
+                conn, order["customer_code"], "demo", "received", [(x["sku"], x["quantity"]) for x in order["lines"]]
+            )
+    finally:
+        conn.close()
+    print(f"sales-demo  mode={args.mode}  sales={args.sales}  workdir={args.workdir}  recordings={args.recordings}")
+    print(f"customer orders seeded: {len(orders)}")
+    number = 0
+
+    def step(*command) -> bool:
+        nonlocal number
+        number += 1
+        run = subprocess.run(
+            [sys.executable, "-m", "purchase_cycle.cli", "--db", str(db_path), *command],
+            capture_output=True,
+            text=True,
+        )
+        print()
+        print(f"== step {number}: purchase-cycle {' '.join(command[:2])}  (own process, exit code {run.returncode})")
+        if run.returncode != 0:
+            print(f"Error: step {number} failed: {run.stderr.strip()}", file=sys.stderr)
+            return False
+        for line in run.stdout.splitlines():
+            print(f"  {line}")
+        return True
+
+    invoices = ["--invoices-dir", str(documents)]
+    checkpoints = ["--checkpoints", str(sales_cp)]
+    decide = [*checkpoints, *invoices, "--outbox", str(outbox)]
+    edit_file = str(sales_dir / "response_edit.txt")
+    commands = [
+        ["receipts", "run", "--checkpoints", str(receipts_cp), "--notes-dir", str(notes_dir)],
+        ["sales", "invoice", *invoices],
+        ["sales", "scan", str(sales_dir / "signed_notes"), *invoices, *checkpoints],
+        ["sales", "list"],
+        ["sales", "responses", "--mode", args.mode, "--recordings", str(recordings), *checkpoints],
+        ["sales", "approve", SALES_DEMO_DECISIONS["approve"], *decide],
+        ["sales", "approve", SALES_DEMO_DECISIONS["edit"], "--body-file", edit_file, *decide],
+        ["sales", "reject", SALES_DEMO_DECISIONS["reject"], *checkpoints],
+        *(["sales", "show", f"SINV-{n:04d}"] for n in range(1, len(orders) + 1)),
+    ]
+    for command in commands:
+        if not step(*command):
+            return 1
+    conn = db.connect(db_path)
+    try:
+        figures = sales_outcomes(conn, outbox)
+    finally:
+        conn.close()
+    print()
+    print("summary:")
+    print(f"results: {figures['results']}")
+    print(f"documents: {figures['documents']}")
+    print(f"responses: {figures['responses']}")
+    print(f"response emails: {', '.join(figures['emails']) or 'none'}")
+    print(f"signed notes unlinked: {figures['unlinked']}")
+    if figures["missing"]:
+        print(
+            f"Error: the demo did not end with every outcome, missing: {'; '.join(figures['missing'])}", file=sys.stderr
+        )
+        return 1
+    return 0
+
+
+def sales_outcomes(conn, outbox: Path) -> dict:
+    """Figures of the sales demo and the list of outcomes it still lacks."""
+    results = [r[0] for r in conn.execute("SELECT result FROM sales_reconciliations")]
+    kinds = [r[0] for r in conn.execute("SELECT kind FROM customer_corrections")]
+    responses = [(r[0], r[1]) for r in conn.execute("SELECT status, edited FROM customer_responses")]
+    unlinked = conn.execute("SELECT COUNT(*) FROM signed_delivery_notes WHERE status = 'unlinked'").fetchone()[0]
+    emails = sorted(p.name for p in outbox.glob("*.eml")) if outbox.is_dir() else []
+    checks = [
+        ("matched invoice", "matched" in results),
+        ("invoice awaiting a delivery note", "awaiting_delivery_note" in results),
+        ("credit note", "credit_note" in kinds),
+        ("corrective invoice", "corrective_invoice" in kinds),
+        ("response sent as drafted", ("sent", 0) in responses),
+        ("response sent edited", ("sent", 1) in responses),
+        ("response rejected", any(status == "rejected" for status, _ in responses)),
+        ("unlinked signed note", unlinked >= 1),
+    ]
+    return {
+        "results": ", ".join(f"{k}={results.count(k)}" for k in sorted(set(results))) or "none",
+        "documents": ", ".join(f"{k}={kinds.count(k)}" for k in sorted(set(kinds))) or "none",
+        "responses": ", ".join(f"{s}{' edited' if e else ''}" for s, e in responses) or "none",
+        "emails": emails,
+        "unlinked": unlinked,
+        "missing": [name for name, ok in checks if not ok],
+    }
 
 
 def _reconcile_demo_claims(args, files: dict, step) -> int:
@@ -2020,9 +2143,29 @@ def main(argv=None) -> int:
     )
     receipt_demo.set_defaults(handler=cmd_receipt_demo)
 
+    sales_demo = sub.add_parser(
+        "sales-demo",
+        help="run the sample customer orders to the decided responses, each step in its own process",
+    )
+    sales_demo.add_argument(
+        "--sales", default=str(DEMO_SALES), help="folder of customer_orders.json, signed_notes and response_edit.txt"
+    )
+    sales_demo.add_argument(
+        "--workdir", default=str(SALES_DEMO_WORKDIR), help="folder for the demo database, checkpoints and documents"
+    )
+    sales_demo.add_argument("--recordings", default=str(SALES_DEMO_RECORDINGS), help="response drafting recordings")
+    sales_demo.add_argument(
+        "--mode", choices=config.MODES, default="replay", help="response drafting mode; record needs ANTHROPIC_API_KEY"
+    )
+    sales_demo.set_defaults(handler=cmd_sales_demo)
+
     from purchase_cycle.receipts_cli import add_receipts_commands
 
     add_receipts_commands(sub)
+
+    from purchase_cycle.sales_cli import add_sales_commands
+
+    add_sales_commands(sub)
 
     from purchase_cycle.evaluation.cli import add_eval_commands
 

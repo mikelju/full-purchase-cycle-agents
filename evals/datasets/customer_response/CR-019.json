@@ -1,0 +1,61 @@
+{
+  "dataset_version": "1.0",
+  "drafts": {},
+  "expected": {
+    "calls": 0,
+    "codes": [
+      0,
+      1
+    ],
+    "docs": {
+      "SINV-0001": []
+    },
+    "open_failures": 0,
+    "outputs": [
+      "",
+      "error"
+    ],
+    "responses": {
+      "SINV-0001": null
+    },
+    "results": {
+      "SINV-0001": "awaiting_delivery_note"
+    }
+  },
+  "forms": {},
+  "id": "CR-019",
+  "initial_state": {
+    "seed": "db.seed, the orders served and the signed notes scanned; no response drafted yet"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "invoice": null,
+      "new_process": false,
+      "op": "responses"
+    },
+    {
+      "invoice": "SINV-0001",
+      "new_process": false,
+      "op": "reject"
+    }
+  ],
+  "tags": [
+    "none_for_awaiting",
+    "no_response_command"
+  ]
+}

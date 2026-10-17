@@ -1,0 +1,134 @@
+{
+  "dataset_version": "1.0",
+  "drafts": {
+    "SINV-0001": "Dear customer,\n\nThank you for signing delivery note CDN-0001 for invoice SINV-0001.\nYou reported these incidents:\n- GLV-NIT-XS: extra, 3 units\n\nCI-0001 is a corrective note with a total of 20.70 EUR.\n\nBest regards,\nSales department",
+    "SINV-0002": "Dear customer,\n\nThank you for signing delivery note CDN-0002 for invoice SINV-0002.\nYou reported these incidents:\n- GLV-NIT200-S: damaged, 2 units\n\nCN-0002 is a credit note with a total of 25.00 EUR.\n\nBest regards,\nSales department"
+  },
+  "expected": {
+    "calls": 2,
+    "codes": [
+      0,
+      0,
+      0
+    ],
+    "docs": {
+      "SINV-0001": [
+        [
+          "CI-0001",
+          "corrective_invoice",
+          20.7
+        ]
+      ],
+      "SINV-0002": [
+        [
+          "CN-0002",
+          "credit_note",
+          -25.0
+        ]
+      ]
+    },
+    "open_failures": 0,
+    "outputs": [
+      "",
+      "sent (edited)",
+      "sent (as drafted)"
+    ],
+    "responses": {
+      "SINV-0001": {
+        "edited": true,
+        "sent": "Dear customer,\n\nWe have reviewed your signed delivery note and will send the documents shortly.\n\nBest regards,\nSales department",
+        "source": "model",
+        "status": "sent"
+      },
+      "SINV-0002": {
+        "edited": false,
+        "sent": "Dear customer,\n\nThank you for signing delivery note CDN-0002 for invoice SINV-0002.\nYou reported these incidents:\n- GLV-NIT200-S: damaged, 2 units\n\nCN-0002 is a credit note with a total of 25.00 EUR.\n\nBest regards,\nSales department",
+        "source": "model",
+        "status": "sent"
+      }
+    },
+    "results": {
+      "SINV-0001": "discrepancies",
+      "SINV-0002": "discrepancies"
+    }
+  },
+  "forms": {
+    "n1": {
+      "incidents": [
+        [
+          "GLV-NIT-XS",
+          "extra",
+          3
+        ]
+      ],
+      "note": 1,
+      "text": "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT-XS extra 3\n"
+    },
+    "n2": {
+      "incidents": [
+        [
+          "GLV-NIT200-S",
+          "damaged",
+          2
+        ]
+      ],
+      "note": 2,
+      "text": "Signed delivery note\nDelivery note: CDN-0002\nCustomer: CLI-001\nSigned by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\nGLV-NIT200-S damaged 2\n"
+    }
+  },
+  "id": "CR-037",
+  "initial_state": {
+    "seed": "db.seed, the orders served and the signed notes scanned; no response drafted yet"
+  },
+  "orders": [
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    },
+    {
+      "customer": "CLI-001",
+      "lines": [
+        [
+          "GLV-NIT-XS",
+          5
+        ],
+        [
+          "GLV-NIT200-S",
+          4
+        ]
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "invoice": null,
+      "new_process": false,
+      "op": "responses"
+    },
+    {
+      "body": "Dear customer,\n\nWe have reviewed your signed delivery note and will send the documents shortly.\n\nBest regards,\nSales department",
+      "invoice": "SINV-0001",
+      "new_process": false,
+      "op": "approve"
+    },
+    {
+      "invoice": "SINV-0002",
+      "new_process": false,
+      "op": "approve"
+    }
+  ],
+  "tags": [
+    "discrepancies_response",
+    "approve",
+    "approve_edit"
+  ]
+}

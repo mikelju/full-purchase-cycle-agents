@@ -1,0 +1,8 @@
+Signed delivery note
+Delivery note: CDN-0002
+Customer: CLI-002
+Signed by: Jon Aguirre
+Signing date: 2026-10-14
+Incidents:
+GLV-NIT-L damaged 3
+GLV-NIT200-L extra 2

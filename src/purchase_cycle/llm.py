@@ -35,6 +35,8 @@ from purchase_cycle.config import (
     OFFER_EXTRACTION_MAX_TOKENS,
     OFFER_EXTRACTION_RECORDINGS_PATH,
     RECORDINGS_PATH,
+    RESPONSE_DRAFTING_MAX_TOKENS,
+    RESPONSE_DRAFTING_RECORDINGS_PATH,
     SUPPLIER_DOCUMENT_MAX_TOKENS,
     SUPPLIER_DOCUMENT_RECORDINGS_PATH,
     WHATSAPP_EXTRACTION_RECORDINGS_PATH,
@@ -346,6 +348,27 @@ class ClaimBody(BaseModel):
     body: str = Field(description="The email body in plain ASCII English")
 
 
+RESPONSE_DRAFTING_INSTRUCTIONS = """You write the body of an email from a medical supplies distributor to a customer about the incidents the customer reported on a signed delivery note.
+
+The user message is one JSON object with the facts: the customer, the invoice number, the delivery note number, the invoice net total, every incident (SKU, product, incident type and units) and every correcting document (number, kind, lines and total).
+Return the email body as plain ASCII English text, with no recipient or subject line.
+Rules:
+- Name the invoice number and the delivery note number.
+- List every incident by its SKU with its units.
+- Name every correcting document by its number and state its total.
+- Write every amount as a number with two decimals followed by EUR, for example 1234.56 EUR, with no thousands separator.
+- Use only the numbers in the facts; never invent an amount, a date or a promise.
+"""
+
+
+class ResponseBody(BaseModel):
+    """Structured answer of the response drafting node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    body: str = Field(description="The email body in plain ASCII English")
+
+
 @dataclass(frozen=True)
 class Task:
     """What the model is asked to do and where its recorded answers live."""
@@ -453,6 +476,15 @@ CLAIM_DRAFTING = Task(
     ClaimBody,
     CLAIM_DRAFTING_RECORDINGS_PATH,
     CLAIM_DRAFTING_MAX_TOKENS,
+)
+RESPONSE_DRAFTING = Task(
+    "response_drafting",
+    RESPONSE_DRAFTING_INSTRUCTIONS,
+    "record_response_body",
+    "Record the body of the response email to the customer.",
+    ResponseBody,
+    RESPONSE_DRAFTING_RECORDINGS_PATH,
+    RESPONSE_DRAFTING_MAX_TOKENS,
 )
 
 
