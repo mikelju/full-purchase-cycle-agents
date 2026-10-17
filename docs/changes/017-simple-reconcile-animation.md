@@ -39,7 +39,7 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 - [x] Orders style: owner decisions in a Lavish page (2026-10-17, see Decisions)
 - [x] Orders style: English and Spanish pages rebuilt in the visual style of the orders animation with the claim email (`ef6e413`) and recorded: 536 frames at 15 fps, 35.73 s, story 33.70 s
 - [x] Orders style: frames inspected on per-second contact sheets, no defects found; GIF and MP4 encoded in both languages
-- [x] Orders style: references updated (folder README, README, LinkedIn plan)
+- [x] Orders style: references updated (folder README and README alt text; the post 3 sentence in the LinkedIn plan stays true and is unchanged)
 - [ ] Orders style: adversarial review (round 5) and `npm run check`
 - [x] First version: adversarial review and `npm run check` (two rounds, see below; `npm run check` on `f0d6f41`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017.txt`; the later commit only touches this document)
 
@@ -53,7 +53,7 @@ Build notes and evidence of the orders-style rebuild (contact sheets in `.eviden
   On-screen text matches the reworded C3: the frames show no document IDs and no captions; the tokens that carry the figures from the documents to the table briefly cross the Extract node and the table while in flight.
   The constants add up to 33.0 s; the measured 33.70 s includes the round resets and the step bodies on the recorder's virtual clock.
 - C4: the Spanish page differs from the English one in its strings block, charset, title and number format (4,20, 420,00, -25,00 €); the frames show Conciliación, Albarán, ¿Cuadra?, Sí, Reclamación, Calcular diferencia, Diferencia -25,00 € and «Solicitamos un abono» legible in one font, and the table and card text inside their boxes at 960x540 (`sheet-reconcile-flow-es-*.png`, final frame scaled to 960x540).
-- C5: the folder README, the README and the LinkedIn plan describe the new claim steps and length.
+- C5: the folder README describes the new claim steps and the length of about 36 s, and the README alt text adds the email, the approval and the send; the post 3 sentence (two rounds, -25,00 €, se pide un abono al proveedor) is still true and unchanged; `git grep reconcile-flow` shows no other reference to update.
 - C6: not run yet; it runs with review round 5.
 - Builder assumptions (not decided by the owner): the document nodes turn teal one after another over 1.6 s and are never amber-active; red is used only in table cells and the card difference line; both end nodes are labelled End (Fin); compute difference 2.4 s, draft 2.0 s, approve 2.0 s, send 3.0 s, end 1.6 s; in round 2 the Pedido (Order) row cells for quantity and total stay uncoloured, as they are not compared against the delivery note.
 
