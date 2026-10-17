@@ -1,6 +1,6 @@
 # 017 - Simple reconcile animation
 
-Status: rebuilt in the orders style with the claim email; review round 5 fixes applied and re-recorded; `npm run check` pending
+Status: delivered, in review (rebuilt in the orders style with the claim email; review round 5 fixes applied and re-recorded)
 
 ## Contract
 Goal and reason:
@@ -43,7 +43,7 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 - [x] Orders style: frames inspected on per-second contact sheets, no defects found; GIF and MP4 encoded in both languages
 - [x] Orders style: references updated (folder README and README alt text; the post 3 sentence in the LinkedIn plan stays true and is unchanged)
 - [x] Orders style: adversarial review round 5 (see below); fixes applied, both languages re-recorded and re-encoded
-- [ ] Orders style: `npm run check` on the fixed pages
+- [x] Orders style: `npm run check` on the fixed pages (`npm run check` on `4af9463`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017-round5.txt`; the later commit only touches this document)
 
 Build notes and evidence of the orders-style rebuild (contact sheets in `.evidence/cambio-017/orders-style/`, probes and recorder logs in `.evidence/cambio-017/`, all git-ignored):
 - C1: both GIFs are 960x540 with the loop block written by `-loop 0`, 536 frames, 1.13 MB (EN, 1127026 bytes) and 1.15 MB (ES, 1149807 bytes); both MP4s are 1280x720, h264, yuv420p, 536 frames, 0.56 MB (EN, 559465 bytes) and 0.55 MB (ES, 552035 bytes), re-recorded after review round 5 (`ffprobe-orders-style-reconcile-flow{,-es}.{gif,mp4}.txt`); encoded with the commands of the folder README and the full ffmpeg 8.0.1 build.
@@ -58,7 +58,7 @@ Build notes and evidence of the orders-style rebuild (contact sheets in `.eviden
   The person label comes from the owner-approved claim step "Approve (person)" (Lavish option 1), not from the C3 option text.
 - C4: the Spanish page differs from the English one in its strings block, charset, title and number format (4,20, 420,00, -25,00 €); the frames show Conciliación, Albarán, ¿Cuadra?, sí, Reclamación, Calcular diferencia, Diferencia -25,00 € and «Solicitamos un abono» legible in one font, and the table and card text inside their boxes at 960x540 (`sheet-reconcile-flow-es-*.png`, final frame scaled to 960x540).
 - C5: the folder README describes the new claim steps and the length of about 36 s, and the README alt text adds the email, the approval and the send; the post 3 sentence (two rounds, -25,00 €, se pide un abono al proveedor) is still true and unchanged; `git grep reconcile-flow` shows no other reference to update.
-- C6: not run yet; it runs with review round 5.
+- C6: `npm run check` on `4af9463` exits 0 with 1288 tests passed (`.evidence/cambio-017/check-017-round5.txt`).
 - Builder assumptions (not decided by the owner): the document nodes turn teal one after another over 1.6 s and are never amber-active; red is used only in table cells and the card difference line; both end nodes are labelled End (Fin); compute difference 2.4 s, draft 2.0 s, approve 2.0 s, send 3.0 s, end 1.6 s; in round 2 the Pedido (Order) row cells for quantity and total stay uncoloured, as they are not compared against the delivery note.
 
 Build notes and evidence of the redesign, superseded by the orders-style rebuild (frames and contact sheets in `.evidence/cambio-017/redesign/`, git-ignored):
@@ -153,4 +153,4 @@ Conceptual simplifications (as in change 011, the flow is conceptual): the deliv
 
 ## Delivery
 Branch `cambio-017-simple-reconcile-animation`, PR to `main` (see the PR description for results per criterion).
-Pending: `npm run check` on the fixed pages; owner decisions on the C3 frame-header deviation, the -25.00 sign and the uncoloured Order row; owner review of the Spanish labels (own translation: node names, Reclamación, Redactar correo, Solicitamos un abono, ...); the post 3 questions inherited from change 015 are outside this change.
+Pending: owner decisions on the C3 frame-header deviation, the -25.00 sign and the uncoloured Order row; owner review of the Spanish labels (own translation: node names, Reclamación, Redactar correo, Solicitamos un abono, ...); the post 3 questions inherited from change 015 are outside this change.
