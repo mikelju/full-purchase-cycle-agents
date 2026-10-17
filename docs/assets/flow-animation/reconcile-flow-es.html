@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;600;700&display=swap">
 <style>
-/* Layout: one fixed 16:9 stage (GIF-ready) - three documents | extract | compare table | decision | register or claim subgraph | end. Single deliberate light, high-contrast look, independent of the OS theme. */
+/* Layout: one fixed 16:9 stage (GIF-ready) - reconciliation graph (three documents, extract, compare with its table, decision, register or claim subgraph) | supplier. Visual style of the orders animation (purchase-cycle-flow.html). Single deliberate light, high-contrast look, independent of the OS theme. */
 :root {
   --ground: #EDF1F7;
   --panel: #FFFFFF;
@@ -11,15 +11,20 @@
   --ink: #0F172A;
   --muted: #475569;
   --line: #8A99AF;
+  --node: #FFFFFF;
   --node-edge: #5B6B82;
-  --active: #7C3AED;
+  --active: #0891B2;
   --title: #4338CA;
   --done: #0D9488;
   --done-soft: #CCFBF1;
   --done-ink: #134E4A;
+  --msg: #D97706;
+  --msg-soft: #FEF3C7;
+  --hot: #F59E0B;
+  --hot-ink: #1C1300;
   --bad: #E11D48;
-  --bad-soft: #FFE4E6;
   --bad-ink: #9F1239;
+  --idle: #F4F6FA;
   --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
   --sans: "Inter", system-ui, "Segoe UI", sans-serif;
   color-scheme: light;
@@ -37,63 +42,65 @@ button:focus-visible { outline: 2px solid var(--active); outline-offset: 2px; }
 svg { display: block; width: 100%; min-width: 0; height: auto; background: var(--ground); }
 body.clean header { display: none; }
 
-/* nodes: idle white, active violet, done teal, failed rose */
-.node .sh { fill: #fff; stroke: var(--node-edge); stroke-width: 1.6; transition: fill .3s, stroke .3s, stroke-width .3s; filter: url(#shadow); }
-.node .lb { font: 700 17px var(--sans); fill: var(--ink); text-anchor: middle; dominant-baseline: central; transition: fill .3s; }
-.node.active .sh { fill: var(--active); stroke: var(--active); stroke-width: 3; filter: url(#glow); }
-.node.active .lb { fill: #fff; }
-.node.done .sh { fill: var(--done-soft); stroke: var(--done); stroke-width: 2.2; }
-.node.done .lb { fill: var(--done-ink); }
-.node.bad .sh { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 2.2; }
-.node.bad .lb { fill: var(--bad-ink); }
-/* the compare node is a frame around the table: it keeps a light fill while active */
-.node.big .sh { fill: var(--panel); }
-.node.big.active .sh { fill: #F5F3FF; }
-.node.big .lb { text-anchor: start; font-size: 18px; }
-.node.big.active .lb { fill: var(--active); }
+.frame { fill: var(--panel); stroke: var(--panel-edge); stroke-width: 1.2; filter: url(#shadow); }
+.subframe { fill: var(--idle); stroke: var(--node-edge); stroke-dasharray: 4 4; transition: fill .4s, stroke .4s; }
+.subframe.open { fill: #ECFEFF; stroke: var(--active); stroke-width: 1.6; }
+.flabel { font: 700 12px var(--mono); fill: var(--title); letter-spacing: .16em; text-transform: uppercase; }
+.small { font: 400 12px var(--mono); fill: var(--muted); }
+.cond { font: 700 12px var(--mono); fill: var(--ink); }
+.pname { font: 600 14px var(--sans); fill: var(--ink); text-anchor: middle; }
 
-.edge { fill: none; stroke: var(--line); stroke-width: 2; transition: stroke .3s; }
-.edge.hot { stroke: var(--active); stroke-width: 3; stroke-dasharray: 9 5; animation: flow .45s linear infinite; filter: url(#glow-e); }
+/* nodes: idle white, active solid amber with glow, done teal (as in the orders animation) */
+.node rect { fill: var(--node); stroke: var(--node-edge); stroke-width: 1.4; transition: fill .3s, stroke .3s; }
+.node text { font: 600 13px var(--mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; transition: fill .3s; }
+.node circle { fill: var(--node); stroke: var(--muted); stroke-width: 1.6; transition: fill .3s, stroke .3s; }
+.node.endc circle.dot { fill: var(--muted); stroke: none; }
+.node.active rect { fill: var(--hot); stroke: var(--hot); filter: url(#glow); }
+.node.active text { fill: var(--hot-ink); font-weight: 700; }
+.node.active circle { stroke: var(--hot); }
+.node.active circle.dot { fill: var(--hot); }
+.node.done rect { fill: var(--done-soft); stroke: var(--done); stroke-width: 1.8; }
+.node.done text { fill: var(--done-ink); }
+.node.done circle { stroke: var(--done); }
+.node.done circle.dot { fill: var(--done); }
+.idle { opacity: .45; transition: opacity .4s; }
+.lit { opacity: 1; transition: opacity .4s; }
+
+.edge { fill: none; stroke: var(--line); stroke-width: 1.6; transition: stroke .3s; }
+.edge.hot { stroke: var(--hot); stroke-width: 2.6; stroke-dasharray: 9 5; animation: flow .45s linear infinite; filter: url(#glow-e); }
 @keyframes flow { to { stroke-dashoffset: -14; } }
-.edge.ok { stroke: var(--done); stroke-width: 3; }
-.edge.bad { stroke: var(--bad); stroke-width: 3; }
+.edge.done { stroke: var(--done); stroke-opacity: .9; stroke-width: 2; }
+.link { stroke: var(--node-edge); stroke-dasharray: 3 4; fill: none; }
 @media (prefers-reduced-motion: reduce) { .edge.hot { animation: none; } }
-.blab { font: 700 16px var(--sans); fill: var(--line); transition: fill .3s; }
-.blab.ok { fill: var(--done); }
-.blab.bad { fill: var(--bad); }
 
-.card .sh { fill: #fff; stroke: var(--panel-edge); stroke-width: 1.6; filter: url(#shadow); transition: stroke .3s, stroke-width .3s; }
-.card.on .sh { stroke: var(--active); stroke-width: 3; }
-.card .nm { font: 700 17px var(--sans); fill: var(--ink); dominant-baseline: central; }
-.card .fg { font: 600 16px var(--mono); fill: var(--ink); dominant-baseline: central; opacity: 0; transition: opacity .3s; }
-.card.on .fg, .card.kept .fg { opacity: 1; }
-
-.cell rect { fill: #F8FAFC; stroke: var(--panel-edge); stroke-width: 1.4; transition: fill .3s, stroke .3s; }
-.cell text { font: 600 18px var(--mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
-.cell.ok rect { fill: #F0FDFA; stroke: var(--done); stroke-width: 2.6; }
+/* compare table: rows are the three documents, columns quantity, price and total */
+.table rect.t { fill: #F8FAFC; stroke: var(--panel-edge); transition: stroke .3s; }
+.table.flash rect.t { stroke: var(--hot); stroke-width: 2; filter: url(#glow-s); }
+.th { font: 700 12px var(--mono); fill: var(--muted); text-anchor: middle; }
+.rh { font: 700 12px var(--mono); fill: var(--ink); dominant-baseline: central; }
+.cell rect { fill: #FFFFFF; stroke: var(--panel-edge); stroke-width: 1.2; transition: fill .3s, stroke .3s; }
+.cell text { font: 600 15px var(--mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+.cell.ok rect { fill: var(--done-soft); stroke: var(--done); stroke-width: 1.8; }
 .cell.ok text { fill: var(--done-ink); }
-.cell.bad rect { fill: #FFF1F2; stroke: var(--bad); stroke-width: 3; }
+.cell.bad rect { fill: #FFE4E6; stroke: var(--bad); stroke-width: 2.2; }
 .cell.bad text { fill: var(--bad-ink); }
 .mark { opacity: 0; transition: opacity .3s; }
 .cell.ok .mk-ok, .cell.bad .mk-bad { opacity: 1; }
-.th { font: 700 15px var(--sans); fill: var(--muted); text-anchor: middle; }
-.rh { font: 700 15px var(--sans); fill: var(--ink); dominant-baseline: central; }
 
-#claimG { opacity: .32; transition: opacity .5s; }
-#claimG.lit { opacity: 1; }
-.cframe { fill: #FFFFFF; fill-opacity: .55; stroke: var(--node-edge); stroke-width: 1.6; stroke-dasharray: 7 5; }
-#claimG.lit .cframe { stroke: var(--bad); }
-.clab { font: 700 16px var(--sans); fill: var(--muted); }
-#claimG.lit .clab { fill: var(--bad-ink); }
-.diff { font: 700 17px var(--mono); fill: var(--bad); text-anchor: middle; dominant-baseline: central; opacity: 0; transition: opacity .3s; }
-.diff.on { opacity: 1; }
-.node.active .diff { fill: #fff; }
-
-.fly { opacity: 0; }
-.fly.on { opacity: 1; }
-.fly text { font: 700 14px var(--mono); fill: #fff; text-anchor: middle; dominant-baseline: central; white-space: pre; }
+.chip { opacity: 0; transition: opacity .4s; }
+.chip.on { opacity: 1; }
+.chip text { font: 600 13px var(--mono); fill: var(--ink); dominant-baseline: central; white-space: pre; }
+.tok { opacity: 0; transition: opacity .25s; filter: url(#glow-t); }
+.tok.on { opacity: 1; }
+.tok text { font: 700 14px var(--mono); fill: var(--hot-ink); text-anchor: middle; dominant-baseline: central; white-space: pre; }
+.check { opacity: 0; transition: opacity .3s; filter: url(#glow-s); }
+.check.on { opacity: 1; }
+.mail { opacity: 0; transition: opacity .4s; }
+.mail.on { opacity: 1; }
+.mline { font: 600 14px var(--sans); fill: var(--ink); }
+.mline.diff { font-weight: 700; fill: var(--bad); }
 .tag rect { fill: var(--title); }
-.tag text { font: 700 16px var(--sans); fill: #fff; text-anchor: middle; dominant-baseline: central; }
+.tag text { font: 700 12px var(--mono); fill: #fff; text-anchor: middle; dominant-baseline: central; letter-spacing: .08em; }
 .progress { fill: url(#prog); }
 </style>
 
@@ -111,23 +118,39 @@ body.clean header { display: none; }
   <svg id="svg" viewBox="0 0 1280 720" role="img">
     <defs>
       <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#EDF1F7"/><circle cx="12" cy="12" r="1.1" fill="#D3DAE5"/></pattern>
-      <linearGradient id="prog" x1="0" x2="1"><stop offset="0" stop-color="#7C3AED"/><stop offset=".5" stop-color="#0891B2"/><stop offset="1" stop-color="#0D9488"/></linearGradient>
-      <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1E293B" flood-opacity=".14"/></filter>
+      <linearGradient id="prog" x1="0" x2="1"><stop offset="0" stop-color="#F59E0B"/><stop offset=".5" stop-color="#22C55E"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+      <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1E293B" flood-opacity=".14"/></filter>
       <filter id="glow" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".55"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".6"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-t" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".4"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <filter id="glow-e" filterUnits="userSpaceOnUse" x="0" y="0" width="1280" height="720"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A99AF"/></marker>
-      <marker id="arr-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
-      <marker id="arr-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0D9488"/></marker>
-      <marker id="arr-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E11D48"/></marker>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A99AF"/></marker>
+      <marker id="arr-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker>
+      <marker id="arr-done" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0D9488"/></marker>
     </defs>
 
     <rect width="1280" height="720" fill="url(#dots)"/>
+    <!-- reconciliation graph and supplier panels -->
+    <rect class="frame" x="24" y="64" width="848" height="616" rx="10"/>
+    <text class="flabel" id="graphLab" x="36" y="88"></text>
+    <rect class="frame" x="896" y="64" width="360" height="616" rx="10"/>
+    <text class="flabel" id="supLab" x="908" y="88"></text>
+    <circle cx="1076" cy="150" r="22" fill="#E2E8F0" stroke="#8A99AF"/>
+    <path d="M1062,164 V146 L1076,136 L1090,146 V164 Z" fill="#64748B"/>
+    <rect x="1071" y="153" width="10" height="11" fill="#E2E8F0"/>
+    <text class="pname" id="supName" x="1076" y="196"></text>
+
+    <g id="claimG" class="idle">
+      <rect class="subframe" id="subframe" x="40" y="436" width="816" height="228" rx="8"/>
+      <text class="flabel" id="claimLab" x="52" y="456"></text>
+    </g>
+    <g id="yesG"></g>
     <g id="edges"></g>
-    <g id="cards"></g>
+    <g id="tables"></g>
     <g id="nodes"></g>
-    <g id="claimG"></g>
-    <g id="flys"></g>
-    <g id="tagG" class="tag"><rect x="24" y="22" width="132" height="34" rx="17"/><text id="tag" x="90" y="39.5"></text></g>
+    <g id="toks"></g>
+    <g id="mailG" class="mail"></g>
+    <g id="tagG" class="tag"><rect x="756" y="74" width="104" height="24" rx="12"/><text id="tag" x="808" y="86.5"></text></g>
 
     <rect x="24" y="704" width="1232" height="4" rx="2" fill="#D5DCE6"/>
     <rect class="progress" id="progress" x="24" y="704" width="0" height="4" rx="2"/>
@@ -136,19 +159,21 @@ body.clean header { display: none; }
 </div>
 
 <script>
-// ---------- every visible string (the Spanish page differs only in this block, the charset and the <title>) ----------
+// ---------- every visible string (the English page differs only in this block, the charset and the <title>) ----------
 const S = {
-  h1: "conciliación - pedido, albarán y factura: extraer, comparar y después registrar o reclamar",
-  aria: "Grafo de conciliación animado en dos rondas: se extraen y comparan la cantidad, el precio y el total del pedido, el albarán y la factura; en la ronda 1 todo cuadra y la factura se registra; en la ronda 2 la factura cobra 40 unidades cuando el albarán muestra 35, así que el subgrafo de reclamación calcula una diferencia de -25,00 € y pide un abono al proveedor",
+  h1: "conciliación - pedido, albarán y factura: extraer, comparar y después registrar o reclamar al proveedor",
+  aria: "Grafo de conciliación animado en dos rondas: se extraen y comparan la cantidad, el precio y el total del pedido, el albarán y la factura; en la ronda 1 todo cuadra y la factura se registra; en la ronda 2 la factura cobra 40 unidades cuando el albarán muestra 35, así que el subgrafo de reclamación calcula una diferencia de -25,00 €, redacta un correo, una persona lo aprueba y se envía al proveedor pidiendo un abono",
   btn: { pause: "Pausa", play: "Reanudar", restart: "Reiniciar", speed: "Velocidad", clean: "Fotograma limpio" },
+  graph: "grafo de conciliación", supPanel: "proveedor", supplier: "Proveedor",
   round: ["Ronda 1", "Ronda 2"],
   docs: ["Pedido", "Albarán", "Factura"],
   cols: ["Cantidad", "Precio", "Total"],
-  nodes: { extract: "Extraer", compare: "Comparar", decide: "¿Cuadra?", register: "Registrar", compute: "Calcular diferencia", ask: "Pedir abono", end: "Fin" },
-  claim: "Reclamación", yes: "Sí", no: "No",
+  nodes: { extract: "Extraer", compare: "Comparar", decide: "¿Cuadra?", register: "Registrar", compute: "Calcular diferencia", draft: "Redactar correo", approve: "Aprobar", send: "Enviar", end: "Fin" },
+  claim: "reclamación", yes: "Sí", no: "No", person: "persona",
   figs: [[["100", "4,20", "420,00"], ["100", "4,20", "420,00"], ["100", "4,20", "420,00"]],
          [["40", "5,00", "200,00"], ["35", "5,00", "175,00"], ["40", "5,00", "200,00"]]],
   diff: "-25,00 €",
+  mail: ["Factura 40 uds · Albarán 35 uds", "Diferencia -25,00 €", "Solicitamos un abono"],
 };
 </script>
 <script>
@@ -160,122 +185,129 @@ const txt = (attrs, s, parent) => { const e = el("text", attrs, parent); e.textC
 $("h1").textContent = S.h1; $("svg").setAttribute("aria-label", S.aria);
 $("btn-pause").textContent = S.btn.pause; $("btn-restart").textContent = S.btn.restart;
 $("btn-speed").textContent = S.btn.speed + " 1x"; $("btn-clean").textContent = S.btn.clean;
+$("graphLab").textContent = S.graph; $("supLab").textContent = S.supPanel; $("supName").textContent = S.supplier;
+$("claimLab").textContent = S.claim;
 
-// ---------- timeline (ms): one node active at a time, every step held at least 1.5 s (change 017 redesign) ----------
+// ---------- timeline (ms): one node active at a time, every step held at least 1.5 s (change 017, orders style) ----------
 const T = {
-  cards: 1600, extract: 3000, compare: [2800, 3400], decide: 1600,
-  register: 1800, compute: 2400, ask: 2000, end: 1600, hold: 2000,
-  fly: 1300, flyGap: 700, edge: 450,
+  docs: 1600, extract: 3000, compare: [2800, 3400], decide: 1600, register: 1800,
+  compute: 2400, draft: 2000, approve: 2000, send: 3000, end: 1600, hold: 2000,
+  fly: 1300, flyGap: 700, edge: 450, mail: 1300,
 };
 
-// ---------- layout ----------
-const Y = 360;
-const CARD = { x: 16, w: 164, h: 104, cy: [216, 360, 504] };
-const EX = { x: 270, w: 112, h: 54 };
-const CMP = { x: 374, y: 196, w: 442, h: 278 };
-const COLX = [500, 602, 704], CW = 96, CH = 48, ROWY = [304, 364, 424];
-const DEC = { x: 905, hw: 60, hh: 48 };
-const REG = { x: 1075, y: 220, w: 162, h: 54 };
-const CLM = { x: 973, y: 452, w: 214, h: 234 };
-const CMPN = { x: 1080, y: 534, w: 190, h: 70 };
-const ASK = { x: 1080, y: 636, w: 190, h: 50 };
-const END = { x: 1232, r: 26 };
-
-// ---------- edges ----------
-const EG = $("edges");
+// ---------- graph layout (orders style: 38 px nodes, mono labels) ----------
+const NH = 38;
+const N = {
+  doc0: { x: 104, y: 136, w: 128 }, doc1: { x: 104, y: 180, w: 128 }, doc2: { x: 104, y: 224, w: 128 },
+  extract: { x: 260, y: 180, w: 100 }, compare: { x: 400, y: 180, w: 110 }, decide: { x: 600, y: 180, w: 110 },
+  register: { x: 750, y: 180, w: 110, g: "yesG" }, end1: { x: 845, y: 180, c: 1, g: "yesG" },
+  compute: { x: 150, y: 528, w: 196, g: "claimG" }, draft: { x: 360, y: 528, w: 164, g: "claimG" },
+  approve: { x: 540, y: 528, w: 110, g: "claimG" }, send: { x: 710, y: 528, w: 110, g: "claimG" },
+  end2: { x: 710, y: 618, c: 1, g: "claimG" },
+};
+const LABEL = { doc0: S.docs[0], doc1: S.docs[1], doc2: S.docs[2], end1: S.nodes.end, end2: S.nodes.end };
+const E = {
+  c0: [[168, 136], [186, 136], [186, 180], [208, 180]],
+  c1: [[168, 180], [208, 180]],
+  c2: [[168, 224], [186, 224], [186, 180], [208, 180]],
+  "ex-cmp": [[310, 180], [343, 180]],
+  "cmp-dec": [[455, 180], [543, 180]],
+  yes: [[655, 180], [693, 180], "yesG"],
+  "reg-end": [[805, 180], [834, 180], "yesG"],
+  no: [[600, 199], [600, 420], [150, 420], [150, 507]],
+  "cd-dr": [[248, 528], [276, 528], "claimG"],
+  "dr-ap": [[442, 528], [483, 528], "claimG"],
+  "ap-se": [[595, 528], [653, 528], "claimG"],
+  "se-end": [[710, 547], [710, 607], "claimG"],
+  "se-sup": [[765, 528], [894, 528]],
+};
 const edges = {};
-function edge(id, d) { edges[id] = el("path", { class: "edge", d, "marker-end": "url(#arr)" }, EG); }
-CARD.cy.forEach((cy, i) => edge("c" + i, `M${CARD.x + CARD.w},${cy} C${CARD.x + CARD.w + 22},${cy} ${EX.x - EX.w / 2 - 24},${Y} ${EX.x - EX.w / 2 - 2},${Y}`));
-edge("ex-cmp", `M${EX.x + EX.w / 2},${Y} L${CMP.x - 2},${Y}`);
-edge("cmp-dec", `M${CMP.x + CMP.w},${Y} L${DEC.x - DEC.hw - 2},${Y}`);
-edge("yes", `M${DEC.x},${Y - DEC.hh} L${DEC.x},${REG.y} L${REG.x - REG.w / 2 - 2},${REG.y}`);
-edge("no", `M${DEC.x},${Y + DEC.hh} L${DEC.x},${CMPN.y} L${CMPN.x - CMPN.w / 2 - 2},${CMPN.y}`);
-edge("reg-end", `M${REG.x + REG.w / 2},${REG.y} L${END.x},${REG.y} L${END.x},${Y - END.r - 2}`);
-edge("cmpn-ask", `M${CMPN.x},${CMPN.y + CMPN.h / 2} L${CMPN.x},${ASK.y - ASK.h / 2 - 2}`);
-edge("ask-end", `M${ASK.x + ASK.w / 2},${ASK.y} L${END.x},${ASK.y} L${END.x},${Y + END.r + 2}`);
-const MARK = { hot: "url(#arr-hot)", ok: "url(#arr-ok)", bad: "url(#arr-bad)" };
+for (const k in E) {
+  const pts = E[k].filter(p => Array.isArray(p)), g = E[k].find(p => typeof p === "string") || "edges";
+  edges[k] = el("polyline", { class: "edge", points: pts.map(p => p.join(",")).join(" "), "marker-end": "url(#arr)" }, $(g));
+}
 function setEdge(id, state) {
-  const e = edges[id]; e.classList.remove("hot", "ok", "bad"); if (state) e.classList.add(state);
-  e.setAttribute("marker-end", MARK[state] || "url(#arr)");
+  const e = edges[id]; e.classList.remove("hot", "done"); if (state) e.classList.add(state);
+  e.setAttribute("marker-end", state === "hot" ? "url(#arr-hot)" : state === "done" ? "url(#arr-done)" : "url(#arr)");
 }
-const yesLab = txt({ class: "blab", x: DEC.x - 12, y: 286, "text-anchor": "end" }, S.yes, EG);
-const noLab = txt({ class: "blab", x: DEC.x - 12, y: 462, "text-anchor": "end" }, S.no, EG);
+el("line", { class: "link", x1: 400, y1: 199, x2: 400, y2: 262 }, $("edges"));
+txt({ class: "cond", x: 662, y: 170 }, S.yes, $("yesG"));
+txt({ class: "cond", x: 608, y: 226 }, S.no, $("edges"));
 
-// ---------- document cards ----------
-const cards = CARD.cy.map((cy, i) => {
-  const g = el("g", { class: "card" }, $("cards"));
-  el("rect", { class: "sh", x: CARD.x, y: cy - CARD.h / 2, width: CARD.w, height: CARD.h, rx: 10 }, g);
-  const ix = CARD.x + 14, iy = cy - 40;
-  el("path", { d: `M${ix},${iy} h11 l5,5 v16 h-16 z`, fill: "none", stroke: "#4338CA", "stroke-width": 1.6 }, g);
-  txt({ class: "nm", x: ix + 26, y: iy + 11 }, S.docs[i], g);
-  const f1 = txt({ class: "fg", x: CARD.x + 16, y: cy + 8 }, "", g);
-  const f2 = txt({ class: "fg", x: CARD.x + 16, y: cy + 34 }, "", g);
-  return { g, f1, f2 };
-});
-
-// ---------- nodes ----------
-const NG = $("nodes"), CG = $("claimG");
 const nodes = {};
-function rectNode(k, c, parent) {
-  const g = el("g", { class: "node" }, parent);
-  el("rect", { class: "sh", x: c.x - c.w / 2, y: (c.y ?? Y) - c.h / 2, width: c.w, height: c.h, rx: 10 }, g);
+for (const k in N) {
+  const n = N[k];
+  const g = el("g", { class: "node" + (n.c ? " endc" : ""), transform: `translate(${n.x},${n.y})` }, $(n.g || "nodes"));
+  if (n.c) {
+    el("circle", { r: 9 }, g); el("circle", { class: "dot", r: 5 }, g);
+    txt({ class: "small", x: n.x, y: n.y + 26, "text-anchor": "middle" }, LABEL[k], $(n.g || "nodes"));
+  } else {
+    el("rect", { x: -n.w / 2, y: -NH / 2, width: n.w, height: NH, rx: 8 }, g);
+    txt({}, LABEL[k] || S.nodes[k], g);
+  }
   nodes[k] = g;
-  return g;
 }
-txt({ class: "lb", x: EX.x, y: Y }, S.nodes.extract, rectNode("extract", EX, NG));
-{
-  const g = el("g", { class: "node big" }, NG);
-  el("rect", { class: "sh", x: CMP.x, y: CMP.y, width: CMP.w, height: CMP.h, rx: 12 }, g);
-  txt({ class: "lb", x: CMP.x + 16, y: CMP.y + 26 }, S.nodes.compare, g);
-  nodes.compare = g;
-}
-{
-  const g = el("g", { class: "node" }, NG);
-  el("polygon", { class: "sh", points: `${DEC.x},${Y - DEC.hh} ${DEC.x + DEC.hw},${Y} ${DEC.x},${Y + DEC.hh} ${DEC.x - DEC.hw},${Y}` }, g);
-  txt({ class: "lb", x: DEC.x, y: Y, style: "font-size:16px" }, S.nodes.decide, g);
-  nodes.decide = g;
-}
-txt({ class: "lb", x: REG.x, y: REG.y }, S.nodes.register, rectNode("register", REG, NG));
-{
-  const g = el("g", { class: "node" }, NG);
-  el("circle", { class: "sh", cx: END.x, cy: Y, r: END.r }, g);
-  txt({ class: "lb", x: END.x, y: Y, style: "font-size:15px" }, S.nodes.end, g);
-  nodes.end = g;
-}
-// claim subgraph: framed, dimmed until the no branch lights in round 2
-el("rect", { class: "cframe", x: CLM.x, y: CLM.y, width: CLM.w, height: CLM.h, rx: 12 }, CG);
-txt({ class: "clab", x: CLM.x + 14, y: CLM.y + 24 }, S.claim, CG);
-const cmpnG = rectNode("compute", CMPN, CG);
-txt({ class: "lb", x: CMPN.x, y: CMPN.y - 14, style: "font-size:16px" }, S.nodes.compute, cmpnG);
-const diffTx = txt({ class: "diff", x: CMPN.x, y: CMPN.y + 15 }, S.diff, cmpnG);
-txt({ class: "lb", x: ASK.x, y: ASK.y, style: "font-size:16px" }, S.nodes.ask, rectNode("ask", ASK, CG));
-function setNode(k, state) { const g = nodes[k]; g.classList.remove("active", "done", "bad"); if (state) g.classList.add(state); }
+function setNode(k, state) { const g = nodes[k]; g.classList.remove("active", "done"); if (state) g.classList.add(state); }
 
-// ---------- compare table ----------
-const TG = nodes.compare;
-S.cols.forEach((c, j) => txt({ class: "th", x: COLX[j] + CW / 2, y: 266 }, c, TG));
-S.docs.forEach((d, i) => txt({ class: "rh", x: CMP.x + 16, y: ROWY[i] }, d, TG));
-const CHECK = "M-4.5,0.5 L-1.5,3.5 L4.5,-3.5", CROSS = "M-3.5,-3.5 L3.5,3.5 M3.5,-3.5 L-3.5,3.5";
+// the person who approves the claim email, above the approve node
+{
+  const g = $("claimG");
+  el("circle", { cx: 540, cy: 474, r: 15, fill: "#E2E8F0", stroke: "#8A99AF" }, g);
+  el("circle", { cx: 540, cy: 469, r: 5.4, fill: "#64748B" }, g);
+  el("path", { d: "M530,486 a10,8.5 0 0 1 20,0", fill: "#64748B" }, g);
+  txt({ class: "small", x: 518, y: 478, "text-anchor": "end" }, S.person, g);
+}
+const approveCheck = el("g", { class: "check", transform: "translate(556,461)" }, $("claimG"));
+el("circle", { r: 8, fill: "#0D9488" }, approveCheck);
+el("path", { d: "M-3.8,0 L-0.9,3 L3.8,-3", stroke: "#fff", "stroke-width": 2, fill: "none" }, approveCheck);
+
+// the computed difference, a chip under the compute node
+const diffChip = el("g", { class: "chip" }, $("claimG"));
+el("rect", { x: 98, y: 556, width: 104, height: 22, rx: 4, fill: "#FEF3C7", stroke: "#D97706" }, diffChip);
+el("rect", { x: 98, y: 556, width: 5, height: 22, rx: 2, fill: "#F59E0B" }, diffChip);
+txt({ x: 110, y: 567.5 }, S.diff, diffChip);
+
+// ---------- compare table, linked to the compare node ----------
+const TB = { x: 224, y: 262, w: 360, h: 136 };
+const COLX = [348, 424, 500], CW = 72, CH = 28, ROWY = [310, 342, 374];
+const table = el("g", { class: "table" }, $("tables"));
+el("rect", { class: "t", x: TB.x, y: TB.y, width: TB.w, height: TB.h, rx: 6 }, table);
+S.cols.forEach((c, j) => txt({ class: "th", x: COLX[j] + CW / 2, y: 286 }, c, table));
+S.docs.forEach((d, i) => txt({ class: "rh", x: TB.x + 12, y: ROWY[i] }, d, table));
+const CHECK = "M-3.6,0.4 L-1.2,2.8 L3.6,-2.8", CROSS = "M-2.8,-2.8 L2.8,2.8 M2.8,-2.8 L-2.8,2.8";
 const cells = ROWY.map(y => COLX.map(x => {
-  const g = el("g", { class: "cell" }, TG);
-  el("rect", { x, y: y - CH / 2, width: CW, height: CH, rx: 8 }, g);
-  const t = txt({ x: x + CW / 2 - 8, y: y + 1 }, "", g);
-  const mx = x + CW - 13, my = y - CH / 2 + 13;
+  const g = el("g", { class: "cell" }, table);
+  el("rect", { x, y: y - CH / 2, width: CW, height: CH, rx: 6 }, g);
+  const t = txt({ x: x + CW / 2 - 5, y: y + 1 }, "", g);
+  const mx = x + CW - 4, my = y - CH / 2 + 4;
   const ok = el("g", { class: "mark mk-ok", transform: `translate(${mx},${my})` }, g);
-  el("circle", { r: 9, fill: "#0D9488" }, ok); el("path", { d: CHECK, fill: "none", stroke: "#fff", "stroke-width": 2.4, "stroke-linecap": "round", "stroke-linejoin": "round" }, ok);
+  el("circle", { r: 7, fill: "#0D9488" }, ok); el("path", { d: CHECK, fill: "none", stroke: "#fff", "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" }, ok);
   const bad = el("g", { class: "mark mk-bad", transform: `translate(${mx},${my})` }, g);
-  el("circle", { r: 9, fill: "#E11D48" }, bad); el("path", { d: CROSS, fill: "none", stroke: "#fff", "stroke-width": 2.4, "stroke-linecap": "round" }, bad);
+  el("circle", { r: 7, fill: "#E11D48" }, bad); el("path", { d: CROSS, fill: "none", stroke: "#fff", "stroke-width": 2, "stroke-linecap": "round" }, bad);
   return { g, t };
 }));
 function setCell(i, j, state) { const c = cells[i][j]; c.g.classList.remove("ok", "bad"); if (state) c.g.classList.add(state); }
 
-// ---------- figures that fly from each card through extract into its table row ----------
-const flys = CARD.cy.map(() => {
-  const g = el("g", { class: "fly" }, $("flys"));
-  const r = el("rect", { y: -15, height: 30, rx: 15, fill: "#7C3AED" }, g);
+// ---------- tokens: figures that fly from each document through extract into its row, and the claim email ----------
+const flys = [0, 1, 2].map(() => {
+  const g = el("g", { class: "tok" }, $("toks"));
+  const r = el("rect", { y: -14, height: 28, rx: 14, fill: "#F59E0B" }, g);
   const t = txt({ x: 0, y: 1 }, "", g);
   return { g, r, t };
 });
+const envelope = el("g", { class: "tok" }, $("toks"));
+el("rect", { x: -15, y: -10, width: 30, height: 20, rx: 3, fill: "#F59E0B" }, envelope);
+el("path", { d: "M-14,-8 L0,2 L14,-8", stroke: "#fff", "stroke-width": 1.8, fill: "none" }, envelope);
+
+// ---------- the claim email, opened in the supplier panel ----------
+const MAIL = { x: 912, y: 460, w: 328, h: 136 };
+{
+  const g = $("mailG");
+  el("rect", { x: MAIL.x, y: MAIL.y, width: MAIL.w, height: MAIL.h, rx: 6, fill: "#FFFFFF", stroke: "#F59E0B", "stroke-width": 1.6, filter: "url(#glow-s)" }, g);
+  el("g", { transform: `translate(${MAIL.x + 24},${MAIL.y + 24})` }, g).innerHTML = '<rect x="-11" y="-7.5" width="22" height="15" rx="2" fill="#F59E0B"/><path d="M-10,-6 L0,1.5 L10,-6" stroke="#fff" stroke-width="1.6" fill="none"/>';
+  el("line", { x1: MAIL.x + 44, y1: MAIL.y + 24, x2: MAIL.x + MAIL.w - 16, y2: MAIL.y + 24, stroke: "#E2E8F0", "stroke-width": 2 }, g);
+  S.mail.forEach((s, i) => txt({ class: "mline" + (i === 1 ? " diff" : ""), x: MAIL.x + 16, y: MAIL.y + 62 + i * 28 }, s, g));
+}
 
 // ---------- timeline engine ----------
 let runId = 0, paused = false, speed = 1;
@@ -311,11 +343,11 @@ function move(g, pts, dur) {
     place(pts[i][0] + (pts[i + 1][0] - pts[i][0]) * r, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * r);
   });
 }
-// an edge pulses while the flow crosses it, then keeps the colour of the outcome
-async function cross(id, after) { setEdge(id, "hot"); await wait(T.edge); setEdge(id, after); }
+// an edge pulses amber while the flow crosses it, then stays teal
+async function cross(id) { setEdge(id, "hot"); await wait(T.edge); setEdge(id, "done"); }
 
 // progress follows the story clock; LOOP is the story length of one pass as measured by record.py (lastStoryMs)
-const LOOP = 28650;
+const LOOP = 33700;
 let vt = 0, lastTs = null, storyStart = null;
 function ticker(ts) {
   if (lastTs !== null && !paused) vt += (ts - lastTs) * speed;
@@ -329,46 +361,43 @@ requestAnimationFrame(ticker);
 function resetRound(r) {
   for (const k in nodes) setNode(k, null);
   for (const k in edges) setEdge(k, null);
-  yesLab.setAttribute("class", "blab"); noLab.setAttribute("class", "blab");
-  $("claimG").classList.remove("lit"); diffTx.classList.remove("on");
-  cards.forEach(c => c.g.classList.remove("on", "kept"));
+  $("claimG").setAttribute("class", "idle"); $("yesG").setAttribute("class", "lit");
+  $("subframe").classList.remove("open");
+  diffChip.classList.remove("on"); approveCheck.classList.remove("on"); $("mailG").classList.remove("on");
   cells.forEach(row => row.forEach(c => { c.t.textContent = ""; c.g.classList.remove("ok", "bad"); }));
-  flys.forEach(f => f.g.classList.remove("on"));
+  flys.forEach(f => f.g.classList.remove("on")); envelope.classList.remove("on");
+  table.classList.remove("flash");
   $("tag").textContent = S.round[r];
 }
 // a step: the incoming edge pulses while the node turns active, and the node stays active for the whole hold
-async function step(k, ms, end, body, inEdge, edgeEnd = "ok") {
+async function step(k, ms, body, inEdge) {
   setNode(k, "active");
-  if (inEdge) bg(cross(inEdge, edgeEnd));
+  if (inEdge) bg(cross(inEdge));
   await Promise.all([wait(ms), body ? body() : null]);
-  setNode(k, end);
+  setNode(k, "done");
 }
 async function round(r) {
   const F = S.figs[r], bad = r === 1;
   resetRound(r);
-  // the three documents light up and show their figures
-  for (let i = 0; i < 3; i++) {
-    cards[i].f1.textContent = F[i][0] + " x " + F[i][1];
-    cards[i].f2.textContent = "= " + F[i][2];
-  }
-  for (let i = 0; i < 3; i++) { cards[i].g.classList.add("on"); await wait(T.cards / 3); }
-  // extract: each document's figures fly through the extract node into its row
-  await step("extract", T.extract, "done", async () => {
+  // the three documents arrive, one after another
+  for (let i = 0; i < 3; i++) { setNode("doc" + i, "done"); await wait(T.docs / 3); }
+  // extract: each document's figures fly through the extract node into its table row
+  await step("extract", T.extract, async () => {
     await Promise.all([0, 1, 2].map(async i => {
       await wait(i * T.flyGap);
-      bg(cross("c" + i, "ok"));
-      const f = flys[i], label = F[i].join("  ");
-      f.t.textContent = label;
-      const w = f.t.getComputedTextLength() + 28;
+      bg(cross("c" + i));
+      const f = flys[i];
+      f.t.textContent = F[i].join("  ");
+      const w = f.t.getComputedTextLength() + 26;
       f.r.setAttribute("x", -w / 2); f.r.setAttribute("width", w);
-      cards[i].g.classList.replace("on", "kept");
-      await move(f.g, [[CARD.x + CARD.w - 30, CARD.cy[i]], [EX.x, Y], [COLX[1] + CW / 2, ROWY[i]]], T.fly);
+      await move(f.g, [[N.doc0.x + 40, N["doc" + i].y], [N.extract.x, N.extract.y], [COLX[1] + CW / 2, ROWY[i]]], T.fly);
       f.g.classList.remove("on");
       F[i].forEach((v, j) => { cells[i][j].t.textContent = v; });
     }));
   });
   // compare: column by column; in round 2 the invoice quantity and total fail against the delivery note
-  await step("compare", T.compare[r], "done", async () => {
+  await step("compare", T.compare[r], async () => {
+    table.classList.add("flash");
     await wait(300);
     for (const j of bad ? [1, 0, 2] : [0, 1, 2]) {
       for (let i = 0; i < 3; i++) {
@@ -378,20 +407,34 @@ async function round(r) {
       }
       await wait(bad ? 520 : 400);
     }
+    table.classList.remove("flash");
   }, "ex-cmp");
   // decision: the yes branch to register, or the no branch into the claim subgraph
-  await step("decide", T.decide, bad ? "bad" : "done", async () => {
+  await step("decide", T.decide, async () => {
     await wait(500);
-    (bad ? noLab : yesLab).setAttribute("class", "blab " + (bad ? "bad" : "ok"));
-    if (bad) $("claimG").classList.add("lit");
+    if (bad) {
+      $("yesG").setAttribute("class", "idle"); $("claimG").setAttribute("class", "lit");
+      $("subframe").classList.add("open");
+    }
   }, "cmp-dec");
   if (!bad) {
-    await step("register", T.register, "done", null, "yes");
-  } else {
-    await step("compute", T.compute, "bad", async () => { await wait(600); diffTx.classList.add("on"); }, "no", "bad");
-    await step("ask", T.ask, "bad", null, "cmpn-ask", "bad");
+    await step("register", T.register, null, "yes");
+    await step("end1", T.end, null, "reg-end");
+    return;
   }
-  await step("end", T.end, "done", null, bad ? "ask-end" : "reg-end", bad ? "bad" : "ok");
+  await step("compute", T.compute, async () => { await wait(600); diffChip.classList.add("on"); }, "no");
+  await step("draft", T.draft, null, "cd-dr");
+  await step("approve", T.approve, async () => { await wait(900); approveCheck.classList.add("on"); }, "dr-ap");
+  // send: the email flies along the edge to the supplier and opens into a card
+  await step("send", T.send, async () => {
+    await wait(250);
+    setEdge("se-sup", "hot");
+    await move(envelope, [[780, 528], [900, 528], [MAIL.x + 24, MAIL.y + 24]], T.mail);
+    envelope.classList.remove("on");
+    setEdge("se-sup", "done");
+    $("mailG").classList.add("on");
+  }, "ap-se");
+  await step("end2", T.end, null, "se-end");
 }
 
 // ---------- story ----------
