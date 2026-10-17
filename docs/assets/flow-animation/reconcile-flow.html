@@ -313,8 +313,8 @@ function move(g, pts, dur) {
 // an edge pulses while the flow crosses it, then keeps the colour of the outcome
 async function cross(id, after) { setEdge(id, "hot"); await wait(T.edge); setEdge(id, after); }
 
-// progress follows the story clock; LOOP is the story length of one pass
-const LOOP = 28000;
+// progress follows the story clock; LOOP is the story length of one pass as measured by record.py (lastStoryMs)
+const LOOP = 28650;
 let vt = 0, lastTs = null, storyStart = null;
 function ticker(ts) {
   if (lastTs !== null && !paused) vt += (ts - lastTs) * speed;
