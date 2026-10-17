@@ -128,7 +128,7 @@ La tercera parte del sistema se resume en una frase: la IA lee, el código cuent
 👉 Si algo no cuadra, la IA redacta el email de reclamación, el código comprueba que todo lo que dice es cierto y una persona lo aprueba antes de que salga.
 👉 Cuando todo cuadra, entra el stock y se sirven, por orden de llegada, los pedidos de clientes que estaban esperando.
 
-En el vídeo: una factura que cuadra con su pedido y su albarán, y otra que cobra 35 gasas cuando se pidieron 40; se ve qué hace cada paso y qué pasa después.
+En el vídeo, dos rondas: en la primera el pedido, el albarán y la factura cuadran y la factura se registra; en la segunda llegaron 35 unidades y se facturaron 40, así que se calcula la diferencia (-25,00 €) y se pide un abono al proveedor.
 
 ¿Por qué no dejar que la IA compare también? Porque sumar y comparar números es lo que un programa normal hace sin fallar nunca. Y cuando hay dinero de por medio, eso no se negocia.
 
