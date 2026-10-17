@@ -1,6 +1,6 @@
 # 017 - Simple reconcile animation
 
-Status: in progress (redesign after owner feedback on PR #27)
+Status: delivered, in review
 
 ## Contract
 Goal and reason:
@@ -35,7 +35,7 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 - [x] Redesign: new script approved by the owner in a Lavish page (2026-10-17, all four answers as recommended)
 - [x] Redesign: English and Spanish pages rebuilt and recorded (`6694391`; re-recorded in `8629aa1` after review round 1 with the progress bar on the measured story length): 460 frames at 15 fps, 30.67 s, story 28.65 s
 - [x] Redesign: references updated (README, folder README, post 3 sentence) (`d6a0133`)
-- [ ] Redesign: adversarial review and `npm run check`
+- [x] Redesign: adversarial review and `npm run check` (two rounds, see below; `npm run check` on `5042562`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017-redesign.txt`; the later commit only touches this document)
 - [x] First version: adversarial review and `npm run check` (two rounds, see below; `npm run check` on `f0d6f41`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017.txt`; the later commit only touches this document)
 
 Build notes and evidence of the redesign (frames and contact sheets in `.evidence/cambio-017/redesign/`, git-ignored):
@@ -48,7 +48,9 @@ Build notes and evidence of the redesign (frames and contact sheets in `.evidenc
 - C5: `git grep reconcile-flow` shows the README (new alt text and description), the folder README and the LinkedIn plan (post 3 sentence reworded to the two rounds) pointing to the replaced files.
 - Deviation from C3: besides the literal C3 list, the screen shows the column headers (Quantity, Price, Total), the yes and no branch labels, the claim frame name and the EUR unit (the euro sign in Spanish).
   They come from the owner-approved Lavish script and mockup (a table of quantity, price and total, yes and no branches, a framed claim subgraph); C3 itself is not reworded, and the deviation is flagged to the owner in the delivery report.
-- Story length: the timeline constants add up to 28.0 s but the measured story is 28.65 s; none of the step bodies outlasts its hold, the gap comes from per-await frame rounding of the rAF tween over about 17 sequential waits on the recorder's virtual 60 Hz clock.
+- Story length: the timeline constants add up to 28.0 s but the measured story is 28.65 s.
+  The round 1 compare body (13 sequential waits, about 3.07 s) outlasts its 2.8 s hold by about 0.27 s; the rest is one extra 60 Hz tick per step-level wait on the recorder's virtual clock (review round 2, timeline simulated with the same rAF and tween semantics).
+  C3 still holds: the steps stay sequential and every hold is at least 1.6 s.
   The progress bar now uses the measured length (`LOOP` = 28650 ms in both pages, review round 1), so it fills exactly when the story ends; the before and after MP4s match above the bar (PSNR about 65 dB, encoder noise) and differ only in the bar strip.
 
 Build notes and evidence of the first version, superseded by the redesign (frames, contact sheets and probes in `.evidence/cambio-017/`, git-ignored):
@@ -113,6 +115,8 @@ Conceptual simplifications (as in change 011, the flow is conceptual): the deliv
 |---|---|---|---|---|---|
 | 1 | Local, two subagents in clean context | `b42d833..aae58ae` | Correctness; evidence | Correctness: 3 menor (Spanish captions said `pedido` next to the `orden de compra` header, against change 016; `store` timers not tied to `runId`, so a restart could light the discrepancy rows of the previous pass; missing comma in the folder README). Evidence: 1 menor (C3 holds quoted from the browser log without saying so) | All confirmed and fixed: `orden de compra` in every Spanish caption (the participle "pedido 40, facturado 35" stays), intro title shortened to fit, timers guarded by `runId` in both pages, comma added, C3 provenance stated; Spanish page re-recorded and frames checked (English recording unchanged, the timer guard does not change it) |
 | 2 | Local, one subagent in clean context | `aae58ae..f0d6f41` (fix commit) | Correctness | None blocking; 1 menor: the C3 caption hold measured on the GIF was not re-checked by the reviewer, and its sentence mixed "in case 1" and "for case 2" | Confirmed as wording only: the case 2 contact sheet shows the `read` and `link` captions on screen about 1.07 s, sentence reworded |
+| 3 (redesign 1) | Local, two subagents in clean context | `f0d6f41..b05adac` | Correctness; evidence | None blocking; correctness: 2 menor (Spanish page says "Pedido" instead of change 016's "orden de compra"; progress bar `LOOP` = 28000 fills 0.65 s before the 28.65 s story ends). Evidence: 5 menor (stale "Spanish captions" pending line; wrong cause for the 0.65 s gap; edge-pulse statement false for extract; on-screen text beyond the C3 list not labelled as a deviation; no saved probe or recorder log) | All confirmed: `LOOP` = 28650 in both pages and both languages re-recorded (`8629aa1`); probe and recorder log saved; build notes, pending line, extract exception and a labelled C3 deviation fixed (`5042562`); "Pedido" kept because the owner-approved script uses it, recorded under Decisions and flagged to the owner |
+| 4 (redesign 2) | Local, one subagent in clean context | `b05adac..5042562` (fix commits) | Correctness; evidence | None blocking; 2 menor: the build notes said no step body outlasts its hold, but the round 1 compare body lasts about 3.07 s against 2.8 s; the redesign rounds were not yet in this table | Both confirmed and fixed in this document: story length note reworded, these rows added; bar, media, probe and figures verified without defects |
 
 ## Delivery
 Branch `cambio-017-simple-reconcile-animation`, PR to `main` (see the PR description for results per criterion).
