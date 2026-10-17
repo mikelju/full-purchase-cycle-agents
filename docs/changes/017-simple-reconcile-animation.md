@@ -142,6 +142,13 @@ First version timeline, superseded (seconds, about 30 s of story plus the 2 s re
 
 Conceptual simplifications (as in change 011, the flow is conceptual): the delivery notes do not ride the graph, they are shown as already stored; only two of the demo reconciliations appear; in the first version the claim step was a separate graph shown as a summary (since the redesign it is a subgraph of the same graph).
 
+Owner decisions of 2026-10-17 on the orders-style delivery (Lavish page, the recommended option in all five, no notes):
+- The frame headers "reconciliation graph" and "supplier" stay; the C3 deviation is accepted.
+- The supplier card keeps -25.00 EUR (-25,00 € in Spanish), the approved figure quoted by post 3.
+- The Order row stays uncoloured in round 2: colour marks only what is compared.
+- The Spanish labels are approved as they are.
+- The post 3 sentence in `docs/linkedin/series-plan.md` stays unchanged.
+
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
@@ -153,4 +160,5 @@ Conceptual simplifications (as in change 011, the flow is conceptual): the deliv
 
 ## Delivery
 Branch `cambio-017-simple-reconcile-animation`, PR to `main` (see the PR description for results per criterion).
-Pending: owner decisions on the C3 frame-header deviation, the -25.00 sign and the uncoloured Order row; owner review of the Spanish labels (own translation: node names, Reclamación, Redactar correo, Solicitamos un abono, ...); the post 3 questions inherited from change 015 are outside this change.
+Pending: none for this change; the owner decided the five open points on 2026-10-17 (see Decisions).
+Follow-up outside this change: `docs/linkedin/series-plan.md:18` points post 3 to the English MP4 although the post 3 video is the Spanish one (change 015); the post 3 questions inherited from change 015 are also outside this change.
