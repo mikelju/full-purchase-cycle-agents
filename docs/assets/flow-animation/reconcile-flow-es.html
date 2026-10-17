@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;600;700&display=swap">
 <style>
-/* Layout: one fixed 16:9 stage (GIF-ready) - documents | reconcile graph + three-way match | database. Single deliberate light, high-contrast look, independent of the OS theme. */
+/* Layout: one fixed 16:9 stage (GIF-ready) - reconciliation graph (three documents, extract, compare with its table, decision, register or claim subgraph) | supplier. Visual style of the orders animation (purchase-cycle-flow.html). Single deliberate light, high-contrast look, independent of the OS theme. */
 :root {
   --ground: #EDF1F7;
   --panel: #FFFFFF;
@@ -20,10 +20,11 @@
   --done-ink: #134E4A;
   --msg: #D97706;
   --msg-soft: #FEF3C7;
-  --msg-ink: #92400E;
-  --ask: #2563EB;
+  --hot: #F59E0B;
+  --hot-ink: #1C1300;
+  --bad: #E11D48;
+  --bad-ink: #9F1239;
   --idle: #F4F6FA;
-  --wa: #25D366;
   --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
   --sans: "Inter", system-ui, "Segoe UI", sans-serif;
   color-scheme: light;
@@ -45,154 +46,111 @@ body.clean header { display: none; }
 .subframe { fill: var(--idle); stroke: var(--node-edge); stroke-dasharray: 4 4; transition: fill .4s, stroke .4s; }
 .subframe.open { fill: #ECFEFF; stroke: var(--active); stroke-width: 1.6; }
 .flabel { font: 700 12px var(--mono); fill: var(--title); letter-spacing: .16em; text-transform: uppercase; }
-.small { font: 400 11px var(--mono); fill: var(--muted); }
-.cond { font: 700 11.5px var(--mono); fill: var(--ink); }
+.small { font: 400 12px var(--mono); fill: var(--muted); }
+.cond { font: 700 12px var(--mono); fill: var(--ink); }
+.pname { font: 600 14px var(--sans); fill: var(--ink); text-anchor: middle; }
 
+/* nodes: idle white, active solid amber with glow, done teal (as in the orders animation) */
 .node rect { fill: var(--node); stroke: var(--node-edge); stroke-width: 1.4; transition: fill .3s, stroke .3s; }
 .node text { font: 600 13px var(--mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; transition: fill .3s; }
-.node.sub rect { stroke-width: 1.4; }
-.node.sub .inner { fill: none; stroke: var(--node-edge); }
 .node circle { fill: var(--node); stroke: var(--muted); stroke-width: 1.6; transition: fill .3s, stroke .3s; }
 .node.endc circle.dot { fill: var(--muted); stroke: none; }
-.node.active rect { fill: var(--oc, var(--active)); stroke: var(--oc, var(--active)); }
-.node.active rect:not(.ring):not(.inner) { filter: url(#glow); }
-.node.active .inner { stroke: var(--ot, #0F172A); stroke-opacity: .6; fill: none; }
-.node.active text { fill: var(--ot, #0F172A); font-weight: 700; }
-.node.active circle { stroke: var(--oc, var(--active)); }
-.node.active circle.dot { fill: var(--oc, var(--active)); }
-.node rect.ring, .node.active rect.ring, .node.done rect.ring, .node.paused rect.ring { fill: none; stroke: var(--rc, var(--active)); stroke-width: 2.4; stroke-dasharray: none; animation: none; opacity: 0; transition: opacity .3s; filter: url(#glow-s); }
-.node.dual rect.ring { opacity: 1; }
+.node.active rect { fill: var(--hot); stroke: var(--hot); filter: url(#glow); }
+.node.active text { fill: var(--hot-ink); font-weight: 700; }
+.node.active circle { stroke: var(--hot); }
+.node.active circle.dot { fill: var(--hot); }
 .node.done rect { fill: var(--done-soft); stroke: var(--done); stroke-width: 1.8; }
-.node.done .inner { fill: none; stroke: var(--done); stroke-opacity: .5; }
 .node.done text { fill: var(--done-ink); }
 .node.done circle { stroke: var(--done); }
 .node.done circle.dot { fill: var(--done); }
-.node.paused rect { fill: var(--msg-soft); stroke: var(--msg); stroke-width: 2; stroke-dasharray: 5 3; animation: dash 1s linear infinite; }
-.node.paused .inner { fill: none; }
-.node.paused text { fill: var(--msg-ink); font-weight: 700; }
-@keyframes dash { to { stroke-dashoffset: -16; } }
-.idlegroup { opacity: .45; }
+.idle { opacity: .45; transition: opacity .4s; }
+.lit { opacity: 1; transition: opacity .4s; }
 
 .edge { fill: none; stroke: var(--line); stroke-width: 1.6; transition: stroke .3s; }
-.edge.hot { stroke: var(--oc, var(--active)); stroke-width: 2.6; stroke-dasharray: 9 5; animation: flow .45s linear infinite; filter: url(#glow-e); }
+.edge.hot { stroke: var(--hot); stroke-width: 2.6; stroke-dasharray: 9 5; animation: flow .45s linear infinite; filter: url(#glow-e); }
 @keyframes flow { to { stroke-dashoffset: -14; } }
 .edge.done { stroke: var(--done); stroke-opacity: .9; stroke-width: 2; }
 .link { stroke: var(--node-edge); stroke-dasharray: 3 4; fill: none; }
+@media (prefers-reduced-motion: reduce) { .edge.hot { animation: none; } }
 
+/* compare table: rows are the three documents, columns quantity, price and total */
 .table rect.t { fill: #F8FAFC; stroke: var(--panel-edge); transition: stroke .3s; }
-.table text.tn { font: 700 11px var(--mono); fill: #1E293B; }
-.table.flash rect.t { stroke: var(--active); stroke-width: 2; filter: url(#glow-s); }
+.table.flash rect.t { stroke: var(--hot); stroke-width: 2; filter: url(#glow-s); }
+.th { font: 700 12px var(--mono); fill: var(--muted); text-anchor: middle; }
+.rh { font: 700 12px var(--mono); fill: var(--ink); dominant-baseline: central; }
+.cell rect { fill: #FFFFFF; stroke: var(--panel-edge); stroke-width: 1.2; transition: fill .3s, stroke .3s; }
+.cell text { font: 600 15px var(--mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+.cell.ok rect { fill: var(--done-soft); stroke: var(--done); stroke-width: 1.8; }
+.cell.ok text { fill: var(--done-ink); }
+.cell.bad rect { fill: #FFE4E6; stroke: var(--bad); stroke-width: 2.2; }
+.cell.bad text { fill: var(--bad-ink); }
+.mark { opacity: 0; transition: opacity .3s; }
+.cell.ok .mk-ok, .cell.bad .mk-bad { opacity: 1; }
+
 .chip { opacity: 0; transition: opacity .4s; }
 .chip.on { opacity: 1; }
-.chip rect { stroke-width: 1; }
-.chip text { font: 500 10.5px var(--mono); dominant-baseline: central; white-space: pre; }
-.chip.pending rect:first-child { fill: var(--msg-soft); stroke: var(--msg); }
-.chip.ok rect:first-child { fill: var(--done-soft); stroke: var(--done); }
-.chip.bad rect:first-child { fill: #FFF1F2; stroke: #E11D48; }
-.chip.zero rect:first-child { fill: var(--idle); stroke: var(--line); }
-.chip text { fill: var(--ink); }
-
-.tok { opacity: 0; filter: url(#glow-t); }
-.tok.on { opacity: 1; transition: opacity .25s; }
-.typing circle { fill: var(--title); opacity: 0; }
-.typing.on circle { animation: blink 1s infinite; }
-.typing.on circle:nth-child(2) { animation-delay: .2s; }
-.typing.on circle:nth-child(3) { animation-delay: .4s; }
-@keyframes blink { 0%,100% { opacity: .15; } 50% { opacity: 1; } }
-.clock { opacity: 0; transition: opacity .3s; filter: url(#glow-s); }
-.clock.on { opacity: 1; }
-.clock.on .hand { animation: spin 1.2s linear infinite; transform-origin: 0 0; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.chip text { font: 600 13px var(--mono); fill: var(--ink); dominant-baseline: central; white-space: pre; }
+.tok { opacity: 0; transition: opacity .25s; filter: url(#glow-t); }
+.tok.on { opacity: 1; }
+.tok text { font: 700 14px var(--mono); fill: var(--hot-ink); text-anchor: middle; dominant-baseline: central; white-space: pre; }
 .check { opacity: 0; transition: opacity .3s; filter: url(#glow-s); }
 .check.on { opacity: 1; }
+.mail { opacity: 0; transition: opacity .4s; }
+.mail.on { opacity: 1; }
+.mline { font: 600 14px var(--sans); fill: var(--ink); }
+.mline.diff { font-weight: 700; fill: var(--bad); }
+.tag rect { fill: var(--title); }
+.tag text { font: 700 12px var(--mono); fill: #fff; text-anchor: middle; dominant-baseline: central; letter-spacing: .08em; }
 .progress { fill: url(#prog); }
-@media (prefers-reduced-motion: reduce) {
-  .node.paused rect, .clock.on .hand, .typing.on circle, .edge.hot { animation: none; }
-}
-.fx { opacity: 0; transition: opacity .4s; }
-.fx.on { opacity: 1; }
-.card .cr { fill: #fff; stroke: var(--panel-edge); stroke-width: 1.4; transition: stroke .3s, fill .3s; }
-.card.bad .cr { stroke: #E11D48; stroke-dasharray: 5 3; fill: #FFF1F2; }
-.card.win .cr { stroke: var(--done); stroke-width: 2.6; fill: #F0FDFA; filter: url(#glow-s); }
-.card .ch { font: 700 12px var(--mono); fill: var(--ink); }
-.card .cn { font: 400 10.5px var(--sans); fill: var(--muted); }
-.card .cq { font: 400 11px var(--sans); fill: #334155; }
-.card .cf { font: 500 10.5px var(--mono); fill: var(--ink); }
-.pillt { font: 700 10px var(--mono); fill: #fff; dominant-baseline: central; text-anchor: middle; }
-.rule rect { fill: var(--idle); stroke: var(--panel-edge); transition: fill .4s, stroke .4s; }
-.rule text { font: 600 10.5px var(--mono); fill: var(--muted); dominant-baseline: central; text-anchor: middle; transition: fill .4s; }
-.rule.lit rect { fill: var(--done-soft); stroke: var(--done); stroke-width: 2; }
-.rule.lit text { fill: var(--done-ink); font-weight: 700; }
-.rule.dim { opacity: .55; }
-.box { fill: #fff; stroke: var(--panel-edge); stroke-width: 1.4; }
-.bt { font: 700 12px var(--mono); fill: var(--ink); }
-.bs { font: 400 11px var(--mono); fill: var(--muted); }
-.bm { font: 500 11px var(--mono); fill: var(--ink); }
 </style>
 
 <div class="wrap">
   <header>
-    <h1>grafo de conciliación (leer, extraer, enlazar, cotejar, guardar) - factura de proveedor vs orden de compra vs albarán</h1>
+    <h1 id="h1"></h1>
     <div class="controls">
-      <button id="btn-pause" type="button">Pausa</button>
-      <button id="btn-restart" type="button">Reiniciar</button>
-      <button id="btn-speed" type="button">Velocidad 1x</button>
-      <button id="btn-clean" type="button">Fotograma limpio</button>
+      <button id="btn-pause" type="button"></button>
+      <button id="btn-restart" type="button"></button>
+      <button id="btn-speed" type="button"></button>
+      <button id="btn-clean" type="button"></button>
     </div>
   </header>
   <div class="stage">
-  <svg id="svg" viewBox="0 0 1280 720" role="img" aria-label="Flujo animado de facturas y albaranes de proveedor por el grafo de conciliación: leer, extraer con Claude Haiku 4.5, enlazar con la orden de compra, cotejo a tres bandas determinista y guardado, con resultado conciliada, con discrepancias o pendiente de albarán">
+  <svg id="svg" viewBox="0 0 1280 720" role="img">
     <defs>
       <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#EDF1F7"/><circle cx="12" cy="12" r="1.1" fill="#D3DAE5"/></pattern>
-      <linearGradient id="prog" x1="0" x2="1"><stop offset="0" stop-color="#7C3AED"/><stop offset=".5" stop-color="#0891B2"/><stop offset="1" stop-color="#0D9488"/></linearGradient>
+      <linearGradient id="prog" x1="0" x2="1"><stop offset="0" stop-color="#F59E0B"/><stop offset=".5" stop-color="#22C55E"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
       <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1E293B" flood-opacity=".14"/></filter>
       <filter id="glow" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".55"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <filter id="glow-s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".6"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <filter id="glow-t" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".4"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <filter id="glow-e" filterUnits="userSpaceOnUse" x="0" y="0" width="1280" height="720"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A99AF"/></marker>
-      <marker id="arr-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+      <marker id="arr-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker>
       <marker id="arr-done" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0D9488"/></marker>
     </defs>
 
     <rect width="1280" height="720" fill="url(#dots)"/>
+    <!-- reconciliation graph and supplier panels -->
+    <rect class="frame" x="24" y="64" width="848" height="616" rx="10"/>
+    <text class="flabel" id="graphLab" x="36" y="88"></text>
+    <rect class="frame" x="896" y="64" width="360" height="616" rx="10"/>
+    <text class="flabel" id="supLab" x="908" y="88"></text>
+    <circle cx="1076" cy="150" r="22" fill="#E2E8F0" stroke="#8A99AF"/>
+    <path d="M1062,164 V146 L1076,136 L1090,146 V164 Z" fill="#64748B"/>
+    <rect x="1071" y="153" width="10" height="11" fill="#E2E8F0"/>
+    <text class="pname" id="supName" x="1076" y="196"></text>
 
-    <!-- left: documents -->
-    <rect class="frame" x="24" y="56" width="170" height="428" rx="10"/>
-    <text class="flabel" x="36" y="80">documents/</text>
-    <text class="small" x="36" y="98">txt . pdf . xlsx</text>
-    <text class="small" x="109" y="446" text-anchor="middle">14 archivos, por nombre</text>
-    <text class="small" x="109" y="464" text-anchor="middle">primero los albaranes</text>
-    <g id="files"></g>
-    <rect class="frame" x="24" y="496" width="170" height="194" rx="10"/>
-    <path d="M36,512 h9 l3,4 h12 v13 h-24 z" fill="none" stroke="#4338CA" stroke-width="1.4"/>
-    <text class="flabel" x="68" y="526" style="letter-spacing:.06em;text-transform:none">later/</text>
-    <text class="small" x="36" y="548">segunda pasada</text>
-    <g id="later"></g>
-
-    <!-- center: graph + three-way match -->
-    <rect class="frame" x="220" y="56" width="800" height="112" rx="10"/>
-    <text class="flabel" x="232" y="78">grafo de conciliación</text>
-    <text class="small" x="1008" y="78" text-anchor="end">una ejecución por archivo - hilo = SHA-256 del contenido</text>
-    <g id="graph"></g>
-    <rect class="frame" x="220" y="182" width="800" height="508" rx="10"/>
-    <text class="flabel" x="232" y="204">cotejo a tres bandas</text>
-    <text class="small" x="1008" y="204" text-anchor="end">orden de compra vs albarán vs factura</text>
-    <g id="match"></g>
-
-    <!-- right: database -->
-    <rect class="frame" x="1046" y="56" width="210" height="428" rx="10"/>
-    <ellipse cx="1068" cy="76" rx="10" ry="4" fill="none" stroke="#4338CA"/>
-    <path d="M1058,76 v12 a10,4 0 0 0 20,0 v-12" fill="none" stroke="#4338CA"/>
-    <text class="flabel" x="1086" y="86">purchase_cycle.db</text>
-    <rect class="frame" x="1046" y="496" width="210" height="194" rx="10"/>
-    <text class="flabel" x="1058" y="520" style="letter-spacing:.06em;text-transform:none">reconcile list</text>
+    <g id="claimG" class="idle">
+      <rect class="subframe" id="subframe" x="40" y="436" width="816" height="228" rx="8"/>
+      <text class="flabel" id="claimLab" x="52" y="456"></text>
+    </g>
+    <g id="yesG"></g>
+    <g id="edges"></g>
     <g id="tables"></g>
-    <g id="list"></g>
-
-    <g class="clock" id="mclock" transform="translate(796,98)"><circle r="10" fill="#FEF3C7" stroke="#D97706" stroke-width="1.8"/><line class="hand" x1="0" y1="0" x2="0" y2="-7" stroke="#B45309" stroke-width="2" stroke-linecap="round"/></g>
-
-    <g id="ptoks"></g>
+    <g id="nodes"></g>
+    <g id="toks"></g>
+    <g id="mailG" class="mail"></g>
+    <g id="tagG" class="tag"><rect x="756" y="74" width="104" height="24" rx="12"/><text id="tag" x="808" y="86.5"></text></g>
 
     <rect x="24" y="704" width="1232" height="4" rx="2" fill="#D5DCE6"/>
     <rect class="progress" id="progress" x="24" y="704" width="0" height="4" rx="2"/>
@@ -201,204 +159,155 @@ body.clean header { display: none; }
 </div>
 
 <script>
+// ---------- every visible string (the English page differs only in this block, the charset and the <title>) ----------
+const S = {
+  h1: "conciliación - pedido, albarán y factura: extraer, comparar y después registrar o reclamar al proveedor",
+  aria: "Grafo de conciliación animado en dos rondas: se extraen y comparan la cantidad, el precio y el total del pedido, el albarán y la factura; en la ronda 1 todo cuadra y la factura se registra; en la ronda 2 la factura cobra 40 unidades cuando el albarán muestra 35, así que el subgrafo de reclamación calcula una diferencia de -25,00 €, redacta un correo, una persona lo aprueba y se envía al proveedor pidiendo un abono",
+  btn: { pause: "Pausa", play: "Reanudar", restart: "Reiniciar", speed: "Velocidad", clean: "Fotograma limpio" },
+  graph: "grafo de conciliación", supPanel: "proveedor", supplier: "Proveedor",
+  round: ["Ronda 1", "Ronda 2"],
+  docs: ["Pedido", "Albarán", "Factura"],
+  cols: ["Cantidad", "Precio", "Total"],
+  nodes: { extract: "Extraer", compare: "Comparar", decide: "¿Cuadra?", register: "Registrar", compute: "Calcular diferencia", draft: "Redactar correo", approve: "Aprobar", send: "Enviar", end: "Fin" },
+  claim: "reclamación", yes: "sí", no: "no", person: "persona",
+  figs: [[["100", "4,20", "420,00"], ["100", "4,20", "420,00"], ["100", "4,20", "420,00"]],
+         [["40", "5,00", "200,00"], ["35", "5,00", "175,00"], ["40", "5,00", "200,00"]]],
+  diff: "-25,00 €",
+  mail: ["Factura 40 uds. · Albarán 35 uds.", "Diferencia -25,00 €", "Solicitamos un abono"],
+};
+</script>
+<script>
 const SVGNS = "http://www.w3.org/2000/svg";
 const $ = id => document.getElementById(id);
 const el = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
 const txt = (attrs, s, parent) => { const e = el("text", attrs, parent); e.textContent = s; return e; };
 
-const TEAL = "#0D9488", AMBER = "#D97706", ROSE = "#E11D48", PURPLE = "#7C3AED";
+$("h1").textContent = S.h1; $("svg").setAttribute("aria-label", S.aria);
+$("btn-pause").textContent = S.btn.pause; $("btn-restart").textContent = S.btn.restart;
+$("btn-speed").textContent = S.btn.speed + " 1x"; $("btn-clean").textContent = S.btn.clean;
+$("graphLab").textContent = S.graph; $("supLab").textContent = S.supPanel; $("supName").textContent = S.supplier;
+$("claimLab").textContent = S.claim;
 
-// ---------- sample data (examples/invoices) ----------
-const CASES = [
-  { id: "INV-0006", po: "PO-0001", detail: true,
-    dn: { file: "dn-001-nitrile.txt", t: "TXT", ext: "albarán  A-5001  PO-0001  GLV-NIT-M 100" },
-    inv: { file: "inv-001-nitrile.txt", t: "TXT", ext: "factura  F-2026-1001  PO-0001  GLV-NIT-M 100 x 4.20" },
-    rows: [{ sku: "GLV-NIT-M", o: "100 x 4.20", d: "100", i: "100 x 4.20", s: { o: "ok", d: "ok", i: "ok" } }],
-    result: "matched", diffs: [] },
-  { id: "INV-0007", po: "PO-0002",
-    dn: { file: "dn-002-masks.xlsx", t: "XLSX", ext: "albarán  AL-3002  PO-0002  MASK-IIR 50" },
-    inv: { file: "inv-002-masks.pdf", t: "PDF", ext: "factura  N-77002  PO-0002  MASK-IIR 50 x 3.40" },
-    rows: [{ sku: "MASK-IIR", o: "50 x 3.00", d: "50", i: "50 x 3.40", s: { o: "ok", d: "ok", i: "bad" } }],
-    result: "discrepancies", diffs: [["price", "MASK-IIR  3.00 -> 3.40  +0.40/ud  20.00 EUR"]] },
-  { id: "INV-0008", po: "PO-0003",
-    dn: { file: "dn-003-gauze.txt", t: "TXT", ext: "albarán  E-0303  PO-0003  GAUZE-NS-5 40" },
-    inv: { file: "inv-003-gauze.xlsx", t: "XLSX", ext: "factura  LV-0303  PO-0003  GAUZE-NS-5 35 x 5.00" },
-    rows: [{ sku: "GAUZE-NS-5", o: "40 x 5.00", d: "40", i: "35 x 5.00", s: { o: "ok", d: "ok", i: "bad" } }],
-    result: "discrepancies", diffs: [["quantity", "GAUZE-NS-5  pedido 40, facturado 35  -25.00 EUR"]] },
-  { id: "INV-0010", po: "PO-0005",
-    dn: { file: "dn-005-saline.txt", t: "TXT", ext: "albarán  AL-3005  PO-0005  SAL-500 60" },
-    inv: { file: "inv-005-saline.txt", t: "TXT", ext: "factura  N-77005  PO-0005  SAL-250 60 x 1.80" },
-    rows: [{ sku: "SAL-500", o: "60 x 1.80", d: "60", i: "-", s: { o: "ok", d: "ok", i: "bad" } },
-           { sku: "SAL-250", o: "-", d: "-", i: "60 x 1.80", s: { o: "dim", d: "dim", i: "bad" } }],
-    result: "discrepancies", diffs: [["extra_line", "SAL-250  no está en el pedido  108.00 EUR"], ["missing_line", "SAL-500  falta en la factura  108.00 EUR"]] },
-  { id: "INV-0011", po: "PO-0006", awaiting: true,
-    inv: { file: "inv-006-thermometers.xlsx", t: "XLSX", ext: "factura  LV-0306  PO-0006  THERM-DIG 20 x 7.00" },
-    rows: [{ sku: "THERM-DIG", o: "20 x 7.00", d: "aún no", i: "20 x 7.00", s: { o: "ok", d: "pend", i: "ok" } }],
-    result: "awaiting_delivery_note", diffs: [] },
-];
-const LATER = { file: "dn-006-thermometers.pdf", t: "PDF", ext: "albarán  E-0306  PO-0006  THERM-DIG 20", d: "20" };
-const RES = {
-  matched: { color: TEAL, label: "CONCILIADA", list: "conciliada", db: "conciliada", cls: "ok" },
-  discrepancies: { color: ROSE, label: "CON DISCREPANCIAS", list: "con discrepancias", db: "con discrepancias", cls: "bad" },
-  awaiting_delivery_note: { color: AMBER, label: "PENDIENTE DE ALBARÁN", list: "pendiente", db: "pendiente de albarán", cls: "pending" },
+// ---------- timeline (ms): one node active at a time, every step held at least 1.5 s (change 017, orders style) ----------
+const T = {
+  docs: 1600, extract: 3000, compare: [2800, 3400], decide: 1600, register: 1800,
+  compute: 2400, draft: 2000, approve: 2000, send: 3000, end: 1600, hold: 2000,
+  fly: 1300, flyGap: 700, edge: 450, mail: 1300,
 };
 
-// ---------- left: file cards ----------
-const SLOT = [144, 214];
-const BADGE = { TXT: "#475569", PDF: ROSE, XLSX: "#15803D" };
-let fileEls = [];
-function fileCard(parent, cy, f, kind) {
-  const g = el("g", {}, parent);
-  const r = el("rect", { x: 34, y: cy - 28, width: 150, height: 56, rx: 8, fill: "#fff", stroke: "#B9C4D4", "stroke-width": 1.4 }, g);
-  const w = f.t.length * 7 + 12;
-  el("rect", { x: 42, y: cy - 22, width: w, height: 14, rx: 7, fill: BADGE[f.t] }, g);
-  txt({ x: 42 + w / 2, y: cy - 15, style: "font:700 9px var(--mono);fill:#fff;dominant-baseline:central;text-anchor:middle" }, f.t, g);
-  txt({ x: 42, y: cy + 6, style: `font:600 ${Math.min(10, 128 / (f.file.length * 0.6)).toFixed(1)}px var(--mono);fill:var(--ink)` }, f.file, g);
-  txt({ x: 42, y: cy + 21, style: "font:400 10.5px var(--sans);fill:var(--muted)" }, kind, g);
-  return { g, r };
-}
-function setFiles(list) {
-  $("files").innerHTML = ""; fileEls = [];
-  list.forEach(([f, kind], i) => fileEls.push(fileCard($("files"), SLOT[i], f, kind)));
-}
-function markFile(i, on) { const r = fileEls[i].r; r.setAttribute("stroke", on ? PURPLE : "#B9C4D4"); r.setAttribute("stroke-width", on ? 2.4 : 1.4); }
-
-// ---------- graph ----------
-const NH = 38, NW = 92, GY = 112;
+// ---------- graph layout (orders style: 38 px nodes, mono labels) ----------
+const NH = 38;
 const N = {
-  r_start: { x: 250, c: 1 }, read: { x: 360, label: "leer" }, extract: { x: 490, label: "extraer" }, link: { x: 620, label: "enlazar" },
-  match: { x: 750, label: "cotejar" }, store: { x: 880, label: "guardar" }, r_end: { x: 975, c: 2 },
+  doc0: { x: 104, y: 136, w: 128 }, doc1: { x: 104, y: 180, w: 128 }, doc2: { x: 104, y: 224, w: 128 },
+  extract: { x: 260, y: 180, w: 100 }, compare: { x: 400, y: 180, w: 110 }, decide: { x: 600, y: 180, w: 110 },
+  register: { x: 750, y: 180, w: 110, g: "yesG" }, end1: { x: 845, y: 180, c: 1, g: "yesG" },
+  compute: { x: 150, y: 528, w: 196, g: "claimG" }, draft: { x: 360, y: 528, w: 164, g: "claimG" },
+  approve: { x: 540, y: 528, w: 110, g: "claimG" }, send: { x: 710, y: 528, w: 110, g: "claimG" },
+  end2: { x: 710, y: 618, c: 1, g: "claimG" },
 };
-const ORDER = Object.keys(N);
-for (const k in N) N[k].y = GY;
-const rad = n => n.c ? 9 : NW / 2;
-const edgeEls = {}, nodeEls = {};
-const GR = $("graph");
-for (let i = 1; i < ORDER.length; i++) {
-  const A = N[ORDER[i - 1]], B = N[ORDER[i]];
-  edgeEls[ORDER[i - 1] + ">" + ORDER[i]] = el("polyline", { class: "edge", points: `${A.x + rad(A)},${GY} ${B.x - rad(B) - 1},${GY}`, "marker-end": "url(#arr)" }, GR);
+const LABEL = { doc0: S.docs[0], doc1: S.docs[1], doc2: S.docs[2], end1: S.nodes.end, end2: S.nodes.end };
+const E = {
+  c0: [[168, 136], [186, 136], [186, 180], [208, 180]],
+  c1: [[168, 180], [208, 180]],
+  c2: [[168, 224], [186, 224], [186, 180], [208, 180]],
+  "ex-cmp": [[310, 180], [343, 180]],
+  "cmp-dec": [[455, 180], [543, 180]],
+  yes: [[655, 180], [693, 180], "yesG"],
+  "reg-end": [[805, 180], [834, 180], "yesG"],
+  no: [[600, 199], [600, 420], [200, 420], [200, 507], "claimG"],
+  "cd-dr": [[248, 528], [276, 528], "claimG"],
+  "dr-ap": [[442, 528], [483, 528], "claimG"],
+  "ap-se": [[595, 528], [653, 528], "claimG"],
+  "se-end": [[710, 547], [710, 607], "claimG"],
+  "se-sup": [[765, 528], [894, 528], "claimG"],
+};
+const edges = {};
+for (const k in E) {
+  const pts = E[k].filter(p => Array.isArray(p)), g = E[k].find(p => typeof p === "string") || "edges";
+  edges[k] = el("polyline", { class: "edge", points: pts.map(p => p.join(",")).join(" "), "marker-end": "url(#arr)" }, $(g));
 }
-for (const k of ORDER) {
-  const n = N[k];
-  const g = el("g", { class: "node" + (n.c === 2 ? " endc" : ""), transform: `translate(${n.x},${n.y})` }, GR);
-  g.style.setProperty("--oc", PURPLE); g.style.setProperty("--ot", "#FFFFFF");
-  if (n.c) { el("circle", { r: 9 }, g); if (n.c === 2) el("circle", { class: "dot", r: 5 }, g); }
-  else {
-    el("rect", { class: "ring", x: -NW / 2 - 4, y: -NH / 2 - 4, width: NW + 8, height: NH + 8, rx: 11 }, g);
-    el("rect", { x: -NW / 2, y: -NH / 2, width: NW, height: NH, rx: 8 }, g);
-    txt({}, n.label, g);
-  }
-  nodeEls[k] = g;
-}
-[["read", "txt pdf xlsx"], ["extract", "Claude Haiku 4.5"], ["link", "PO-NNNN"], ["match", "código determinista"], ["store", "SQLite"]].forEach(([k, s]) =>
-  txt({ class: "small", x: N[k].x, y: 154, "text-anchor": "middle" }, s, GR));
-
-function node(k, state) { const g = nodeEls[k]; g.classList.remove("active", "done", "paused"); if (state) g.classList.add(state); }
-function edge(a, b, state) {
-  const e = edgeEls[a + ">" + b];
-  e.classList.remove("hot", "done"); if (state) e.classList.add(state);
+function setEdge(id, state) {
+  const e = edges[id]; e.classList.remove("hot", "done"); if (state) e.classList.add(state);
   e.setAttribute("marker-end", state === "hot" ? "url(#arr-hot)" : state === "done" ? "url(#arr-done)" : "url(#arr)");
 }
-function resetGraph() { for (const k of ORDER) node(k, null); for (let i = 1; i < ORDER.length; i++) edge(ORDER[i - 1], ORDER[i], null); }
+el("line", { class: "link", x1: 400, y1: 199, x2: 400, y2: 262 }, $("edges"));
+txt({ class: "cond", x: 662, y: 170 }, S.yes, $("yesG"));
+txt({ class: "cond", x: 608, y: 226 }, S.no, $("claimG"));
 
-// ---------- database ----------
-const TB = {
-  supplier_documents: { y: 96, h: 64 }, document_lines: { y: 168, h: 48 }, reconciliations: { y: 224, h: 48 }, discrepancies: { y: 280, h: 140 },
-};
-const tableEls = {};
-for (const k in TB) {
-  const t = TB[k], g = el("g", { class: "table" }, $("tables"));
-  el("rect", { class: "t", x: 1054, y: t.y, width: 194, height: t.h, rx: 6 }, g);
-  txt({ class: "tn", x: 1062, y: t.y + 16 }, k, g);
-  tableEls[k] = g;
+const nodes = {};
+for (const k in N) {
+  const n = N[k];
+  const g = el("g", { class: "node" + (n.c ? " endc" : ""), transform: `translate(${n.x},${n.y})` }, $(n.g || "nodes"));
+  if (n.c) {
+    el("circle", { r: 9 }, g); el("circle", { class: "dot", r: 5 }, g);
+    txt({ class: "small", x: n.x, y: n.y + 26, "text-anchor": "middle" }, LABEL[k], $(n.g || "nodes"));
+  } else {
+    el("rect", { x: -n.w / 2, y: -NH / 2, width: n.w, height: NH, rx: 8 }, g);
+    txt({}, LABEL[k] || S.nodes[k], g);
+  }
+  nodes[k] = g;
 }
-const recRef = txt({ class: "small", x: 1240, y: 240, "text-anchor": "end" }, "", tableEls.reconciliations);
-function chip(parent, y, text, cls, color, x0, w) {
-  const g = el("g", { class: "chip " + cls }, parent);
-  el("rect", { x: x0, y: y - 10, width: w, height: 20, rx: 4 }, g);
-  if (color) el("rect", { x: x0, y: y - 10, width: 5, height: 20, rx: 2, fill: color, style: "stroke:none" }, g);
-  txt({ x: x0 + (color ? 11 : 8), y }, text, g);
-  return g;
-}
-const dbchip = (t, y, text, cls, color) => chip(tableEls[t], y, text, cls, color, 1062, 178);
-const setChip = (c, text, cls) => { c.setAttribute("class", "chip " + cls + (c.classList.contains("on") ? " on" : "")); c.querySelector("text").textContent = text; };
-const chips = {
-  dn: dbchip("supplier_documents", 126, "", "ok", TEAL),
-  inv: dbchip("supplier_documents", 148, "", "ok", PURPLE),
-  line: dbchip("document_lines", 198, "", "ok", PURPLE),
-  rec: dbchip("reconciliations", 254, "", "ok", TEAL),
-};
-const TYPES = ["price", "quantity", "extra_line", "missing_line"];
-const TNAME = {price: "precio", quantity: "cantidad", extra_line: "sobrante", missing_line: "ausente"};
-const counts = {};
-const tchips = {};
-TYPES.forEach((t, i) => { tchips[t] = dbchip("discrepancies", 308 + i * 28, "", "zero", ROSE); fxOn(tchips[t]); });
-function showCounts() {
-  for (const t of TYPES) setChip(tchips[t], TNAME[t].padEnd(14) + (counts[t] || 0), counts[t] ? "bad" : "zero");
-}
-const listChips = [];
-for (let i = 0; i < 5; i++) listChips.push(chip($("list"), 548 + i * 24, "", "ok", TEAL, 1054, 194));
+function setNode(k, state) { const g = nodes[k]; g.classList.remove("active", "done"); if (state) g.classList.add(state); }
 
-// ---------- center: three-way match ----------
-const MG = $("match");
-const ext = el("g", { class: "fx" }, MG);
-el("rect", { class: "box", x: 240, y: 220, width: 756, height: 70, rx: 10 }, ext);
-const extL = [0, 1].map(i => txt({ x: 256, y: 246 + i * 26, class: "fx", style: "font:600 14px var(--mono);fill:var(--ink)" }, "", ext));
-const pill = el("g", { class: "fx" }, MG);
-el("rect", { x: 884, y: 230, width: 100, height: 24, rx: 12, fill: "#EEF2FF", stroke: "#4338CA", "stroke-width": 1.6 }, pill);
-txt({ x: 934, y: 242, style: "font:700 12px var(--mono);fill:#4338CA;dominant-baseline:central;text-anchor:middle" }, "Haiku 4.5", pill);
+// the person who approves the claim email, above the approve node
+{
+  const g = $("claimG");
+  el("circle", { cx: 540, cy: 474, r: 15, fill: "#E2E8F0", stroke: "#8A99AF" }, g);
+  el("circle", { cx: 540, cy: 469, r: 5.4, fill: "#64748B" }, g);
+  el("path", { d: "M530,486 a10,8.5 0 0 1 20,0", fill: "#64748B" }, g);
+  txt({ class: "small", x: 518, y: 478, "text-anchor": "end" }, S.person, g);
+}
+const approveCheck = el("g", { class: "check", transform: "translate(556,461)" }, $("claimG"));
+el("circle", { r: 8, fill: "#0D9488" }, approveCheck);
+el("path", { d: "M-3.8,0 L-0.9,3 L3.8,-3", stroke: "#fff", "stroke-width": 2, fill: "none" }, approveCheck);
 
-const CX = [360, 580, 800], CWID = 200, RYS = [334, 386], CH = 44;
-const HEAD = ["orden de compra", "albarán", "factura"];
-const heads = HEAD.map((h, i) => txt({ x: CX[i] + CWID / 2, y: 318, style: "font:700 12px var(--mono);fill:var(--muted);text-anchor:middle" }, h, MG));
-const led = [0, 1].map(r => {
-  const label = txt({ x: 240, y: RYS[r] + CH / 2 + 1, class: "fx", style: "font:700 13px var(--mono);fill:var(--ink);dominant-baseline:central" }, "", MG);
-  const cells = CX.map(x => {
-    const g = el("g", { class: "fx" }, MG);
-    const rect = el("rect", { x, y: RYS[r], width: CWID, height: CH, rx: 8, fill: "#fff", stroke: "#B9C4D4", "stroke-width": 1.4 }, g);
-    const text = txt({ x: x + CWID / 2, y: RYS[r] + CH / 2 + 1, style: "font:600 17px var(--mono);fill:var(--ink);dominant-baseline:central;text-anchor:middle" }, "", g);
-    return { g, rect, text };
-  });
-  return { label, cells };
+// the computed difference, a chip under the compute node
+const diffChip = el("g", { class: "chip" }, $("claimG"));
+el("rect", { x: 98, y: 556, width: 104, height: 22, rx: 4, fill: "#FEF3C7", stroke: "#D97706" }, diffChip);
+el("rect", { x: 98, y: 556, width: 5, height: 22, rx: 2, fill: "#F59E0B" }, diffChip);
+txt({ x: 110, y: 567.5 }, S.diff, diffChip);
+
+// ---------- compare table, linked to the compare node ----------
+const TB = { x: 224, y: 262, w: 360, h: 136 };
+const COLX = [348, 424, 500], CW = 72, CH = 28, ROWY = [310, 342, 374];
+const table = el("g", { class: "table" }, $("tables"));
+el("rect", { class: "t", x: TB.x, y: TB.y, width: TB.w, height: TB.h, rx: 6 }, table);
+S.cols.forEach((c, j) => txt({ class: "th", x: COLX[j] + CW / 2, y: 286 }, c, table));
+S.docs.forEach((d, i) => txt({ class: "rh", x: TB.x + 12, y: ROWY[i] }, d, table));
+const CHECK = "M-3.6,0.4 L-1.2,2.8 L3.6,-2.8", CROSS = "M-2.8,-2.8 L2.8,2.8 M2.8,-2.8 L-2.8,2.8";
+const cells = ROWY.map(y => COLX.map(x => {
+  const g = el("g", { class: "cell" }, table);
+  el("rect", { x, y: y - CH / 2, width: CW, height: CH, rx: 6 }, g);
+  const t = txt({ x: x + CW / 2 - 5, y: y + 1 }, "", g);
+  const mx = x + CW - 4, my = y - CH / 2 + 4;
+  const ok = el("g", { class: "mark mk-ok", transform: `translate(${mx},${my})` }, g);
+  el("circle", { r: 7, fill: "#0D9488" }, ok); el("path", { d: CHECK, fill: "none", stroke: "#fff", "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" }, ok);
+  const bad = el("g", { class: "mark mk-bad", transform: `translate(${mx},${my})` }, g);
+  el("circle", { r: 7, fill: "#E11D48" }, bad); el("path", { d: CROSS, fill: "none", stroke: "#fff", "stroke-width": 2, "stroke-linecap": "round" }, bad);
+  return { g, t };
+}));
+function setCell(i, j, state) { const c = cells[i][j]; c.g.classList.remove("ok", "bad"); if (state) c.g.classList.add(state); }
+
+// ---------- tokens: figures that fly from each document through extract into its row, and the claim email ----------
+const flys = [0, 1, 2].map(() => {
+  const g = el("g", { class: "tok" }, $("toks"));
+  const r = el("rect", { y: -14, height: 28, rx: 14, fill: "#F59E0B" }, g);
+  const t = txt({ x: 0, y: 1 }, "", g);
+  return { g, r, t };
 });
-const CELLSTYLE = {
-  norm: ["#fff", "#B9C4D4", 1.4, "#0F172A", ""],
-  ok: ["#F0FDFA", TEAL, 2.2, "#134E4A", ""],
-  bad: ["#FFF1F2", ROSE, 2.6, "#9F1239", "5 3"],
-  pend: ["#FEF3C7", AMBER, 2.4, "#92400E", "5 3"],
-  dim: ["#F4F6FA", "#CBD5E1", 1.2, "#94A3B8", ""],
-};
-function setCell(r, c, text, state) {
-  const cell = led[r].cells[c], s = CELLSTYLE[state || "norm"];
-  if (text !== null) cell.text.textContent = text;
-  cell.rect.setAttribute("fill", s[0]); cell.rect.setAttribute("stroke", s[1]); cell.rect.setAttribute("stroke-width", s[2]);
-  if (s[4]) cell.rect.setAttribute("stroke-dasharray", s[4]); else cell.rect.removeAttribute("stroke-dasharray");
-  cell.text.style.fill = s[3];
-  cell.g.classList.add("on");
-}
+const envelope = el("g", { class: "tok" }, $("toks"));
+el("rect", { x: -15, y: -10, width: 30, height: 20, rx: 3, fill: "#F59E0B" }, envelope);
+el("path", { d: "M-14,-8 L0,2 L14,-8", stroke: "#fff", "stroke-width": 1.8, fill: "none" }, envelope);
 
-const rule = el("g", { class: "fx" }, MG);
-el("rect", { x: 240, y: 440, width: 470, height: 32, rx: 16, style: "fill:#CCFBF1;stroke:#0D9488;stroke-width:2" }, rule);
-txt({ x: 475, y: 457, style: "font:700 14px var(--mono);fill:#134E4A;dominant-baseline:central;text-anchor:middle" }, "tolerancia: precio 0.01 EUR/ud, cantidad 0", rule);
-const resG = el("g", { class: "fx" }, MG);
-const resId = txt({ x: 240, y: 502, style: "font:700 22px var(--mono);fill:var(--ink);dominant-baseline:central" }, "", resG);
-const resRect = el("rect", { x: 372, y: 482, width: 150, height: 40, rx: 20, fill: TEAL }, resG);
-const resTxt = txt({ x: 0, y: 502, style: "font:700 18px var(--mono);fill:#fff;dominant-baseline:central;text-anchor:middle" }, "", resG);
-const diffG = el("g", { class: "fx" }, MG);
-el("rect", { class: "box", x: 240, y: 544, width: 756, height: 132, rx: 10 }, diffG);
-const note = txt({ x: 256, y: 610, class: "fx", style: "font:600 17px var(--mono);fill:var(--muted);dominant-baseline:central" }, "", diffG);
-const dRows = [0, 1].map(i => {
-  const g = el("g", { class: "fx" }, diffG);
-  const rect = el("rect", { x: 256, y: 560 + i * 56, width: 100, height: 34, rx: 17, fill: ROSE }, g);
-  const tt = txt({ x: 0, y: 577 + i * 56, style: "font:700 14px var(--mono);fill:#fff;dominant-baseline:central;text-anchor:middle" }, "", g);
-  const tx = txt({ x: 0, y: 577 + i * 56, style: "font:600 16px var(--mono);fill:var(--ink);dominant-baseline:central" }, "", g);
-  return { g, rect, tt, tx };
-});
-
-function docTok(id, color) {
-  el("g", { class: "tok", id }, $("ptoks")).innerHTML = `<rect x="-12" y="-15" width="24" height="30" rx="3" fill="${color}"/><rect x="-7" y="-9" width="14" height="3" rx="1" fill="#fff"/><rect x="-7" y="-3" width="14" height="3" rx="1" fill="#fff"/><rect x="-7" y="3" width="9" height="3" rx="1" fill="#fff"/>`;
+// ---------- the claim email, opened in the supplier panel ----------
+const MAIL = { x: 912, y: 460, w: 328, h: 136 };
+{
+  const g = $("mailG");
+  el("rect", { x: MAIL.x, y: MAIL.y, width: MAIL.w, height: MAIL.h, rx: 6, fill: "#FFFFFF", stroke: "#F59E0B", "stroke-width": 1.6, filter: "url(#glow-s)" }, g);
+  el("g", { transform: `translate(${MAIL.x + 24},${MAIL.y + 24})` }, g).innerHTML = '<rect x="-11" y="-7.5" width="22" height="15" rx="2" fill="#F59E0B"/><path d="M-10,-6 L0,1.5 L10,-6" stroke="#fff" stroke-width="1.6" fill="none"/>';
+  el("line", { x1: MAIL.x + 44, y1: MAIL.y + 24, x2: MAIL.x + MAIL.w - 16, y2: MAIL.y + 24, stroke: "#E2E8F0", "stroke-width": 2 }, g);
+  S.mail.forEach((s, i) => txt({ class: "mline" + (i === 1 ? " diff" : ""), x: MAIL.x + 16, y: MAIL.y + 62 + i * 28 }, s, g));
 }
-docTok("tdn", TEAL); docTok("tinv", PURPLE);
 
 // ---------- timeline engine ----------
 let runId = 0, paused = false, speed = 1;
@@ -421,28 +330,24 @@ function tween(dur, fn) {
 }
 const wait = ms => tween(ms, () => {});
 const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
-function place(id, x, y) { $(id).setAttribute("transform", `translate(${x},${y})`); }
-function show(id, x, y) { if (x !== undefined) place(id, x, y); $(id).classList.add("on"); }
-function hide(id) { $(id).classList.remove("on"); }
-function move(id, pts, dur) {
+const bg = p => p.catch(e => { if (e !== "restart") throw e; });
+function move(g, pts, dur) {
   const segs = []; let total = 0;
   for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); segs.push(l); total += l; }
-  show(id, pts[0][0], pts[0][1]);
+  const place = (x, y) => g.setAttribute("transform", `translate(${x},${y})`);
+  place(pts[0][0], pts[0][1]); g.classList.add("on");
   return tween(RM ? 1 : dur, p => {
     let d = ease(p) * total, i = 0;
     while (i < segs.length - 1 && d > segs[i]) { d -= segs[i]; i++; }
     const r = segs[i] ? d / segs[i] : 1;
-    place(id, pts[i][0] + (pts[i + 1][0] - pts[i][0]) * r, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * r);
+    place(pts[i][0] + (pts[i + 1][0] - pts[i][0]) * r, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * r);
   });
 }
-function flash(t) { tableEls[t].classList.add("flash"); setTimeout(() => tableEls[t].classList.remove("flash"), 700); }
-const on = id => $(id).classList.add("on"), off = id => $(id).classList.remove("on");
-function fxOn(e) { e.classList.add("on"); }
-function fxOff(e) { e.classList.remove("on"); }
-const bg = p => p.catch(e => { if (e !== "restart") throw e; });
+// an edge pulses amber while the flow crosses it, then stays teal
+async function cross(id) { setEdge(id, "hot"); await wait(T.edge); setEdge(id, "done"); }
 
-// progress follows the story clock
-let LOOP = 36600;
+// progress follows the story clock; LOOP is the story length of one pass as measured by record.py (lastStoryMs)
+const LOOP = 33700;
 let vt = 0, lastTs = null, storyStart = null;
 function ticker(ts) {
   if (lastTs !== null && !paused) vt += (ts - lastTs) * speed;
@@ -452,191 +357,102 @@ function ticker(ts) {
 }
 requestAnimationFrame(ticker);
 
-// ---------- one token through the graph ----------
-// from: first point of the path from a file card to the start node; drive: this token sets node and edge states
-async function ride(tok, from, delay, hopMs, holdMs, drive, hooks, holds) {
-  if (delay) await wait(delay);
-  await move(tok, [from, [207, from[1]], [207, GY], [N.r_start.x, GY]], 520);
-  if (drive) node("r_start", "done");
-  for (let i = 1; i < ORDER.length; i++) {
-    const a = ORDER[i - 1], b = ORDER[i];
-    if (drive) edge(a, b, "hot");
-    await move(tok, [[N[a].x, GY], [N[b].x, GY]], hopMs);
-    if (drive) edge(a, b, "done");
-    if (b === "r_end") { if (drive) node(b, "done"); break; }
-    hide(tok);
-    if (drive) node(b, "active");
-    const h = holds && holds[b] ? holds[b] : holdMs;
-    if (hooks && hooks[b]) bg(hooks[b](h));
-    await wait(h);
-    if (drive) node(b, "done");
+// ---------- one round ----------
+function resetRound(r) {
+  for (const k in nodes) setNode(k, null);
+  for (const k in edges) setEdge(k, null);
+  $("claimG").setAttribute("class", "idle"); $("yesG").setAttribute("class", "lit");
+  $("subframe").classList.remove("open");
+  diffChip.classList.remove("on"); approveCheck.classList.remove("on"); $("mailG").classList.remove("on");
+  cells.forEach(row => row.forEach(c => { c.t.textContent = ""; c.g.classList.remove("ok", "bad"); }));
+  flys.forEach(f => f.g.classList.remove("on")); envelope.classList.remove("on");
+  table.classList.remove("flash");
+  $("tag").textContent = S.round[r];
+}
+// a step: the incoming edge pulses while the node turns active, and the node stays active for the whole hold
+async function step(k, ms, body, inEdge) {
+  setNode(k, "active");
+  if (inEdge) bg(cross(inEdge));
+  await Promise.all([wait(ms), body ? body() : null]);
+  setNode(k, "done");
+}
+async function round(r) {
+  const F = S.figs[r], bad = r === 1;
+  resetRound(r);
+  // the three documents arrive, one after another
+  for (let i = 0; i < 3; i++) { setNode("doc" + i, "done"); await wait(T.docs / 3); }
+  // extract: each document's figures fly through the extract node into its table row
+  await step("extract", T.extract, async () => {
+    await Promise.all([0, 1, 2].map(async i => {
+      await wait(i * T.flyGap);
+      bg(cross("c" + i));
+      const f = flys[i];
+      f.t.textContent = F[i].join("  ");
+      const w = f.t.getComputedTextLength() + 26;
+      f.r.setAttribute("x", -w / 2); f.r.setAttribute("width", w);
+      await move(f.g, [[N.doc0.x + N.doc0.w / 2 + w / 2, N["doc" + i].y], [N.extract.x, N.extract.y], [COLX[1] + CW / 2, ROWY[i]]], T.fly);
+      f.g.classList.remove("on");
+      F[i].forEach((v, j) => { cells[i][j].t.textContent = v; });
+    }));
+  });
+  // compare: column by column; in round 2 the invoice quantity and total fail against the delivery note
+  await step("compare", T.compare[r], async () => {
+    table.classList.add("flash");
+    await wait(300);
+    for (const j of bad ? [1, 0, 2] : [0, 1, 2]) {
+      for (let i = 0; i < 3; i++) {
+        if (bad && j !== 1 && i === 0) continue;
+        setCell(i, j, bad && j !== 1 && i === 2 ? "bad" : "ok");
+        await wait(140);
+      }
+      await wait(bad ? 520 : 400);
+    }
+    table.classList.remove("flash");
+  }, "ex-cmp");
+  // decision: the yes branch to register, or the no branch into the claim subgraph
+  await step("decide", T.decide, async () => {
+    await wait(500);
+    if (bad) {
+      $("yesG").setAttribute("class", "idle"); $("claimG").setAttribute("class", "lit");
+      $("subframe").classList.add("open");
+    }
+  }, "cmp-dec");
+  if (!bad) {
+    await step("register", T.register, null, "yes");
+    await step("end1", T.end, null, "reg-end");
+    return;
   }
-  hide(tok);
+  await step("compute", T.compute, async () => { await wait(600); diffChip.classList.add("on"); }, "no");
+  await step("draft", T.draft, null, "cd-dr");
+  await step("approve", T.approve, async () => { await wait(900); approveCheck.classList.add("on"); }, "dr-ap");
+  // send: the email flies along the edge to the supplier and opens into a card
+  await step("send", T.send, async () => {
+    await wait(250);
+    setEdge("se-sup", "hot");
+    await move(envelope, [[780, 528], [900, 528], [MAIL.x + 24, MAIL.y + 24]], T.mail);
+    envelope.classList.remove("on");
+    setEdge("se-sup", "done");
+    $("mailG").classList.add("on");
+  }, "ap-se");
+  await step("end2", T.end, null, "se-end");
 }
-
-// ---------- scene pieces ----------
-function clearMatch() {
-  [ext, pill, rule, resG, diffG, note].forEach(fxOff);
-  extL.forEach(fxOff);
-  led.forEach(r => { fxOff(r.label); r.cells.forEach(c => fxOff(c.g)); });
-  dRows.forEach(d => fxOff(d.g));
-  heads[0].textContent = HEAD[0];
-  off("mclock");
-}
-function extractHook(line, text) {
-  return async ms => {
-    fxOn(ext); fxOn(pill); await wait(ms * .7); fxOff(pill);
-    extL[line].textContent = text; fxOn(extL[line]);
-  };
-}
-function fillOrder(c) {
-  heads[0].textContent = "orden de compra " + c.po;
-  c.rows.forEach((r, i) => { led[i].label.textContent = r.sku; fxOn(led[i].label); setCell(i, 0, r.o, r.s.o === "dim" ? "dim" : "norm"); });
-}
-const fillDn = c => c.rows.forEach((r, i) => setCell(i, 1, r.d, r.s.d === "dim" ? "dim" : "norm"));
-const fillInv = c => c.rows.forEach((r, i) => setCell(i, 2, r.i, "norm"));
-function showResult(c) {
-  const R = RES[c.result];
-  resId.textContent = c.id;
-  const w = R.label.length * 11 + 40;
-  resRect.setAttribute("width", w); resRect.setAttribute("fill", R.color);
-  resTxt.setAttribute("x", 372 + w / 2); resTxt.textContent = R.label;
-  fxOn(resG);
-  dRows.forEach(d => fxOff(d.g));
-  fxOff(note);
-  if (c.diffs.length) {
-    c.diffs.forEach(([t, s], i) => {
-      const d = dRows[i], w2 = TNAME[t].length * 9 + 24;
-      d.rect.setAttribute("width", w2); d.tt.setAttribute("x", 256 + w2 / 2); d.tt.textContent = TNAME[t];
-      d.tx.setAttribute("x", 256 + w2 + 16); d.tx.textContent = s; fxOn(d.g);
-    });
-  } else {
-    note.textContent = c.result === "matched" ? "sin diferencias: orden de compra, albarán y factura coinciden" : "aún no hay albarán: el resultado sigue abierto";
-    note.style.fill = c.result === "matched" ? "#0F766E" : "#92400E"; fxOn(note);
-  }
-  fxOn(diffG);
-}
-async function matchScene(c) {
-  fxOn(rule); await wait(450);
-  if (c.awaiting) on("mclock");
-  for (const col of [0, 1, 2]) {
-    c.rows.forEach((r, i) => setCell(i, col, col === 1 && !c.dn ? r.d : null, r.s["odi"[col]]));
-    await wait(230);
-  }
-  await wait(200);
-  showResult(c);
-}
-function storeInv(c) {
-  flash("supplier_documents"); setChip(chips.inv, ("fac  " + c.inv.ext.split("  ")[1]).padEnd(17) + "enlazada", "ok"); fxOn(chips.inv);
-  setTimeout(() => {
-    flash("document_lines"); const r = c.rows.find(x => x.i !== "-") || c.rows[0];
-    setChip(chips.line, r.sku + " " + r.i, "ok"); fxOn(chips.line);
-  }, 220);
-  setTimeout(() => {
-    flash("reconciliations"); recRef.textContent = c.id;
-    const R = RES[c.result];
-    setChip(chips.rec, R.db, R.cls); fxOn(chips.rec);
-    for (const d of c.diffs) counts[d[0]] = (counts[d[0]] || 0) + 1;
-    if (c.diffs.length) flash("discrepancies");
-    showCounts();
-  }, 440);
-}
-const storeDn = (c, f) => { flash("supplier_documents"); setChip(chips.dn, ("alb  " + f.ext.split("  ")[1]).padEnd(17) + "enlazado", "ok"); fxOn(chips.dn); };
-function addList(i, c) { const R = RES[c.result]; setChip(listChips[i], c.id + "  " + R.list, R.cls); fxOn(listChips[i]); }
 
 // ---------- story ----------
-function reset() {
-  clearMatch(); resetGraph(); $("later").innerHTML = ""; $("files").innerHTML = "";
-  document.querySelectorAll(".tok, .chip, .clock").forEach(e => e.classList.remove("on"));
-  for (const t of TYPES) { counts[t] = 0; fxOn(tchips[t]); }
-  showCounts();
-  recRef.textContent = "";
-  storyStart = vt; $("progress").setAttribute("width", 0);
-}
-
-async function runCase(c, k) {
-  clearMatch(); resetGraph();
-  for (const k2 of ["dn", "inv", "line", "rec"]) fxOff(chips[k2]);
-  recRef.textContent = "";
-  const files = c.dn ? [[c.dn, "albarán"], [c.inv, "factura"]] : [[c.inv, "factura"]];
-  setFiles(files); await wait(c.detail ? 500 : 250);
-  const invSlot = c.dn ? 1 : 0;
-  const fromDn = [109, SLOT[0]], fromInv = [109, SLOT[invSlot]];
-  const dnHooks = c.dn ? { extract: extractHook(0, c.dn.ext), link: async () => { fillOrder(c); fillDn(c); }, store: async () => storeDn(c, c.dn) } : null;
-  const invHooks = {
-    extract: extractHook(c.dn ? 1 : 0, c.inv.ext),
-    link: async () => { fillOrder(c); fillInv(c); },
-    match: () => matchScene(c),
-    store: async () => { storeInv(c); addList(k, c); },
-  };
-  if (c.detail) {
-    markFile(0, true);
-    await ride("tdn", fromDn, 0, 200, 170, true, dnHooks, { extract: 700 });
-    markFile(0, false); markFile(1, true);
-    resetGraph();
-    await wait(100);
-    await ride("tinv", fromInv, 0, 200, 170, true, invHooks, { extract: 700, match: 2000 });
-    markFile(1, false);
-  } else {
-    markFile(invSlot, true); if (c.dn) markFile(0, true);
-    const jobs = [ride("tinv", fromInv, c.dn ? 330 : 0, 150, 130, true, invHooks, { extract: 380, match: 1550 })];
-    if (c.dn) jobs.unshift(ride("tdn", fromDn, 0, 150, 130, false, dnHooks, { extract: 380, match: 1550 }));
-    await Promise.all(jobs);
-  }
-  await wait(c.awaiting ? 700 : 450);
-}
-async function secondScan() {
-  const c = CASES[4];
-  clearMatch(); resetGraph();
-  $("files").innerHTML = ""; fileEls = [];
-  for (const k2 of ["dn", "inv", "line", "rec"]) fxOff(chips[k2]);
-  fillOrder(c); fillInv(c);
-  $("later").innerHTML = "";
-  fileCard($("later"), 590, LATER, "albarán");
-  await wait(600);
-  resetGraph();
-  const hooks = {
-    extract: async ms => { fxOn(ext); fxOn(pill); await wait(ms * .7); fxOff(pill); extL[0].textContent = LATER.ext; fxOn(extL[0]); },
-    link: async () => setCell(0, 1, LATER.d, "norm"),
-    match: async () => {
-      const R = RES.matched, w = R.label.length * 11 + 40;
-      await wait(150);
-      [0, 1, 2].forEach(col => setCell(0, col, null, "ok"));
-      await wait(400);
-      resId.textContent = c.id; resRect.setAttribute("width", w); resRect.setAttribute("fill", R.color);
-      resTxt.setAttribute("x", 372 + w / 2); resTxt.textContent = R.label;
-      note.textContent = "misma conciliación INV-0011, completada - no añade otra fila"; note.style.fill = "#0F766E";
-      dRows.forEach(d => fxOff(d.g)); fxOn(note); fxOn(diffG); fxOn(resG);
-    },
-    store: async () => {
-      storeDn(c, LATER);
-      setTimeout(() => {
-        flash("reconciliations"); setChip(chips.rec, RES.matched.db, "ok");
-        setChip(listChips[4], c.id + "  " + RES.matched.list, "ok"); fxOn(listChips[4]);
-      }, 250);
-    },
-  };
-  extL[1].textContent = ""; fxOff(extL[1]); fxOff(extL[0]);
-  await ride("tdn", [109, 590], 0, 200, 170, true, hooks, { extract: 600, match: 1900 });
-  await wait(500);
-}
-
 async function story() {
-  reset();
-  await wait(300);
-  for (let k = 0; k < CASES.length; k++) await runCase(CASES[k], k);
-  await secondScan();
+  storyStart = vt; $("progress").setAttribute("width", 0);
+  await round(0);
+  await round(1);
   window.lastStoryMs = vt - storyStart;
   $("progress").setAttribute("width", 1232); storyStart = null;
-  await wait(3500);
+  await wait(T.hold);
 }
 async function loop() {
   const my = ++runId;
   try { while (my === runId) await story(); } catch (e) { if (e !== "restart") throw e; }
 }
-$("btn-pause").onclick = () => { paused = !paused; $("btn-pause").textContent = paused ? "Reanudar" : "Pausa"; };
-$("btn-restart").onclick = () => { paused = false; $("btn-pause").textContent = "Pausa"; loop(); };
-$("btn-speed").onclick = () => { speed = speed === 1 ? 2 : speed === 2 ? 0.5 : 1; $("btn-speed").textContent = "Velocidad " + speed + "x"; };
+$("btn-pause").onclick = () => { paused = !paused; $("btn-pause").textContent = paused ? S.btn.play : S.btn.pause; };
+$("btn-restart").onclick = () => { paused = false; $("btn-pause").textContent = S.btn.pause; loop(); };
+$("btn-speed").onclick = () => { speed = speed === 1 ? 2 : speed === 2 ? 0.5 : 1; $("btn-speed").textContent = S.btn.speed + " " + speed + "x"; };
 $("btn-clean").onclick = () => document.body.classList.toggle("clean");
 if (location.hash === "#clean") document.body.classList.add("clean");
 loop();

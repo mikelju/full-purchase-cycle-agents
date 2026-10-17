@@ -419,10 +419,10 @@ It prints the extracted documents with their lines, the result of every invoice 
 By default (`--mode replay`) it reads the extraction answers from `evals/recordings/reconcile_demo.jsonl` and needs no key and no network; a test inside `npm run check` runs it with the network blocked.
 To record them again, set `ANTHROPIC_API_KEY` in `.env` and run `uv run purchase-cycle reconcile-demo --mode record` (15 Haiku 4.5 calls, a few cents); `--mode live` calls the model without saving.
 
-![Delivery notes and invoices are read from a folder, extracted, linked to their purchase order, matched in plain code and stored as matched, discrepancies or awaiting delivery note; a later scan completes the awaiting invoice](docs/assets/reconcile-flow.gif)
+![The quantity, price and total of an order, a delivery note and an invoice are extracted and compared in two rounds: in the first everything matches and the invoice is registered; in the second the invoice charges 40 units when the delivery note shows 35, so the claim subgraph computes a -25.00 EUR difference, drafts an email, a person approves it and it is sent to the supplier asking for a credit note](docs/assets/reconcile-flow.gif)
 
 The reconciliation flow as a video: [docs/assets/reconcile-flow.mp4](docs/assets/reconcile-flow.mp4).
-Like the orders and quotes animations, it is a conceptual flow, not the exact current behavior of the code: it shows five of the seven reconciliations of the demo.
+Like the orders and quotes animations, it is a conceptual flow, not the exact current behavior of the code: it shows one connected graph (extract, compare, match, then register or the claim subgraph) in two rounds, one where everything matches and one where fewer units arrived than were invoiced, with figures and colours instead of captions.
 
 ## Claim a supplier for invoice differences
 
