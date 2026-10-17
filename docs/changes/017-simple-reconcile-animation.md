@@ -1,6 +1,6 @@
 # 017 - Simple reconcile animation
 
-Status: rebuilt in the orders style with the claim email; adversarial review round 5 and `npm run check` pending
+Status: rebuilt in the orders style with the claim email; review round 5 fixes applied and re-recorded; `npm run check` pending
 
 ## Contract
 Goal and reason:
@@ -10,6 +10,7 @@ It keeps only two cases: the clean case, labelled as such, and one case that doe
 It is made in English and in Spanish; the Spanish one is the video of post 3 of the LinkedIn series (change 015).
 Redesign of 2026-10-17: the owner found the first delivered version still confusing (too much text, pausing needed, unclear why the second case fails if the delivery note had arrived).
 The new version is a conceptual flow with almost no text: three inputs (order, delivery note, invoice), their quantity, price and total extracted and compared, and a claim subgraph inside the same graph that only lights up in round 2.
+Orders-style rebuild of 2026-10-17: the owner asked for the node style of the orders animation, the comparison table, and a claim that drafts an email, has a person approve it and sends it to a Supplier panel, where a three-line card shows the discrepancy and the credit-note request.
 Out of scope:
 The orders and quotes animations; code, tests, datasets and evaluations; phase 11.
 Constraints / decisions that need the owner:
@@ -32,6 +33,7 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 - [x] English page built and recorded (`c890b76`): 499 frames at 15 fps, 33.27 s, story 31.25 s
 - [x] Spanish page built and recorded (`c890b76`): same timeline, same length
 - [x] References updated (README, folder README, LinkedIn plan if approved) (`cb630dd`)
+- [x] First version: adversarial review and `npm run check` (two rounds, see below; `npm run check` on `f0d6f41`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017.txt`; the later commit only touches this document)
 - [x] Redesign: new script approved by the owner in a Lavish page (2026-10-17, all four answers as recommended)
 - [x] Redesign: English and Spanish pages rebuilt and recorded (`6694391`; re-recorded in `8629aa1` after review round 1 with the progress bar on the measured story length): 460 frames at 15 fps, 30.67 s, story 28.65 s
 - [x] Redesign: references updated (README, folder README, post 3 sentence) (`d6a0133`)
@@ -40,19 +42,21 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 - [x] Orders style: English and Spanish pages rebuilt in the visual style of the orders animation with the claim email (`ef6e413`) and recorded: 536 frames at 15 fps, 35.73 s, story 33.70 s
 - [x] Orders style: frames inspected on per-second contact sheets, no defects found; GIF and MP4 encoded in both languages
 - [x] Orders style: references updated (folder README and README alt text; the post 3 sentence in the LinkedIn plan stays true and is unchanged)
-- [ ] Orders style: adversarial review (round 5) and `npm run check`
-- [x] First version: adversarial review and `npm run check` (two rounds, see below; `npm run check` on `f0d6f41`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017.txt`; the later commit only touches this document)
+- [x] Orders style: adversarial review round 5 (see below); fixes applied, both languages re-recorded and re-encoded
+- [ ] Orders style: `npm run check` on the fixed pages
 
 Build notes and evidence of the orders-style rebuild (contact sheets in `.evidence/cambio-017/orders-style/`, probes and recorder logs in `.evidence/cambio-017/`, all git-ignored):
-- C1: both GIFs are 960x540 with the loop block written by `-loop 0`, 536 frames, 1.19 MB (EN, 1193246 bytes) and 1.12 MB (ES, 1117628 bytes); both MP4s are 1280x720, h264, yuv420p, 536 frames, 0.55 MB (EN, 550561 bytes) and 0.56 MB (ES, 557101 bytes) (`ffprobe-orders-style-reconcile-flow{,-es}.{gif,mp4}.txt`); encoded with the commands of the folder README and the full ffmpeg 8.0.1 build.
+- C1: both GIFs are 960x540 with the loop block written by `-loop 0`, 536 frames, 1.13 MB (EN, 1127026 bytes) and 1.15 MB (ES, 1149807 bytes); both MP4s are 1280x720, h264, yuv420p, 536 frames, 0.56 MB (EN, 559465 bytes) and 0.55 MB (ES, 552035 bytes), re-recorded after review round 5 (`ffprobe-orders-style-reconcile-flow{,-es}.{gif,mp4}.txt`); encoded with the commands of the folder README and the full ffmpeg 8.0.1 build.
 - C2: 536 frames at 15 fps = 35.73 s (GIF 35.74 s), under 40 s; the story lasts 33.70 s by the recorder clock (`story ms 33700` at frame 506 in `record-reconcile-flow{,-es}.html.log`, `LOOP` = 33700 in both pages), followed by the 2 s hold.
   The contact sheets (`sheet-reconcile-flow{,-es}-{1,2,3}.png`, one frame per second) show round 1 (100 x 4.20 = 420.00 in all three rows, every cell green) ending in Register and End, and round 2 (40, 35, 40 x 5.00) going through Match? no, Compute difference (-25.00 EUR chip), Draft email, Approve (person check), Send and the claim End node, with Register greyed.
   On Send the envelope flies along the edge into the Supplier panel and opens the three-line card (checked on frames 452 to 464 at full size).
-- C3: timeline constants `T`, identical in both pages: documents 1.6 s in total (they turn teal one after another and are never active), extract 3.0 s, compare 2.8 s (round 1) and 3.4 s (round 2), decision 1.6 s, register 1.8 s, compute difference 2.4 s, draft email 2.0 s, approve 2.0 s, send 3.0 s (envelope flight 1.3 s), end 1.6 s, final hold 2.0 s; the shortest hold is 1.6 s.
-  Each `step` sets one node active and sets it done before the next step starts, so one node is active at a time; the contact sheets show a short fade where the previous node leaves amber while the next one lights up.
-  On-screen text matches the reworded C3: the frames show no document IDs and no captions; the tokens that carry the figures from the documents to the table briefly cross the Extract node and the table while in flight.
+- C3: timeline constants `T`, identical in both pages: documents 1.6 s in total (they turn teal one after another and are never active), extract 3.0 s, compare 2.8 s (round 1) and 3.4 s (round 2), decision 1.6 s, register 1.8 s, compute difference 2.4 s, draft email 2.0 s, approve 2.0 s, send 3.0 s (envelope flight 1.3 s), end 1.6 s, final hold 2.0 s; the shortest step hold is 1.6 s (the three document nodes are not steps: they turn teal about 0.53 s apart within one 1.6 s step and are never active).
+  Each `step` sets one node active and sets it done before the next step starts, so the page state never has two active nodes; on screen the previous node fades out of amber over the 0.3 s CSS transition while the next one lights up, which the contact sheets show as a brief overlap and which is judged acceptable against C3 (logical state one active node, overlap under 0.3 s).
+  On-screen text matches the reworded C3 except for the frame headers, labelled below as a deviation: the frames show no document IDs and no captions; the tokens that carry the figures from the documents to the table briefly cross the Extract node and the table while in flight.
   The constants add up to 33.0 s; the measured 33.70 s includes the round resets and the step bodies on the recorder's virtual clock.
-- C4: the Spanish page differs from the English one in its strings block, charset, title and number format (4,20, 420,00, -25,00 €); the frames show Conciliación, Albarán, ¿Cuadra?, Sí, Reclamación, Calcular diferencia, Diferencia -25,00 € and «Solicitamos un abono» legible in one font, and the table and card text inside their boxes at 960x540 (`sheet-reconcile-flow-es-*.png`, final frame scaled to 960x540).
+- Deviation from C3: the frame headers of the orders style, "reconciliation graph" ("grafo de conciliación") above the main graph and "supplier" ("proveedor") above the Supplier panel besides its name, are not in the C3 list; they come from the orders animation style the owner asked for and appear in the owner-approved Lavish mockup, and they are flagged to the owner in the delivery report.
+  The person label comes from the owner-approved claim step "Approve (person)" (Lavish option 1), not from the C3 option text.
+- C4: the Spanish page differs from the English one in its strings block, charset, title and number format (4,20, 420,00, -25,00 €); the frames show Conciliación, Albarán, ¿Cuadra?, sí, Reclamación, Calcular diferencia, Diferencia -25,00 € and «Solicitamos un abono» legible in one font, and the table and card text inside their boxes at 960x540 (`sheet-reconcile-flow-es-*.png`, final frame scaled to 960x540).
 - C5: the folder README describes the new claim steps and the length of about 36 s, and the README alt text adds the email, the approval and the send; the post 3 sentence (two rounds, -25,00 €, se pide un abono al proveedor) is still true and unchanged; `git grep reconcile-flow` shows no other reference to update.
 - C6: not run yet; it runs with review round 5.
 - Builder assumptions (not decided by the owner): the document nodes turn teal one after another over 1.6 s and are never amber-active; red is used only in table cells and the card difference line; both end nodes are labelled End (Fin); compute difference 2.4 s, draft 2.0 s, approve 2.0 s, send 3.0 s, end 1.6 s; in round 2 the Pedido (Order) row cells for quantity and total stay uncoloured, as they are not compared against the delivery note.
@@ -102,7 +106,7 @@ Owner answers of 2026-10-17 in the Lavish redesign page (all as recommended; the
 
 Note on the Spanish wording: the Lavish script the owner approved labels the purchase order "Pedido" (the owner's own wording, and post 3 also says "pedido"), so this animation uses "Pedido" instead of the "orden de compra" of change 016; flagged to the owner in the delivery report.
 
-Redesign script (conceptual; it does not need to match the implementation):
+Redesign script (conceptual, superseded by the orders-style rebuild):
 | Time | Scene |
 |---|---|
 | 0-12 | Round 1: the order, delivery note and invoice cards light up; extract pulls quantity, price and total of each into the compare table (100 x 4.20 = 420.00 for all three); every cell turns green, the yes branch and the register node light up; the claim subgraph stays grey |
@@ -136,7 +140,7 @@ First version timeline, superseded (seconds, about 30 s of story plus the 2 s re
 | 24-27 | DISCREPANCIES stamp (2.2 s) | |
 | 27-30 | What happens next: small graph draft, review (person), send | "next: a claim email to the supplier is drafted, a person approves it and it is sent" |
 
-Conceptual simplifications (as in change 011, the flow is conceptual): the delivery notes do not ride the graph, they are shown as already stored; only two of the demo reconciliations appear; the claim step is a separate graph shown as a summary.
+Conceptual simplifications (as in change 011, the flow is conceptual): the delivery notes do not ride the graph, they are shown as already stored; only two of the demo reconciliations appear; in the first version the claim step was a separate graph shown as a summary (since the redesign it is a subgraph of the same graph).
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
@@ -145,7 +149,8 @@ Conceptual simplifications (as in change 011, the flow is conceptual): the deliv
 | 2 | Local, one subagent in clean context | `aae58ae..f0d6f41` (fix commit) | Correctness | None blocking; 1 menor: the C3 caption hold measured on the GIF was not re-checked by the reviewer, and its sentence mixed "in case 1" and "for case 2" | Confirmed as wording only: the case 2 contact sheet shows the `read` and `link` captions on screen about 1.07 s, sentence reworded |
 | 3 (redesign 1) | Local, two subagents in clean context | `f0d6f41..b05adac` | Correctness; evidence | None blocking; correctness: 2 menor (Spanish page says "Pedido" instead of change 016's "orden de compra"; progress bar `LOOP` = 28000 fills 0.65 s before the 28.65 s story ends). Evidence: 5 menor (stale "Spanish captions" pending line; wrong cause for the 0.65 s gap; edge-pulse statement false for extract; on-screen text beyond the C3 list not labelled as a deviation; no saved probe or recorder log) | All confirmed: `LOOP` = 28650 in both pages and both languages re-recorded (`8629aa1`); probe and recorder log saved; build notes, pending line, extract exception and a labelled C3 deviation fixed (`5042562`); "Pedido" kept because the owner-approved script uses it, recorded under Decisions and flagged to the owner |
 | 4 (redesign 2) | Local, one subagent in clean context | `b05adac..5042562` (fix commits) | Correctness; evidence | None blocking; 2 menor: the build notes said no step body outlasts its hold, but the round 1 compare body lasts about 3.07 s against 2.8 s; the redesign rounds were not yet in this table | Both confirmed and fixed in this document: story length note reworded, these rows added; bar, media, probe and figures verified without defects |
+| 5 (orders style) | Local, four subagents in clean context (two from the session before an automatic hand-over, two after) | `b13ac2a..6fdbbc7` | Correctness; evidence | None blocking. Correctness: the Spanish `no` edge ran through the end of the label RECLAMACIÓN (C4); Spanish branch labels capitalised (Sí/No) against English yes/no; the Send-to-Supplier edge and the `no` edge stayed at full opacity in round 1 while the claim subgraph was dimmed; figure tokens covered the document labels while flying; "uds" without its period; the frame headers (reconciliation graph, supplier) are outside the C3 list; the card shows -25.00 where the real claim email states 25.00 EUR in dispute; the Order row stays uncoloured in round 2. Evidence: the redesign script table and the conceptual simplifications line not marked superseded; the goal did not describe the orders-style rebuild; plan items out of order; the two-amber fade not judged against C3; the 1.6 s shortest hold ignored the 0.53 s document cadence; the person label attributed to the C3 option | Fixed: `no` edge moved to x=200, Spanish labels lowercase, `no` edge, its label and `se-sup` moved into the claim group, tokens start at the node edge, "uds.", both languages re-recorded (536 frames, story 33.70 s, `LOOP` unchanged) and re-encoded; document wording fixed and the fade judged acceptable (0.3 s CSS transition, same as the orders animation). Labelled as a C3 deviation for the owner: the frame headers. Left to the owner: the -25.00 sign (owner-approved figure, quoted by post 3) and the uncoloured Order row (builder assumption) |
 
 ## Delivery
 Branch `cambio-017-simple-reconcile-animation`, PR to `main` (see the PR description for results per criterion).
-Pending: adversarial review round 5 and `npm run check` on the orders-style rebuild; owner review of the Spanish labels (own translation: node names, Reclamación, Redactar correo, Solicitamos un abono, ...); the post 3 questions inherited from change 015 are outside this change.
+Pending: `npm run check` on the fixed pages; owner decisions on the C3 frame-header deviation, the -25.00 sign and the uncoloured Order row; owner review of the Spanish labels (own translation: node names, Reclamación, Redactar correo, Solicitamos un abono, ...); the post 3 questions inherited from change 015 are outside this change.

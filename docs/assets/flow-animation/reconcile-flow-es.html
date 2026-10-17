@@ -169,11 +169,11 @@ const S = {
   docs: ["Pedido", "Albarán", "Factura"],
   cols: ["Cantidad", "Precio", "Total"],
   nodes: { extract: "Extraer", compare: "Comparar", decide: "¿Cuadra?", register: "Registrar", compute: "Calcular diferencia", draft: "Redactar correo", approve: "Aprobar", send: "Enviar", end: "Fin" },
-  claim: "reclamación", yes: "Sí", no: "No", person: "persona",
+  claim: "reclamación", yes: "sí", no: "no", person: "persona",
   figs: [[["100", "4,20", "420,00"], ["100", "4,20", "420,00"], ["100", "4,20", "420,00"]],
          [["40", "5,00", "200,00"], ["35", "5,00", "175,00"], ["40", "5,00", "200,00"]]],
   diff: "-25,00 €",
-  mail: ["Factura 40 uds · Albarán 35 uds", "Diferencia -25,00 €", "Solicitamos un abono"],
+  mail: ["Factura 40 uds. · Albarán 35 uds.", "Diferencia -25,00 €", "Solicitamos un abono"],
 };
 </script>
 <script>
@@ -214,12 +214,12 @@ const E = {
   "cmp-dec": [[455, 180], [543, 180]],
   yes: [[655, 180], [693, 180], "yesG"],
   "reg-end": [[805, 180], [834, 180], "yesG"],
-  no: [[600, 199], [600, 420], [150, 420], [150, 507]],
+  no: [[600, 199], [600, 420], [200, 420], [200, 507], "claimG"],
   "cd-dr": [[248, 528], [276, 528], "claimG"],
   "dr-ap": [[442, 528], [483, 528], "claimG"],
   "ap-se": [[595, 528], [653, 528], "claimG"],
   "se-end": [[710, 547], [710, 607], "claimG"],
-  "se-sup": [[765, 528], [894, 528]],
+  "se-sup": [[765, 528], [894, 528], "claimG"],
 };
 const edges = {};
 for (const k in E) {
@@ -232,7 +232,7 @@ function setEdge(id, state) {
 }
 el("line", { class: "link", x1: 400, y1: 199, x2: 400, y2: 262 }, $("edges"));
 txt({ class: "cond", x: 662, y: 170 }, S.yes, $("yesG"));
-txt({ class: "cond", x: 608, y: 226 }, S.no, $("edges"));
+txt({ class: "cond", x: 608, y: 226 }, S.no, $("claimG"));
 
 const nodes = {};
 for (const k in N) {
@@ -390,7 +390,7 @@ async function round(r) {
       f.t.textContent = F[i].join("  ");
       const w = f.t.getComputedTextLength() + 26;
       f.r.setAttribute("x", -w / 2); f.r.setAttribute("width", w);
-      await move(f.g, [[N.doc0.x + 40, N["doc" + i].y], [N.extract.x, N.extract.y], [COLX[1] + CW / 2, ROWY[i]]], T.fly);
+      await move(f.g, [[N.doc0.x + N.doc0.w / 2 + w / 2, N["doc" + i].y], [N.extract.x, N.extract.y], [COLX[1] + CW / 2, ROWY[i]]], T.fly);
       f.g.classList.remove("on");
       F[i].forEach((v, j) => { cells[i][j].t.textContent = v; });
     }));
