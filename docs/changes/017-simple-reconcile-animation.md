@@ -1,6 +1,6 @@
 # 017 - Simple reconcile animation
 
-Status: delivered, in review
+Status: in progress (redesign after owner feedback on PR #27)
 
 ## Contract
 Goal and reason:
@@ -8,6 +8,8 @@ The reconciliation animation of change 011 packs five reconciliations and a seco
 The owner wants a shorter, simpler version that can be followed at normal speed from start to end, showing which graph node each step goes through and what happens in it.
 It keeps only two cases: the clean case, labelled as such, and one case that does not match, followed by what happens next.
 It is made in English and in Spanish; the Spanish one is the video of post 3 of the LinkedIn series (change 015).
+Redesign of 2026-10-17: the owner found the first delivered version still confusing (too much text, pausing needed, unclear why the second case fails if the delivery note had arrived).
+The new version is a conceptual flow with almost no text: three inputs (order, delivery note, invoice), their quantity, price and total extracted and compared, and a claim subgraph inside the same graph that only lights up in round 2.
 Out of scope:
 The orders and quotes animations; code, tests, datasets and evaluations; phase 11.
 Constraints / decisions that need the owner:
@@ -19,8 +21,8 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 | ID | Observable criterion | Evidence when verifying |
 |---|---|---|
 | C1 | The English and Spanish animations exist as GIF (960x540, loops forever, under about 4 MB) and MP4 (1280x720, H.264, yuv420p) | `ffprobe` and file sizes |
-| C2 | The recording lasts at most 34 seconds and shows exactly two reconciliations: one labelled as the correct case that ends matched, and one that ends with discrepancies, followed by what happens next | Frame count and extracted frames |
-| C3 | Every node the invoice passes through is highlighted while active, with a one-line caption of what it does in that case, held on screen for at least 1.2 seconds (0.9 seconds for `read` and `link` in the second case, already seen in the first); the moving token never covers a node label | Timeline constants in the page and extracted frames |
+| C2 | The recording lasts at most 34 seconds and shows two rounds through one connected graph: in round 1 everything matches and the flow ends in the register node; in round 2 the invoice charges 40 units when the delivery note shows 35, and the flow goes through the claim subgraph of the same graph | Frame count and extracted frames |
+| C3 | The only on-screen text is node names, the three document names, quantity, price and total figures, check and cross marks and a small round tag (no document IDs, no captions); one node is active at a time and each step is held at least 1.5 seconds | Timeline constants in the page and extracted frames |
 | C4 | The Spanish page follows the translation rules of change 016 and its frames show correct, legible accents in a consistent font, with no text overflowing its box | Frames under `.evidence/cambio-017/` (git-ignored) |
 | C5 | Every repository reference to the reconciliation animation matches the approved replace-or-add decision, and the README describes what the new animation shows | `git grep reconcile-flow` and the README diff |
 | C6 | `npm run check` exits 0 | Check output (outside the repository) |
@@ -30,9 +32,13 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 - [x] English page built and recorded (`c890b76`): 499 frames at 15 fps, 33.27 s, story 31.25 s
 - [x] Spanish page built and recorded (`c890b76`): same timeline, same length
 - [x] References updated (README, folder README, LinkedIn plan if approved) (`cb630dd`)
-- [x] Adversarial review and `npm run check` (two rounds, see below; `npm run check` on `f0d6f41`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017.txt`; the later commit only touches this document)
+- [x] Redesign: new script approved by the owner in a Lavish page (2026-10-17, all four answers as recommended)
+- [ ] Redesign: English and Spanish pages rebuilt and recorded
+- [ ] Redesign: references updated (README, folder README, post 3 sentence)
+- [ ] Redesign: adversarial review and `npm run check`
+- [x] First version: adversarial review and `npm run check` (two rounds, see below; `npm run check` on `f0d6f41`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017.txt`; the later commit only touches this document)
 
-Build notes and evidence (frames, contact sheets and probes in `.evidence/cambio-017/`, git-ignored):
+Build notes and evidence of the first version, superseded by the redesign (frames, contact sheets and probes in `.evidence/cambio-017/`, git-ignored):
 - C1: both GIFs are 960x540, loop count 0, 1.48 MB (EN) and 1.50 MB (ES, re-recorded after review round 1); both MP4s are 1280x720, h264, yuv420p, 499 frames.
 - C2: 499 frames at 15 fps = 33.27 s (story 31.25 s, `LOOP` = 31250 ms); exactly two reconciliations, then the claim scene.
 - C3: node holds logged by the browser during recording (`scene-times-en.txt`), case 1 read 1.43, extract 2.23, link 1.42, match 2.62, store 1.43 s; case 2 read 0.92, extract 1.64, link 0.94, match 3.62, store 1.41 s.
@@ -45,6 +51,20 @@ Build notes and evidence (frames, contact sheets and probes in `.evidence/cambio
 - C5: `git grep reconcile-flow` shows the README, the folder README and the LinkedIn plan pointing to the replaced files; changes 011 and 016 keep their historical figures.
 
 ## Decisions
+Owner answers of 2026-10-17 in the Lavish redesign page (all as recommended):
+- **What fails in round 2:** fewer units arrived than were invoiced: order 40 x 5.00 = 200.00, delivery note 35 x 5.00 = 175.00, invoice 40 x 5.00 = 200.00; the invoice quantity and total turn red against the delivery note and the claim asks for a -25.00 EUR credit.
+- **Claim:** a framed subgraph inside the same graph, grey until round 2, wired to the same end node.
+- **Languages:** English and Spanish, same file names as now.
+- **Length:** about 30 seconds, about 2 seconds per step.
+
+Redesign script (conceptual; it does not need to match the implementation):
+| Time | Scene |
+|---|---|
+| 0-12 | Round 1: the order, delivery note and invoice cards light up; extract pulls quantity, price and total of each into the compare table (100 x 4.20 = 420.00 for all three); every cell turns green, the yes branch and the register node light up; the claim subgraph stays grey |
+| 12-28 | Round 2: order 40 x 5.00 = 200.00, delivery note 35 x 5.00 = 175.00, invoice 40 x 5.00 = 200.00; the invoice quantity and total turn red, the no branch lights up, the claim subgraph runs: compute difference (-25.00 EUR), ask the supplier for a credit; end |
+| 28-30 | Hold on the final state, then loop |
+
+Owner answers of 2026-10-16 for the first version (superseded by the redesign where they conflict):
 Owner answers of 2026-10-16 in the Lavish script page:
 - **Script:** approved as shown; it is the timeline below.
 - **Replace, not add:** the new animation replaces the current one under the same file names (`reconcile-flow.html`, `reconcile-flow-es.html` and their GIF and MP4), so the README and the LinkedIn plan keep pointing to the right files and only one version is maintained; the old one stays in Git history.
@@ -53,7 +73,7 @@ Owner answers of 2026-10-16 in the Lavish script page:
 - **What happens next:** a closing scene shows the claim graph of phase 09 in small (draft, review by a person, send).
 - **Post 3 text:** the sentence that describes the video is reworded to the two cases.
 
-Approved timeline (seconds, about 30 s of story plus the 2 s recording tail):
+First version timeline, superseded (seconds, about 30 s of story plus the 2 s recording tail):
 | Time | Scene | Caption under the graph (English) |
 |---|---|---|
 | 0-2 | Title; graph idle; orders and delivery notes already stored | "Reconciling an invoice: order, delivery note and invoice" / "the delivery note arrived first and is already stored" |
