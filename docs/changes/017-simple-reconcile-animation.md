@@ -33,10 +33,19 @@ Request of 2026-10-16 from the owner, relayed by the session that plans phase 05
 - [x] Spanish page built and recorded (`c890b76`): same timeline, same length
 - [x] References updated (README, folder README, LinkedIn plan if approved) (`cb630dd`)
 - [x] Redesign: new script approved by the owner in a Lavish page (2026-10-17, all four answers as recommended)
-- [ ] Redesign: English and Spanish pages rebuilt and recorded
-- [ ] Redesign: references updated (README, folder README, post 3 sentence)
+- [x] Redesign: English and Spanish pages rebuilt and recorded (`6694391`): 460 frames at 15 fps, 30.67 s, story 28.65 s
+- [x] Redesign: references updated (README, folder README, post 3 sentence) (`d6a0133`)
 - [ ] Redesign: adversarial review and `npm run check`
 - [x] First version: adversarial review and `npm run check` (two rounds, see below; `npm run check` on `f0d6f41`: EXIT 0, 1288 tests passed, log in `.evidence/cambio-017/check-017.txt`; the later commit only touches this document)
+
+Build notes and evidence of the redesign (frames and contact sheets in `.evidence/cambio-017/redesign/`, git-ignored):
+- C1: both GIFs are 960x540 with the NETSCAPE loop block written by `-loop 0`, 1.23 MB (EN) and 1.25 MB (ES); both MP4s are 1280x720, h264, yuv420p; 460 frames each.
+- C2: 460 frames at 15 fps = 30.67 s, under 34 s; the story (round 1 plus round 2) lasts 28.65 s by the recorder clock, followed by the 2 s hold on the final state; the contact sheets show round 1 ending in register and end, and round 2 going through compute difference and ask for credit into the same end node.
+- C3: timeline constants `T` in both pages: cards 1.6 s, extract 3.0 s, compare 2.8 s (round 1) and 3.4 s (round 2), decision 1.6 s, register 1.8 s, compute difference 2.4 s, ask for credit 2.0 s, end 1.6 s, final hold 2.0 s; the incoming edge pulses during the first 0.45 s of each node's hold, so one node is active at a time.
+  On-screen text is limited to the round tag, the three document names, node names, column headers, figures, yes and no branch labels, the claim frame name and check and cross marks.
+- C4: the Spanish page differs from the English one only in its strings block, charset and title, with Spanish number format (4,20, 420,00, -25,00 €); the final frame scaled to 960x540 shows Albarán, ¿Cuadra?, Sí and Reclamación legible and nothing overflowing its box.
+- C5: `git grep reconcile-flow` shows the README (new alt text and description), the folder README and the LinkedIn plan (post 3 sentence reworded to the two rounds) pointing to the replaced files.
+- Outside the script: column headers (Quantity, Price, Total) and the yes and no branch labels are on screen, as the redesign asks for the table and the branches; the 0.65 s gap between the 28.0 s of the constants and the measured 28.65 s comes from the staggered card and cell waits.
 
 Build notes and evidence of the first version, superseded by the redesign (frames, contact sheets and probes in `.evidence/cambio-017/`, git-ignored):
 - C1: both GIFs are 960x540, loop count 0, 1.48 MB (EN) and 1.50 MB (ES, re-recorded after review round 1); both MP4s are 1280x720, h264, yuv420p, 499 frames.
