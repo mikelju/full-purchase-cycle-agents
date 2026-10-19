@@ -1,6 +1,6 @@
 # 018 - Fix the known defects before phase 12
 
-Status: implemented, in adversarial review
+Status: implemented, adversarial review complete, delivery in progress
 
 ## Contract
 Goal and reason:
@@ -37,7 +37,7 @@ Constraints / decisions that need the owner:
 
 Current authorization and limits:
 Owner decisions of 2026-10-19 in the Lavish page `.lavish/cambio-018-decisiones.html` (git-ignored), the recommended option in all three (see Decisions).
-Work on branch `cambio-018-known-defects` from `main`; push it and open a PR to `main`; never merge.
+Work on branch `cambio-018-known-defects` from `origin/main`; push it and open a PR to `main`; never merge.
 
 ### Acceptance criteria
 Replay commands run with no API key and no network.
@@ -60,7 +60,7 @@ Every pytest test named below is new or changed in this change and fails on `mai
 | C7 | (a) After the extraction instructions are tuned and re-recorded, the phase 04 detection replay shows no "no produced line" failure for CLD-0041 and CLD-0047 | Replay eval `clarification_detection`, failures list in `.evidence/cambio-018/replay-clarification_detection.txt` |
 | C8 | Phase 04 detection on the test split after re-recording: recall ambiguous, unknown and quantity each at least 95%, or at least the value measured after the fix if lower but never below the current 49/55, 50/53 and 42/46; precision and false question rate gates unchanged (false question rate at most 5%) | Replay eval `clarification_detection` exits 0; `DETECTION_THRESHOLDS` in `clarification_eval.py`, the stored baseline `threshold` and the phase 04 spec gate text show the raised values |
 | C9 | Phase 03 email extraction keeps its gates on the test split after re-recording: intake accuracy, line recall and line precision each at least 95%, and no significant drop against the old baseline (exact McNemar, p < 0.05) | Replay eval `email_order_extraction` exits 0; old-versus-new McNemar per email and per expected line in `.evidence/cambio-018/mcnemar-email.txt` |
-| C10 | The email intake instructions are unchanged; CLD-0149 may still fail and is listed as known | `git diff main -- src/purchase_cycle/llm.py` shows no change to `EMAIL_INTAKE_INSTRUCTIONS` |
+| C10 | The email intake instructions are unchanged; CLD-0149 may still fail and is listed as known | `git diff origin/main -- src/purchase_cycle/llm.py` shows no change to `EMAIL_INTAKE_INSTRUCTIONS` |
 
 #### Claims
 | ID | Observable criterion | Evidence when verifying |
@@ -79,9 +79,9 @@ Every pytest test named below is new or changed in this change and fails on `mai
 | ID | Observable criterion | Evidence when verifying |
 |---|---|---|
 | C16 | One combined live pass: dev split tuning first, at most 3 rounds per task (email extraction, documents, claims), then one test-split record per affected suite and the demo recordings; total spend at most 6 USD, with calls, tokens and USD per task logged | `.evidence/cambio-018/live-cost.txt`; Plan lists the rounds used |
-| C17 | Baselines of `email_order_extraction`, `clarification_detection`, `document_extraction` and `claim_drafting` are reset from the test-split record, each with the old-versus-new McNemar comparison written in Delivery; no other baseline file changes | `git diff --stat main -- evals/baselines/` |
+| C17 | Baselines of `email_order_extraction`, `clarification_detection`, `document_extraction` and `claim_drafting` are reset from the test-split record, each with the old-versus-new McNemar comparison written in Delivery; no other baseline file changes | `git diff --stat origin/main -- evals/baselines/` |
 | C18 | Recordings hold no stale rows for the old prompts, and every recording file whose key includes a changed prompt is re-recorded: `email_order_extraction`, `clarification_detection_email_extraction`, `order_scenarios`, `orders_demo`, `studio`, `document_extraction`, `reconcile_demo`, `claim_drafting`, `claim_demo`; intake recordings are reused where the harness allows it, otherwise their re-record counts against the cap | `npm run eval` exits 0 with no missing recording; a one-off key check (outside `src/`) shows no orphan key, output in `.evidence/cambio-018/recordings-keys.txt` |
-| C19 | Demo outputs and every README transcript, figure or defect mention that changes (README sections on email extraction, clarification detection, reconcile demo, document extraction and claims; `docs/security.md`; the DOC-060 and DOC-112 mentions in the phase 09, 10 and 11 specs are history and stay) are updated to the new run; the flow animations are conceptual and are re-recorded only if a figure they show changes, and the change 017 reconcile animation keeps its approved -25.00 EUR story | README and docs diff; `git grep -n "DOC-060\|DOC-112\|CLM-044\|CLM-066\|CLM-072\|89.1\|94.3\|91.3"` reviewed in Delivery; `git diff --stat main -- docs/assets/flow-animation/` empty or justified |
+| C19 | Demo outputs and every README transcript, figure or defect mention that changes (README sections on email extraction, clarification detection, reconcile demo, document extraction and claims; `docs/security.md`; the DOC-060 and DOC-112 mentions in the phase 09, 10 and 11 specs are history and stay) are updated to the new run; the flow animations are conceptual and are re-recorded only if a figure they show changes, and the change 017 reconcile animation keeps its approved -25.00 EUR story | README and docs diff; `git grep -n "DOC-060\|DOC-112\|CLM-044\|CLM-066\|CLM-072\|89.1\|94.3\|91.3"` reviewed in Delivery; `git diff --stat origin/main -- docs/assets/flow-animation/` empty or justified |
 | C20 | `npm run check` exits 0 on the final commit, with every evaluation in replay mode, no key and no `.env` | Check output in `.evidence/cambio-018/npm-check.txt` |
 
 ## Plan
@@ -108,14 +108,16 @@ Commits, one per defect group, then the re-record commit; each group lists the f
   Phase 04 detection thresholds raised to 95% in `DETECTION_THRESHOLDS`, in the stored baseline `threshold` and in the phase 04 spec gate text; `tests/test_report_format.py` pinned the old levels (89.1, 94.3, 91.3) and was updated.
   Offline: full pytest 1625 passed (`pytest-full.txt`), ruff check and format clean.
   Deviation (cost-saving, same precedent as DV-05): the test and demo records ran through one-off scratchpad scripts, none committed: `rec.py` (a reuse wrapper that replays an answer whose recording key already exists in any recording file and calls the model only for new keys), `recstudio.py` (records the one Studio sample row live), `keys.py` (key audit and prune of stale rows) and `keys2.py` (a second pass for the empty catalog that the document and claim evals send); the figures above are therefore the same as a record that keeps the answers of unchanged prompts.
-  Disclosure (test-informed wording): the new rule in `EMAIL_EXTRACTION_INSTRUCTIONS` (`llm.py`, `3f3fb0c`) was worded from the diagnosed test misses CLD-0041 and CLD-0047 and then checked on dev (dev recall for unknown products 94.1% to 100.0% live); the test detection recall gain for that shape is therefore not a clean held-out estimate.
+  Disclosure (test-informed wording): the new rule in `EMAIL_EXTRACTION_INSTRUCTIONS` (`llm.py`, `3f3fb0c`) was worded from the diagnosed test misses CLD-0041 and CLD-0047 and then checked on dev (dev recall for unknown products 94.1% in a replay before the tuning, 100.0% live after it); the test detection recall gain for that shape is therefore not a clean held-out estimate.
+  Disclosure (test-informed wording, documents): the document instructions (`7801053`) target the test misses DOC-060 and DOC-112 and the dev split holds no such shape, so the test result (0 of 90 critical errors, exact match gain) is not a clean held-out estimate.
+  Disclosure (test-informed wording, claims): the claim instructions were changed because of the test miss CLM-044 (amount in dispute stated also when 0.00 EUR); dev was 20 of 20 before and after, so the test result (60 of 60) is not a clean held-out estimate.
   Deviation (LangSmith): the first email record run logged one LangSmith experiment; the clarification record hit a "dataset not found" error and was re-run with `LANGSMITH_API_KEY` empty, as were all later live runs.
 - [x] 8. Documentation commit (C19): README, `docs/security.md`, master plan status line; animations only if C19 requires it.
   README: email extraction, detection (thresholds 95%, figures, remaining misses CLD-0149, CLD-0107, CLD-0123-L2), document extraction (0 of 90 critical) and claim drafting (60 of 60) tables and prose, the phase 08 limitation lines of the receipt and sales sections, and the Limits lines; `docs/security.md` SEC-022 no longer names DOC-060 and DOC-112; master plan decision row added.
   README transcripts of the orders, reconcile and claim demos were compared with the replayed demo output; the lines that changed were updated, the rest are unchanged.
   Flow animations (`docs/assets/flow-animation/`): unchanged, they show no figure or output that changed, and the change 017 reconcile animation keeps its -25.00 EUR story.
   Known and not fixed stay logged: CLD-0149, SHARPS-15 on EML-0215 and EML-0237; the dev split is not replayed (recordings not kept), its recall_unknown was 100.0% (17) in the live tuning run.
-- [x] 9a. `npm run check` (C20) on f0901b2: exit 0, ruff clean, 1625 pytest passed in 900.48 s, every evaluation in replay with all gates PASS, no key and no `.env`; output in `.evidence/cambio-018/npm-check.txt`.
+- [x] 9a. `npm run check` (C20) on the final commit: exit 0, ruff clean, 1626 pytest passed in 717.44 s, every evaluation in replay with all gates PASS, no key and no `.env`; output in `.evidence/cambio-018/npm-check.txt`.
 - [ ] 9. Adversarial review, at most two rounds, push and PR to `main`.
 
 ## Decisions
@@ -134,7 +136,7 @@ Affects phase 08 C12 (document extraction figures) and the reconciliation path; 
 ### Known but not fixed
 - CLD-0149: email intake drops a line (intake model error); intake is out of scope.
 - SHARPS-15: hallucinated SKU in phase 03 on EML-0215 and EML-0237; to log as its own change.
-- Dev split recall_unknown is now 100% live on dev (n=17, after the tuning); it was 94.1% before and is reported only.
+- Dev split recall_unknown is now 100% live on dev (n=17, after the tuning); it was 94.1% in a replay before the tuning (100.0% is the only live figure) and is reported only.
 - The dev replay of `email_order_extraction` and `clarification_detection` is no longer available: the old-prompt dev rows were pruned and the dev tuning ran live without recording.
 - `PURPOSE_CLAUSE` in `email_order.py:30` cuts at the first "for the|our|...|<word>ing", so an out-of-catalog text such as "covers for the infusion pump" becomes "covers".
 - On the phase 03 email demo path without clarification, a null quantity is now stored as 1 with no doubt; the clarification path raises the quantity doubt.
@@ -155,6 +157,7 @@ Replay evals on the test split with the three offline fixes and the old recordin
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
 | 1 | local | 17d938a | correctness, tests, docs | 1 important (sales `invoice_file` row given the wrong retry command), 1 important (README document baseline stale), 1 important (test-informed wording not disclosed), 3 minor (change doc pointers and delivery, C18 wording, README misses wording), 2 minor (known limits: purpose clause, null quantity on phase 03 path) | fixed |
+| 2 | local | 4976b47..ea1e06e | correctness, docs | 2 important (README documents and claims said dev-only tuning, but the document instructions target test misses and the claim instructions changed after the test miss CLM-044), 2 minor (94.1% came from a replay, only 100.0% is live; Delivery commands used stale local `main`) | fixed, final round |
 
 Round 1 resolutions:
 - `invoice_file` row of channel `sales`: `cmd_failures_resume` now advises "fix or remove the file and run purchase-cycle sales invoice again"; case added to the parametrized test in `tests/test_failures_cli.py`.
@@ -163,6 +166,11 @@ Round 1 resolutions:
 - Change doc: status, C7 and C20 evidence pointers, Delivery, known-but-not-fixed list and C18 deviation wording corrected.
 - README misses wording: CLD-0107 and CLD-0123-L2 are precision errors, CLD-0149 is the only recall miss.
 - Purpose-clause cut and null quantity on the phase 03 path added to the known-but-not-fixed list and to README Limits.
+
+Round 2 resolutions (final round, no third round):
+- README and step 7 now disclose that the documents test result (0 of 90 critical, exact match gain) and the claims test result (60 of 60) are not clean held-out measures; the claims sentence no longer says the instructions were unchanged after the test run.
+- The 94.1% figure is worded as a replay figure before the tuning; 100.0% is the only live figure (README detection paragraph, step 7, known-but-not-fixed list).
+- Delivery commands C10, C17 and C19 use `origin/main` as base after `git fetch origin`: `git diff origin/main -- src/purchase_cycle/llm.py` has no change to `EMAIL_INTAKE_INSTRUCTIONS`; `git diff --stat origin/main -- evals/baselines/` lists only the four baselines (claim_drafting, clarification_detection, document_extraction, email_order_extraction: 381 insertions, 279 deletions); `git diff --stat origin/main -- docs/assets/flow-animation/` is empty.
 
 ## Delivery
 Exact McNemar, old baseline of 636711e versus the re-recorded test split (`mcnemar-*.txt`):

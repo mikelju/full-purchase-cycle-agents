@@ -908,7 +908,7 @@ The 120 supplier documents in `evals/datasets/document_extraction/` were built w
 1. A seeded planning script (`plan.jsonl`, seed 20261013) fixes, for ten categories of 12 documents (clean invoice, delivery note, price basis, several lines, other unit, VAT and totals, chatty text, reference forms, extra charge, messy layout), the kind, reference and lines each document must state.
 2. The texts in `texts/` were written by the coding agent in ASCII English and checked automatically; after a review, the texts of DOC-097 to DOC-120 (extra charge and messy layout) were rewritten one by one with distinct layouts, and the test recordings of those documents were redone; a share is rendered as PDF (20) and Excel (20) files that are read back with every labelled fact.
 3. A blind second pass by a clean-context agent relabelled every document (`second_pass_review.jsonl`); after the rewrite it re-read the 24 rewritten documents, the review file covers all 120 and all 120 agree (16 rows changed).
-4. A fixed stratified split gives 30 development and 90 test documents; only the development split was used to check and tune the instructions (one live round in change 018).
+4. A fixed stratified split gives 30 development and 90 test documents; the development split was used to check the instructions (one live round in change 018), but the document instructions were also worded from the diagnosed test misses DOC-060 and DOC-112, whose shapes the development split does not hold, so the test result (0 of 90 critical errors, exact match gain) is not a clean held-out measure.
 5. There is no owner audit of the labels: the labels come from the planning script and the second pass.
 
 The steps run as `uv run purchase-cycle document-dataset plan`, `check`, `build`, `blind` and `review`.
@@ -990,8 +990,8 @@ The Claude Haiku 4.5 baseline on the 150 test orders and 453 lines (`evals/basel
 The spec gate is 95% recall per doubt type.
 The first baseline missed it and the owner set the three thresholds at the measured level (deviation 04.1 in [docs/plans/fase-04-excepciones/plan.md](docs/plans/fase-04-excepciones/plan.md)); change 018 fixed the phase 03 extractor and raised the three thresholds back to 95%.
 The remaining miss is CLD-0149 (the intake model drops a line, so there is no produced line); CLD-0107 (one extra quantity doubt) and CLD-0123-L2 (an extra unknown doubt next to the expected quantity doubt) are precision errors, not misses; web form recall is 100% for the three types.
-The wording of the new rule in the email extraction instructions (a product the customer asks to source or to quote stays a line) was written from the diagnosed test misses CLD-0041 and CLD-0047 and checked on the development split (recall for unknown products 94.1% to 100.0% live), so the test recall gain for that shape is not a clean held-out estimate.
-The development split is not replayed (its recordings were not kept); in the live tuning run of change 018 its recall for unknown products was 100.0% (n=17), against a pre-existing 94.1% before the tuning.
+The wording of the new rule in the email extraction instructions (a product the customer asks to source or to quote stays a line) was written from the diagnosed test misses CLD-0041 and CLD-0047 and checked on the development split (recall for unknown products 94.1% in a replay before the tuning, 100.0% live after it), so the test recall gain for that shape is not a clean held-out estimate.
+The development split is not replayed (its recordings were not kept); in the live tuning run of change 018 its recall for unknown products was 100.0% (n=17), against 94.1% in a replay before the tuning.
 
 `uv run purchase-cycle eval --suite clarification_answers` sends each case's doubts, question and answer to the interpreter and compares its reading with the expected resolution per line.
 It prints resolution accuracy per doubtful line (gated) and case exact match (reported), with 95% Wilson intervals globally, per channel and per category, and the failures.
@@ -1054,7 +1054,7 @@ Scenario success is 100.0% (91.0% to 100.0%, 39 of 39) with 0 critical errors; t
 The cases are planned by a seeded script over ten categories, their differences and amounts in dispute are recomputed with the matching code, and a clean-context second pass agreed on all 80.
 The grader scores the model draft before any template fallback: reference accuracy, discrepancy coverage, amount in dispute accuracy, requested action, invented amount rate and case pass rate, with Wilson intervals, globally and per category.
 A critical error is a draft that omits the amount in dispute or a difference, states an amount not in the facts, states a wrong amount in dispute, or gives a wrong invoice or order number.
-The instructions were tuned on the development split only (one live round, 20 of 20) and not changed after the test run.
+The instructions were tuned on the development split (one live round, 20 of 20) and then changed in change 018 because of the test miss CLM-044, so the test result (60 of 60) is not a clean held-out measure.
 The Claude Haiku 4.5 baseline on the 60 test claims (`evals/baselines/claim_drafting.json`):
 
 | Metric | Value | 95% interval | Threshold |
