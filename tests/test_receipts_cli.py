@@ -151,3 +151,27 @@ def test_run_a_later_insert_and_run_in_separate_processes_equal_the_same_steps_i
     assert final["threads"] == ["receipt-run-0001", "receipt-run-0002"]
     assert [r[1] for r in final["orders"]] == ["served", "served", "served"]  # the later note served the waiting order
     assert sorted(final["files"]) == ["CDN-0001.txt", "CDN-0002.txt", "CDN-0003.txt"]
+
+
+def test_failures_resume_refuses_a_goods_receipt_and_changes_nothing(tmp_path, capsys):
+    """C1: a parked goods receipt has no checkpoint; the refusal names it instead of an email checkpoint."""
+    folder = _world(tmp_path)
+    assert _run(folder, capsys, "run")[0] == 0
+    before = _state(folder)
+    thread = next(row[0] for row in before["failures"] if row[1] == "receipts")
+    checkpoints = folder / "checkpoints.sqlite"
+    checkpoint_bytes = checkpoints.read_bytes()
+    code = cli.main(["--db", str(folder / "r.db"), "failures", "resume", thread, "--checkpoints", str(checkpoints)])
+    err = capsys.readouterr().err
+    assert code == 1
+    assert "goods receipt failure" in err
+    assert "source DN-2" in err
+    assert "step goods_receipt" in err
+    assert "NOPE" in err
+    assert "no checkpoint" in err
+    assert "fixed by hand" in err
+    assert err.strip().endswith("nothing changed")
+    assert "no checkpoint to resume found" not in err
+    assert _state(folder) == before
+    assert [row[5] for row in before["failures"] if row[1] == "receipts"] == ["needs_review"]
+    assert checkpoints.read_bytes() == checkpoint_bytes

@@ -1,6 +1,6 @@
 # 017 - Simple reconcile animation
 
-Status: delivered, in review (rebuilt in the orders style with the claim email; review round 5 fixes applied and re-recorded)
+Status: integrated (merged via PR #27)
 
 ## Contract
 Goal and reason:

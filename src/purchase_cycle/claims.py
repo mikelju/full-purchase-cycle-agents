@@ -137,7 +137,7 @@ def _near(a: float, b: float) -> bool:
 
 def mentions(text: str, token: str) -> bool:
     """Whether the token appears in the text as a whole token, not inside a longer SKU or number."""
-    return bool(re.search(_token(token), text))
+    return bool(re.search(_token(token), text, re.IGNORECASE))
 
 
 def _sentences(body: str) -> list[str]:
@@ -157,8 +157,8 @@ def amount_stated(row: dict, body: str, rows: list[dict]) -> bool:
     if not item:
         return False
     others = {name for r in rows for name in (r["sku"], r["text"]) if name and name != item}
-    stops = sorted(m.start() for name in others for m in re.finditer(_token(name), body))
-    for m in re.finditer(_token(item), body):
+    stops = sorted(m.start() for name in others for m in re.finditer(_token(name), body, re.IGNORECASE))
+    for m in re.finditer(_token(item), body, re.IGNORECASE):
         end = next((pos for pos in stops if pos > m.start()), len(body))
         if any(_near(v, amount) for v in money_amounts(body[m.start() : end])):
             return True
@@ -191,7 +191,7 @@ def check_draft(body: str, facts: dict) -> list[str]:
     unnamed = body  # a SKU or product text may hold numbers such as "2.5 cm"; they are names, not amounts
     names = {name for row in facts["differences"] for name in (row["sku"], row["text"]) if name}
     for name in sorted(names, key=len, reverse=True):
-        unnamed = unnamed.replace(name, " ")
+        unnamed = re.sub(re.escape(name), " ", unnamed, flags=re.IGNORECASE)
     for value in money_amounts(unnamed):
         if not any(_near(value, known) for known in money):
             problems.append(f"invented amount {value:.2f}")

@@ -542,6 +542,17 @@ def test_numbers_inside_a_product_text_are_not_amounts():
     assert claims.check_draft(body, facts) == []
 
 
+def test_product_text_matches_ignoring_case():
+    facts = CLM | {
+        "differences": [_row(None, "extra_line", 20.0, text="zinc oxide tape 2.5 cm")],
+        "amount_in_dispute": 20.0,
+    }
+    body = "F-1 PO-0001 Zinc Oxide Tape 2.5 cm 20.00 EUR. The amount in dispute is 20.00 EUR. Credit note."
+    assert claims.check_draft(body, facts) == []
+    assert claims.mentions("the Surgical Masks", "surgical masks")
+    assert claims.mentions("pay x-1.", "X-1") and not claims.mentions("X-10 only", "x-1")
+
+
 def test_a_sku_header_with_bullets_and_per_unit_figures_pass():
     facts = CLM | {
         "differences": [_row("A-1", "price", 12.0, expected=4.0, found=4.5), _row("B-2", "quantity", 5.0)],

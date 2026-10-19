@@ -65,12 +65,12 @@ RECALLS = tuple(f"recall_{t}" for t in DOUBT_TYPES)
 PRECISIONS = tuple(f"precision_{t}" for t in DOUBT_TYPES)
 DETECTION_METRICS = (*RECALLS, *PRECISIONS, "false_question_rate")
 ANSWER_METRICS = ("resolution_accuracy", "case_exact_match")
-# Detection gates on the test split after deviation 04.1: recall of each doubt type at the level the owner
-# accepted from the replay measured after the rule change (spec amended 2026-10-08), false question rate at most 5%.
+# Detection gates on the test split: recall of each doubt type at least 95% (raised from the levels of deviation 04.1
+# once change 018 fixed the phase 03 extractor causes), false question rate at most 5%.
 DETECTION_THRESHOLDS = {
-    "recall_ambiguous": 49 / 55,
-    "recall_unknown": 50 / 53,
-    "recall_quantity": 42 / 46,
+    "recall_ambiguous": DEFAULT_THRESHOLD,
+    "recall_unknown": DEFAULT_THRESHOLD,
+    "recall_quantity": DEFAULT_THRESHOLD,
     "false_question_rate": 1 - DEFAULT_THRESHOLD,
 }
 # Targets fixed before measuring (phase 04 spec), reported apart from the gates above: 95% recall, at most 5% false questions.
@@ -317,8 +317,8 @@ def save_detection_baseline(path: Path, mode: str, split: str, summary: dict, re
         mode,
         split,
         summary,
-        "recall of each doubt type at the level measured after the rule change of deviation 04.1, accepted by the owner "
-        "on 2026-10-08 as a phase 03 extractor limitation (change 001); false question rate at most 5% on the test split",
+        "recall of each doubt type at least 95% (raised by change 018 from the levels of deviation 04.1); "
+        "false question rate at most 5% on the test split",
         threshold=DETECTION_THRESHOLDS,
         orders={r["id"]: {k: r[k] for k in ("error", "question", "lines")} for r in results},
         doubts=_recall_pairs(results),

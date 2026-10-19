@@ -245,3 +245,69 @@ def test_clarification_tasks_have_own_tools_recordings_and_keys(seeded_db):
     assert ModelClient("live", catalog, task=CLARIFICATION_ANSWER).recordings_path.name == "clarification_answers.jsonl"
     assert tool_definition(CLARIFICATION_QUESTION)["name"] == "record_clarification_question"
     assert tool_definition(CLARIFICATION_ANSWER)["name"] == "record_clarification_resolutions"
+
+
+EMAIL_EXTRACTION_TOOL = {
+    "description": "Record every order line found in the email.",
+    "input_schema": {
+        "$defs": {
+            "EmailLine": {
+                "additionalProperties": False,
+                "properties": {
+                    "quantity": {
+                        "description": "Quantity in catalog sale units",
+                        "exclusiveMinimum": 0,
+                        "title": "Quantity",
+                        "type": "integer",
+                    },
+                    "sku": {
+                        "anyOf": [{"type": "string"}, {"type": "null"}],
+                        "description": "Catalog SKU, or null when the product is not in the catalog",
+                        "title": "Sku",
+                    },
+                    "source": {
+                        "description": '"body" or the attachment file name',
+                        "minLength": 1,
+                        "title": "Source",
+                        "type": "string",
+                    },
+                    "source_text": {
+                        "description": "The line as the customer wrote it",
+                        "minLength": 1,
+                        "title": "Source Text",
+                        "type": "string",
+                    },
+                },
+                "required": ["source", "source_text", "sku", "quantity"],
+                "title": "EmailLine",
+                "type": "object",
+            }
+        },
+        "additionalProperties": False,
+        "description": "Structured answer of the email extraction node.",
+        "properties": {
+            "lines": {
+                "description": "Every ordered product, in the order the customer wrote them",
+                "items": {"$ref": "#/$defs/EmailLine"},
+                "title": "Lines",
+                "type": "array",
+            }
+        },
+        "required": ["lines"],
+        "title": "EmailLines",
+        "type": "object",
+    },
+    "name": "record_email_order_lines",
+}
+
+
+def test_email_extraction_tool_schema_is_unchanged_so_recording_keys_hold():
+    assert tool_definition(EMAIL_EXTRACTION) == EMAIL_EXTRACTION_TOOL
+
+
+def test_null_email_quantity_is_read_as_one(seeded_db, write_recording, no_network):
+    _, catalog = seeded_db
+    line = {"source": "body", "source_text": "elastic wrist supports in size L", "sku": "SUP-WRIST-L", "quantity": None}
+    path = write_recording(catalog, EMAIL_TEXT, {"lines": [line]}, task=EMAIL_EXTRACTION)
+    answer = ModelClient("replay", catalog, path, task=EMAIL_EXTRACTION).extract(EMAIL_TEXT, case_id="EML-1")
+    assert [line.quantity for line in answer.lines] == [1]

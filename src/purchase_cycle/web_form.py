@@ -62,6 +62,18 @@ def match_key(text: str) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", text).split())
 
 
+def resolve_product(text: str, index: dict[str, str], catalog: list) -> str | None:
+    """SKU of a product text: its key is a SKU or name key, or a SKU key joined to the name key of the same product."""
+    key = match_key(text)
+    if key in index:
+        return index[key]
+    for row in catalog:
+        sku, name = match_key(row["sku"]), match_key(row["name"])
+        if key in (f"{sku} {name}", f"{name} {sku}"):
+            return row["sku"]
+    return None
+
+
 def catalog_index(catalog: list) -> dict[str, str]:
     """Map the key of every catalog SKU and name to its SKU."""
     index = {}

@@ -332,3 +332,21 @@ def test_a_failed_extraction_is_not_linked(tmp_path, conn):
     doc = reconciliation.extract_document(conn, _client(tmp_path, [path], [{**ANSWER, "lines": []}]), path)
     again = reconciliation.link_document(conn, doc["id"])
     assert (again["status"], again["purchase_order_id"]) == ("extraction_failed", None)
+
+
+def test_a_sku_joined_to_the_name_of_the_same_product_resolves_to_it(tmp_path, conn):
+    path = _write(tmp_path, "j.txt", "\n".join(LINES))
+    joined = [
+        ("GLV-NIT-XS Nitrile examination gloves, powder-free, size XS", SKU),
+        ("Nitrile examination gloves, powder-free, size XS GLV-NIT-XS", SKU),
+        ("GLV-NIT-XS box", None),
+        ("GLV-NIT-XS Surgical masks", None),
+    ]
+    for number, (product, sku) in enumerate(joined):
+        answer = {**ANSWER, "lines": [{**ANSWER["lines"][0], "product": product}]}
+        client = _client(tmp_path, [path], [answer], name=f"j{number}.jsonl")
+        conn.execute("DELETE FROM document_lines")
+        conn.execute("DELETE FROM supplier_documents")
+        stored = reconciliation.extract_document(conn, client, path)
+        found = conn.execute("SELECT sku FROM document_lines WHERE document_id = ?", (stored["id"],)).fetchone()[0]
+        assert found == sku

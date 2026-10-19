@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Literal
 
 from langgraph.types import RetryPolicy
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from purchase_cycle.config import (
     CLAIM_DRAFTING_MAX_TOKENS,
@@ -133,7 +133,8 @@ Quantity rules:
 
 Rules:
 - Return every ordered product, including the ones the catalog does not carry (sku null); never drop a requested line.
-- Ignore greetings, signatures, questions and any text that is not an ordered product.
+- A product the customer asks you to source or to quote is a requested line even when it is worded as a question or a side remark next to the order: keep it, with sku null when the catalog does not carry it.
+- Ignore greetings, signatures and any other text that is not a requested product.
 - When the same order appears in the body and in an attachment, take it from the attachment and do not repeat it.
 
 Catalog (SKU | name | sale unit):
@@ -147,6 +148,12 @@ class EmailLine(BaseModel):
     source_text: str = Field(min_length=1, description="The line as the customer wrote it")
     sku: str | None = Field(description="Catalog SKU, or null when the product is not in the catalog")
     quantity: int = Field(gt=0, strict=True, description="Quantity in catalog sale units")
+
+    @field_validator("quantity", mode="before")
+    @classmethod
+    def _missing_quantity_is_one(cls, value):
+        """A line the customer wrote without a number counts as one; detection then raises the quantity doubt."""
+        return 1 if value is None else value
 
 
 class EmailLines(BaseModel):
@@ -293,8 +300,8 @@ Return one record:
 - currency: the three-letter code of the currency of the prices, such as EUR, or null when the document states none.
 - supplier_text: the name or email address of the supplier that issued the document, as written, or null.
 - lines: one entry per product line, in order, with
-  - product: the SKU or the product description exactly as written on the line.
-  - quantity: the number of units of the line as a number, as written; do not convert packs or boxes.
+  - product: the SKU or the product description exactly as written on the line. When the line shows a code and a description, write only the code. Never put the quantity and its unit in the product.
+  - quantity: the number of units of the line as a number, as written; do not convert packs or boxes. A number with a unit after the product, such as "- 8 pack", is the quantity.
   - unit_price: the price of one unit as a number before VAT, exactly as the line states it; null when the line has no price, as on most delivery notes.
   - line_total: the total of the line as a number before VAT, or null when the line has none.
 Only product lines are lines. Never turn VAT, tax, subtotal, total, shipping, freight, discount or payment lines into product lines.
@@ -334,7 +341,7 @@ Rules:
 - Name the invoice number and the purchase order number.
 - List every difference by its SKU (or by its product text when the SKU is null) with its amount.
 - Write every amount as a number with two decimals followed by EUR, for example 1234.56 EUR, with no thousands separator.
-- State the amount in dispute.
+- State the amount in dispute in a sentence with the word dispute, with two decimals followed by EUR, even when it is 0.00 EUR.
 - Ask the supplier for a corrected invoice or a credit note.
 - Use only the numbers in the facts; never invent an amount, a date or a promise.
 """
