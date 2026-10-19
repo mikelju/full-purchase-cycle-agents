@@ -1,0 +1,79 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "claims": [
+      "sent"
+    ],
+    "clarifications": [],
+    "customer_invoices": 0,
+    "customer_responses": [],
+    "failures": 0,
+    "orders": [
+      "received"
+    ],
+    "pending": [],
+    "purchase_orders": 1,
+    "quote_requests": [
+      "ordered",
+      "waiting"
+    ],
+    "sales_results": []
+  },
+  "id": "PC-016",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers and the clock; the stock of the short SKU set to zero"
+  },
+  "orders": [
+    {
+      "file": "b-short.json",
+      "kind": "web_form",
+      "product": "nitrile gloves XS",
+      "quantity": 3
+    }
+  ],
+  "steps": [
+    {
+      "do": "pass"
+    },
+    {
+      "do": "reply",
+      "request": 1
+    },
+    {
+      "days": 6,
+      "do": "clock"
+    },
+    {
+      "do": "pass"
+    },
+    {
+      "command": "approve_offer",
+      "do": "decide",
+      "ref": 1
+    },
+    {
+      "do": "documents",
+      "invoice_quantity": 3,
+      "n": 1,
+      "note_quantity": 1,
+      "price": 4.1
+    },
+    {
+      "do": "pass"
+    },
+    {
+      "command": "approve_claim",
+      "do": "decide",
+      "ref": 1
+    },
+    {
+      "do": "pass"
+    }
+  ],
+  "tags": [
+    "short_of_stock",
+    "pause_quote_approval",
+    "pause_claim",
+    "short_delivery"
+  ]
+}

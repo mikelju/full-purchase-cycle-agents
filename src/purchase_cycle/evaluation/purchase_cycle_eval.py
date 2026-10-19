@@ -292,6 +292,53 @@ CASES = [
             orders=["served"], quotes=["ordered"], po=1, invoices=1, sales=["discrepancies"], responses=["sent"]
         ),
     },
+    {  # PC-009: the customer never clarifies; a person closes the doubt and no order is stored
+        "orders": [WEB_AMBIGUOUS],
+        "steps": [PASS, decide("close", DOUBT_THREAD), PASS],
+        "expected": want(clarifications=["closed"]),
+    },
+    {  # PC-010: a rejected offer leaves the order waiting for stock and a new pass does not ask again
+        "orders": [WEB_XS],
+        "steps": [*TO_APPROVAL, decide("reject_offer"), PASS],
+        "expected": want(orders=["received"], quotes=["rejected"]),
+    },
+    {  # PC-011: a rejected claim sends nothing; the goods are in and the order is served
+        "orders": [WEB_XS],
+        "steps": [*TO_APPROVAL, decide("approve_offer"), docs(price=5.0), PASS, decide("reject_claim"), PASS],
+        "expected": want(
+            orders=["served"],
+            quotes=["ordered"],
+            po=1,
+            claims=["rejected"],
+            invoices=1,
+            sales=["awaiting_delivery_note"],
+        ),
+    },
+    {  # PC-012: a pass stopped after quotes resumes with no model call; the rest follows as in PC-004
+        "orders": [WEB_XS],
+        "steps": [crash("quotes"), PASS, reply(), wait(), PASS, decide("approve_offer"), PASS],
+        "expected": want(orders=["received"], quotes=["ordered"], po=1),
+    },
+    {  # PC-013: a pass stopped after reconcile resumes with no model call
+        "orders": [WEB_XS],
+        "steps": [*TO_APPROVAL, decide("approve_offer"), PASS, docs(), crash("reconcile"), PASS],
+        "expected": want(orders=["served"], quotes=["ordered"], po=1, invoices=1, sales=["awaiting_delivery_note"]),
+    },
+    {  # PC-014: a pass stopped after receipts resumes with no model call
+        "orders": [WEB_XS],
+        "steps": [*TO_APPROVAL, decide("approve_offer"), PASS, docs(), crash("receipts"), PASS],
+        "expected": want(orders=["served"], quotes=["ordered"], po=1, invoices=1, sales=["awaiting_delivery_note"]),
+    },
+    {  # PC-015: a pass stopped after the last stage resumes with nothing left to do
+        "orders": [WEB_M, WHATSAPP],
+        "steps": [crash("sales"), PASS],
+        "expected": want(orders=["served", "served"], invoices=2, sales=["awaiting_delivery_note"] * 2),
+    },
+    {  # PC-016: the supplier delivers 1 box of 3; once the claim is approved the missing boxes start a new quote request
+        "orders": [WEB_XS],
+        "steps": [*TO_APPROVAL, decide("approve_offer"), docs(note_quantity=1), PASS, decide("approve_claim"), PASS],
+        "expected": want(orders=["received"], quotes=["ordered", "waiting"], po=1, claims=["sent"]),
+    },
 ]
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -650,7 +697,7 @@ def _decision_words(root: Path, step: dict) -> list[str]:
     thread = ["--outbox", str(root / "outbox")]
     words = {
         "approve_offer": lambda: ["quotes", "approve", f"QR-{ref:04d}", *paths, *supplier],
-        "reject_offer": lambda: ["quotes", "reject", f"QR-{ref:04d}", *paths, *supplier],
+        "reject_offer": lambda: ["quotes", "reject", f"QR-{ref:04d}", *paths],
         "approve_claim": lambda: ["reconcile", "approve", f"INV-{ref:04d}", *paths, *supplier],
         "reject_claim": lambda: ["reconcile", "reject", f"INV-{ref:04d}", *paths],
         "approve_response": lambda: ["sales", "approve", f"SINV-{ref:04d}", *paths, *customer],
