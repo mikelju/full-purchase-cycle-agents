@@ -300,8 +300,8 @@ Return one record:
 - currency: the three-letter code of the currency of the prices, such as EUR, or null when the document states none.
 - supplier_text: the name or email address of the supplier that issued the document, as written, or null.
 - lines: one entry per product line, in order, with
-  - product: the SKU or the product description exactly as written on the line.
-  - quantity: the number of units of the line as a number, as written; do not convert packs or boxes.
+  - product: the SKU or the product description exactly as written on the line. When the line shows a code and a description, write only the code. Never put the quantity and its unit in the product.
+  - quantity: the number of units of the line as a number, as written; do not convert packs or boxes. A number with a unit after the product, such as "- 8 pack", is the quantity.
   - unit_price: the price of one unit as a number before VAT, exactly as the line states it; null when the line has no price, as on most delivery notes.
   - line_total: the total of the line as a number before VAT, or null when the line has none.
 Only product lines are lines. Never turn VAT, tax, subtotal, total, shipping, freight, discount or payment lines into product lines.
