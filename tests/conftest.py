@@ -259,3 +259,11 @@ def claim_recordings(tmp_path_factory, demo_without_claim_recordings):
 def reconcile_demo(tmp_path_factory, claim_recordings):
     """One full demo run with the claim recordings, shared by the tests that only read its output, log and database."""
     return run_reconcile_demo(tmp_path_factory.mktemp("reconcile_demo"), "--claim-recordings", str(claim_recordings))
+
+
+@pytest.fixture(autouse=True)
+def _eval_summaries_in_tmp(tmp_path, monkeypatch):
+    """Evaluation tests never write into the real data/eval_summaries folder."""
+    from purchase_cycle.evaluation import harness
+
+    monkeypatch.setattr(harness, "SUMMARIES_DIR", tmp_path / "eval_summaries_default")

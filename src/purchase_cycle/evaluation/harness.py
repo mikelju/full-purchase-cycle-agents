@@ -1,7 +1,10 @@
 """Evaluation runs of the order line extraction graph: graders, report and gates."""
 
+import contextlib
+import io
 import json
 import os
+import re
 import sys
 import tempfile
 from collections import defaultdict
@@ -12,7 +15,7 @@ from langsmith import tracing_context
 from langsmith.utils import ContextThreadPoolExecutor
 
 from purchase_cycle import db
-from purchase_cycle.config import EVALS_DIR, MODEL_ID, RECORDINGS_PATH
+from purchase_cycle.config import DATA_DIR, EVALS_DIR, MODEL_ID, RECORDINGS_PATH
 from purchase_cycle.evaluation import dataset as ds
 from purchase_cycle.evaluation.planning import DATASET_VERSION, read_jsonl
 from purchase_cycle.evaluation.stats import mcnemar_exact, target_cells, wilson_interval, zero_event_note
@@ -539,6 +542,158 @@ def cmd_upload(args) -> int:
     return max(_suite(name).upload_datasets() for name in names)
 
 
+SUMMARIES_DIR = DATA_DIR / "eval_summaries"
+_ROW = re.compile(
+    r"^(\S+)\s+(\S+)\s+(\[[^\]]*\]|-)\s+(\d+)\s+(\S+)\s+(\S+)\s+(met|not met|n/a)\s+(\S+)\s+(PASS|FAIL|reported)(?:\s+(.*))?$"
+)
+_FIGURE = re.compile(r"(?:(\w+)\s+)?(\d+(?:\.\d+)?)%\s+\[(\d+(?:\.\d+)?), (\d+(?:\.\d+)?)\](?:\s+n=(\d+))?")
+
+
+def _number(text: str) -> float | None:
+    try:
+        return float(text.rstrip("%"))
+    except ValueError:
+        return None
+
+
+def _parse_category_line(line: str, block: list[dict]) -> None:
+    indent = len(line) - len(line.lstrip())
+    text = line.strip()
+    figures = [
+        {
+            "name": m[1] or None,
+            "value": float(m[2]),
+            "low": float(m[3]),
+            "high": float(m[4]),
+            "n": int(m[5]) if m[5] else None,
+        }
+        for m in _FIGURE.finditer(text)
+    ]
+    if indent <= 2 or not block:
+        label = text.split()[0]
+        counts = {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", text)}
+        block.append({"label": label, "counts": counts, "figures": figures, "raw": [text]})
+        return
+    block[-1]["figures"] += figures
+    block[-1]["raw"].append(text)
+
+
+def parse_report(text: str, code: int) -> dict:
+    """Machine-readable form of the printed report: the same figures, read back from the printed text."""
+    lines = text.splitlines()
+    head = {}
+    if lines:
+        head = {k: v for k, v in re.findall(r"(\w+)=([^\s)]+)", lines[0].split("(")[0])}
+    counts = {k: int(v) for k, v in head.items() if v.isdigit()}
+    metrics, gates, categories, failures, gate_failures = [], [], {}, [], []
+    baseline_date, regression, by_kind, block = None, None, {}, None
+    for line in lines[1:]:
+        row = _ROW.match(line.strip())
+        if row:
+            name, value, ci, n, unit, target, met, threshold, gate, note = row.groups()
+            low_high = re.findall(r"[\d.]+", ci) if ci != "-" else []
+            metrics.append(
+                {
+                    "name": name,
+                    "value": _number(value),
+                    "value_text": value,
+                    "ci_low": float(low_high[0]) if low_high else None,
+                    "ci_high": float(low_high[1]) if low_high else None,
+                    "n": int(n),
+                    "unit": unit,
+                    "target": target,
+                    "target_met": met,
+                    "note": note,
+                }
+            )
+            gates.append(
+                {"metric": name, "threshold": _number(threshold), "threshold_text": threshold, "verdict": gate}
+            )
+            block = None
+        elif line.strip().startswith("by kind:"):
+            by_kind = {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", line)}
+        elif line.startswith("regression vs baseline"):
+            regression = line
+            found = re.match(r"regression vs baseline (\d{4}-\d\d-\d\d)", line)
+            baseline_date = found.group(1) if found else None
+        elif line.startswith("GATE FAILED: "):
+            gate_failures.append(line[len("GATE FAILED: ") :])
+        elif re.match(r"failures: \d+", line):
+            failures.append(line)
+            block = None
+        elif line.startswith("per ") and line.rstrip().endswith(":"):
+            block = categories.setdefault(line.strip()[4:-1], [])
+        elif block is not None and line.startswith(" "):
+            _parse_category_line(line, block)
+        elif not line.startswith(" "):
+            block = None
+    critical = next((m for m in metrics if m["name"] == "critical_errors"), None)
+    status = "passed" if code == 0 else "missing" if code == 2 else "failed"
+    return {
+        "status": status,
+        "exit_code": code,
+        "mode": head.get("mode"),
+        "split": head.get("split"),
+        "model": head.get("model"),
+        "counts": counts,
+        "case_count": next(iter(counts.values()), None),
+        "metrics": metrics,
+        "gates": gates,
+        "gate_failures": gate_failures,
+        "critical_errors": {"total": critical["value"] if critical else None, "by_kind": by_kind},
+        "baseline_date": baseline_date,
+        "regression": regression,
+        "failed_cases": int(failures[0].split(":")[1]) if failures else None,
+        "categories": categories,
+        "report": text,
+    }
+
+
+def write_summary(name: str, summary: dict, directory: Path | None = None) -> None:
+    """Write `<directory>/<name>.json`; a write problem is reported on stderr and never changes the exit code."""
+    target = SUMMARIES_DIR if directory is None else directory
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        (target / f"{name}.json").write_text(
+            json.dumps({"suite": name, **summary}, indent=2, ensure_ascii=True) + "\n", encoding="utf-8"
+        )
+    except OSError as error:
+        print(f"Warning: summary for {name} not written: {error}", file=sys.stderr)
+
+
+class _Tee(io.TextIOBase):
+    def __init__(self, stream, buffer):
+        self.stream, self.buffer = stream, buffer
+
+    def write(self, text):
+        self.buffer.write(text)
+        return self.stream.write(text)
+
+    def flush(self):
+        self.stream.flush()
+
+
+def run_suite_with_summary(name: str, run) -> int:
+    """Run one suite, print its report as usual and record its summary; an error is recorded and re-raised."""
+    buffer = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(_Tee(sys.stdout, buffer)):
+            code = run()
+    except BaseException as error:
+        write_summary(
+            name,
+            {
+                "status": "failed",
+                "exit_code": None,
+                "error": f"{type(error).__name__}: {error}",
+                "report": buffer.getvalue(),
+            },
+        )
+        raise
+    write_summary(name, parse_report(buffer.getvalue(), code))
+    return code
+
+
 def cmd_eval(args) -> int:
     names = suite_names(args.suite)
     if args.set_baseline and (args.mode != "record" or args.split != "test" or len(names) != 1):
@@ -551,6 +706,14 @@ def cmd_eval(args) -> int:
     for n, name in enumerate(names):
         if n:
             print()
-        codes.append(_suite(name).evaluate(args.mode, args.split, set_baseline=args.set_baseline, workers=args.workers))
+        suite = _suite(name)
+        codes.append(
+            run_suite_with_summary(
+                name,
+                lambda suite=suite: suite.evaluate(
+                    args.mode, args.split, set_baseline=args.set_baseline, workers=args.workers
+                ),
+            )
+        )
     # The worst exit code wins: 1 for a failed gate, 2 for missing recordings, 3 for a stopped baseline.
     return max(codes)
