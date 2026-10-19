@@ -133,7 +133,8 @@ Quantity rules:
 
 Rules:
 - Return every ordered product, including the ones the catalog does not carry (sku null); never drop a requested line.
-- Ignore greetings, signatures, questions and any text that is not an ordered product.
+- A product the customer asks you to source or to quote is a requested line even when it is worded as a question or a side remark next to the order: keep it, with sku null when the catalog does not carry it.
+- Ignore greetings, signatures and any other text that is not a requested product.
 - When the same order appears in the body and in an attachment, take it from the attachment and do not repeat it.
 
 Catalog (SKU | name | sale unit):
