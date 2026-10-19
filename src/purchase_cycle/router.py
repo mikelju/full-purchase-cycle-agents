@@ -185,7 +185,12 @@ def stored_reply(path: Path, routed: Route, graph, db_path: Path | str, outbox: 
 
 
 def run_inbox(
-    folder: Path | str, graphs: dict, db_path: Path | str, run_id: str, outbox: Path | str | None = None
+    folder: Path | str,
+    graphs: dict,
+    db_path: Path | str,
+    run_id: str,
+    outbox: Path | str | None = None,
+    skip: Callable[[Path], bool] | None = None,
 ) -> list[dict]:
     """Route each file of the folder, in name order, and run it through the graph of its channel.
 
@@ -196,6 +201,7 @@ def run_inbox(
     (a run id reused with the same file name) runs no graph either: the item gets an error asking for a new run id.
     A duplicate of a stored order runs no graph either: its state holds the reply naming that order (WhatsApp
     writes it to `outbox`) and `unfinished` says whether the stored thread still has steps to resume.
+    A file for which `skip(path)` is true is left out of the results and not routed.
     """
 
     def paused_source(channel: str, thread: str) -> str | None:
@@ -211,6 +217,8 @@ def run_inbox(
 
     results = []
     for path in sorted(p for p in Path(folder).iterdir() if p.is_file()):
+        if skip is not None and skip(path):
+            continue
         conn = db.connect(db_path)
         try:
             routed = route(path, conn, paused_source, applied_answers)

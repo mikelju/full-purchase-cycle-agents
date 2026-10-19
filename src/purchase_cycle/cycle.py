@@ -7,6 +7,7 @@ per-stage counts. The orchestrator takes no decision: a module thread that reach
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 from pathlib import Path
@@ -124,6 +125,34 @@ def _order_graphs(db_path, checkpointer, client: ClientFactory, outbox: Path) ->
     return {WEB_FORM: web, EMAIL: email, WHATSAPP: whatsapp}
 
 
+def _seen_web_form(checkpointer, graph) -> Callable[[Path], bool]:
+    """True for a web form file whose submission id an earlier thread already ran, so a new pass runs it no more.
+
+    A web form file has no message id for the router to spot a re-delivery by; the thread of the first run holds
+    the submission, whether it is paused, stored or failed.
+    """
+    threads = {
+        c.config["configurable"]["thread_id"]
+        for c in checkpointer.list(None)
+        if c.config["configurable"]["thread_id"].startswith(f"{WEB_FORM}-")
+    }
+    seen = set()
+    for thread in threads:
+        submission = graph.get_state({"configurable": {"thread_id": thread}}).values.get("submission") or {}
+        seen.add(submission.get("submission_id"))
+
+    def skip(path: Path) -> bool:
+        if path.suffix.lower() != ".json":
+            return False
+        try:
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            return False
+        return isinstance(data, dict) and data.get("submission_id") in seen
+
+    return skip
+
+
 def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFactory, interrupt_after=None):
     """The `purchase_cycle` graph: orders -> quotes -> reconcile -> receipts -> sales, over the shared database."""
 
@@ -133,7 +162,8 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
             return {"counts": {"orders": {"items": 0, "stored": 0, "paused": 0, "failed": 0}}}
         graphs = _order_graphs(db_path, checkpointer, client, folders.outbox)
         thread_id = config["configurable"]["thread_id"]
-        results = router.run_inbox(folder, graphs, db_path, run_id(thread_id), folders.outbox)
+        skip = _seen_web_form(checkpointer, graphs[WEB_FORM])
+        results = router.run_inbox(folder, graphs, db_path, run_id(thread_id), folders.outbox, skip)
         states = [r["state"] or {} for r in results]
         counts = {
             "items": len(results),

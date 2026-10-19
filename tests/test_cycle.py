@@ -1,12 +1,11 @@
 """C2 (phase 12): the purchase_cycle graph and its stages."""
 
+import argparse
 import ast
 import json
 import shutil
 import sqlite3
 from pathlib import Path
-
-from langgraph.types import Command
 
 from conftest import make_email
 from purchase_cycle import claims, cli, customer_responses, cycle, db, quote_decision, sales_cli
@@ -549,7 +548,9 @@ def test_a_customer_response_stays_paused_listed_with_its_command_and_the_next_p
     assert world.rows("SELECT status FROM customer_responses") == [("rejected",)]
 
 
-def test_a_clarification_stays_paused_listed_with_its_command_and_the_next_pass_continues_after_it(tmp_path):
+def test_a_clarification_stays_paused_listed_with_its_command_and_the_next_pass_continues_after_it(
+    tmp_path, monkeypatch
+):
     sizes = ("XS", "S", "M", "L", "XL")
     names = ", ".join(f"Nitrile examination gloves, powder-free, size {size}" for size in sizes)
     question = f'For "nitrile gloves" (10 boxes), which one do you want: {names}?'
@@ -575,20 +576,30 @@ def test_a_clarification_stays_paused_listed_with_its_command_and_the_next_pass_
             ],
         }
     ]
-    checkpointer = sqlite_checkpointer(tmp_path / "cp.sqlite")
-    try:
-        graphs = cycle._order_graphs(tmp_path / "business.db", checkpointer, world.client, tmp_path / "outbox")
-        config = {"configurable": {"thread_id": thread}}
-        assert graphs["web_form"].get_state(config).next == ("clarify",)
-        assert world.rows("SELECT COUNT(*) FROM orders") == [(0,)]
-        assert world.rows("SELECT status, round FROM clarifications") == [("pending", 1)]
-        graphs["web_form"].invoke(Command(resume={"answer": "Size L"}), config, durability="sync")
-    finally:
-        checkpointer.conn.close()
+    build = lambda cp: cycle._order_graphs(tmp_path / "business.db", cp, world.client, tmp_path)["web_form"]  # noqa: E731
+    assert world.paused_at(build, thread) == ("clarify",)
+    assert world.rows("SELECT COUNT(*) FROM orders") == [(0,)]
+    assert world.rows("SELECT status, round FROM clarifications") == [("pending", 1)]
+    _no_decision_taken(world, result)
+    factory = lambda mode, catalog, recordings=None, task=None: CountingClient(task, world.calls, world.answers)  # noqa: E731
+    monkeypatch.setattr(cli, "ModelClient", factory)
+    args = argparse.Namespace(
+        file=None,
+        text="Size L",
+        thread_id=thread,
+        db=str(tmp_path / "business.db"),
+        checkpoints=world.cp,
+        mode="replay",
+        outbox=str(tmp_path / "outbox"),
+    )
+    assert cli.cmd_clarify_answer(args) == 0
     assert world.rows("SELECT status FROM clarifications") == [("answered",)]
     assert world.rows("SELECT COUNT(*) FROM orders") == [(1,)]
-    (tmp_path / "orders" / "short.json").unlink()  # a new pass over the same file asks again (see increment 5)
+    calls = len(world.calls)
     assert world.one_pass()["pending"] == []
+    assert len(world.calls) == calls
+    assert world.rows("SELECT status FROM clarifications") == [("answered",)]
+    assert world.rows("SELECT COUNT(*) FROM orders") == [(1,)]
 
 
 def test_cycle_py_calls_no_approve_reject_or_answer_function():
