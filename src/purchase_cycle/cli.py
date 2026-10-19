@@ -1338,8 +1338,8 @@ def _clarify_graph(
     finally:
         conn.close()
     clients = ClarificationClients(
-        ModelClient(args.mode, catalog, task=CLARIFICATION_QUESTION),
-        ModelClient(args.mode, catalog, task=CLARIFICATION_ANSWER),
+        ModelClient(args.mode, catalog, getattr(args, "recordings", None), task=CLARIFICATION_QUESTION),
+        ModelClient(args.mode, catalog, getattr(args, "recordings", None), task=CLARIFICATION_ANSWER),
     )
     checkpointer = sqlite_checkpointer(args.checkpoints)
     if channel == WEB_FORM:
@@ -2040,6 +2040,7 @@ def main(argv=None) -> int:
     close.add_argument("thread_id")
     for command, handler in ((answer, cmd_clarify_answer), (close, cmd_clarify_close)):
         command.add_argument("--mode", choices=config.MODES, default="replay")
+        command.add_argument("--recordings", default=None, help="one recordings file for the clarification tasks")
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
         command.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
         command.set_defaults(handler=handler)
