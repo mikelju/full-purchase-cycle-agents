@@ -17,13 +17,16 @@ Build the versioned scenario files with `uv run python -m purchase_cycle.evaluat
 import contextlib
 import io
 import json
+import os
 import re
 import sqlite3
+import subprocess
+import sys
 import tempfile
 from email.message import EmailMessage
 from pathlib import Path
 
-from purchase_cycle import cli, cycle, cycle_cli, db, llm, sales_cli
+from purchase_cycle import claims, cli, customer_responses, cycle, cycle_cli, db, llm, sales_cli
 from purchase_cycle.catalog import CUSTOMERS
 from purchase_cycle.config import EVALS_DIR
 from purchase_cycle.evaluation.email_eval import _ci, _pct
@@ -117,9 +120,27 @@ ANSWERS = {  # hand-written model answers by task, keyed by a text inside the mo
         }
     },
     SUPPLIER_DOCUMENT_EXTRACTION.name: {},
-    CLAIM_DRAFTING.name: {"": {"body": "Dear supplier, please review the invoice."}},
-    RESPONSE_DRAFTING.name: {"": {"body": "Dear customer, we are sorry."}},
 }
+STANDARD_TEXT = {  # the drafting tasks: the double writes the standard text of the module from the facts it is given
+    CLAIM_DRAFTING.name: lambda facts: claims.fill_template(_claim_facts(facts)),
+    RESPONSE_DRAFTING.name: lambda facts: customer_responses.fill_template(_response_facts(facts)),
+}
+
+
+def _claim_facts(facts: dict) -> dict:
+    """The facts of the prompt (amounts as text) back as numbers."""
+    money = (*claims.MONEY_KEYS, "expected", "found")
+    rows = [
+        {k: float(v) if k in money and v is not None else v for k, v in row.items()} for row in facts["differences"]
+    ]
+    return {**facts, "differences": rows, "amount_in_dispute": float(facts["amount_in_dispute"])}
+
+
+def _response_facts(facts: dict) -> dict:
+    documents = [{**doc, "total": float(doc["total"])} for doc in facts["documents"]]
+    return {**facts, "documents": documents, "net_total": float(facts["net_total"])}
+
+
 DECIDED = {  # the statuses that only a person's decision gives, by table
     "quote_requests": ("ordered", "rejected"),
     "claims": ("sent", "rejected"),
@@ -202,21 +223,91 @@ def want(orders=(), quotes=(), po=0, claims=(), invoices=0, sales=(), responses=
     }
 
 
+TO_APPROVAL = [PASS, reply(), wait(), PASS]  # the order is short of stock: request, supplier reply, time, offer stored
 CASES = [
     {  # PC-001: one web form order in stock is served in one pass and a second pass changes nothing
         "orders": [WEB_M],
         "steps": [PASS, AGAIN],
-        "expected": want(orders=["served"], invoices=1),
+        "expected": want(orders=["served"], invoices=1, sales=["awaiting_delivery_note"]),
     },
-    {  # PC-002: a pass stopped after the orders stage resumes with no model call and ends as a whole pass
+    {  # PC-002: two orders in stock; a pass stopped after the orders stage resumes with no model call
         "orders": [WEB_M, EMAIL],
         "steps": [crash("orders"), PASS],
-        "expected": want(orders=["served", "served"], invoices=2),
+        "expected": want(orders=["served", "served"], invoices=2, sales=["awaiting_delivery_note"] * 2),
+    },
+    {  # PC-003: an ambiguous order waits for the customer, a second pass decides nothing, the answer resumes it
+        "orders": [WEB_AMBIGUOUS],
+        "steps": [PASS, AGAIN, decide("answer", DOUBT_THREAD, text="Size L"), PASS],
+        "expected": want(orders=["served"], invoices=1, sales=["awaiting_delivery_note"], clarifications=["answered"]),
+    },
+    {  # PC-004: a quote waits for approval, a second pass does not approve it, the approval orders the goods
+        "orders": [WEB_XS],
+        "steps": [*TO_APPROVAL, AGAIN, decide("approve_offer"), PASS],
+        "expected": want(orders=["received"], quotes=["ordered"], po=1),
+    },
+    {  # PC-005: the supplier invoice price differs from the purchase order; the claim waits until it is approved
+        "orders": [WEB_XS],
+        "steps": [*TO_APPROVAL, decide("approve_offer"), docs(price=5.0), PASS, AGAIN, decide("approve_claim"), PASS],
+        "expected": want(
+            orders=["served"], quotes=["ordered"], po=1, claims=["sent"], invoices=1, sales=["awaiting_delivery_note"]
+        ),
+    },
+    {  # PC-006: the customer reports one box missing; the response waits and a person rejects it in a new process
+        "orders": [WEB_XS],
+        "steps": [
+            *TO_APPROVAL,
+            decide("approve_offer"),
+            docs(),
+            PASS,
+            signed(1, [("missing", 1)]),
+            PASS,
+            AGAIN,
+            process(decide("reject_response")),
+            PASS,
+        ],
+        "expected": want(
+            orders=["served"], quotes=["ordered"], po=1, invoices=1, sales=["discrepancies"], responses=["rejected"]
+        ),
+    },
+    {  # PC-007: the supplier delivers 2 boxes of the 3 invoiced
+        "orders": [WEB_XS],
+        "steps": [*TO_APPROVAL, decide("approve_offer"), docs(note_quantity=2), PASS],
+        "expected": want(
+            orders=["received"], quotes=["ordered"], po=1, claims=["awaiting_approval"], pending=[("claim", "INV-0001")]
+        ),
+    },
+    {  # PC-008: the customer reports 2 damaged boxes; the response is approved in a new process
+        "orders": [WEB_XS],
+        "steps": [
+            *TO_APPROVAL,
+            decide("approve_offer"),
+            docs(),
+            PASS,
+            signed(1, [("damaged", 2)]),
+            PASS,
+            process(decide("approve_response")),
+            PASS,
+        ],
+        "expected": want(
+            orders=["served"], quotes=["ordered"], po=1, invoices=1, sales=["discrepancies"], responses=["sent"]
+        ),
     },
 ]
 
 # ---------------------------------------------------------------------------------------------------------------
 # The dataset.
+
+
+PAUSE_OF = {  # the pause a decision command ends, by command (the pending kinds use the same names)
+    "answer": "clarification",
+    "close": "clarification",
+    "approve_offer": "quote_approval",
+    "reject_offer": "quote_approval",
+    "approve_claim": "claim",
+    "reject_claim": "claim",
+    "approve_response": "customer_response",
+    "reject_response": "customer_response",
+}
 
 
 def derive_tags(item: dict) -> list[str]:
@@ -233,16 +324,12 @@ def derive_tags(item: dict) -> list[str]:
         tags.append("served_from_stock")
     if expected["quote_requests"]:
         tags.append("short_of_stock")
-    if "awaiting_approval" in expected["quote_requests"]:
-        tags.append("pause_quote_approval")
-    if "pending" in expected["clarifications"]:
-        tags.append("pause_clarification")
-    if "draft" in expected["claims"]:
-        tags.append("pause_claim")
-    if "draft" in expected["customer_responses"]:
-        tags.append("pause_customer_response")
-    if any(s.get("command", "").startswith("reject") for s in steps):
+    paused = {kind for kind, _ in expected["pending"]} | {PAUSE_OF[s["command"]] for s in steps if s["do"] == "decide"}
+    tags += [f"pause_{kind}" for kind in dict.fromkeys(PAUSE_OF.values()) if kind in paused]
+    if any(s.get("command", "").startswith("reject") or s.get("command") == "close" for s in steps):
         tags.append("rejected")
+    if any(s["do"] == "documents" and s["note_quantity"] < s["invoice_quantity"] for s in steps):
+        tags.append("short_delivery")
     return tags
 
 
@@ -293,6 +380,8 @@ class CountingClient:
     def extract(self, sentence, case_id=None, correction=None):
         self.calls_list.append(self.task.name)
         self.calls += 1
+        if self.task.name in STANDARD_TEXT:
+            return self.task.answer.model_validate({"body": STANDARD_TEXT[self.task.name](json.loads(sentence))})
         for key, answer in ANSWERS[self.task.name].items():
             if key in sentence:
                 return self.task.answer.model_validate(answer)
@@ -400,7 +489,27 @@ def _pending(lines: list[str]) -> list[list[str]]:
     return found
 
 
-def _cycle_pass(root: Path, stage, calls: list[str]) -> tuple[int, list[str], list[list[str]]]:
+def _run_cli(root: Path, words: list[str], process: bool) -> tuple[int, list[str]]:
+    """One command of the person, in this process or in a new one without any API key; returns code and lines."""
+    argv = ["--db", str(root / "business.db"), *words]
+    if process:
+        env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "LANGSMITH_API_KEY")}
+        done = subprocess.run(
+            [sys.executable, "-m", "purchase_cycle.cli", *argv],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=env,
+            check=False,
+        )
+        return done.returncode, done.stdout.splitlines()
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+        code = cli.main(argv)
+    return code, out.getvalue().splitlines()
+
+
+def _cycle_pass(root: Path, stage, calls: list[str], process: bool) -> tuple[int, list[str], list[list[str]]]:
     """One pass of `cycle run` (or a pass stopped after `stage`): exit code, printed stages, pending decisions."""
     if stage:
         result = cycle.run_cycle(
@@ -411,7 +520,7 @@ def _cycle_pass(root: Path, stage, calls: list[str]) -> tuple[int, list[str], li
             [stage],
         )
         return 0, [], [[p["kind"], p["reference"]] for p in result["pending"]]
-    argv = ["--db", str(root / "business.db"), "cycle", "run"]
+    words = ["cycle", "run"]
     flags = (
         ("--orders", "orders"),
         ("--replies", "replies"),
@@ -423,21 +532,22 @@ def _cycle_pass(root: Path, stage, calls: list[str]) -> tuple[int, list[str], li
         ("--invoices", "invoices"),
     )
     for flag, name in flags:
-        argv += [flag, str(root / name)]
-    argv += ["--checkpoints", str(root / "cp.sqlite")]
-    out = io.StringIO()
-    with contextlib.redirect_stdout(out):
-        code = cli.main(argv)
-    lines = out.getvalue().splitlines()
+        words += [flag, str(root / name)]
+    words += ["--checkpoints", str(root / "cp.sqlite")]
+    code, lines = _run_cli(root, words, process)
     stages = [m.group(1) for line in lines if (m := re.match(r"^  (\w+):", line)) and m.group(1) in cycle.STAGES]
     return code, stages, _pending(lines)
 
 
-def _reference(root: Path) -> None:
-    """The module commands one by one over the same folders, in the order of the cycle."""
+def _reference(root: Path, first: bool) -> None:
+    """The module commands one by one over the same folders, in the order of the cycle (route only on the first)."""
     r, cp = root, str(root / "cp.sqlite")
     steps = [
-        ["route", str(r / "orders"), "--run-id", "c0001", "--checkpoints", cp, "--outbox", str(r / "outbox")],
+        *(
+            [["route", str(r / "orders"), "--run-id", "c0001", "--checkpoints", cp, "--outbox", str(r / "outbox")]]
+            if first
+            else []
+        ),
         ["quotes", "scan", "--checkpoints", cp, "--outbox", str(r / "supplier_outbox")],
         ["quotes", "receive", str(r / "replies"), "--checkpoints", cp],
         ["quotes", "tick", "--checkpoints", cp, "--outbox", str(r / "supplier_outbox")],
@@ -458,6 +568,109 @@ def _factory(calls: list[str]):
     return lambda mode, catalog, recordings=None, task=None: CountingClient(task, calls)
 
 
+class _Patched:
+    """The model client of the module commands replaced by the counting double while a step runs."""
+
+    def __init__(self, calls: list[str]):
+        self.calls = calls
+
+    def __enter__(self):
+        self.saved = (cli.ModelClient, sales_cli.ModelClient, cycle_cli.ModelClient)
+        cli.ModelClient = sales_cli.ModelClient = cycle_cli.ModelClient = _factory(self.calls)
+
+    def __exit__(self, *exc):
+        cli.ModelClient, sales_cli.ModelClient, cycle_cli.ModelClient = self.saved
+
+
+def _query_rows(root: Path, sql: str) -> list:
+    conn = sqlite3.connect(root / "business.db")
+    try:
+        return [tuple(r) for r in conn.execute(sql).fetchall()]
+    finally:
+        conn.close()
+
+
+def _document_answer(kind: str, number: str, supplier_name: str, unit_price, quantity: int) -> dict:
+    return {
+        "kind": kind,
+        "number": number,
+        "po_reference": "PO-0001",
+        "issue_date": "2026-10-20",
+        "currency": "EUR" if kind == "invoice" else None,
+        "supplier_text": supplier_name,
+        "lines": [
+            {
+                "product": "Nitrile examination gloves, powder-free, size XS",
+                "quantity": quantity,
+                "unit_price": unit_price,
+                "line_total": round(unit_price * quantity, 2) if unit_price else None,
+            }
+        ],
+    }
+
+
+def _put_files(roots: tuple[Path, Path], step: dict) -> None:
+    """The files a step drops in both worlds: a supplier reply, the supplier documents or a signed note."""
+    name, email = _query_rows(roots[0], f"SELECT name, email FROM suppliers WHERE code = '{SUPPLIER}'")[0]
+    answers = ANSWERS[SUPPLIER_DOCUMENT_EXTRACTION.name]
+    for root in roots:
+        if step["do"] == "reply":
+            ref = f"QR-{step['request']:04d}"
+            text = (
+                f"From: {email}\nTo: purchasing@distributor.example.com\n"
+                f"Subject: Re: Quote request {ref} - {SHORT_SKU}\n\n{REPLY_TEXT}\n"
+            )
+            (root / "replies" / f"{ref}-{SUPPLIER}.eml").write_text(text, encoding="utf-8")
+        elif step["do"] == "documents":
+            n = step["n"]
+            invoice, note = f"INVOICE F-{n}", f"DELIVERY NOTE A-{n}"
+            (root / "documents" / f"a-invoice-{n}.txt").write_text(
+                f"{invoice}\nPO-0001 gloves XS {step['invoice_quantity']} boxes", encoding="utf-8"
+            )
+            (root / "documents" / f"b-note-{n}.txt").write_text(
+                f"{note}\nPO-0001 gloves XS {step['note_quantity']} boxes", encoding="utf-8"
+            )
+            answers[invoice] = _document_answer("invoice", f"F-{n}", name, step["price"], step["invoice_quantity"])
+            answers[note] = _document_answer("delivery_note", f"A-{n}", name, None, step["note_quantity"])
+        else:
+            incidents = "".join(f"{SHORT_SKU} {kind} {units}\n" for kind, units in step["incidents"] or [])
+            text = (
+                f"Signed delivery note\nDelivery note: CDN-{step['note']:04d}\nCustomer: CLI-001\n"
+                f"Signed by: Laura Etxeberria\nSigning date: 2026-10-14\nIncidents:\n{incidents}"
+            )
+            (root / "signed" / f"n{step['note']}.txt").write_text(text, encoding="utf-8")
+
+
+def _decision_words(root: Path, step: dict) -> list[str]:
+    """The command of the person for a decide step, with every output folder inside the world."""
+    command, ref = step["command"], step["ref"]
+    paths = ["--checkpoints", str(root / "cp.sqlite")]
+    supplier = ["--outbox", str(root / "supplier_outbox")]
+    customer = ["--invoices-dir", str(root / "invoices"), "--outbox", str(root / "customer_outbox")]
+    thread = ["--outbox", str(root / "outbox")]
+    words = {
+        "approve_offer": lambda: ["quotes", "approve", f"QR-{ref:04d}", *paths, *supplier],
+        "reject_offer": lambda: ["quotes", "reject", f"QR-{ref:04d}", *paths, *supplier],
+        "approve_claim": lambda: ["reconcile", "approve", f"INV-{ref:04d}", *paths, *supplier],
+        "reject_claim": lambda: ["reconcile", "reject", f"INV-{ref:04d}", *paths],
+        "approve_response": lambda: ["sales", "approve", f"SINV-{ref:04d}", *paths, *customer],
+        "reject_response": lambda: ["sales", "reject", f"SINV-{ref:04d}", *paths],
+        "answer": lambda: ["clarify", "answer", ref, "--text", step["text"], *paths, *thread],
+        "close": lambda: ["clarify", "close", ref, *paths, *thread],
+    }
+    return words[command]()
+
+
+def _step_cli(roots_calls: list, step: dict, words) -> int:
+    """The command on both worlds (the cycle world in a new process when the step says so); failed commands."""
+    failed = 0
+    for n, (root, calls) in enumerate(roots_calls):
+        with _Patched(calls):
+            code, _ = _run_cli(root, words(root), bool(step.get("process")) and n == 0)
+        failed += code != 0
+    return failed
+
+
 def measure(item: dict, tmp: Path) -> dict:
     """Run the scenario on both worlds and return what the grader needs."""
     cycle_root, ref_root = tmp / "cycle", tmp / "ref"
@@ -465,44 +678,46 @@ def measure(item: dict, tmp: Path) -> dict:
         _write_world(root, item["orders"])
     cycle_calls: list[str] = []
     ref_calls: list[str] = []
-    passes, pending, ref_done, previous = [], [], False, None
+    both = [(cycle_root, cycle_calls), (ref_root, ref_calls)]
+    passes, pending, ref_passes, previous, failed = [], [], 0, None, 0
+    ANSWERS[SUPPLIER_DOCUMENT_EXTRACTION.name] = {}
     for step in item["steps"]:
-        if step["do"] != "pass":
-            raise ValueError(f"step not supported yet: {step['do']}")
-        if step.get("crash"):
-            kind = "crash"
-        elif step.get("repeat"):
-            kind = "repeat"
+        if step["do"] == "clock":
+            failed += _step_cli(both, step, lambda root, s=step: ["clock", "advance", "--days", str(s["days"])])
+        elif step["do"] == "decide":
+            failed += _step_cli(both, step, lambda root, s=step: _decision_words(root, s))
+        elif step["do"] != "pass":
+            _put_files((cycle_root, ref_root), step)
         else:
-            kind = "resume" if previous == "crash" else "pass"
-        before, decided_before, calls_before = _snapshot(cycle_root), _decided(cycle_root), len(cycle_calls)
-        saved = cycle_cli.ModelClient
-        cycle_cli.ModelClient = _factory(cycle_calls)
-        try:
-            code, stages, pending = _cycle_pass(cycle_root, step.get("crash"), cycle_calls)
-        finally:
-            cycle_cli.ModelClient = saved
-        passes.append(
-            {
-                "kind": kind,
-                "calls": len(cycle_calls) - calls_before,
-                "stages": stages,
-                "decided": [decided_before, _decided(cycle_root)],
-                "changed": before != _snapshot(cycle_root),
-                "rc": code,
-            }
-        )
-        if kind in ("pass", "resume") and not ref_done:
-            ref_done = True
-            patched = (cli.ModelClient, sales_cli.ModelClient)
-            cli.ModelClient = sales_cli.ModelClient = _factory(ref_calls)
-            try:
-                _reference(ref_root)
-            finally:
-                cli.ModelClient, sales_cli.ModelClient = patched
-        previous = kind
+            if step.get("crash"):
+                kind = "crash"
+            elif step.get("repeat"):
+                kind = "repeat"
+            else:
+                kind = "resume" if previous == "crash" else "pass"
+            previous = kind
+            before, decided_before, calls_before = _snapshot(cycle_root), _decided(cycle_root), len(cycle_calls)
+            with _Patched(cycle_calls):
+                code, stages, pending = _cycle_pass(
+                    cycle_root, step.get("crash"), cycle_calls, bool(step.get("process"))
+                )
+            passes.append(
+                {
+                    "kind": kind,
+                    "calls": len(cycle_calls) - calls_before,
+                    "stages": stages,
+                    "decided": [decided_before, _decided(cycle_root)],
+                    "changed": before != _snapshot(cycle_root),
+                    "rc": code,
+                }
+            )
+            if kind in ("pass", "resume"):
+                with _Patched(ref_calls):
+                    _reference(ref_root, ref_passes == 0)
+                ref_passes += 1
     return {
         "passes": passes,
+        "failed_steps": failed,
         "violations": len(_query(cycle_root, "PRAGMA foreign_key_check")),
         "cycle": _snapshot(cycle_root),
         "ref": _snapshot(ref_root),
@@ -511,6 +726,7 @@ def measure(item: dict, tmp: Path) -> dict:
         "pending": pending,
         "real_calls": len(ACTIVE_CALLS),
         "statuses": {t: _query(cycle_root, f"SELECT status FROM {t} ORDER BY rowid") for t in STATUS_TABLES},
+        "sales": _query(cycle_root, "SELECT result FROM sales_reconciliations ORDER BY id"),
         "counts": {t: _query(cycle_root, f"SELECT COUNT(*) FROM {t}")[0] for t in COUNT_TABLES},
     }
 
@@ -523,7 +739,7 @@ def _got(measured: dict) -> dict:
         "purchase_orders": counts["purchase_orders"],
         "claims": statuses["claims"],
         "customer_invoices": counts["customer_invoices"],
-        "sales_results": [],
+        "sales_results": measured["sales"],
         "customer_responses": statuses["customer_responses"],
         "clarifications": statuses["clarifications"],
         "failures": counts["failures"],
@@ -541,7 +757,9 @@ def _errors(item: dict, measured: dict) -> dict[str, int]:
         bool(measured["violations"])
     )
     again = [p for p in passes if p["kind"] in ("repeat", "resume")]
-    errors["model_call"] = sum(bool(p["calls"]) or p["rc"] != 0 for p in again) + measured["real_calls"]
+    errors["model_call"] = (
+        sum(bool(p["calls"]) or p["rc"] != 0 for p in again) + measured["real_calls"] + measured["failed_steps"]
+    )
     errors["final_state_differs"] = int(
         measured["cycle"] != measured["ref"] or measured["calls"] != measured["ref_calls"]
     )
@@ -556,7 +774,9 @@ def grade(item: dict, measured: dict) -> dict:
         "tags": item["tags"],
         "expected": item["expected"],
         "got": got,
-        "correct": got == item["expected"] and not any(p["rc"] for p in measured["passes"]),
+        "correct": got == item["expected"]
+        and not any(p["rc"] for p in measured["passes"])
+        and not measured["failed_steps"],
         "critical": _errors(item, measured),
     }
 

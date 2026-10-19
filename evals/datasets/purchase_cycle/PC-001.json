@@ -12,7 +12,9 @@
     "pending": [],
     "purchase_orders": 0,
     "quote_requests": [],
-    "sales_results": []
+    "sales_results": [
+      "awaiting_delivery_note"
+    ]
   },
   "id": "PC-001",
   "initial_state": {
