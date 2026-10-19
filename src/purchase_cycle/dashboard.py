@@ -18,7 +18,8 @@ section{background:var(--card);border:1px solid var(--line);border-radius:8px;pa
 table{border-collapse:collapse;width:100%;margin:4px 0}th,td{text-align:left;padding:3px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
 th{color:var(--muted);font-weight:600}.meta{color:var(--muted)}.passed,.PASS,.met{color:var(--ok)}.failed,.FAIL,.not_met{color:var(--bad)}.missing{color:var(--warn)}
 .badge{font-weight:700;text-transform:uppercase;font-size:12px}svg .track{fill:var(--track)}svg .bar{fill:var(--bar)}svg .dot{fill:var(--fg)}
-nav a{margin-right:10px;color:var(--bar)}
+nav{display:flex;flex-wrap:wrap;gap:4px 12px}nav a{color:var(--bar)}
+body,section,td,th,p,div{overflow-wrap:anywhere}.scroll{overflow-x:auto;max-width:100%}svg{max-width:100%}
 """
 
 
@@ -47,7 +48,7 @@ def _bar(metric: dict) -> str:
 def _table(headers: list[str], rows: list[list[str]]) -> str:
     head = "".join(f"<th>{_e(h)}</th>" for h in headers)
     body = "".join("<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>" for row in rows)
-    return f"<table><tr>{head}</tr>{body}</table>"
+    return f'<div class="scroll"><table><tr>{head}</tr>{body}</table></div>'
 
 
 def _metrics(summary: dict) -> str:

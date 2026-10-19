@@ -103,3 +103,9 @@ def test_write_dashboard(tmp_path):
     _fixtures(tmp_path)
     out = write_dashboard(tmp_path, tmp_path / "out" / "d.html")
     assert out.read_text(encoding="utf-8") == build_html(tmp_path)
+
+
+def test_css_wraps_at_narrow_widths(tmp_path):
+    _fixtures(tmp_path)
+    page = build_html(tmp_path)
+    assert "flex-wrap:wrap" in page and "overflow-wrap:anywhere" in page and "overflow-x:auto" in page
