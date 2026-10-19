@@ -1855,6 +1855,8 @@ def cmd_failures_resume(args) -> int:
     if refusal:
         label, advice = refusal
         first_line = row["error"].splitlines()[0] if row["error"] else ""
+        if row["channel"] == customer_responses.CHANNEL and row["step"] == "invoice_file":
+            advice = "fix or remove the file and run purchase-cycle sales invoice again"
         print(
             f"Error: thread {args.thread_id} is a {label} failure (source {row['source']}, step {row['step']}): "
             f"{first_line}; it has no checkpoint to resume; {advice}; nothing changed",

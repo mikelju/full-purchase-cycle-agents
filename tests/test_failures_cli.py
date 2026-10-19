@@ -183,6 +183,7 @@ def test_resume_commands_save_the_channel_recordings(invoke_durability, parked, 
         ("quotes", "quote_wait", "quote-1", "quotes tick|decide|approve|reject"),
         ("sales", "signed_note", "signed-note-abc", "sales scan|responses|approve|reject"),
         ("sales", "response_drafting", "response-SINV-0001", "sales scan|responses|approve|reject"),
+        ("sales", "invoice_file", "invoice-file-INV-0001", "sales invoice again"),
         ("reconcile", "document_extraction", "doc-abc", "reconcile scan again"),
     ],
 )
