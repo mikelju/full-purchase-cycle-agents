@@ -13,6 +13,7 @@ from purchase_cycle.email_order import (
     build_email_order_graph,
     model_text,
     parse_email,
+    strip_purpose_clause,
 )
 from purchase_cycle.graph import sqlite_checkpointer
 from purchase_cycle.llm import EMAIL_EXTRACTION, EMAIL_INTAKE, InvalidModelOutput, ModelClient
@@ -305,3 +306,39 @@ def test_email_source_is_the_message_id_header(seeded_db, run, tmp_path):
     conn = db.connect(seeded_db[0])
     assert [r[0] for r in conn.execute("SELECT message_id FROM order_sources")] == ["<abc.1@example.org>"]
     conn.close()
+
+
+PURPOSE_LINES = [
+    ("3 packs of pads for the treatment room", "3 packs of pads"),  # CLD-0083
+    ("round spot plasters for after the injections, enough for a normal month", "round spot plasters"),  # CLD-0083
+    ("3 boxes of test strips for our diabetic patients", "3 boxes of test strips"),  # CLD-0112
+    ("40 gauze bandage rolls for the treatment boxes", "40 gauze bandage rolls"),  # CLD-0160
+    ("9 litre bottles of ethyl alcohol for cleaning the equipment", "9 litre bottles of ethyl alcohol"),  # CLD-0165
+    ("16 digital thermometers, rigid tip for the consultation rooms", "16 digital thermometers, rigid tip"),  # CLD-0165
+    ("45 rolls of tape for the counter", "45 rolls of tape"),  # dev CLD-0045
+]
+
+
+@pytest.mark.parametrize(("written", "kept"), PURPOSE_LINES)
+def test_trailing_purpose_clause_is_dropped_from_the_line_text(written, kept):
+    assert strip_purpose_clause(written) == kept
+
+
+def test_catalog_names_containing_for_are_not_altered(seeded_db):
+    _, catalog = seeded_db
+    names = [row["name"] for row in catalog if " for " in row["name"].lower()]
+    assert names  # the catalog does carry names such as "Wall dispenser for hand sanitiser"
+    assert all(strip_purpose_clause(name) == name for name in names)
+
+
+def test_extract_node_stores_the_line_text_without_its_purpose_clause(run):
+    lines = [
+        {
+            "source": "body",
+            "source_text": "3 boxes of test strips for our diabetic patients",
+            "sku": None,
+            "quantity": 3,
+        }
+    ]
+    _, state, _, _ = run(lines_answer={"lines": lines})
+    assert [line["source_text"] for line in state["lines"]] == ["3 boxes of test strips"]

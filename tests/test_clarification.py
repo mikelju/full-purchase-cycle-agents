@@ -18,7 +18,7 @@ from purchase_cycle.clarification import (
     plain_question,
     resume_value,
 )
-from purchase_cycle.llm import ClarificationResolutions
+from purchase_cycle.llm import EMAIL_EXTRACTION, ClarificationResolutions, ModelClient
 
 
 def _skus(text, catalog):
@@ -357,3 +357,14 @@ def test_answer_breaking_a_check_is_rejected(seeded_db, rows, message):
 )  # fmt: skip
 def test_resume_value_normalizes_any_resume_to_an_answer_or_a_close(received, expected):
     assert resume_value(received) == expected
+
+
+def test_recorded_null_quantity_reaches_detection_as_a_quantity_doubt(seeded_db, write_recording):
+    # CLD-0123 shape: the extractor writes null for a line the customer wrote without a number.
+    _, catalog = seeded_db
+    text = "Subject: Order\n\nBody:\nelastic wrist supports in size L"
+    line = {"source": "body", "source_text": "elastic wrist supports in size L", "sku": "SUP-WRIST-L", "quantity": None}
+    path = write_recording(catalog, text, {"lines": [line]}, task=EMAIL_EXTRACTION)
+    answer = ModelClient("replay", catalog, path, task=EMAIL_EXTRACTION).extract(text, case_id="CLD-0123")
+    doubts = detect([line.model_dump() for line in answer.lines], catalog, EMAIL)
+    assert [(d["line_id"], d["types"]) for d in doubts] == [(1, [QUANTITY])]

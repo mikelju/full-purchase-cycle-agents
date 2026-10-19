@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Literal
 
 from langgraph.types import RetryPolicy
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from purchase_cycle.config import (
     CLAIM_DRAFTING_MAX_TOKENS,
@@ -147,6 +147,12 @@ class EmailLine(BaseModel):
     source_text: str = Field(min_length=1, description="The line as the customer wrote it")
     sku: str | None = Field(description="Catalog SKU, or null when the product is not in the catalog")
     quantity: int = Field(gt=0, strict=True, description="Quantity in catalog sale units")
+
+    @field_validator("quantity", mode="before")
+    @classmethod
+    def _missing_quantity_is_one(cls, value):
+        """A line the customer wrote without a number counts as one; detection then raises the quantity doubt."""
+        return 1 if value is None else value
 
 
 class EmailLines(BaseModel):

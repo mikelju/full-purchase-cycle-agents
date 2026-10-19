@@ -27,6 +27,7 @@ from purchase_cycle.web_form import build_reply, clarification_outcome, thread_i
 CHANNEL = "email"
 STATUS = "received"
 SUPPORTED_ATTACHMENTS = (".txt", ".pdf", ".xlsx")
+PURPOSE_CLAUSE = re.compile(r",?\s+for (?:the|our|my|your|their|after|\w+ing)\b.*$", re.IGNORECASE)
 MAX_EMAIL_TEXT = 50_000  # bounds what one email can send to the model
 BROKEN_STRUCTURE = (
     errors.NoBoundaryInMultipartDefect,
@@ -316,6 +317,11 @@ def find_customer(conn: sqlite3.Connection, sender: str) -> dict | None:
     return dict(row) if row else None
 
 
+def strip_purpose_clause(text: str) -> str:
+    """Drop a trailing purpose or usage clause ("for the treatment room") from an extracted line text."""
+    return PURPOSE_CLAUSE.sub("", text).rstrip() or text
+
+
 def read_email(path: Path | str, conn: sqlite3.Connection) -> dict:
     """Deterministic intake: parse the file, find the customer and bound the text; no model call."""
     path = Path(path)
@@ -425,7 +431,9 @@ def build_email_order_graph(
                     raise InvalidExtraction(
                         f"Extracted line {n}: source '{line.source}' is not the body or an attachment"
                     )
-                lines.append({**line.model_dump(), "source": source})
+                lines.append(
+                    {**line.model_dump(), "source": source, "source_text": strip_purpose_clause(line.source_text)}
+                )
             return lines
 
         return {"lines": reask(ask) if recovery else ask(None)}
