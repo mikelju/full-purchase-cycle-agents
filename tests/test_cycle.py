@@ -7,6 +7,8 @@ import shutil
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from conftest import make_email
 from purchase_cycle import claims, cli, customer_responses, cycle, db, quote_decision, sales_cli
 from purchase_cycle.catalog import CUSTOMERS
@@ -600,6 +602,58 @@ def test_a_clarification_stays_paused_listed_with_its_command_and_the_next_pass_
     assert len(world.calls) == calls
     assert world.rows("SELECT status FROM clarifications") == [("answered",)]
     assert world.rows("SELECT COUNT(*) FROM orders") == [(1,)]
+
+
+# C5: idempotence and crash resumption
+
+
+def _files(root):
+    """Every file under the run folder but the two databases, with size and modification time."""
+    return {
+        path.relative_to(root).as_posix(): (path.stat().st_size, path.stat().st_mtime_ns)
+        for path in sorted(root.rglob("*"))
+        if path.is_file() and not path.name.startswith(("business.db", "cp.sqlite"))
+    }
+
+
+def _world_pass(root, interrupt_after=None):
+    calls = []
+    result = cycle.run_cycle(
+        root / "business.db",
+        root / "cp.sqlite",
+        _folders(root),
+        lambda task, catalog: CountingClient(task, calls),
+        interrupt_after,
+    )
+    return result, calls
+
+
+def test_a_second_pass_with_nothing_new_changes_no_row_writes_no_file_and_calls_no_model(tmp_path):
+    _write_world(tmp_path)
+    _, calls = _world_pass(tmp_path)
+    assert calls
+    rows, written = _snapshot(tmp_path), _files(tmp_path)
+    again, again_calls = _world_pass(tmp_path)
+    assert again["thread_id"] == "cycle-run-0002" and not again["resumed"]
+    assert again_calls == []
+    assert _snapshot(tmp_path) == rows
+    assert _files(tmp_path) == written
+
+
+@pytest.mark.parametrize("stage", cycle.STAGES)
+def test_a_pass_stopped_after_a_stage_and_run_again_ends_as_an_uninterrupted_pass_with_no_model_call(tmp_path, stage):
+    whole, crashed = tmp_path / "whole", tmp_path / "crashed"
+    _write_world(whole)
+    _write_world(crashed)
+    _, whole_calls = _world_pass(whole)
+
+    stopped, first_calls = _world_pass(crashed, [stage])
+    assert stopped["thread_id"] == "cycle-run-0001"
+    resumed, resumed_calls = _world_pass(crashed)
+    assert resumed["resumed"] is (stage != cycle.STAGES[-1])
+    assert resumed_calls == []
+    assert first_calls == whole_calls
+    assert _snapshot(crashed) == _snapshot(whole)
 
 
 def test_cycle_py_calls_no_approve_reject_or_answer_function():

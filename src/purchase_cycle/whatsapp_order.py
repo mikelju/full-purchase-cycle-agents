@@ -129,7 +129,8 @@ def write_outbox(
     outbox.mkdir(parents=True, exist_ok=True)
     path = outbox / f"{kind}-{phone_digits(to)}-{message_id}{suffix}.json"
     content = json.dumps({"to": to, "in_reply_to": message_id, "text": text}, indent=2, sort_keys=True)
-    path.write_text(content + "\n", encoding="utf-8", newline="\n")
+    if not path.is_file() or path.read_bytes() != (content + "\n").encode("utf-8"):  # the same reply is not rewritten
+        path.write_text(content + "\n", encoding="utf-8", newline="\n")
     return path
 
 
