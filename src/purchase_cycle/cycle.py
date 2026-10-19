@@ -214,10 +214,78 @@ def _last_run(checkpointer) -> int:
     return max(numbers, default=0)
 
 
+def pending_decisions(db_path) -> list[dict]:
+    """Every decision a person has still to take, read from the database, with the commands that take it.
+
+    The orchestrator only lists them: each one is a module thread paused in the checkpoint file.
+    """
+    conn = db.connect(db_path)
+    try:
+        clarifications = db.pending_clarifications(conn)
+        requests = conn.execute(
+            "SELECT id FROM quote_requests WHERE status = ? ORDER BY id", (quote_decision.AWAITING,)
+        )
+        claim_invoices = conn.execute(
+            "SELECT r.invoice_id FROM claims c JOIN reconciliations r ON r.id = c.reconciliation_id "
+            "WHERE c.status = ? ORDER BY c.id",
+            (claims.AWAITING,),
+        )
+        response_invoices = conn.execute(
+            "SELECT r.invoice_id FROM customer_responses p JOIN sales_reconciliations r ON r.id = p.reconciliation_id "
+            "WHERE p.status = ? ORDER BY p.id",
+            (customer_responses.AWAITING,),
+        )
+        pending = [
+            {
+                "kind": "clarification",
+                "reference": row["thread_id"],
+                "thread_id": row["thread_id"],
+                "commands": [
+                    f"purchase-cycle clarify answer {row['thread_id']} --text ...",
+                    f"purchase-cycle clarify close {row['thread_id']}",
+                ],
+            }
+            for row in clarifications
+        ]
+        for (request_id,) in requests:
+            ref = quotes.reference(request_id)
+            pending.append(
+                {
+                    "kind": "quote_approval",
+                    "reference": ref,
+                    "thread_id": quote_decision.decision_thread_id(request_id),
+                    "commands": [f"purchase-cycle quotes approve {ref}", f"purchase-cycle quotes reject {ref}"],
+                }
+            )
+        for (invoice_id,) in claim_invoices:
+            ref = reconciliation.invoice_reference(invoice_id)
+            pending.append(
+                {
+                    "kind": "claim",
+                    "reference": ref,
+                    "thread_id": claims.claim_thread_id(invoice_id),
+                    "commands": [f"purchase-cycle reconcile approve {ref}", f"purchase-cycle reconcile reject {ref}"],
+                }
+            )
+        for (invoice_id,) in response_invoices:
+            ref = f"SINV-{invoice_id:04d}"
+            pending.append(
+                {
+                    "kind": "customer_response",
+                    "reference": ref,
+                    "thread_id": customer_responses.response_thread_id(conn, invoice_id),
+                    "commands": [f"purchase-cycle sales approve {ref}", f"purchase-cycle sales reject {ref}"],
+                }
+            )
+        return pending
+    finally:
+        conn.close()
+
+
 def run_cycle(db_path, checkpoint_path, folders: Folders, client: ClientFactory, interrupt_after=None) -> dict:
     """Run one pass of the cycle, or resume the last one when it stopped before its end.
 
-    Returns the thread id, whether the pass is a resumption and the per-stage counts.
+    Returns the thread id, whether the pass is a resumption, the per-stage counts and the pending decisions.
     """
     conn = db.connect(db_path)
     try:
@@ -240,6 +308,7 @@ def run_cycle(db_path, checkpoint_path, folders: Folders, client: ClientFactory,
             "thread_id": thread["configurable"]["thread_id"],
             "resumed": resumed,
             "counts": values.get("counts", {}),
+            "pending": pending_decisions(db_path),
         }
     finally:
         checkpointer.conn.close()

@@ -1,18 +1,26 @@
 """C2 (phase 12): the purchase_cycle graph and its stages."""
 
+import ast
 import json
 import shutil
 import sqlite3
+from pathlib import Path
+
+from langgraph.types import Command
 
 from conftest import make_email
-from purchase_cycle import cli, cycle, db, sales_cli
+from purchase_cycle import claims, cli, customer_responses, cycle, db, quote_decision, sales_cli
 from purchase_cycle.catalog import CUSTOMERS
 from purchase_cycle.graph import sqlite_checkpointer
 from purchase_cycle.llm import (
+    CLAIM_DRAFTING,
+    CLARIFICATION_ANSWER,
+    CLARIFICATION_QUESTION,
     EMAIL_EXTRACTION,
     EMAIL_INTAKE,
     MATCHING,
     OFFER_EXTRACTION,
+    RESPONSE_DRAFTING,
     SUPPLIER_DOCUMENT_EXTRACTION,
     WHATSAPP_EXTRACTION,
     WHATSAPP_INTAKE,
@@ -351,3 +359,244 @@ def test_an_order_short_of_stock_goes_from_quote_request_to_customer_invoice_thr
         "JOIN customer_invoice_lines l ON l.invoice_id = i.id",
     )[0][:2] == (order_id, 1)
     assert _rows(root, "SELECT COUNT(*) FROM customer_invoices") == [(1,)]
+
+
+# C4: pending decisions are listed with their command and never taken; the next pass continues after the decision
+
+CLAIM_FORM = "INVOICE F-1\nPO-0001 gloves XS 3 boxes"
+DELIVERY_FORM = "DELIVERY NOTE A-1\nPO-0001 gloves XS 3 boxes"
+
+
+class Journey:
+    """One web form order short of stock, followed with a counting model double and the operator steps by hand."""
+
+    def __init__(self, root, answers=None):
+        self.root, self.calls, self.cp = root, [], str(root / "cp.sqlite")
+        for name in ("orders", "replies", "documents", "signed"):
+            (root / name).mkdir()
+        conn = db.connect(root / "business.db")
+        db.seed(conn)
+        conn.execute("UPDATE stock SET on_hand = 0 WHERE sku = ?", (SHORT_SKU,))
+        self.supplier_name, self.supplier_email = conn.execute(
+            "SELECT name, email FROM suppliers WHERE code = ?", (SUPPLIER,)
+        ).fetchone()
+        conn.commit()
+        conn.close()
+        self.answers = {**HANDOFF_ANSWERS, SUPPLIER_DOCUMENT_EXTRACTION.name: {}, **(answers or {})}
+        self.folders = _folders(root)
+
+    def client(self, task, catalog):
+        return CountingClient(task, self.calls, self.answers)
+
+    def one_pass(self):
+        return cycle.run_cycle(self.root / "business.db", self.root / "cp.sqlite", self.folders, self.client)
+
+    def rows(self, sql):
+        return _rows(self.root, sql)
+
+    def order_form(self, product="nitrile gloves XS", quantity=3):
+        form = {
+            "submission_id": "WF-9",
+            "customer_code": "CLI-001",
+            "lines": [{"product": product, "quantity": quantity}],
+        }
+        (self.root / "orders" / "short.json").write_text(json.dumps(form), encoding="utf-8")
+
+    def cli(self, *words):
+        return cli.main(["--db", str(self.root / "business.db"), *words])
+
+    def to_approval(self):
+        self.order_form()
+        self.one_pass()
+        (self.root / "replies" / "QR-0001-SUP-002.eml").write_text(
+            f"From: {self.supplier_email}\nTo: purchasing@distributor.example.com\n"
+            f"Subject: Re: Quote request QR-0001 - {SHORT_SKU}\n\n{REPLY_TEXT}\n",
+            encoding="utf-8",
+        )
+        assert self.cli("clock", "advance", "--days", "6") == 0
+        return self.one_pass()
+
+    def approve_offer(self):
+        words = ["quotes", "approve", "QR-0001", "--checkpoints", self.cp, "--outbox", str(self.root / "so")]
+        assert self.cli(*words) == 0
+
+    def drop_documents(self, invoice_price):
+        (self.root / "documents" / "a-invoice.txt").write_text(CLAIM_FORM, encoding="utf-8")
+        (self.root / "documents" / "b-note.txt").write_text(DELIVERY_FORM, encoding="utf-8")
+        self.answers[SUPPLIER_DOCUMENT_EXTRACTION.name] = {
+            "INVOICE F-1": _document_answer("invoice", "F-1", self.supplier_name, invoice_price),
+            "DELIVERY NOTE A-1": _document_answer("delivery_note", "A-1", self.supplier_name, None),
+        }
+
+    def paused_at(self, graph_builder, thread_id):
+        checkpointer = sqlite_checkpointer(self.root / "cp.sqlite")
+        try:
+            return graph_builder(checkpointer).get_state({"configurable": {"thread_id": thread_id}}).next
+        finally:
+            checkpointer.conn.close()
+
+
+DECISION_TABLES = ("quote_requests", "claims", "customer_responses", "clarifications")
+
+
+def _decision_rows(world):
+    return {t: world.rows(f"SELECT * FROM {t} ORDER BY 1") for t in DECISION_TABLES}
+
+
+def _no_decision_taken(world, first):
+    """A second pass with nothing new takes no decision: the decision rows and the pending list are as before."""
+    before = _decision_rows(world)
+    again = world.one_pass()
+    assert _decision_rows(world) == before
+    assert again["pending"] == first["pending"]
+
+
+def test_a_quote_approval_stays_paused_listed_with_its_command_and_the_next_pass_continues_after_it(tmp_path):
+    world = Journey(tmp_path)
+    result = world.to_approval()
+    assert result["pending"] == [
+        {
+            "kind": "quote_approval",
+            "reference": "QR-0001",
+            "thread_id": "decision-QR-0001",
+            "commands": ["purchase-cycle quotes approve QR-0001", "purchase-cycle quotes reject QR-0001"],
+        }
+    ]
+    paused = world.paused_at(
+        lambda cp: quote_decision.build_quote_decision_graph(tmp_path / "business.db", None, None, cp),
+        "decision-QR-0001",
+    )
+    assert paused == ("approve",)
+    assert world.rows("SELECT status FROM quote_requests") == [("awaiting_approval",)]
+    assert world.rows("SELECT COUNT(*) FROM purchase_orders") == [(0,)]
+    _no_decision_taken(world, result)
+
+    world.approve_offer()
+    world.drop_documents(4.1)
+    after = world.one_pass()
+    assert after["pending"] == []
+    assert world.rows("SELECT status FROM quote_requests") == [("ordered",)]
+    assert world.rows("SELECT result FROM reconciliations") == [("matched",)]
+    assert world.rows("SELECT status FROM orders") == [("served",)]
+
+
+def test_a_claim_stays_paused_listed_with_its_command_and_the_next_pass_continues_after_it(tmp_path):
+    world = Journey(tmp_path, {CLAIM_DRAFTING.name: {"": {"body": "Dear supplier, please review the invoice."}}})
+    world.to_approval()
+    world.approve_offer()
+    world.drop_documents(5.0)  # the invoice price differs from the purchase order: a discrepancy and a claim
+    result = world.one_pass()
+    assert result["pending"] == [
+        {
+            "kind": "claim",
+            "reference": "INV-0001",
+            "thread_id": "claim-INV-0001",
+            "commands": ["purchase-cycle reconcile approve INV-0001", "purchase-cycle reconcile reject INV-0001"],
+        }
+    ]
+    paused = world.paused_at(
+        lambda cp: claims.build_claim_graph(tmp_path / "business.db", None, None, cp), "claim-INV-0001"
+    )
+    assert paused == ("review",)
+    assert world.rows("SELECT status FROM claims") == [("awaiting_approval",)]
+    _no_decision_taken(world, result)
+
+    checkpointer = sqlite_checkpointer(tmp_path / "cp.sqlite")
+    try:
+        done = claims.reject_claim(tmp_path / "business.db", checkpointer, 1)
+    finally:
+        checkpointer.conn.close()
+    assert done["status"] == "rejected"
+    assert world.one_pass()["pending"] == []
+    assert world.rows("SELECT status FROM claims") == [("rejected",)]
+
+
+def test_a_customer_response_stays_paused_listed_with_its_command_and_the_next_pass_continues_after_it(tmp_path):
+    world = Journey(tmp_path, {RESPONSE_DRAFTING.name: {"": {"body": "Dear customer, we are sorry."}}})
+    world.to_approval()
+    world.approve_offer()
+    world.drop_documents(4.1)
+    world.one_pass()
+    (tmp_path / "signed" / "n1.txt").write_text(
+        "Signed delivery note\nDelivery note: CDN-0001\nCustomer: CLI-001\nSigned by: Laura Etxeberria\n"
+        f"Signing date: 2026-10-14\nIncidents:\n{SHORT_SKU} missing 1\n",
+        encoding="utf-8",
+    )
+    result = world.one_pass()
+    assert result["pending"] == [
+        {
+            "kind": "customer_response",
+            "reference": "SINV-0001",
+            "thread_id": "response-SINV-0001",
+            "commands": ["purchase-cycle sales approve SINV-0001", "purchase-cycle sales reject SINV-0001"],
+        }
+    ]
+    paused = world.paused_at(
+        lambda cp: customer_responses.build_response_graph(tmp_path / "business.db", None, None, None, cp),
+        "response-SINV-0001",
+    )
+    assert paused == ("review",)
+    assert world.rows("SELECT status FROM customer_responses") == [("awaiting_approval",)]
+    _no_decision_taken(world, result)
+
+    checkpointer = sqlite_checkpointer(tmp_path / "cp.sqlite")
+    try:
+        done = customer_responses.reject_response(tmp_path / "business.db", checkpointer, 1)
+    finally:
+        checkpointer.conn.close()
+    assert done["status"] == "rejected"
+    assert world.one_pass()["pending"] == []
+    assert world.rows("SELECT status FROM customer_responses") == [("rejected",)]
+
+
+def test_a_clarification_stays_paused_listed_with_its_command_and_the_next_pass_continues_after_it(tmp_path):
+    sizes = ("XS", "S", "M", "L", "XL")
+    names = ", ".join(f"Nitrile examination gloves, powder-free, size {size}" for size in sizes)
+    question = f'For "nitrile gloves" (10 boxes), which one do you want: {names}?'
+    answers = {
+        MATCHING.name: {"nitrile gloves": {"sku": None}},
+        CLARIFICATION_QUESTION.name: {"": {"question": question}},
+        CLARIFICATION_ANSWER.name: {
+            "": {"resolutions": [{"line_id": 1, "action": "set", "sku": "GLV-NIT-L", "quantity": 10}]}
+        },
+    }
+    world = Journey(tmp_path, answers)
+    world.order_form("nitrile gloves", 10)
+    result = world.one_pass()
+    thread = "web_form-c0001-short"
+    assert result["pending"] == [
+        {
+            "kind": "clarification",
+            "reference": thread,
+            "thread_id": thread,
+            "commands": [
+                f"purchase-cycle clarify answer {thread} --text ...",
+                f"purchase-cycle clarify close {thread}",
+            ],
+        }
+    ]
+    checkpointer = sqlite_checkpointer(tmp_path / "cp.sqlite")
+    try:
+        graphs = cycle._order_graphs(tmp_path / "business.db", checkpointer, world.client, tmp_path / "outbox")
+        config = {"configurable": {"thread_id": thread}}
+        assert graphs["web_form"].get_state(config).next == ("clarify",)
+        assert world.rows("SELECT COUNT(*) FROM orders") == [(0,)]
+        assert world.rows("SELECT status, round FROM clarifications") == [("pending", 1)]
+        graphs["web_form"].invoke(Command(resume={"answer": "Size L"}), config, durability="sync")
+    finally:
+        checkpointer.conn.close()
+    assert world.rows("SELECT status FROM clarifications") == [("answered",)]
+    assert world.rows("SELECT COUNT(*) FROM orders") == [(1,)]
+    (tmp_path / "orders" / "short.json").unlink()  # a new pass over the same file asks again (see increment 5)
+    assert world.one_pass()["pending"] == []
+
+
+def test_cycle_py_calls_no_approve_reject_or_answer_function():
+    tree = ast.parse(Path(cycle.__file__).read_text(encoding="utf-8"))
+    called = {
+        node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+    }
+    assert {name for name in called if name.startswith(("approve", "reject", "answer"))} == set()
+    assert "Command" not in called
