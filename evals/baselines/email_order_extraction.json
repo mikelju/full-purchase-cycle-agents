@@ -628,14 +628,14 @@
    "out_of_catalog_detection": false
   },
   "EML-0038": {
-   "email_exact_match": false,
+   "email_exact_match": true,
    "error": null,
    "intake_accuracy": true,
    "is_order": true,
    "lines": [
     {
      "quantity": 48,
-     "sku": "LAN-200",
+     "sku": "LAN-100",
      "source": "order-0038.txt"
     },
     {
@@ -1549,13 +1549,13 @@
    "out_of_catalog_detection": true
   },
   "EML-0095": {
-   "email_exact_match": true,
+   "email_exact_match": false,
    "error": null,
    "intake_accuracy": true,
    "is_order": true,
    "lines": [
     {
-     "quantity": 1,
+     "quantity": 100,
      "sku": "PILL-CUP",
      "source": "order-0095.xlsx"
     },
@@ -3539,10 +3539,51 @@
   },
   "EML-0215": {
    "email_exact_match": false,
-   "error": "Extracted line 1: SKU 'SHARPS-15' is not in the catalog",
+   "error": null,
    "intake_accuracy": true,
    "is_order": true,
-   "lines": [],
+   "lines": [
+    {
+     "quantity": 18,
+     "sku": "SHARPS-30",
+     "source": "order-0215.txt"
+    },
+    {
+     "quantity": 19,
+     "sku": "MASK-FFP2-V",
+     "source": "order-0215.txt"
+    },
+    {
+     "quantity": 13,
+     "sku": "CREAM-MOIST-500",
+     "source": "order-0215.txt"
+    },
+    {
+     "quantity": 13,
+     "sku": null,
+     "source": "order-0215.txt"
+    },
+    {
+     "quantity": 9,
+     "sku": "GLU-STRIP-50",
+     "source": "order-0215.txt"
+    },
+    {
+     "quantity": 1,
+     "sku": "BPM-CUFF-S",
+     "source": "order-0215.txt"
+    },
+    {
+     "quantity": 5,
+     "sku": "GAUZE-NS-7",
+     "source": "order-0215.txt"
+    },
+    {
+     "quantity": 12,
+     "sku": "PLST-SPOT",
+     "source": "order-0215.txt"
+    }
+   ],
    "out_of_catalog_detection": false
   },
   "EML-0220": {
@@ -4052,7 +4093,7 @@
    "out_of_catalog_detection": true
   },
   "EML-0251": {
-   "email_exact_match": true,
+   "email_exact_match": false,
    "error": null,
    "intake_accuracy": true,
    "is_order": true,
@@ -4088,7 +4129,7 @@
      "source": "order-0251.txt"
     },
     {
-     "quantity": 100,
+     "quantity": 1,
      "sku": "WIPE-SURF-200",
      "source": "order-0251.txt"
     }
@@ -4371,12 +4412,23 @@
    "out_of_catalog_detection": true
   },
   "EML-0270": {
-   "email_exact_match": false,
+   "email_exact_match": true,
    "error": null,
-   "intake_accuracy": false,
-   "is_order": false,
-   "lines": [],
-   "out_of_catalog_detection": false
+   "intake_accuracy": true,
+   "is_order": true,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": null,
+     "source": "body"
+    },
+    {
+     "quantity": 20,
+     "sku": "COT-ROLL-500",
+     "source": "body"
+    }
+   ],
+   "out_of_catalog_detection": true
   },
   "EML-0271": {
    "email_exact_match": true,
@@ -5551,9 +5603,9 @@
    "line_recall": false
   },
   "EML-0038-L1": {
-   "field_quantity": false,
-   "field_sku": false,
-   "line_recall": false
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
   },
   "EML-0038-L2": {
    "field_quantity": true,
@@ -6026,9 +6078,9 @@
    "line_recall": true
   },
   "EML-0095-L1": {
-   "field_quantity": true,
+   "field_quantity": false,
    "field_sku": true,
-   "line_recall": true
+   "line_recall": false
   },
   "EML-0095-L2": {
    "field_quantity": true,
@@ -7111,34 +7163,34 @@
    "line_recall": true
   },
   "EML-0215-L2": {
-   "field_quantity": false,
-   "field_sku": false,
-   "line_recall": false
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
   },
   "EML-0215-L3": {
-   "field_quantity": false,
-   "field_sku": false,
-   "line_recall": false
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
   },
   "EML-0215-L5": {
-   "field_quantity": false,
-   "field_sku": false,
-   "line_recall": false
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
   },
   "EML-0215-L6": {
-   "field_quantity": false,
-   "field_sku": false,
-   "line_recall": false
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
   },
   "EML-0215-L7": {
-   "field_quantity": false,
-   "field_sku": false,
-   "line_recall": false
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
   },
   "EML-0215-L8": {
-   "field_quantity": false,
-   "field_sku": false,
-   "line_recall": false
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
   },
   "EML-0220-L1": {
    "field_quantity": true,
@@ -7486,9 +7538,9 @@
    "line_recall": true
   },
   "EML-0251-L7": {
-   "field_quantity": true,
+   "field_quantity": false,
    "field_sku": true,
-   "line_recall": true
+   "line_recall": false
   },
   "EML-0252-L1": {
    "field_quantity": true,
@@ -7641,9 +7693,9 @@
    "line_recall": true
   },
   "EML-0270-L1": {
-   "field_quantity": false,
-   "field_sku": false,
-   "line_recall": false
+   "field_quantity": true,
+   "field_sku": true,
+   "line_recall": true
   },
   "EML-0271-L1": {
    "field_quantity": true,
@@ -8131,7 +8183,7 @@
    "line_recall": true
   }
  },
- "measured_at": "2026-10-07",
+ "measured_at": "2026-10-19",
  "metrics": {
   "email_exact_match": {
    "high": 0.9682128153611747,
@@ -8141,46 +8193,46 @@
    "value": 0.9435897435897436
   },
   "field_quantity": {
-   "high": 0.9990372402188312,
-   "hits": 568,
-   "low": 0.9872979074074675,
-   "n": 570,
-   "value": 0.9964912280701754
+   "high": 0.9973055905986025,
+   "hits": 574,
+   "low": 0.9823427162706003,
+   "n": 578,
+   "value": 0.9930795847750865
   },
   "field_sku": {
-   "high": 0.9831248730825677,
-   "hits": 570,
-   "low": 0.956110563347496,
+   "high": 0.9930665034434529,
+   "hits": 578,
+   "low": 0.9732948661687064,
    "n": 586,
-   "value": 0.9726962457337884
+   "value": 0.9863481228668942
   },
   "intake_accuracy": {
-   "high": 0.9956304640096074,
-   "hits": 231,
-   "low": 0.9629913050062249,
+   "high": 0.9976529641229172,
+   "hits": 232,
+   "low": 0.9693777677790189,
    "n": 234,
-   "value": 0.9871794871794872
+   "value": 0.9914529914529915
   },
   "line_precision": {
-   "high": 0.9952007542867797,
-   "hits": 568,
-   "low": 0.9773843578077649,
-   "n": 574,
-   "value": 0.9895470383275261
+   "high": 0.9930187409613054,
+   "hits": 574,
+   "low": 0.9731129512875922,
+   "n": 582,
+   "value": 0.9862542955326461
   },
   "line_recall": {
-   "high": 0.9804833732855639,
-   "hits": 568,
-   "low": 0.9519705798489758,
+   "high": 0.9882477370340371,
+   "hits": 574,
+   "low": 0.9645506659870745,
    "n": 586,
-   "value": 0.9692832764505119
+   "value": 0.9795221843003413
   },
   "out_of_catalog_detection": {
-   "high": 0.982504436442586,
-   "hits": 188,
-   "low": 0.9277685070043703,
+   "high": 0.9858234276319828,
+   "hits": 189,
+   "low": 0.9345077803834483,
    "n": 195,
-   "value": 0.9641025641025641
+   "value": 0.9692307692307692
   }
  },
  "mode": "record",

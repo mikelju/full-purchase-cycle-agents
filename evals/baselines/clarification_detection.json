@@ -34,11 +34,11 @@
   "CLD-0036-L3:quantity": true,
   "CLD-0037-L1:unknown": true,
   "CLD-0038-L3:unknown": true,
-  "CLD-0041-L2:unknown": false,
+  "CLD-0041-L2:unknown": true,
   "CLD-0043-L2:quantity": true,
   "CLD-0043-L5:unknown": true,
   "CLD-0047-L1:quantity": true,
-  "CLD-0047-L2:unknown": false,
+  "CLD-0047-L2:unknown": true,
   "CLD-0050-L1:quantity": true,
   "CLD-0050-L2:quantity": true,
   "CLD-0052-L2:unknown": true,
@@ -49,8 +49,8 @@
   "CLD-0056-L4:unknown": true,
   "CLD-0061-L1:unknown": true,
   "CLD-0062-L2:unknown": true,
-  "CLD-0066-L1:ambiguous": false,
-  "CLD-0066-L4:quantity": false,
+  "CLD-0066-L1:ambiguous": true,
+  "CLD-0066-L4:quantity": true,
   "CLD-0068-L2:quantity": true,
   "CLD-0068-L5:ambiguous": true,
   "CLD-0070-L1:ambiguous": true,
@@ -64,8 +64,8 @@
   "CLD-0077-L2:unknown": true,
   "CLD-0081-L1:quantity": true,
   "CLD-0082-L1:quantity": true,
-  "CLD-0083-L1:ambiguous": false,
-  "CLD-0083-L2:quantity": false,
+  "CLD-0083-L1:ambiguous": true,
+  "CLD-0083-L2:quantity": true,
   "CLD-0084-L4:unknown": true,
   "CLD-0087-L1:ambiguous": true,
   "CLD-0091-L2:ambiguous": true,
@@ -83,7 +83,7 @@
   "CLD-0109-L1:ambiguous": true,
   "CLD-0109-L2:quantity": true,
   "CLD-0110-L1:ambiguous": true,
-  "CLD-0112-L2:ambiguous": false,
+  "CLD-0112-L2:ambiguous": true,
   "CLD-0117-L1:ambiguous": true,
   "CLD-0117-L2:quantity": true,
   "CLD-0118-L2:unknown": true,
@@ -95,15 +95,15 @@
   "CLD-0121-L3:ambiguous": true,
   "CLD-0121-L4:unknown": true,
   "CLD-0122-L1:unknown": true,
-  "CLD-0123-L2:quantity": false,
+  "CLD-0123-L2:quantity": true,
   "CLD-0129-L1:unknown": true,
   "CLD-0131-L1:unknown": true,
   "CLD-0131-L5:ambiguous": true,
   "CLD-0132-L2:unknown": true,
   "CLD-0134-L2:unknown": true,
   "CLD-0135-L3:ambiguous": true,
-  "CLD-0137-L2:quantity": false,
-  "CLD-0137-L3:ambiguous": false,
+  "CLD-0137-L2:quantity": true,
+  "CLD-0137-L3:ambiguous": true,
   "CLD-0138-L3:ambiguous": true,
   "CLD-0139-L2:quantity": true,
   "CLD-0139-L3:unknown": true,
@@ -124,12 +124,12 @@
   "CLD-0158-L2:unknown": true,
   "CLD-0158-L4:quantity": true,
   "CLD-0159-L2:unknown": true,
-  "CLD-0160-L2:ambiguous": false,
+  "CLD-0160-L2:ambiguous": true,
   "CLD-0162-L4:quantity": true,
   "CLD-0163-L2:ambiguous": true,
   "CLD-0164-L1:ambiguous": true,
   "CLD-0164-L2:ambiguous": true,
-  "CLD-0165-L1:ambiguous": false,
+  "CLD-0165-L1:ambiguous": true,
   "CLD-0167-L2:quantity": true,
   "CLD-0167-L3:ambiguous": true,
   "CLD-0168-L2:unknown": true,
@@ -156,7 +156,7 @@
   "CLD-0197-L1:ambiguous": true,
   "CLD-0197-L4:ambiguous": true
  },
- "measured_at": "2026-10-08",
+ "measured_at": "2026-10-19",
  "metrics": {
   "false_question_rate": {
    "high": 0.07410012966611748,
@@ -166,49 +166,49 @@
    "value": 0.0
   },
   "precision_ambiguous": {
-   "high": 0.9999999999999999,
-   "hits": 49,
-   "low": 0.9273021807795035,
-   "n": 49,
+   "high": 1.0,
+   "hits": 55,
+   "low": 0.9347150988829137,
+   "n": 55,
    "value": 1.0
   },
   "precision_quantity": {
-   "high": 0.9958829127256662,
-   "hits": 42,
-   "low": 0.8794100655939282,
-   "n": 43,
-   "value": 0.9767441860465116
+   "high": 0.996234231961403,
+   "hits": 46,
+   "low": 0.8888701895837066,
+   "n": 47,
+   "value": 0.9787234042553191
   },
   "precision_unknown": {
-   "high": 0.9965303073589391,
-   "hits": 50,
-   "low": 0.8969543127385502,
-   "n": 51,
-   "value": 0.9803921568627451
+   "high": 0.9966615466117361,
+   "hits": 52,
+   "low": 0.9005708794749876,
+   "n": 53,
+   "value": 0.9811320754716981
   },
   "recall_ambiguous": {
-   "high": 0.9490327499921767,
-   "hits": 49,
-   "low": 0.7817445091344648,
+   "high": 1.0,
+   "hits": 55,
+   "low": 0.9347150988829137,
    "n": 55,
-   "value": 0.8909090909090909
+   "value": 1.0
   },
   "recall_quantity": {
-   "high": 0.9656641321052741,
-   "hits": 42,
-   "low": 0.7967533592588116,
+   "high": 1.0,
+   "hits": 46,
+   "low": 0.9229264369144198,
    "n": 46,
-   "value": 0.9130434782608695
+   "value": 1.0
   },
   "recall_unknown": {
-   "high": 0.9805633385150642,
-   "hits": 50,
-   "low": 0.8462979168981911,
+   "high": 0.9966615466117361,
+   "hits": 52,
+   "low": 0.9005708794749876,
    "n": 53,
-   "value": 0.9433962264150944
+   "value": 0.9811320754716981
   }
  },
- "mode": "replay",
+ "mode": "record",
  "model": "claude-haiku-4-5",
  "orders": {
   "CLD-0002": {
@@ -841,9 +841,14 @@
      "quantity": 8,
      "sku": "ALC70-500",
      "text": "8 bottles of ethyl alcohol 70% 500 ml"
+    },
+    {
+     "quantity": 12,
+     "sku": null,
+     "text": "twelve infusion pumps"
     }
    ],
-   "question": false
+   "question": true
   },
   "CLD-0043": {
    "error": null,
@@ -935,6 +940,11 @@
      "quantity": 1,
      "sku": "BPM-ARM",
      "text": "blood pressure monitors, automatic upper arm"
+    },
+    {
+     "quantity": 18,
+     "sku": null,
+     "text": "18 infusion pumps"
     }
    ],
    "question": true
@@ -1224,9 +1234,30 @@
    "question": false
   },
   "CLD-0066": {
-   "error": "Model output for case CLD-0066 rejected by schema: field 'lines.3.quantity': Input should be a valid integer",
-   "lines": [],
-   "question": false
+   "error": null,
+   "lines": [
+    {
+     "quantity": 12,
+     "sku": "MASK-II",
+     "text": "12 boxes of surgical masks with ear loops"
+    },
+    {
+     "quantity": 19,
+     "sku": "TAPE-PAP-25",
+     "text": "19 boxes of microporous paper tape 2.5 cm x 9.1 m"
+    },
+    {
+     "quantity": 17,
+     "sku": "INC-PAD-NORMAL",
+     "text": "17 packs of incontinence pads, normal absorbency"
+    },
+    {
+     "quantity": 1,
+     "sku": "SUP-WRIST-L",
+     "text": "elastic wrist supports in size L"
+    }
+   ],
+   "question": true
   },
   "CLD-0068": {
    "error": null,
@@ -1487,15 +1518,15 @@
     {
      "quantity": 3,
      "sku": "COT-PADS",
-     "text": "3 packs of pads for the treatment room"
+     "text": "3 packs of pads"
     },
     {
-     "quantity": 1,
+     "quantity": 2,
      "sku": "PLST-SPOT",
-     "text": "round spot plasters for after the injections, enough for a normal month"
+     "text": "round spot plasters"
     }
    ],
-   "question": false
+   "question": true
   },
   "CLD-0084": {
    "error": null,
@@ -1950,7 +1981,7 @@
     {
      "quantity": 3,
      "sku": "GLU-STRIP-100",
-     "text": "3 boxes of test strips for our diabetic patients"
+     "text": "3 boxes of test strips"
     },
     {
      "quantity": 1,
@@ -1958,7 +1989,7 @@
      "text": "20 adult incontinence briefs, size M"
     }
    ],
-   "question": false
+   "question": true
   },
   "CLD-0115": {
    "error": null,
@@ -2124,9 +2155,30 @@
    "question": true
   },
   "CLD-0123": {
-   "error": "Model output for case CLD-0123 rejected by schema: field 'lines.1.quantity': Input should be a valid integer",
-   "lines": [],
-   "question": false
+   "error": null,
+   "lines": [
+    {
+     "quantity": 48,
+     "sku": "GAUZE-NS-5",
+     "text": "4 dozen packs of non-sterile gauze swabs 5 x 5 cm, 8 ply"
+    },
+    {
+     "quantity": 1,
+     "sku": null,
+     "text": "the usual quantity of mild shampoo"
+    },
+    {
+     "quantity": 15,
+     "sku": "GLU-STRIP-50",
+     "text": "15 boxes of blood glucose test strips, box of 50"
+    },
+    {
+     "quantity": 10,
+     "sku": "LIP-BALM",
+     "text": "10 x lip balm SPF 15"
+    }
+   ],
+   "question": true
   },
   "CLD-0124": {
    "error": null,
@@ -2313,9 +2365,25 @@
    "question": false
   },
   "CLD-0137": {
-   "error": "Model output for case CLD-0137 rejected by schema: field 'lines.1.quantity': Input should be a valid integer",
-   "lines": [],
-   "question": false
+   "error": null,
+   "lines": [
+    {
+     "quantity": 13,
+     "sku": "SUP-ANKLE-S",
+     "text": "13 elastic ankle supports, size S"
+    },
+    {
+     "quantity": 1,
+     "sku": "GLV-NITX-XL",
+     "text": "nitrile examination gloves with extended cuff, size XL"
+    },
+    {
+     "quantity": 26,
+     "sku": "MASK-IIR",
+     "text": "26 boxes of type IIR masks"
+    }
+   ],
+   "question": true
   },
   "CLD-0138": {
    "error": null,
@@ -2673,7 +2741,7 @@
     {
      "quantity": 40,
      "sku": null,
-     "text": "40 gauze bandage rolls for the treatment boxes"
+     "text": "40 gauze bandage rolls"
     }
    ],
    "question": true
@@ -2747,12 +2815,12 @@
     {
      "quantity": 9,
      "sku": "ALC70-1000",
-     "text": "9 litre bottles of ethyl alcohol for cleaning the equipment"
+     "text": "9 litre bottles of ethyl alcohol"
     },
     {
      "quantity": 16,
      "sku": "THERM-DIG",
-     "text": "16 digital thermometers, rigid tip for the consultation rooms"
+     "text": "16 digital thermometers, rigid tip"
     },
     {
      "quantity": 6,
@@ -2760,7 +2828,7 @@
      "text": "6 lumbar support belts, adjustable"
     }
    ],
-   "question": false
+   "question": true
   },
   "CLD-0167": {
    "error": null,
@@ -3191,7 +3259,7 @@
     },
     {
      "quantity": 8,
-     "sku": null,
+     "sku": "SUP-KNEE-M",
      "text": "8 elastic knee supports"
     }
    ],
