@@ -1,6 +1,6 @@
 # 001 - Email extractor: dropped lines, non-integer quantities and purpose clauses
 
-Status: proposed
+Status: superseded by change 018
 
 ## Contract
 Goal and reason:
