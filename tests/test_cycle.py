@@ -8,7 +8,15 @@ from conftest import make_email
 from purchase_cycle import cli, cycle, db, sales_cli
 from purchase_cycle.catalog import CUSTOMERS
 from purchase_cycle.graph import sqlite_checkpointer
-from purchase_cycle.llm import EMAIL_EXTRACTION, EMAIL_INTAKE, MATCHING, WHATSAPP_EXTRACTION, WHATSAPP_INTAKE
+from purchase_cycle.llm import (
+    EMAIL_EXTRACTION,
+    EMAIL_INTAKE,
+    MATCHING,
+    OFFER_EXTRACTION,
+    SUPPLIER_DOCUMENT_EXTRACTION,
+    WHATSAPP_EXTRACTION,
+    WHATSAPP_INTAKE,
+)
 
 
 def _folders(tmp_path):
@@ -73,14 +81,14 @@ ANSWERS = {  # hand-written model answers by task, keyed by a text inside the mo
 class CountingClient:
     """A test double of the model client: hand-written answers, one shared call counter."""
 
-    def __init__(self, task, calls):
-        self.task, self.calls_list = task, calls
+    def __init__(self, task, calls, answers=None):
+        self.task, self.calls_list, self.answers = task, calls, answers or ANSWERS
         self.calls, self.usage = 0, []
 
     def extract(self, sentence, case_id=None, correction=None):
         self.calls_list.append(self.task.name)
         self.calls += 1
-        for key, answer in ANSWERS[self.task.name].items():
+        for key, answer in self.answers[self.task.name].items():
             if key in sentence:
                 return self.task.answer.model_validate(answer)
         raise AssertionError(f"no hand-written answer for {self.task.name}: {sentence!r}")
@@ -203,3 +211,143 @@ def test_one_pass_gives_the_same_rows_and_files_as_the_module_commands_one_by_on
     assert cycle_rows == cli_rows
     assert cycle_files == cli_files
     assert result["counts"]["orders"]["stored"] == 4
+
+
+# C3: the hand-off through the shared database, one order id followed across passes
+
+SHORT_SKU = "GLV-NIT-XS"
+SUPPLIER = "SUP-002"
+REPLY_TEXT = "We can supply 3 boxes at 4.10 EUR per box, delivery in 5 working days."
+HANDOFF_ANSWERS = {
+    MATCHING.name: {"nitrile gloves XS": {"sku": SHORT_SKU}},
+    OFFER_EXTRACTION.name: {
+        REPLY_TEXT: {
+            "offers": True,
+            "quantity": 3,
+            "unit_price": 4.1,
+            "currency": "EUR",
+            "vat_included": False,
+            "vat_rate": None,
+            "lead_time_days": 5,
+            "working_days": True,
+            "price_text": "4.10 EUR per box",
+        }
+    },
+}
+
+
+def _document_answer(kind, number, supplier_name, unit_price):
+    return {
+        "kind": kind,
+        "number": number,
+        "po_reference": "PO-0001",
+        "issue_date": "2026-10-20",
+        "currency": "EUR" if kind == "invoice" else None,
+        "supplier_text": supplier_name,
+        "lines": [
+            {
+                "product": "Nitrile examination gloves, powder-free, size XS",
+                "quantity": 3,
+                "unit_price": unit_price,
+                "line_total": 12.3 if unit_price else None,
+            }
+        ],
+    }
+
+
+def _rows(root, sql):
+    conn = sqlite3.connect(root / "business.db")
+    try:
+        return [tuple(r) for r in conn.execute(sql)]
+    finally:
+        conn.close()
+
+
+def test_an_order_short_of_stock_goes_from_quote_request_to_customer_invoice_through_the_tables(tmp_path):
+    root = tmp_path
+    for name in ("orders", "replies", "documents", "signed"):
+        (root / name).mkdir()
+    conn = db.connect(root / "business.db")
+    db.seed(conn)
+    conn.execute("UPDATE stock SET on_hand = 0 WHERE sku = ?", (SHORT_SKU,))
+    supplier_name, supplier_email = conn.execute(
+        "SELECT name, email FROM suppliers WHERE code = ?", (SUPPLIER,)
+    ).fetchone()
+    conn.commit()
+    conn.close()
+    form = {
+        "submission_id": "WF-9",
+        "customer_code": "CLI-001",
+        "lines": [{"product": "nitrile gloves XS", "quantity": 3}],
+    }
+    (root / "orders" / "short.json").write_text(json.dumps(form), encoding="utf-8")
+
+    calls = []
+    answers = {**HANDOFF_ANSWERS, SUPPLIER_DOCUMENT_EXTRACTION.name: {}}
+    folders = _folders(root)
+
+    def one_pass():
+        return cycle.run_cycle(
+            root / "business.db",
+            root / "cp.sqlite",
+            folders,
+            lambda task, catalog: CountingClient(task, calls, answers),
+        )
+
+    cp = str(root / "cp.sqlite")
+    cli_base = ["--db", str(root / "business.db")]
+
+    # pass 1: the order is stored and, being short of stock, gets a quote request
+    one_pass()
+    order_id, status = _rows(root, "SELECT id, status FROM orders")[0]
+    assert status == "received"
+    assert _rows(root, "SELECT sku, quantity, status FROM quote_requests") == [(SHORT_SKU, 3, "waiting")]
+    assert _rows(root, "SELECT COUNT(*) FROM purchase_orders") == [(0,)]
+
+    # the supplier replies and time passes: the next pass stores the offer and waits for the approval
+    (root / "replies" / "QR-0001-SUP-002.eml").write_text(
+        f"From: {supplier_email}\nTo: purchasing@distributor.example.com\n"
+        f"Subject: Re: Quote request QR-0001 - {SHORT_SKU}\n\n{REPLY_TEXT}\n",
+        encoding="utf-8",
+    )
+    assert cli.main([*cli_base, "clock", "advance", "--days", "6"]) == 0
+    one_pass()
+    assert _rows(root, "SELECT supplier_code, usable FROM quote_offers WHERE offers = 1") == [(SUPPLIER, 1)]
+    assert _rows(root, "SELECT status FROM quote_requests") == [("awaiting_approval",)]
+    assert _rows(root, "SELECT COUNT(*) FROM purchase_orders") == [(0,)]
+
+    # a person approves the offer; the purchase order exists before any further pass
+    assert cli.main([*cli_base, "quotes", "approve", "QR-0001", "--checkpoints", cp, "--outbox", str(root / "so")]) == 0
+    assert _rows(root, "SELECT request_id, supplier_code, sku, quantity, unit_price FROM purchase_orders") == [
+        (1, SUPPLIER, SHORT_SKU, 3, 4.1)
+    ]
+    assert _rows(root, "SELECT status FROM quote_requests") == [("ordered",)]
+    assert _rows(root, f"SELECT on_hand FROM stock WHERE sku = '{SHORT_SKU}'") == [(0,)]
+
+    # the supplier sends the invoice and the delivery note: one pass reconciles, receives, serves and invoices
+    (root / "documents" / "a-invoice.txt").write_text("INVOICE F-1\nPO-0001 gloves XS 3 boxes", encoding="utf-8")
+    (root / "documents" / "b-note.txt").write_text("DELIVERY NOTE A-1\nPO-0001 gloves XS 3 boxes", encoding="utf-8")
+    answers[SUPPLIER_DOCUMENT_EXTRACTION.name] = {
+        "INVOICE F-1": _document_answer("invoice", "F-1", supplier_name, 4.1),
+        "DELIVERY NOTE A-1": _document_answer("delivery_note", "A-1", supplier_name, None),
+    }
+    one_pass()
+    assert _rows(root, "SELECT kind, number, purchase_order_id, status FROM supplier_documents ORDER BY id") == [
+        ("invoice", "F-1", 1, "linked"),
+        ("delivery_note", "A-1", 1, "linked"),
+    ]
+    assert _rows(root, "SELECT result FROM reconciliations") == [("matched",)]
+    assert _rows(
+        root,
+        "SELECT g.purchase_order_id, g.status, l.sku, l.quantity FROM goods_receipts g "
+        "JOIN goods_receipt_lines l ON l.receipt_id = g.id",
+    ) == [(1, "received", SHORT_SKU, 3)]
+    assert _rows(root, f"SELECT status FROM orders WHERE id = {order_id}") == [("served",)]
+    assert _rows(root, f"SELECT on_hand FROM stock WHERE sku = '{SHORT_SKU}'") == [(0,)]
+    assert _rows(root, "SELECT order_id, customer_code FROM customer_delivery_notes") == [(order_id, "CLI-001")]
+    assert _rows(
+        root,
+        "SELECT i.order_id, i.delivery_note_id, i.net_total, l.sku, l.quantity FROM customer_invoices i "
+        "JOIN customer_invoice_lines l ON l.invoice_id = i.id",
+    )[0][:2] == (order_id, 1)
+    assert _rows(root, "SELECT COUNT(*) FROM customer_invoices") == [(1,)]
