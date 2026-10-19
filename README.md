@@ -926,7 +926,7 @@ The first baseline had two critical errors, DOC-060 (other unit, a pack size kep
 Change 018 fixed them with two instruction lines (the number and unit after a product is the quantity; write only the code in the product field) and a shared resolver that links a product text made of a SKU and its own product name to that SKU, so the target of 0 is now met.
 Kind and reference were read correctly in all 90 documents (100.0%, 95.9% to 100.0%).
 About 90 documents give a wide interval, and the text writer and the evaluated model belong to the same family, so the figures may be optimistic.
-The baseline is `evals/baselines/document_extraction.json`, stored in mode replay: the 90 recorded test answers, of which 72 are the original live answers and 18 were re-recorded live after the texts DOC-097 to DOC-120 were rewritten (DV-05 in the phase 08 plan).
+The baseline is `evals/baselines/document_extraction.json`, stored in mode record and measured on 2026-10-19: all 90 test answers were recorded live in change 018, after the document instructions were tuned.
 
 ### Reconciliation matching cases
 
@@ -989,7 +989,8 @@ The Claude Haiku 4.5 baseline on the 150 test orders and 453 lines (`evals/basel
 
 The spec gate is 95% recall per doubt type.
 The first baseline missed it and the owner set the three thresholds at the measured level (deviation 04.1 in [docs/plans/fase-04-excepciones/plan.md](docs/plans/fase-04-excepciones/plan.md)); change 018 fixed the phase 03 extractor and raised the three thresholds back to 95%.
-The remaining misses are email lines: CLD-0149 (the intake model drops a line, so there is no produced line), CLD-0107 (one extra quantity doubt) and CLD-0123-L2 (an unknown doubt raised next to the expected quantity doubt); web form recall is 100% for the three types.
+The remaining miss is CLD-0149 (the intake model drops a line, so there is no produced line); CLD-0107 (one extra quantity doubt) and CLD-0123-L2 (an extra unknown doubt next to the expected quantity doubt) are precision errors, not misses; web form recall is 100% for the three types.
+The wording of the new rule in the email extraction instructions (a product the customer asks to source or to quote stays a line) was written from the diagnosed test misses CLD-0041 and CLD-0047 and checked on the development split (recall for unknown products 94.1% to 100.0% live), so the test recall gain for that shape is not a clean held-out estimate.
 The development split is not replayed (its recordings were not kept); in the live tuning run of change 018 its recall for unknown products was 100.0% (n=17), against a pre-existing 94.1% before the tuning.
 
 `uv run purchase-cycle eval --suite clarification_answers` sends each case's doubts, question and answer to the interpreter and compares its reading with the expected resolution per line.
@@ -1113,6 +1114,8 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - There is no automatic timeout or reminder; an unanswered thread stays paused until an operator runs `clarify close`.
 - A wrong variant picked with confidence by the matcher or the extractor raises no product doubt when the line text fits a single catalog product or none.
 - The candidate search and the extractor send or use the whole catalog, with the same context-window limitation as phase 03.
+- The purpose-clause strip in `email_order.py` cuts a line at the first "for the", "our" or word ending in "ing", so an out-of-catalog text such as "covers for the infusion pump" becomes "covers".
+- On the phase 03 email demo path, without clarification, a null quantity is stored as 1 with no doubt; the clarification path raises the quantity doubt.
 - Detection inherits the phase 03 intake limitation: when the intake model drops a line (CLD-0149) the email order loses that doubt.
 - Four detection lines with generic hints ("single", "free", "cm size", "litre") are labelled ambiguous by the runtime rule while a person may read them as unknown or as the default size; the owner accepted them as a recorded limitation of the second pass.
 - The LangSmith trace of the phase 04 demo and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
