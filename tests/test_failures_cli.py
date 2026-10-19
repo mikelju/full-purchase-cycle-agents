@@ -174,3 +174,45 @@ def test_resume_commands_save_the_channel_recordings(invoke_durability, parked, 
     assert parked.run(*args, parked.thread_id) == 0, capsys.readouterr()
     assert {EMAIL_INTAKE.name, EMAIL_EXTRACTION.name} <= set(saved)
     assert invoke_durability == ["sync", "sync"]  # `route` in the fixture, then the resume command (C10)
+
+
+@pytest.mark.parametrize(
+    ("channel", "step", "thread", "words"),
+    [
+        ("quotes", "offer_extraction", "offer-1-SUP-001", "quotes failure"),
+        ("quotes", "quote_wait", "quote-1", "quotes tick|decide|approve|reject"),
+        ("sales", "signed_note", "signed-note-abc", "sales scan|responses|approve|reject"),
+        ("sales", "response_drafting", "response-SINV-0001", "sales scan|responses|approve|reject"),
+        ("reconcile", "document_extraction", "doc-abc", "reconcile scan again"),
+    ],
+)
+def test_failures_resume_refuses_the_module_rows_that_have_no_order_checkpoint(
+    tmp_path, capsys, channel, step, thread, words
+):
+    """C2: quotes, sales and non-claim reconcile rows are refused with their own message and nothing changes."""
+    db_path = tmp_path / "f.db"
+    conn = db.connect(db_path)
+    try:
+        db.seed(conn)
+        db.park_failure(conn, thread, channel, "source.txt", step, "something broke\nsecond line")
+        before = [tuple(r) for r in conn.execute("SELECT * FROM failures")]
+    finally:
+        conn.close()
+    checkpoints = tmp_path / "checkpoints.sqlite"
+    assert cli.main(["--db", str(db_path), "failures", "resume", thread, "--checkpoints", str(checkpoints)]) == 1
+    err = capsys.readouterr().err
+    assert f"step {step}" in err
+    assert "source source.txt" in err
+    assert "something broke" in err
+    assert "second line" not in err
+    assert "no checkpoint to resume;" in err
+    assert words in err
+    assert "is a claim" not in err
+    assert "no checkpoint to resume found" not in err
+    assert err.strip().endswith("nothing changed")
+    conn = db.connect(db_path)
+    try:
+        assert [tuple(r) for r in conn.execute("SELECT * FROM failures")] == before
+    finally:
+        conn.close()
+    assert not checkpoints.exists()

@@ -206,6 +206,8 @@ Every model-calling step (matching, intake, extraction, question and interpretat
 
 `failures list` shows every parked thread with its channel, source, step, age and first error line.
 `failures resume <thread_id>` runs a parked thread again from its last checkpoint, for example after the outage is over, and marks its row `resolved` when the order completes; a thread that is not parked fails with a message and changes nothing.
+`failures resume` resumes only web form, email and WhatsApp order threads, which have a checkpoint.
+For a goods receipt, quotes, sales or reconcile document row it exits 1 with a message that names the module, its source and first error line, says it has no checkpoint to resume, points to the module command that handles it and ends with `nothing changed`; a claim row points to `reconcile approve|reject`.
 A parked thread is resumed by an operator, never automatically.
 
 `resume <thread_id>` continues any thread that `route` started and a crash interrupted.
@@ -488,6 +490,7 @@ A claim on the invoice concerns money and does not hold the goods, so a note who
 An invoice `awaiting_delivery_note`, an unlinked document and a note with no invoice are not candidates; a note linked by a later reconciliation becomes one on the next run.
 Receiving adds the delivered quantity of each line to `stock.on_hand`, whether it is short, exact or above the purchase order, and for a SKU that is not on the purchase order.
 A note with an unknown SKU, a fractional or non-positive quantity or no lines adds nothing: it is stored as a `failed` receipt with its reason, one `failures` row (`needs_review`, step `goods_receipt`) is written, and the next note is still received.
+`failures resume` refuses the `goods_receipt` row (the note has no checkpoint and is fixed by hand) and changes nothing.
 Each note is received once, in one transaction with its stock change.
 
 ### Short deliveries and the quote scan

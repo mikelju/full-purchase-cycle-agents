@@ -89,7 +89,7 @@ Commits, one per defect group, then the re-record commit; each group lists the f
 `src/purchase_cycle/llm.py` is shared by three groups (email schema and instructions, document instructions, claim instructions): its edits are made serially by one agent, each in its own group commit.
 
 - [x] 1. Status line of change 001 set to superseded by 018 (first commit of the branch, with the merged-PR status updates of the flow).
-- [ ] 2. F6 group (C1 to C4), offline: reproduce each channel, then guard in `src/purchase_cycle/cli.py`; tests in `tests/test_receipts_cli.py`, `tests/test_failures_cli.py` (and the quotes, sales and reconcile CLI test files if a case lives there); README `failures resume` paragraph.
+- [x] 2. F6 group (C1 to C4), offline: reproduce each channel, then guard in `src/purchase_cycle/cli.py`; tests in `tests/test_receipts_cli.py`, `tests/test_failures_cli.py` (and the quotes, sales and reconcile CLI test files if a case lives there); README `failures resume` paragraph.
 - [ ] 3. Email offline group (C5, C6): `EmailLine.quantity` before-validator in `src/purchase_cycle/llm.py`; purpose-clause strip in the extract node of `src/purchase_cycle/email_order.py`; tests in `tests/test_llm.py`, `tests/test_email_order.py`, `tests/test_clarification.py`; simulated replay figures recorded here.
 - [ ] 4. Claims offline group (C11, C12): `src/purchase_cycle/claims.py`; tests in `tests/test_claims.py`; regrade evidence.
 - [ ] 5. Documents offline group (C14): shared resolver next to `match_key` (one function, no new module unless needed), used by `src/purchase_cycle/reconciliation.py` and `src/purchase_cycle/evaluation/document_eval.py`; tests in `tests/test_reconciliation.py`, `tests/test_document_eval.py`.

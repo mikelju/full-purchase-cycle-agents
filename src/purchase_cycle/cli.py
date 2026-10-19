@@ -9,7 +9,18 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langgraph.types import Command
 
-from purchase_cycle import claims, config, db, quote_decision, quotes, reconciliation, router, sim_clock
+from purchase_cycle import (
+    claims,
+    config,
+    customer_responses,
+    db,
+    quote_decision,
+    quotes,
+    receipts,
+    reconciliation,
+    router,
+    sim_clock,
+)
 from purchase_cycle.clarification import ClarificationClients, InvalidAnswer, InvalidQuestion
 from purchase_cycle.email_order import CHANNEL as EMAIL
 from purchase_cycle.email_order import build_email_order_graph
@@ -1810,6 +1821,15 @@ def cmd_failures_list(args) -> int:
     return 0
 
 
+# Rows of these channels have no order graph checkpoint: without this table `failures resume` builds the email graph.
+_RESUME_REFUSALS = {
+    receipts.CHANNEL: ("goods receipt", "it must be fixed by hand, `receipts run` does not receive the note again"),
+    quote_decision.CHANNEL: ("quotes", "use purchase-cycle quotes tick|decide|approve|reject"),
+    customer_responses.CHANNEL: ("sales", "use purchase-cycle sales scan|responses|approve|reject"),
+    reconciliation.CHANNEL: ("reconcile document", "replace the file and run purchase-cycle reconcile scan again"),
+}
+
+
 def cmd_failures_resume(args) -> int:
     """Run a parked thread again from its last checkpoint with recovery on and mark its row resolved."""
     conn = db.connect(args.db)
@@ -1825,9 +1845,19 @@ def cmd_failures_resume(args) -> int:
             f"Error: thread {args.thread_id} is not parked (status {row['status']}); nothing changed", file=sys.stderr
         )
         return 1
-    if row["channel"] == claims.CHANNEL:
+    if row["channel"] == claims.CHANNEL and row["step"] == claims.STEP:
         print(
             f"Error: thread {args.thread_id} is a claim; use purchase-cycle reconcile approve|reject; nothing changed",
+            file=sys.stderr,
+        )
+        return 1
+    refusal = _RESUME_REFUSALS.get(row["channel"])
+    if refusal:
+        label, advice = refusal
+        first_line = row["error"].splitlines()[0] if row["error"] else ""
+        print(
+            f"Error: thread {args.thread_id} is a {label} failure (source {row['source']}, step {row['step']}): "
+            f"{first_line}; it has no checkpoint to resume; {advice}; nothing changed",
             file=sys.stderr,
         )
         return 1
