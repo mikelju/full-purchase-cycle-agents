@@ -90,9 +90,9 @@ Commits, one per defect group, then the re-record commit; each group lists the f
 
 - [x] 1. Status line of change 001 set to superseded by 018 (first commit of the branch, with the merged-PR status updates of the flow).
 - [x] 2. F6 group (C1 to C4), offline: reproduce each channel, then guard in `src/purchase_cycle/cli.py`; tests in `tests/test_receipts_cli.py`, `tests/test_failures_cli.py` (and the quotes, sales and reconcile CLI test files if a case lives there); README `failures resume` paragraph.
-- [ ] 3. Email offline group (C5, C6): `EmailLine.quantity` before-validator in `src/purchase_cycle/llm.py`; purpose-clause strip in the extract node of `src/purchase_cycle/email_order.py`; tests in `tests/test_llm.py`, `tests/test_email_order.py`, `tests/test_clarification.py`; simulated replay figures recorded here.
-- [ ] 4. Claims offline group (C11, C12): `src/purchase_cycle/claims.py`; tests in `tests/test_claims.py`; regrade evidence.
-- [ ] 5. Documents offline group (C14): shared resolver next to `match_key` (one function, no new module unless needed), used by `src/purchase_cycle/reconciliation.py` and `src/purchase_cycle/evaluation/document_eval.py`; tests in `tests/test_reconciliation.py`, `tests/test_document_eval.py`.
+- [x] 3. Email offline group (C5, C6): `EmailLine.quantity` before-validator in `src/purchase_cycle/llm.py`; purpose-clause strip in the extract node of `src/purchase_cycle/email_order.py`; tests in `tests/test_llm.py`, `tests/test_email_order.py`, `tests/test_clarification.py`; simulated replay figures recorded here.
+- [x] 4. Claims offline group (C11, C12): `src/purchase_cycle/claims.py`; tests in `tests/test_claims.py`; regrade evidence.
+- [x] 5. Documents offline group (C14): shared resolver next to `match_key` (one function, no new module unless needed), used by `src/purchase_cycle/reconciliation.py` and `src/purchase_cycle/evaluation/document_eval.py`; tests in `tests/test_reconciliation.py`, `tests/test_document_eval.py`.
 - [ ] 6. Instruction tuning on dev (C7, C13, C15, C16), at most 3 rounds per task: `EMAIL_EXTRACTION_INSTRUCTIONS`, `SUPPLIER_DOCUMENT_INSTRUCTIONS`, `CLAIM_DRAFTING_INSTRUCTIONS` in `src/purchase_cycle/llm.py`; one commit per task with its dev figures and cost.
 - [ ] 7. Re-record commit (C8, C9, C13, C15 to C18): test-split records with `--set-baseline` per suite, demo recordings, stale-row pruning, phase 04 thresholds raised in `src/purchase_cycle/evaluation/clarification_eval.py` and the phase 04 spec gate text; owner check if the cap or a gate fails.
 - [ ] 8. Documentation commit (C19): README, `docs/security.md`, master plan status line; animations only if C19 requires it.
@@ -115,6 +115,18 @@ Affects phase 08 C12 (document extraction figures) and the reconciliation path; 
 - CLD-0149: email intake drops a line (intake model error); intake is out of scope.
 - SHARPS-15: hallucinated SKU in phase 03 on EML-0215 and EML-0237; to log as its own change.
 - Dev split recall_unknown 94.1% (n=17): pre-existing, reported only.
+
+### Offline fix results (steps 3 to 5, 2026-10-19)
+Replay evals on the test split with the three offline fixes and the old recordings, evidence in `.evidence/cambio-018/` (git-ignored); no baseline changed.
+- Email, `clarification_detection-test` (`detection-replay.txt`): recall ambiguous 100.0% (55), quantity 100.0% (46), unknown 94.3% (53); precision_quantity 97.9% (one extra quantity doubt on CLD-0107); false question rate 0 of 48; gate PASS.
+  Remaining failures: CLD-0041 and CLD-0047 (dropped lines, live fix in step 6) and CLD-0149 (known).
+- Email, `email_order_extraction-test`: intake accuracy 99.1%, line recall 97.1%, line precision 99.0%, no significant drop against baseline 2026-10-07; gate PASS, 10 failures listed (including SHARPS-15 on EML-0215 and EML-0237, logged).
+- Claims, `claims-regrade.txt` (C12): `claim_drafting` case pass rate 98.3% (59 of 60), only CLM-044 fails; `claim_approval` 35 of 35.
+- Documents, `document_extraction-test` (C14): exact match 98.9%, unit price accuracy 100.0%, critical errors 1 of 90 (only DOC-060 left); only the DOC-112 lines changed.
+- `failure_recovery` replay: 34 of 34, exit 0 (C3).
+- Dev split: `clarification_detection-dev` recall_unknown 94.1% (n=17), the pre-existing failure, exit 1; `email_order_extraction-dev` exit 0.
+- `tests/test_report_format.py` detection report test updated: recall ambiguous and quantity now meet the 95% target, unknown does not.
+- Full pytest 1625 passed, ruff check and ruff format --check clean (`pytest-offline.txt`).
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |

@@ -45,12 +45,12 @@ def test_detection_report_shows_the_target_not_met_and_the_zero_event_bound(caps
     assert clarification_eval.evaluate_detection("replay", "test") == 0
     out = capsys.readouterr().out
     assert "target met" in out
-    for metric, gate in (
-        ("recall_ambiguous", ">=89.1%"),
-        ("recall_unknown", ">=94.3%"),
-        ("recall_quantity", ">=91.3%"),
+    for metric, gate, met in (
+        ("recall_ambiguous", ">=89.1%", True),
+        ("recall_unknown", ">=94.3%", False),
+        ("recall_quantity", ">=91.3%", True),
     ):
-        _check(out, metric, "expected_doubt", ">=95.0%", False, "PASS")
+        _check(out, metric, "expected_doubt", ">=95.0%", met, "PASS")
         assert gate in _row(out, metric).split()
     _check(out, "false_question_rate", "clear_order", "<=5.0%", True, "PASS")
     assert _row(out, "false_question_rate").endswith("0 of 48, Wilson upper bound 7.4%")

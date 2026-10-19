@@ -543,7 +543,10 @@ def test_numbers_inside_a_product_text_are_not_amounts():
 
 
 def test_product_text_matches_ignoring_case():
-    facts = CLM | {"differences": [_row(None, "extra_line", 20.0, text="zinc oxide tape 2.5 cm")], "amount_in_dispute": 20.0}
+    facts = CLM | {
+        "differences": [_row(None, "extra_line", 20.0, text="zinc oxide tape 2.5 cm")],
+        "amount_in_dispute": 20.0,
+    }
     body = "F-1 PO-0001 Zinc Oxide Tape 2.5 cm 20.00 EUR. The amount in dispute is 20.00 EUR. Credit note."
     assert claims.check_draft(body, facts) == []
     assert claims.mentions("the Surgical Masks", "surgical masks")
