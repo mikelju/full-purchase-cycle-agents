@@ -67,9 +67,9 @@ Built with the phase 01 method: a seeded planning script fixes the labels before
 
 ### Gates
 - Absolute gates in the test split: detection recall per doubt type at least 95%, false question rate at most 5%, and answer resolution accuracy at least 95%, if the baseline measured in this phase reaches them; otherwise execution stops and the owner decides, recorded as a deviation.
-- Detection recall of unknown and doubtful quantity doubts is gated at the level measured after the rule change of deviation 04.1, because the misses come from the phase 03 extractor (dropped email lines, non-integer quantities); amended 2026-10-08, owner decision on deviation 04.1, fix in `docs/changes/001-email-extractor-dropped-lines.md`.
-- Detection recall of ambiguous doubts is gated at the level measured after the same rule change, 89.1% (49 of 55 test lines), because the remaining misses come from the phase 03 extractor (a purpose clause copied into the line text, a non-integer quantity); the rule is not tuned against the test misses; amended 2026-10-08, owner decision on deviation 04.1 (second round), fix in the same change.
-- With these amendments the test baseline stores one limit per metric: recall ambiguous 49/55, unknown 50/53 and quantity 42/46 as point estimates, and the false question rate at most 5%, unchanged.
+- Detection recall of unknown and doubtful quantity doubts was gated at the level measured after the rule change of deviation 04.1 (amended 2026-10-08, owner decision on deviation 04.1); raised back to 95% by change 018 (`docs/changes/018-known-defects.md`) once the phase 03 extractor causes were fixed and re-recorded.
+- Detection recall of ambiguous doubts was gated at 89.1% (49 of 55 test lines) by the second round of deviation 04.1 (amended 2026-10-08); raised back to 95% by change 018 for the same reason, measured on the test split after re-recording: ambiguous 100.0%, unknown 98.1%, quantity 100.0%.
+- With the change 018 amendment the test baseline stores one limit per metric: recall ambiguous, unknown and quantity at 95%, and the false question rate at most 5%, unchanged.
 - Regression gate: exact McNemar test per line for detection recall and per doubtful line for resolution accuracy against the stored baseline, failing on a significant drop (p < 0.05).
 - The three existing evaluations keep running unchanged with their own gates.
 

@@ -41,14 +41,14 @@ def test_email_report(capsys):
     assert "order_email none n/a" in " ".join(_row(out, "email_exact_match").split())
 
 
-def test_detection_report_shows_the_target_not_met_and_the_zero_event_bound(capsys):
+def test_detection_report_shows_the_target_met_and_the_zero_event_bound(capsys):
     assert clarification_eval.evaluate_detection("replay", "test") == 0
     out = capsys.readouterr().out
     assert "target met" in out
     for metric, gate, met in (
-        ("recall_ambiguous", ">=89.1%", True),
-        ("recall_unknown", ">=94.3%", False),
-        ("recall_quantity", ">=91.3%", True),
+        ("recall_ambiguous", ">=95.0%", True),
+        ("recall_unknown", ">=95.0%", True),
+        ("recall_quantity", ">=95.0%", True),
     ):
         _check(out, metric, "expected_doubt", ">=95.0%", met, "PASS")
         assert gate in _row(out, metric).split()

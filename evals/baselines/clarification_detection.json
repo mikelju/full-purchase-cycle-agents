@@ -3369,9 +3369,9 @@
  "split": "test",
  "threshold": {
   "false_question_rate": 0.050000000000000044,
-  "recall_ambiguous": 0.8909090909090909,
-  "recall_quantity": 0.9130434782608695,
-  "recall_unknown": 0.9433962264150944
+  "recall_ambiguous": 0.95,
+  "recall_quantity": 0.95,
+  "recall_unknown": 0.95
  },
- "threshold_rule": "recall of each doubt type at the level measured after the rule change of deviation 04.1, accepted by the owner on 2026-10-08 as a phase 03 extractor limitation (change 001); false question rate at most 5% on the test split"
+ "threshold_rule": "recall of each doubt type at least 95% (raised by change 018 from the levels of deviation 04.1); false question rate at most 5% on the test split"
 }
