@@ -116,7 +116,8 @@ def _store_failed(conn: sqlite3.Connection, path: Path, digest: str, reason: str
 
 
 def _store(conn: sqlite3.Connection, path: Path, digest: str, fields: dict) -> dict:
-    index = web_form.catalog_index(db.catalog_rows(conn))
+    catalog = db.catalog_rows(conn)
+    index = web_form.catalog_index(catalog)
     with conn:
         cursor = conn.execute(
             "INSERT INTO supplier_documents (kind, number, po_reference, supplier_text, issue_date, currency, "
@@ -141,7 +142,7 @@ def _store(conn: sqlite3.Connection, path: Path, digest: str, fields: dict) -> d
                 (
                     cursor.lastrowid,
                     number,
-                    index.get(web_form.match_key(line["product"])),
+                    web_form.resolve_product(line["product"], index, catalog),
                     line["product"],
                     line["quantity"],
                     line["unit_price"],

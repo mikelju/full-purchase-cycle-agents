@@ -48,7 +48,8 @@ UNITS = {
     "critical_errors": "document",
 }
 PRICE_EPSILON = 1e-9
-_INDEX = web_form.catalog_index([{"sku": p.sku, "name": p.name} for p in PRODUCTS])
+_CATALOG = [{"sku": p.sku, "name": p.name} for p in PRODUCTS]
+_INDEX = web_form.catalog_index(_CATALOG)
 
 
 def langsmith_dataset_name(split: str) -> str:
@@ -76,7 +77,7 @@ def _pair(expected: list[dict], produced: list[dict]) -> tuple[list[tuple[dict, 
     free = list(expected)
     pairs, invented = [], []
     for line in produced:
-        sku = _INDEX.get(web_form.match_key(str(line["product"])))
+        sku = web_form.resolve_product(str(line["product"]), _INDEX, _CATALOG)
         match = next((e for e in free if e["sku"] == sku), None) if sku else None
         if match is None:
             invented.append(line)

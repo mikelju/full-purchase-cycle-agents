@@ -268,3 +268,11 @@ def test_eval_upload_includes_the_document_suite(monkeypatch):
     )
     assert harness.cmd_upload(argparse.Namespace(suite="all")) == 0
     assert "document_extraction" in uploaded
+
+
+def test_the_recorded_doc_112_answer_with_sku_and_name_joined_has_no_critical_error():
+    case = next(c for c in dd.load_dataset() if c["id"] == "DOC-112")
+    rows = (dd.DATASET_DIR.parents[1] / "recordings" / "document_extraction.jsonl").read_text(encoding="utf-8")
+    answer = next(r["answer"] for r in map(json.loads, rows.splitlines()) if r["case_id"] == "DOC-112")
+    assert document_eval.grade(case, answer)["counts"]["critical_errors"] == [0, 1]
+    assert document_eval._pair(case["lines"], [{"product": "BND-TUB-C Surgical masks"}])[2]
