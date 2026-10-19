@@ -86,8 +86,11 @@ This file is the durable state: a new session resumes from here and from Git.
 
 ### Batch F - Live record and trace (owner's key, LangSmith tracing off)
 All live spend of the phase happens here, once, after `npm run check` is green with batches A to E.
-- [ ] 13. Pre-flight cost check (C13) - check: from the call count of increment 10, estimate the record cost at 0.006 USD per call and write it here with the running phase total (0 USD before this batch); proceed only if the estimate is under 1 USD; confirm `LANGSMITH_TRACING` is false and the LangSmith key empty in the shell that will run the record, without reading `.env`.
-  - Evidence:
+- [x] 13. Pre-flight cost check (C13) - check: from the call count of increment 10, estimate the record cost at 0.006 USD per call and write it here with the running phase total (0 USD before this batch); proceed only if the estimate is under 1 USD; confirm `LANGSMITH_TRACING` is false and the LangSmith key empty in the shell that will run the record, without reading `.env`.
+  - Evidence: Estimate: 17 model calls (measured in increment 10) x 0.006 USD = 0.102 USD, under the 1 USD threshold; running phase total before this batch: 0 USD.
+    Shell check: `LANGSMITH_TRACING` unset and `LANGSMITH_API_KEY` empty (`.evidence/fase-12/preflight.txt`, untracked).
+    Code: `load_dotenv()` in `cli.py` main uses the default `override=False`, so shell variables win over `.env`; `config.py` forces tracing off only in replay, so record needs the prefix.
+    Record command prefix: `LANGSMITH_TRACING=false LANGSMITH_TRACING_V2=false LANGCHAIN_TRACING_V2=false LANGCHAIN_TRACING=false LANGSMITH_API_KEY=`
 - [ ] 14. `cycle-demo --mode record` once live (C7, C13) - files: new `evals/recordings/cycle_demo.jsonl`, `tests/test_cycle_demo.py` (switch to the versioned recording, remove the temporary-recording writer), `README.md` (cost figures); check: one record run by the owner or with the owner present, output saved as `.evidence/fase-12/cycle-demo-record.txt` with calls, input and output tokens and cost at Haiku 4.5 list prices; the four final states reached; `git diff --stat -- evals/recordings` shows only the new file; replay with no key gives the same end state (`.evidence/fase-12/cycle-demo-replay.txt`); `uv run pytest -q tests/test_cycle_demo.py tests/test_secrets.py` pass with no key; running phase total written here.
   - Stop rule: before every live run, the running phase total plus 1 USD must stay at or under 5 USD, and at most three record runs are made; a run that ends without the four final states is not repeated until its cause is fixed offline; if a run reports more than twice the calls counted in increment 10 or more than 1 USD, stop and ask the owner.
   - Evidence:
