@@ -1,0 +1,7 @@
+Signed delivery note
+Delivery note: CDN-0002
+Customer: CLI-002
+Signed by: Iker Zubiri
+Signing date: 2026-10-19
+Incidents:
+GLV-NIT-L damaged 2
