@@ -1947,6 +1947,18 @@ def cmd_resume(args) -> int:
     return 0
 
 
+def cmd_dashboard(args) -> int:
+    from purchase_cycle import dashboard
+
+    kwargs = {}
+    if args.summaries:
+        kwargs["directory"] = Path(args.summaries)
+    if args.output:
+        kwargs["output"] = Path(args.output)
+    print(f"dashboard written to {dashboard.write_dashboard(**kwargs).resolve()}")
+    return 0
+
+
 def main(argv=None) -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(prog="purchase-cycle")
@@ -2206,6 +2218,11 @@ def main(argv=None) -> int:
     from purchase_cycle.evaluation.cli import add_eval_commands
 
     add_eval_commands(sub)
+
+    dash = sub.add_parser("dashboard", help="build one static HTML page from the evaluation summaries")
+    dash.add_argument("--summaries", default=None, help="folder of summary files (default data/eval_summaries)")
+    dash.add_argument("--output", default=None, help="HTML file to write (default data/dashboard.html)")
+    dash.set_defaults(handler=cmd_dashboard)
 
     args = parser.parse_args(argv)
     if args.command == "demo" and args.resume and not args.thread_id:
