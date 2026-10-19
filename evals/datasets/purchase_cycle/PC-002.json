@@ -1,0 +1,47 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "claims": [],
+    "clarifications": [],
+    "customer_invoices": 2,
+    "customer_responses": [],
+    "failures": 0,
+    "orders": [
+      "served",
+      "served"
+    ],
+    "pending": [],
+    "purchase_orders": 0,
+    "quote_requests": [],
+    "sales_results": []
+  },
+  "id": "PC-002",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers and the clock; the stock of the short SKU set to zero"
+  },
+  "orders": [
+    {
+      "file": "a-form.json",
+      "kind": "web_form",
+      "product": "nitrile gloves M",
+      "quantity": 2
+    },
+    {
+      "file": "d-email.eml",
+      "kind": "email"
+    }
+  ],
+  "steps": [
+    {
+      "crash": "orders",
+      "do": "pass"
+    },
+    {
+      "do": "pass"
+    }
+  ],
+  "tags": [
+    "crash_resume",
+    "served_from_stock"
+  ]
+}
