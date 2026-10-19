@@ -148,7 +148,7 @@ def test_the_grader_counts_a_swapped_type_once_and_the_rest_as_missed_or_invente
 
 
 def test_reconciliation_matching_is_a_local_suite():
-    assert "reconciliation_matching" in harness.SUITES and harness.ALL_SUITES[-7:] == (
+    assert "reconciliation_matching" in harness.SUITES and harness.ALL_SUITES[-8:-1] == (
         "reconciliation_matching",
         "document_extraction",
         "claim_approval",
