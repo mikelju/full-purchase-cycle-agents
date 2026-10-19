@@ -341,7 +341,7 @@ Rules:
 - Name the invoice number and the purchase order number.
 - List every difference by its SKU (or by its product text when the SKU is null) with its amount.
 - Write every amount as a number with two decimals followed by EUR, for example 1234.56 EUR, with no thousands separator.
-- State the amount in dispute.
+- State the amount in dispute in a sentence with the word dispute, with two decimals followed by EUR, even when it is 0.00 EUR.
 - Ask the supplier for a corrected invoice or a credit note.
 - Use only the numbers in the facts; never invent an amount, a date or a promise.
 """
