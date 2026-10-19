@@ -179,5 +179,5 @@ Exact McNemar, old baseline of 636711e versus the re-recorded test split (`mcnem
 - Documents: exact match lost 0 gained 2 (p=0.50), unit price accuracy lost 0 gained 1 (p=1.00).
 - Claims: case pass rate lost 0 gained 3 (p=0.25).
 C19 grep (`git grep -n "DOC-060\|DOC-112\|CLM-044\|CLM-066\|CLM-072\|89.1\|94.3\|91.3"`): the README matches are the two defect-history sentences (document and claim baselines) and are correct; the remaining hits are history in earlier plans, specs and change documents, datasets, recordings, baselines (substring matches of other numbers) and animation colour codes, left as they are; the flow animations are unchanged.
-Push and PR: pending.
+Push and PR: pushed to origin, PR https://github.com/mikelju/full-purchase-cycle-agents/pull/29 open to `main`, not merged.
 Done means: every criterion met with evidence in `.evidence/cambio-018/` (git-ignored), `npm run check` exits 0, at most two adversarial review rounds, branch pushed and PR to `main` open, not merged.
