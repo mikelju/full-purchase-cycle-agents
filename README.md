@@ -550,7 +550,7 @@ By default (`--mode replay`) it reads the extraction answers from the phase 08 r
 - Stock is a single number per SKU, with no reservation, location, lot or expiry.
 - The customer delivery note is a local text file; nothing is sent to the customer.
 - The delivered quantity read by the model goes into stock with no human check (SEC-022 in `docs/security.md`).
-- The phase 08 limitations remain: one invoice and one delivery note per order, fixed tolerances, and the DOC-060 and DOC-112 extraction errors until their change lands.
+- The phase 08 limitations remain: one invoice and one delivery note per order, fixed tolerances.
 
 ## Invoice customers and answer their incidents
 
@@ -671,7 +671,7 @@ Phoenix tracing is never set up inside `npm run check`.
 - An edited response is sent as written: only an empty text is refused and the fact check does not apply to it (SEC-029 in `docs/security.md`).
 - The tone and wording of a draft are not scored, only its facts, and a person reviews every response before it is written.
 - The trace of this phase is local to the owner's machine; the LangSmith trace and the `response_drafting` experiment come with a later change.
-- The phase 08 limitations remain on the purchase side: one invoice and one delivery note per order, fixed tolerances, and the DOC-060 and DOC-112 extraction errors until their change lands.
+- The phase 08 limitations remain on the purchase side: one invoice and one delivery note per order, fixed tolerances.
 
 ## See local traces in Phoenix
 
@@ -908,7 +908,7 @@ The 120 supplier documents in `evals/datasets/document_extraction/` were built w
 1. A seeded planning script (`plan.jsonl`, seed 20261013) fixes, for ten categories of 12 documents (clean invoice, delivery note, price basis, several lines, other unit, VAT and totals, chatty text, reference forms, extra charge, messy layout), the kind, reference and lines each document must state.
 2. The texts in `texts/` were written by the coding agent in ASCII English and checked automatically; after a review, the texts of DOC-097 to DOC-120 (extra charge and messy layout) were rewritten one by one with distinct layouts, and the test recordings of those documents were redone; a share is rendered as PDF (20) and Excel (20) files that are read back with every labelled fact.
 3. A blind second pass by a clean-context agent relabelled every document (`second_pass_review.jsonl`); after the rewrite it re-read the 24 rewritten documents, the review file covers all 120 and all 120 agree (16 rows changed).
-4. A fixed stratified split gives 30 development and 90 test documents; only the development split was used to check the instructions, and no tuning round was needed.
+4. A fixed stratified split gives 30 development and 90 test documents; only the development split was used to check and tune the instructions (one live round in change 018).
 5. There is no owner audit of the labels: the labels come from the planning script and the second pass.
 
 The steps run as `uv run purchase-cycle document-dataset plan`, `check`, `build`, `blind` and `review`.
@@ -917,12 +917,13 @@ The grader compares kind, purchase order reference, lines by SKU, quantity and u
 
 | Metric | Value | 95% interval | Threshold |
 |---|---|---|---|
-| Document exact match (90 documents) | 97.8% | 92.3% to 99.4% | at least 95% |
-| Unit price accuracy (128 priced lines) | 97.7% | 93.3% to 99.2% | at least 95% |
-| Line recall, precision and quantity (181 lines) | 97.2% | 93.7% to 98.8% | reported |
-| Critical errors (90 documents) | 2 | 2.2% (0.6% to 7.7%) | target 0, not met |
+| Document exact match (90 documents) | 100.0% | 95.9% to 100.0% | at least 95% |
+| Unit price accuracy (128 priced lines) | 100.0% | 97.1% to 100.0% | at least 95% |
+| Line recall, precision and quantity (181 lines) | 100.0% | 97.9% to 100.0% | reported |
+| Critical errors (90 documents) | 0 | upper bound 4.1% | target 0, met |
 
-The two failing documents are DOC-060 (other unit), where the model dropped two lines and invented two descriptions in a pack-size conversion case, and DOC-112 (messy layout), where product names wrapped over several lines next to the SKU made the model write the SKU and the description as one product; both are critical errors, and the target of 0 is reported, not gated.
+The first baseline had two critical errors, DOC-060 (other unit, a pack size kept in the product with the wrong quantity) and DOC-112 (messy layout, the SKU and its wrapped description joined as one product).
+Change 018 fixed them with two instruction lines (the number and unit after a product is the quantity; write only the code in the product field) and a shared resolver that links a product text made of a SKU and its own product name to that SKU, so the target of 0 is now met.
 Kind and reference were read correctly in all 90 documents (100.0%, 95.9% to 100.0%).
 About 90 documents give a wide interval, and the text writer and the evaluated model belong to the same family, so the figures may be optimistic.
 The baseline is `evals/baselines/document_extraction.json`, stored in mode replay: the 90 recorded test answers, of which 72 are the original live answers and 18 were re-recorded live after the texts DOC-097 to DOC-120 were rewritten (DV-05 in the phase 08 plan).
@@ -962,12 +963,12 @@ The Claude Haiku 4.5 baseline on the 234 test emails (`evals/baselines/email_ord
 
 | Metric | Value | 95% interval |
 |---|---|---|
-| Intake accuracy (234 emails) | 98.7% | 96.3% to 99.6% |
-| Line recall (586 expected lines) | 96.9% | 95.2% to 98.0% |
-| Line precision (574 extracted lines) | 99.0% | 97.7% to 99.5% |
-| Field accuracy, SKU (586 expected lines) | 97.3% | 95.6% to 98.3% |
-| Field accuracy, quantity (570 lines with the right SKU) | 99.6% | 98.7% to 99.9% |
-| Out-of-catalog detection (195 order emails) | 96.4% | 92.8% to 98.3% |
+| Intake accuracy (234 emails) | 99.1% | 96.9% to 99.8% |
+| Line recall (586 expected lines) | 98.0% | 96.5% to 98.8% |
+| Line precision (582 extracted lines) | 98.6% | 97.3% to 99.3% |
+| Field accuracy, SKU (586 expected lines) | 98.6% | 97.3% to 99.3% |
+| Field accuracy, quantity (578 lines with the right SKU) | 99.3% | 98.2% to 99.7% |
+| Out-of-catalog detection (195 order emails) | 96.9% | 93.5% to 98.6% |
 | Email exact match (195 order emails) | 94.4% | 90.2% to 96.8% |
 
 The three gated metrics reach 95%, so the threshold is 95%.
@@ -978,17 +979,18 @@ The Claude Haiku 4.5 baseline on the 150 test orders and 453 lines (`evals/basel
 
 | Metric | Value | 95% interval | Threshold |
 |---|---|---|---|
-| Recall, ambiguous product (55 lines) | 89.1% | 78.2% to 94.9% | at least 89.1% |
-| Recall, unknown product (53 lines) | 94.3% | 84.6% to 98.1% | at least 94.3% |
-| Recall, doubtful quantity (46 lines) | 91.3% | 79.7% to 96.6% | at least 91.3% |
+| Recall, ambiguous product (55 lines) | 100.0% | 93.5% to 100.0% | at least 95% |
+| Recall, unknown product (53 lines) | 98.1% | 90.1% to 99.7% | at least 95% |
+| Recall, doubtful quantity (46 lines) | 100.0% | 92.3% to 100.0% | at least 95% |
 | False question rate (48 orders with no doubt) | 0.0% | 0.0% to 7.4% | at most 5% |
-| Precision, ambiguous product (49 doubts raised) | 100.0% | 92.7% to 100.0% | reported |
-| Precision, unknown product (51 doubts raised) | 98.0% | 89.7% to 99.7% | reported |
-| Precision, doubtful quantity (43 doubts raised) | 97.7% | 87.9% to 99.6% | reported |
+| Precision, ambiguous product (55 doubts raised) | 100.0% | 93.5% to 100.0% | reported |
+| Precision, unknown product (53 doubts raised) | 98.1% | 90.1% to 99.7% | reported |
+| Precision, doubtful quantity (47 doubts raised) | 97.9% | 88.9% to 99.6% | reported |
 
-The spec gate was 95% recall per doubt type; the baseline missed it, and the owner set the three recall thresholds at the measured level (deviation 04.1 in [docs/plans/fase-04-excepciones/plan.md](docs/plans/fase-04-excepciones/plan.md)).
-Every miss is an email line: the phase 03 extractor drops some lines, returns a non-integer quantity that the schema rejects, or copies a purpose clause such as "for the treatment room" into the line text so the candidate search finds one product or none; web form recall is 100% for the three types.
-The extractor fix is a separate change, [docs/changes/001-email-extractor-dropped-lines.md](docs/changes/001-email-extractor-dropped-lines.md), not yet authorized.
+The spec gate is 95% recall per doubt type.
+The first baseline missed it and the owner set the three thresholds at the measured level (deviation 04.1 in [docs/plans/fase-04-excepciones/plan.md](docs/plans/fase-04-excepciones/plan.md)); change 018 fixed the phase 03 extractor and raised the three thresholds back to 95%.
+The remaining misses are email lines: CLD-0149 (the intake model drops a line, so there is no produced line), CLD-0107 (one extra quantity doubt) and CLD-0123-L2 (an unknown doubt raised next to the expected quantity doubt); web form recall is 100% for the three types.
+The development split is not replayed (its recordings were not kept); in the live tuning run of change 018 its recall for unknown products was 100.0% (n=17), against a pre-existing 94.1% before the tuning.
 
 `uv run purchase-cycle eval --suite clarification_answers` sends each case's doubts, question and answer to the interpreter and compares its reading with the expected resolution per line.
 It prints resolution accuracy per doubtful line (gated) and case exact match (reported), with 95% Wilson intervals globally, per channel and per category, and the failures.
@@ -1056,16 +1058,15 @@ The Claude Haiku 4.5 baseline on the 60 test claims (`evals/baselines/claim_draf
 
 | Metric | Value | 95% interval | Threshold |
 |---|---|---|---|
-| Case pass rate (60 claims) | 95.0% | 86.3% to 98.3% | at least 95% |
+| Case pass rate (60 claims) | 100.0% | 94.0% to 100.0% | at least 95% |
 | Reference accuracy | 100.0% | - | reported |
-| Discrepancy coverage | 97.8% | - | reported |
-| Amount in dispute accuracy | 98.3% | - | reported |
+| Discrepancy coverage | 100.0% | - | reported |
+| Amount in dispute accuracy | 100.0% | - | reported |
 | Invented amount rate | 0.0% | - | reported |
-| Critical errors (60 claims) | 3 | 1.7% to 13.7% | target 0, not met |
+| Critical errors (60 claims) | 0 | upper bound 6.0% | target 0, met |
 
-The gate sits exactly on the edge (57 of 60).
-The three critical errors are CLM-044 (amount in dispute missing) and CLM-066 and CLM-072 (a difference named only by product text is omitted).
-They are reported, not hidden.
+The first baseline was 57 of 60, with three critical errors: CLM-044 (amount in dispute missing, a model miss) and CLM-066 and CLM-072 (a grader and fact check defect).
+Change 018 made product matching in the grader and the fact check case-insensitive for those two and tuned the instructions so a draft states the amount in dispute also when it is 0.00 EUR.
 The grader and the run-time fact check share one implementation (`check_draft`), so the evaluation cannot measure drafts that the check wrongly passes; this is a known limit.
 
 `uv run purchase-cycle eval --suite claim_approval` runs the 35 scenarios of `evals/datasets/claim_approval/` through the same functions as the CLI on a temporary database, with the drafting call given by a test double so no model is called.
@@ -1112,7 +1113,7 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - There is no automatic timeout or reminder; an unanswered thread stays paused until an operator runs `clarify close`.
 - A wrong variant picked with confidence by the matcher or the extractor raises no product doubt when the line text fits a single catalog product or none.
 - The candidate search and the extractor send or use the whole catalog, with the same context-window limitation as phase 03.
-- Detection inherits the phase 03 extractor limitations: dropped email lines, non-integer quantities rejected by the schema and purpose clauses copied into the line text lose doubts on email orders, so the detection recall thresholds sit at the measured level until change 001 is done.
+- Detection inherits the phase 03 intake limitation: when the intake model drops a line (CLD-0149) the email order loses that doubt.
 - Four detection lines with generic hints ("single", "free", "cm size", "litre") are labelled ambiguous by the runtime rule while a person may read them as unknown or as the default size; the owner accepted them as a recorded limitation of the second pass.
 - The LangSmith trace of the phase 04 demo and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
 - WhatsApp is simulated by files: there is no webhook, no delivery receipt and no media handling; a message that is not text gets a reply asking for text.
@@ -1142,7 +1143,7 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - No credit notes, payment terms, tax rules, freight allocation or multi-currency handling; an invoice that states VAT separately is read net.
 - Credit notes from the supplier and a payment block are not modelled: a claim is one email and its answer is not read.
 - The tolerance (0.01 EUR per unit, quantity 0) is a fixed number, not learned per supplier.
-- In `document_extraction`, 2 of 90 test documents (DOC-060, other unit, and DOC-112, messy layout) are critical errors against a target of 0, and the writer and the evaluated model belong to the same family, so the figures may be optimistic.
+- The `document_extraction` figures (0 critical errors in 90 test documents) come from texts written by a model of the same family as the one evaluated, so they may be optimistic.
 - The sample documents of the demo list the SKU only: in a first recording a description column made the model join it to the SKU, which left the line unresolved, so the reading of free descriptions relies on the catalog matching of phase 02.
 - The LangSmith trace of a live `reconcile-demo` run and the experiments of the two new evaluations are pending until the LangSmith trace quota resets, around 2026-11-05.
 - A claim for an invoice whose differences are all in the supplier's favour has 0.00 EUR in dispute and asks for a corrected invoice (the LV-0303 case).

@@ -109,7 +109,11 @@ Commits, one per defect group, then the re-record commit; each group lists the f
   Offline: full pytest 1625 passed (`pytest-full.txt`), ruff check and format clean.
   Deviation (cost-saving, same precedent as DV-05): the test and demo records ran through a one-off reuse wrapper (`rec.py`, not committed) that replays an answer whose recording key already exists in any recording file and calls the model only for new keys; the figures above are therefore identical to a full re-record.
   Deviation (LangSmith): the first email record run logged one LangSmith experiment; the clarification record hit a "dataset not found" error and was re-run with `LANGSMITH_API_KEY` empty, as were all later live runs.
-- [ ] 8. Documentation commit (C19): README, `docs/security.md`, master plan status line; animations only if C19 requires it.
+- [x] 8. Documentation commit (C19): README, `docs/security.md`, master plan status line; animations only if C19 requires it.
+  README: email extraction, detection (thresholds 95%, figures, remaining misses CLD-0149, CLD-0107, CLD-0123-L2), document extraction (0 of 90 critical) and claim drafting (60 of 60) tables and prose, the phase 08 limitation lines of the receipt and sales sections, and the Limits lines; `docs/security.md` SEC-022 no longer names DOC-060 and DOC-112; master plan decision row added.
+  README transcripts of the orders, reconcile and claim demos were compared with the replayed demo output; the lines that changed were updated, the rest are unchanged.
+  Flow animations (`docs/assets/flow-animation/`): unchanged, they show no figure or output that changed, and the change 017 reconcile animation keeps its -25.00 EUR story.
+  Known and not fixed stay logged: CLD-0149, SHARPS-15 on EML-0215 and EML-0237; the dev split is not replayed (recordings not kept), its recall_unknown was 100.0% (17) in the live tuning run.
 - [ ] 9. `npm run check` (C20), at most two adversarial review rounds, push and PR to `main`.
 
 ## Decisions
