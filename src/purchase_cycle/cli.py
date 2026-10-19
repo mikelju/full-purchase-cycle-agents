@@ -2199,6 +2199,10 @@ def main(argv=None) -> int:
 
     add_sales_commands(sub)
 
+    from purchase_cycle.cycle_cli import add_cycle_commands
+
+    add_cycle_commands(sub)
+
     from purchase_cycle.evaluation.cli import add_eval_commands
 
     add_eval_commands(sub)
