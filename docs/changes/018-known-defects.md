@@ -114,7 +114,8 @@ Commits, one per defect group, then the re-record commit; each group lists the f
   README transcripts of the orders, reconcile and claim demos were compared with the replayed demo output; the lines that changed were updated, the rest are unchanged.
   Flow animations (`docs/assets/flow-animation/`): unchanged, they show no figure or output that changed, and the change 017 reconcile animation keeps its -25.00 EUR story.
   Known and not fixed stay logged: CLD-0149, SHARPS-15 on EML-0215 and EML-0237; the dev split is not replayed (recordings not kept), its recall_unknown was 100.0% (17) in the live tuning run.
-- [ ] 9. `npm run check` (C20), at most two adversarial review rounds, push and PR to `main`.
+- [x] 9a. `npm run check` (C20) on f0901b2: exit 0, ruff clean, 1625 pytest passed in 900.48 s, every evaluation in replay with all gates PASS, no key and no `.env`; output in `.evidence/cambio-018/npm-check.txt`.
+- [ ] 9. Adversarial review, at most two rounds, push and PR to `main`.
 
 ## Decisions
 Owner decisions of 2026-10-19 in `.lavish/cambio-018-decisiones.html`, the recommended option in all three:
