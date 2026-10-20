@@ -716,6 +716,9 @@ That recording is made once with `--mode record`, which made 18 model calls (4 s
 Cost of the record run: 18 calls at Claude Haiku 4.5 list prices, at most about 0.22 USD (an upper bound: only the clarification answer step prints its token usage, 740 uncached and 8587 cache-write input tokens and 68 output tokens, about 0.012 USD).
 Elapsed time of the replay run: about 24 seconds on the development machine.
 
+Interactive walkthrough of the 14-step demo (Spanish): [docs/assets/cycle-demo-visual-es.html](docs/assets/cycle-demo-visual-es.html).
+Guide to reading a Phoenix trace and the evaluation dashboard (Spanish): [docs/assets/trace-dashboard-guide-es.html](docs/assets/trace-dashboard-guide-es.html).
+
 ### See the evaluations in a dashboard
 
 ```

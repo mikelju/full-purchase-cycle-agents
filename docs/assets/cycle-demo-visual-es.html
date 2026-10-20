@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ciclo de compra - demo de 14 pasos</title>
+<style>
+:root{
+  --bg:#EDF1F7;--panel:#fff;--edge:#C2CCDB;--ink:#0F172A;--muted:#52627A;--soft:#F4F6FA;
+  --accent:#0891B2;--title:#4338CA;--ok:#0D9488;--ok-soft:#CCFBF1;--warn:#B45309;--warn-soft:#FEF3C7;
+  --bad:#DC2626;--bad-soft:#FEE2E2;--blue:#2563EB;--blue-soft:#DBEAFE;--vio:#7C3AED;--vio-soft:#EDE9FE;
+  --mono:ui-monospace,"JetBrains Mono",Consolas,monospace;--sans:Inter,system-ui,"Segoe UI",sans-serif;color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0B1220;--panel:#141C2E;--edge:#2B3850;--ink:#E6EBF5;--muted:#9AA8C0;--soft:#1A2438;
+  --accent:#22D3EE;--title:#A5B4FC;--ok:#2DD4BF;--ok-soft:#0F3B38;--warn:#FBBF24;--warn-soft:#3B2D0B;
+  --bad:#F87171;--bad-soft:#3F1618;--blue:#60A5FA;--blue-soft:#14284A;--vio:#A78BFA;--vio-soft:#2A2250;color-scheme:dark;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);padding:14px 16px 130px}
+.wrap{max-width:1280px;margin:0 auto;display:grid;gap:12px}
+h1{font:700 15px/1.3 var(--mono);color:var(--title);margin:0;letter-spacing:.02em}
+h2{font:700 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--title);margin:0 0 8px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.clock{font:600 12px var(--mono);color:var(--muted)}
+.clock b{color:var(--ink)}
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:12px 14px}
+.graph{position:relative}
+.gtitle{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.gtitle code{font:600 12px var(--mono);color:var(--muted)}
+.chain{position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:22px;padding:6px 0 2px}
+.stage{position:relative;border:1.5px dashed var(--edge);background:var(--soft);border-radius:10px;padding:10px;min-height:118px;opacity:.6;transition:all .45s}
+.stage:not(:last-child)::after{content:"";position:absolute;right:-22px;top:50%;width:22px;border-top:2px solid var(--edge)}
+.stage h3{margin:0 0 2px;font:700 14px var(--sans)}
+.stage .calls{font:500 10.5px var(--mono);color:var(--muted);margin-bottom:8px}
+.stage .cnt{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font:600 11px var(--mono);padding:2px 7px;border-radius:99px;background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok);animation:pop .4s}
+.stage .none{font:500 11px var(--mono);color:var(--muted)}
+.stage.active{opacity:1;border-style:solid;border-color:var(--accent);background:var(--panel);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.stage.nothing{opacity:.45}
+.stage.gate{opacity:1;border-style:solid;border-color:var(--warn);background:var(--warn-soft);animation:pulse 1.2s infinite}
+.stage.done{opacity:1;border-style:solid;border-color:var(--ok);background:var(--panel)}
+.token{position:absolute;width:20px;height:20px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent);left:0;top:0;transform:translate(-40px,-40px);opacity:0;transition:transform .6s ease,opacity .3s;z-index:3;pointer-events:none}
+.token.on{opacity:1}
+.pend{margin-top:8px;display:none;font:600 11.5px var(--mono);color:var(--warn)}
+.pend.on{display:block}
+.pend span{display:inline-block;margin:2px 4px 0 0;padding:2px 8px;border:1px dashed var(--warn);border-radius:6px;background:var(--warn-soft);animation:pop .4s}
+.stepcard{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.num{font:800 28px var(--mono);color:var(--title);line-height:1}
+.stepcard .t{font:700 15px var(--sans)}
+.cmd{font:500 12px var(--mono);background:var(--soft);border:1px solid var(--edge);border-radius:6px;padding:5px 8px;margin-top:6px;overflow-wrap:anywhere}
+.tag{display:inline-block;font:700 10.5px var(--mono);border-radius:99px;padding:2px 8px;margin-right:6px;background:var(--blue-soft);color:var(--blue)}
+.tag.h{background:var(--warn-soft);color:var(--warn)}
+.tag.c{background:var(--vio-soft);color:var(--vio)}
+.gate{display:none;margin-top:10px;border:2px solid var(--warn);background:var(--warn-soft);border-radius:12px;padding:12px;gap:12px;grid-template-columns:auto 1fr}
+.gate.on{display:grid;animation:pop .45s}
+.person{font-size:34px;line-height:1}
+.gate .gt{font:800 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--warn)}
+.gate .what{font:600 13px var(--sans);margin:2px 0 6px}
+.gate .cmd{background:var(--panel)}
+.choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.choice{font:700 12px var(--mono);padding:6px 14px;border-radius:8px;border:1.5px solid var(--edge);background:var(--panel);color:var(--muted);transition:all .5s}
+.choice.pick{background:var(--ok);border-color:var(--ok);color:#fff;transform:scale(1.07)}
+.choice.pick.no{background:var(--bad);border-color:var(--bad)}
+.choice.dim{opacity:.35}
+.result{margin-top:8px;font:500 12px var(--mono);color:var(--ink);opacity:0;transform:translateY(4px);transition:all .5s}
+.result.on{opacity:1;transform:none}
+.clockjump{display:none;margin-top:10px;align-items:center;gap:14px;border:2px solid var(--vio);background:var(--vio-soft);border-radius:12px;padding:12px}
+.clockjump.on{display:flex;animation:pop .45s}
+.hand{font-size:40px;display:inline-block}
+.clockjump.on .hand{animation:spin 1.6s ease-in-out}
+.clockjump .big{font:800 22px var(--mono);color:var(--vio)}
+.cols{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.board{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{border:1.5px solid var(--edge);border-radius:12px;padding:10px 12px;background:var(--soft);transition:all .5s}
+.card .top{display:flex;align-items:center;gap:8px}
+.letter{font:800 18px var(--mono);width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;background:var(--title);color:var(--bg)}
+.card .who{font:600 12.5px var(--sans)}
+.card .prod{font:500 11.5px var(--mono);color:var(--muted)}
+.ch{margin-left:auto;font:500 11px var(--mono);color:var(--muted);text-align:right}
+.ch i{font-style:normal;font-size:20px;display:block;line-height:1}
+.status{margin-top:8px;font:700 12px var(--sans);padding:6px 9px;border-radius:8px;background:var(--panel);border:1px solid var(--edge);transition:all .5s}
+.status small{display:block;font:500 11px var(--mono);margin-top:2px;opacity:.85}
+.card.s-idle .status{color:var(--muted)}
+.card.s-paused{border-color:var(--warn)}.card.s-paused .status{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.card.s-stored{border-color:var(--blue)}.card.s-stored .status{background:var(--blue-soft);color:var(--blue);border-color:var(--blue)}
+.card.s-wait{border-color:var(--vio)}.card.s-wait .status{background:var(--vio-soft);color:var(--vio);border-color:var(--vio)}
+.card.s-ok{border-color:var(--ok)}.card.s-ok .status{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.card.s-bad{border-color:var(--bad)}.card.s-bad .status{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.card.flash{animation:flash 1s}
+.lane{display:grid;gap:6px;align-content:start}
+.lane h4{margin:6px 0 0;font:700 10.5px var(--mono);color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.box{display:grid;gap:5px}
+.obj{display:flex;gap:8px;align-items:baseline;border:1px solid var(--edge);border-left:4px solid var(--blue);background:var(--soft);border-radius:8px;padding:5px 8px;font:500 11.5px var(--mono);animation:slide .5s}
+.obj b{font-weight:800}
+.obj.k-po{border-left-color:var(--ok)}.obj.k-inv{border-left-color:var(--warn)}.obj.k-sinv{border-left-color:var(--vio)}
+.obj.bad{border-left-color:var(--bad)}.obj.bad em{color:var(--bad)}
+.obj em{font-style:normal;color:var(--muted);margin-left:auto;text-align:right}
+.empty{font:500 11px var(--mono);color:var(--muted);padding:2px 4px}
+.mail{display:flex;gap:8px;align-items:center;border:1px solid var(--edge);background:var(--panel);border-radius:6px;padding:5px 8px;font:500 10.5px var(--mono);animation:fly .9s}
+.mail:before{content:"\2709";font-size:20px;line-height:1}
+.mail b{display:block;font-weight:700;color:var(--ink)}
+.mail span{color:var(--muted);overflow-wrap:anywhere}
+.final{display:none}.final.on{display:block;animation:pop .6s}
+.final ul{margin:0;padding:0;list-style:none;display:grid;gap:6px;font:500 12.5px var(--mono)}
+.final li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.pill{font-weight:700;padding:1px 8px;border-radius:99px}
+.pill.g{background:var(--ok-soft);color:var(--ok)}.pill.b{background:var(--blue-soft);color:var(--blue)}.pill.v{background:var(--vio-soft);color:var(--vio)}.pill.w{background:var(--warn-soft);color:var(--warn)}
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--edge);padding:8px 16px 10px;z-index:10}
+.dockin{max-width:1280px;margin:0 auto;display:grid;gap:8px}
+.ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+button{font:600 12px var(--mono);color:var(--ink);background:var(--soft);border:1px solid var(--edge);border-radius:7px;padding:6px 11px;cursor:pointer}
+button:hover{border-color:var(--accent)}button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ctl label{font:500 11px var(--mono);color:var(--muted);margin-left:auto;display:flex;gap:6px;align-items:center}
+.steps{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}
+.dot{flex:1 0 auto;min-width:40px;padding:5px 4px;text-align:center;font:700 11px var(--mono);border-radius:6px;border:1px solid var(--edge);background:var(--soft);cursor:pointer;color:var(--muted)}
+.dot.h{border-color:var(--warn)}.dot.c{border-color:var(--vio)}
+.dot.past{background:var(--ok-soft);color:var(--ok)}
+.dot.cur{background:var(--accent);color:#fff;border-color:var(--accent)}
+.dot small{display:block;font-weight:500;font-size:9px;opacity:.85}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@keyframes slide{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+@keyframes fly{0%{opacity:0;transform:translate(-40px,-30px) rotate(-6deg)}60%{opacity:1}100%{transform:none}}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--accent)}40%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 30%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes pulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--warn) 30%,transparent)}}
+@keyframes spin{to{transform:rotate(720deg)}}
+@media (max-width:900px){
+  .chain{grid-template-columns:1fr;gap:20px}.stage{min-height:0}
+  .stage:not(:last-child)::after{right:auto;left:50%;top:auto;bottom:-20px;width:0;height:20px;border-top:0;border-left:2px solid var(--edge)}
+  .cols{grid-template-columns:1fr}
+}
+@media (max-width:560px){.board{grid-template-columns:1fr}.num{font-size:22px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>purchase_cycle - demo de 14 pasos (modo replay)</h1>
+    <div class="clock">Reloj simulado: <b id="simclock">tiempo real</b></div>
+  </header>
+
+  <section class="panel graph">
+    <div class="gtitle"><h2>Orquestador - grafo purchase_cycle (5 etapas en orden fijo)</h2><code id="passid">&nbsp;</code></div>
+    <div class="chain" id="chain"><div class="token" id="token"></div></div>
+    <div class="pend" id="pend"></div>
+  </section>
+
+  <section class="panel">
+    <div class="stepcard">
+      <div class="num" id="snum">1</div>
+      <div>
+        <div><span class="tag" id="stag">cycle run</span><span class="t" id="stitle"></span></div>
+        <div class="cmd" id="scmd"></div>
+      </div>
+    </div>
+    <div class="gate" id="gate">
+      <div class="person">&#129489;</div>
+      <div>
+        <div class="gt">Decisi&oacute;n pendiente - el flujo se detiene</div>
+        <div class="what" id="gwhat"></div>
+        <div class="cmd" id="gcmd"></div>
+        <div class="choices" id="gchoices"></div>
+        <div class="result" id="gresult"></div>
+      </div>
+    </div>
+    <div class="clockjump" id="cj"><span class="hand">&#128339;</span><div><div class="big" id="cjbig"></div><div style="font:12px var(--mono);color:var(--muted)">el reloj simulado salta; nada se ejecuta solo</div></div></div>
+  </section>
+
+  <div class="cols">
+    <section class="panel">
+      <h2>Pedidos de clientes</h2>
+      <div class="board" id="board"></div>
+    </section>
+    <section class="panel lane">
+      <h2>Objetos de compra</h2>
+      <h4>Peticiones de cotizaci&oacute;n</h4><div class="box" id="l-qr"></div>
+      <h4>Pedidos a proveedor</h4><div class="box" id="l-po"></div>
+      <h4>Facturas de proveedor y reclamaciones</h4><div class="box" id="l-inv"></div>
+      <h4>Factura de venta</h4><div class="box" id="l-sinv"></div>
+      <h4>Bandeja de salida</h4><div class="box" id="l-mail"></div>
+    </section>
+  </div>
+
+  <section class="panel final" id="final">
+    <h2>Resumen final</h2>
+    <ul>
+      <li><span class="pill g">servido</span> pedido 1 (A): factura cuadrada</li>
+      <li><span class="pill g">servido</span> pedido 4 (B): factura con discrepancias, abono enviado</li>
+      <li><span class="pill g">servido</span> pedido 2 (C): factura esperando albar&aacute;n firmado</li>
+      <li><span class="pill b">recibido</span> pedido 3 (D): sin facturar</li>
+      <li><span class="pill w">reclamaciones</span> 1 enviada (INV-0002), 1 rechazada (INV-0004)</li>
+      <li><span class="pill v">en espera</span> QR-0003 GLV-NIT-XS x1</li>
+    </ul>
+  </section>
+</div>
+
+<div class="dock"><div class="dockin">
+  <div class="ctl">
+    <button id="bPrev" aria-label="Paso anterior">&#9664; Anterior</button>
+    <button id="bPlay">&#10074;&#10074; Pausa</button>
+    <button id="bNext" aria-label="Paso siguiente">Siguiente &#9654;</button>
+    <button id="bRe">&#8635; Reiniciar</button>
+    <label>Velocidad <input type="range" id="speed" min="0.25" max="3" step="0.25" value="1"> <span id="speedv">1x</span></label>
+  </div>
+  <div class="steps" id="steps"></div>
+</div></div>
+
+<script>
+"use strict";
+var STAGES=[
+ {k:"orders",n:"Pedidos",c:"web_form / email_order / whatsapp_order"},
+ {k:"quotes",n:"Cotizaciones",c:"quotes + quote_decision"},
+ {k:"reconcile",n:"Conciliación compras",c:"reconciliation + claims"},
+ {k:"receipts",n:"Recepciones",c:"receipts"},
+ {k:"sales",n:"Ventas",c:"sales + customer_responses"}
+];
+var ORDERS={
+ A:{n:1,ch:"web",icon:"🌐",who:"CLI-001",prod:"Guantes nitrilo M x2"},
+ B:{n:4,ch:"email",icon:"✉️",who:"Iker Zubiri (CLI-002)",prod:"Guantes nitrilo x10 (talla L tras aclarar)"},
+ C:{n:2,ch:"WhatsApp",icon:"💬",who:"34600101201",prod:"Guantes nitrilo S x4"},
+ D:{n:3,ch:"web",icon:"🌐",who:"CLI-001",prod:"Guantes nitrilo XS x3"}
+};
+var CLAR="purchase-cycle clarify answer email-c0001-02-email-b --text ...";
+function run(p,c,pend,o){return Object.assign({kind:"run",pass:p,counts:c,pend:pend||[]},o)}
+var S=[
+ run("cycle-run-0001",{orders:["4 entradas","3 guardados","1 en pausa"],quotes:["2 iniciadas","2 en espera"],reconcile:null,receipts:["1 servido","1 emitido"],sales:["1 facturado","1 conciliado"]},
+  ["clarification email-c0001-02-email-b"],{title:"Primera pasada: entran 4 pedidos, uno queda en pausa",
+  orders:{A:["ok","Servido y facturado","con el stock existente"],B:["paused","En pausa: pide aclaración","email-c0001-02-email-b"],C:["wait","Guardado - espera stock","QR-0001 en cotización"],D:["wait","Guardado - espera stock","QR-0002 en cotización"]},
+  objs:[["qr","QR-0001","GLV-NIT-S x4","iniciada"],["qr","QR-0002","GLV-NIT-XS x3","iniciada"]]}),
+ {kind:"human",title:"Operador responde a la aclaración",cmd:CLAR,gate:{what:"Aclaración de pedido por email (hilo email-c0001-02-email-b)",choices:["responder","cerrar"],pick:0,
+   result:"Respuesta del cliente: \"Size L, please.\" -> GLV-NIT-L x 10, pedido 4 guardado, 69,00 EUR"},
+  orders:{B:["stored","Guardado como pedido 4","GLV-NIT-L x10 - 69,00 EUR"]},
+  mails:[["Re: Gloves order","a iker.cli-002@example.com","Pedido 4 registrado - total 69,00 EUR"]]},
+ run("cycle-run-0002",{orders:["2 entradas","2 guardados"],quotes:["2 en espera"],reconcile:null,receipts:["1 servido","1 emitido"],sales:["1 facturado","1 conciliado"]},[],
+  {title:"Segunda pasada: el pedido B ya se sirve",orders:{B:["ok","Servido y facturado","SINV-0002"]},objs:[["sinv","SINV-0002","factura de venta - pedido 4","emitida"]]}),
+ {kind:"clock",title:"El reloj simulado avanza",cmd:"purchase-cycle clock advance",time:"2026-10-18 09:00"},
+ run("cycle-run-0003",{orders:["2 entradas","2 guardados"],quotes:["2 respuestas aceptadas","2 en espera","2 decididas"],reconcile:null,receipts:null,sales:null},
+  ["quote_approval QR-0001","quote_approval QR-0002"],{title:"Llegan las respuestas de proveedor: 2 cotizaciones esperan decisión",
+  objs:[["qr","QR-0001","GLV-NIT-S x4","respuesta aceptada"],["qr","QR-0002","GLV-NIT-XS x3","respuesta aceptada"]]}),
+ {kind:"human",title:"Operador aprueba QR-0001",cmd:"purchase-cycle quotes approve QR-0001",gate:{what:"Aprobación de cotización QR-0001",choices:["aprobar","rechazar"],pick:0,
+   result:"PO-0001 a SUP-002 - GLV-NIT-S x4 a 4,1000 EUR = 16,40 - entrega 2026-10-23"},
+  orders:{C:["wait","Esperando stock","PO-0001 pedido, entrega 2026-10-23"]},objs:[["po","PO-0001","SUP-002 - 16,40 EUR","pedido"]]},
+ {kind:"human",title:"Operador aprueba QR-0002",cmd:"purchase-cycle quotes approve QR-0002",gate:{what:"Aprobación de cotización QR-0002",choices:["aprobar","rechazar"],pick:0,
+   result:"PO-0002 a SUP-002 - GLV-NIT-XS x3 a 4,1000 EUR = 12,30 - entrega 2026-10-23"},
+  orders:{D:["wait","Esperando stock","PO-0002 pedido, entrega 2026-10-23"]},objs:[["po","PO-0002","SUP-002 - 12,30 EUR","pedido"]]},
+ run("cycle-run-0004",{orders:["2 entradas","2 guardados"],quotes:null,reconcile:["4 documentos","4 nuevos","2 reclamaciones redactadas"],receipts:["2 recibidos","1 servido","1 emitido"],sales:["1 facturado","1 conciliado"]},
+  ["claim INV-0002","claim INV-0004"],{title:"Llega la mercancía y 4 facturas de proveedor: 2 reclamaciones redactadas",
+  orders:{C:["ok","Servido y facturado","factura esperando albarán firmado"],D:["stored","Recibido","mercancía llegada, sin facturar"]},
+  objs:[["inv","INV-0001","factura de proveedor","registrada"],["inv","INV-0002","factura de proveedor","reclamación redactada"],["inv","INV-0003","factura de proveedor","registrada"],["inv","INV-0004","factura de proveedor","reclamación redactada"]]}),
+ {kind:"human",title:"Operador aprueba la reclamación INV-0002",cmd:"purchase-cycle reconcile approve INV-0002",gate:{what:"Reclamación al proveedor INV-0002",choices:["aprobar","rechazar"],pick:0,
+   result:"Reclamación enviada tal cual a ventas@dissanorte.example.com (CLAIM-INV-0002-SUP-002.eml)"},
+  objs:[["inv","INV-0002","reclamación al proveedor","enviada"]],mails:[["CLAIM-INV-0002-SUP-002","a ventas@dissanorte.example.com","Reclamación de factura INV-0002"]]},
+ {kind:"human",title:"Operador rechaza la reclamación INV-0004",cmd:"purchase-cycle reconcile reject INV-0004",gate:{what:"Reclamación al proveedor INV-0004",choices:["aprobar","rechazar"],pick:1,
+   result:"Reclamación rechazada - no se envía email"},
+  objs:[["inv","INV-0004","reclamación al proveedor","rechazada",true]]},
+ run("cycle-run-0005",{orders:["2 entradas","2 guardados"],quotes:["1 iniciada","1 en espera"],reconcile:["4 documentos"],receipts:null,sales:null},[],
+  {title:"Nace una nueva petición de cotización",objs:[["qr","QR-0003","GLV-NIT-XS x1","iniciada, en espera"]]}),
+ run("cycle-run-0006",{orders:["2 entradas","2 guardados"],quotes:["1 en espera"],reconcile:["4 documentos"],receipts:null,sales:["2 notas firmadas","2 conciliadas","1 corrección","1 respuesta redactada"]},
+  ["customer_response SINV-0002"],{title:"Llegan las notas firmadas: una cuadra y otra no",
+  orders:{A:["ok","Servido, factura cuadrada","nota firmada conciliada"],B:["bad","Factura con discrepancias","respuesta con abono redactada"]},
+  objs:[["sinv","SINV-0002","factura de venta - pedido 4","respuesta redactada"]]}),
+ {kind:"human",title:"Operador aprueba la respuesta al cliente",cmd:"purchase-cycle sales approve SINV-0002",gate:{what:"Respuesta al cliente SINV-0002 (con abono)",choices:["aprobar","rechazar"],pick:0,
+   result:"Respuesta enviada tal cual a iker.cli-002@example.com (RESPONSE-SINV-0002.eml)"},
+  orders:{B:["ok","Servido, abono enviado","factura con discrepancias"]},objs:[["sinv","SINV-0002","factura de venta - pedido 4","abono enviado"]],
+  mails:[["RESPONSE-SINV-0002","a iker.cli-002@example.com","Respuesta con abono"]]},
+ run("cycle-run-0007",{orders:["2 entradas","2 guardados"],quotes:["1 en espera"],reconcile:["4 documentos"],receipts:null,sales:null},[],
+  {title:"Pasada final: no queda ninguna decisión pendiente",final:true})
+];
+var HUMAN_STAGE={1:0,5:1,6:1,8:2,9:2,12:4};
+var el=function(i){return document.getElementById(i)};
+var chain=el("chain"),token=el("token");
+STAGES.forEach(function(s){var d=document.createElement("div");d.className="stage";d.id="st-"+s.k;
+ d.innerHTML='<h3>'+s.n+'</h3><div class="calls">llama a: '+s.c+'</div><div class="cnt"></div>';chain.appendChild(d)});
+Object.keys(ORDERS).forEach(function(k){var o=ORDERS[k],d=document.createElement("div");d.className="card s-idle";d.id="c-"+k;
+ d.innerHTML='<div class="top"><div class="letter">'+k+'</div><div><div class="who">'+o.who+'</div><div class="prod">'+o.prod+'</div></div><div class="ch"><i>'+o.icon+'</i>'+o.ch+'</div></div><div class="status">Sin recibir<small>pedido '+o.n+'</small></div>';
+ el("board").appendChild(d)});
+var stepsEl=el("steps");
+S.forEach(function(s,i){var b=document.createElement("div");b.className="dot"+(s.kind==="human"?" h":s.kind==="clock"?" c":"");
+ b.innerHTML=(i+1)+"<small>"+(s.kind==="run"?s.pass.slice(-4):s.kind==="human"?"persona":"reloj")+"</small>";b.onclick=function(){setPlay(false);go(i)};b.title="Paso "+(i+1)+": "+s.title;stepsEl.appendChild(b)});
+
+var cur=-1,runId=0,playing=true,speed=1;
+function wait(ms){var id=runId;return new Promise(function(r){setTimeout(function(){r(id===runId)},ms/speed)})}
+function stateAt(i){var o={},objs=[],mails=[],time=null;
+ for(var j=0;j<=i;j++){var s=S[j];
+  if(s.orders)Object.keys(s.orders).forEach(function(k){o[k]=s.orders[k]});
+  if(s.objs)s.objs.forEach(function(x){objs.push({x:x,j:j})});
+  if(s.mails)s.mails.forEach(function(x){mails.push({x:x,j:j})});
+  if(s.time)time=s.time}
+ return{o:o,objs:objs,mails:mails,time:time}}
+function objsRender(st,i,animate){
+ var lanes={qr:"l-qr",po:"l-po",inv:"l-inv",sinv:"l-sinv"},latest={},first={};
+ st.objs.forEach(function(e){latest[e.x[1]]=e;if(!(e.x[1] in first))first[e.x[1]]=e.j});
+ Object.keys(lanes).forEach(function(k){var box=el(lanes[k]);
+  var items=Object.keys(latest).filter(function(id){return latest[id].x[0]===k});
+  var sig=items.map(function(id){return id+latest[id].x[3]}).join("|")+(animate?"a"+i:"");
+  if(box.dataset.sig===sig)return;box.dataset.sig=sig;box.innerHTML="";
+  if(!items.length){box.innerHTML='<div class="empty">-</div>';return}
+  items.forEach(function(id){var e=latest[id],x=e.x,d=document.createElement("div");d.className="obj k-"+k+(x[4]?" bad":"");
+   if(!(animate&&e.j===i))d.style.animation="none";
+   d.innerHTML='<b>'+id+'</b> '+x[2]+'<em>'+x[3]+'</em>';box.appendChild(d)})});
+ var mb=el("l-mail"),sig2=st.mails.length+(animate?"a"+i:"");
+ if(mb.dataset.sig!==sig2){mb.dataset.sig=sig2;mb.innerHTML="";
+  if(!st.mails.length)mb.innerHTML='<div class="empty">-</div>';
+  st.mails.forEach(function(m){var d=document.createElement("div");d.className="mail";if(!(animate&&m.j===i))d.style.animation="none";
+   d.innerHTML='<div><b>'+m.x[0]+'</b><span>'+m.x[1]+'</span><br><span>'+m.x[2]+'</span></div>';mb.appendChild(d)})}}
+function boardRender(st,i,animate){
+ Object.keys(ORDERS).forEach(function(k){var c=el("c-"+k),v=st.o[k];
+  c.className="card "+(v?"s-"+v[0]:"s-idle");
+  if(v){var changed=c.dataset.t!==v[1]+v[2];c.querySelector(".status").innerHTML=v[1]+'<small>'+v[2]+'</small>';c.dataset.t=v[1]+v[2];
+   if(changed&&animate&&S[i].orders&&S[i].orders[k]){void c.offsetWidth;c.classList.add("flash")}}
+  else{c.querySelector(".status").innerHTML='Sin recibir<small>pedido '+ORDERS[k].n+'</small>';c.dataset.t=""}})}
+function stagesReset(){STAGES.forEach(function(s){var e=el("st-"+s.k);e.className="stage";e.querySelector(".cnt").innerHTML=""});token.classList.remove("on");el("pend").className="pend"}
+function setCount(k,arr){var e=el("st-"+k),c=e.querySelector(".cnt");
+ if(arr){e.className="stage active";c.innerHTML=arr.map(function(t){return'<span class="chip">'+t+'</span>'}).join("")}
+ else{e.className="stage nothing";c.innerHTML='<span class="none">sin novedades</span>'}}
+function moveToken(k){var e=el("st-"+k),cr=chain.getBoundingClientRect(),r=e.getBoundingClientRect();
+ token.style.transform="translate("+(r.left-cr.left+r.width/2-10)+"px,"+(r.top-cr.top+r.height/2-10)+"px)"}
+function showPend(s){var p=el("pend");
+ p.innerHTML=s.pend.length?"Decisiones pendientes: "+s.pend.map(function(x){return"<span>🧑 "+x+"</span>"}).join(""):"Decisiones pendientes: 0";p.className="pend on"}
+
+async function go(i){
+ var id=++runId;cur=i;var s=S[i],st=stateAt(i);
+ Array.prototype.forEach.call(stepsEl.children,function(d,j){d.className=d.className.replace(/ ?(past|cur)/g,"")+(j<i?" past":j===i?" cur":"")});
+ stepsEl.children[i].scrollIntoView({block:"nearest",inline:"center",behavior:"smooth"});
+ el("snum").textContent=i+1;el("stitle").textContent=s.title;
+ var tg=el("stag");tg.textContent=s.kind==="run"?"cycle run":s.kind==="human"?"decisión humana":"reloj";tg.className="tag"+(s.kind==="human"?" h":s.kind==="clock"?" c":"");
+ el("scmd").textContent=s.kind==="run"?"purchase-cycle cycle run":s.cmd;
+ el("passid").textContent=s.kind==="run"?"pasada "+s.pass:"";
+ el("gate").className="gate";el("cj").className="clockjump";el("final").className="final";
+ var prevT=i>0?stateAt(i-1).time:null;el("simclock").textContent=prevT||"tiempo real";
+ stagesReset();
+ var prevState=i>0?stateAt(i-1):{o:{},objs:[],mails:[],time:null};
+ boardRender(prevState,i,false);objsRender(prevState,i,false);
+ if(s.kind==="run"){
+  if(!await wait(300))return;
+  token.classList.add("on");
+  for(var q=0;q<STAGES.length;q++){var k=STAGES[q].k;moveToken(k);if(!await wait(650))return;
+   setCount(k,s.counts[k]);if(!await wait(450))return;
+   if(s.counts[k])el("st-"+k).className="stage done"}
+  token.classList.remove("on");showPend(s);
+  boardRender(st,i,true);objsRender(st,i,true);
+  if(s.final)el("final").className="final on";
+ }else if(s.kind==="human"){
+  el("st-"+STAGES[HUMAN_STAGE[i]].k).className="stage gate";
+  el("pend").className="pend on";el("pend").textContent="El grafo no decide: espera a la persona";
+  var g=s.gate;el("gwhat").textContent=g.what;el("gcmd").textContent="$ "+s.cmd;
+  el("gchoices").innerHTML=g.choices.map(function(c){return'<span class="choice">'+c+'</span>'}).join("");
+  el("gresult").className="result";el("gresult").textContent=g.result;
+  el("gate").className="gate on";
+  if(!await wait(1500))return;
+  Array.prototype.forEach.call(el("gchoices").children,function(c,n){c.className="choice "+(n===g.pick?"pick"+(g.choices[n]==="rechazar"?" no":""):"dim")});
+  if(!await wait(900))return;
+  el("gresult").className="result on";
+  if(!await wait(700))return;
+  boardRender(st,i,true);objsRender(st,i,true);
+ }else{
+  el("cj").className="clockjump on";el("cjbig").textContent="-> "+s.time;
+  if(!await wait(1800))return;
+  el("simclock").textContent=s.time;
+ }
+ if(playing){if(!await wait(2200)||!playing)return;if(i<S.length-1)go(i+1);else setPlay(false)}
+}
+function setPlay(v){playing=v;el("bPlay").innerHTML=v?"❚❚ Pausa":"▶ Reproducir"}
+function toggle(){setPlay(!playing);if(playing)go(cur>=S.length-1?0:cur+1)}
+function step(d){setPlay(false);go(Math.max(0,Math.min(cur+d,S.length-1)))}
+el("bPlay").onclick=toggle;
+el("bNext").onclick=function(){step(1)};
+el("bPrev").onclick=function(){step(-1)};
+el("bRe").onclick=function(){setPlay(true);go(0)};
+document.addEventListener("keydown",function(e){if(e.key===" "){e.preventDefault();toggle()}else if(e.key==="ArrowRight")step(1);else if(e.key==="ArrowLeft")step(-1)});
+el("speed").oninput=function(){speed=parseFloat(this.value);el("speedv").textContent=speed+"x"};
+go(0);
+</script>
+</body>
+</html>

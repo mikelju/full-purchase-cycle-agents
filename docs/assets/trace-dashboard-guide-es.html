@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía - leer trazas y panel de evaluación</title>
+<style>
+:root{
+  --bg:#EDF1F7;--panel:#fff;--edge:#C2CCDB;--ink:#0F172A;--muted:#52627A;--soft:#F4F6FA;
+  --accent:#0891B2;--title:#4338CA;--ok:#0D9488;--ok-soft:#CCFBF1;--warn:#B45309;--warn-soft:#FEF3C7;
+  --bad:#DC2626;--bad-soft:#FEE2E2;--blue:#2563EB;--blue-soft:#DBEAFE;--vio:#7C3AED;--vio-soft:#EDE9FE;
+  --mono:ui-monospace,"JetBrains Mono",Consolas,monospace;--sans:Inter,system-ui,"Segoe UI",sans-serif;color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0B1220;--panel:#141C2E;--edge:#2B3850;--ink:#E6EBF5;--muted:#9AA8C0;--soft:#1A2438;
+  --accent:#22D3EE;--title:#A5B4FC;--ok:#2DD4BF;--ok-soft:#0F3B38;--warn:#FBBF24;--warn-soft:#3B2D0B;
+  --bad:#F87171;--bad-soft:#3F1618;--blue:#60A5FA;--blue-soft:#14284A;--vio:#A78BFA;--vio-soft:#2A2250;color-scheme:dark;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);padding:14px 16px 60px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;display:grid;gap:14px}
+h1{font:700 15px/1.3 var(--mono);color:var(--title);margin:0;letter-spacing:.02em}
+h2{font:700 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--title);margin:0 0 8px}
+h3{font:700 14px var(--sans);margin:0 0 6px}
+p{margin:0 0 8px}
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:14px 16px;min-width:0}
+.big{font-size:clamp(20px,3.2vw,30px);line-height:1.25;font-weight:700;margin:2px 0 8px}
+.muted{color:var(--muted)}
+code,.mono{font-family:var(--mono);font-size:12px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{font:700 13px var(--sans);padding:10px 16px;border-radius:10px;border:1px solid var(--edge);background:var(--panel);color:var(--ink);cursor:pointer}
+.tab[aria-selected=true]{background:var(--title);color:#fff;border-color:var(--title)}
+.tab:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sec[hidden]{display:none}
+.sec{display:grid;gap:14px;min-width:0}
+.grid2{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:8px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none}
+.dot.bad{background:var(--bad)}.dot.pause{background:var(--warn)}
+.row{display:grid;grid-template-columns:minmax(120px,230px) minmax(0,1fr) 54px;gap:8px;align-items:center;margin:3px 0}
+.node{display:flex;align-items:center;gap:6px;text-align:left;font:600 12px var(--mono);padding:5px 8px;border-radius:8px;border:1px solid var(--edge);background:var(--soft);color:var(--ink);cursor:pointer;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.node:hover{border-color:var(--accent)}
+.node.sel{border-color:var(--title);box-shadow:0 0 0 2px var(--title)}
+.node.pausepath{background:var(--warn-soft);border-color:var(--warn)}
+.node.okpath{background:var(--ok-soft)}
+.track{position:relative;height:14px;background:var(--soft);border-radius:4px;border:1px solid var(--edge)}
+.bar{position:absolute;top:1px;bottom:1px;border-radius:3px;background:var(--blue);min-width:2px}
+.bar.pausepath{background:var(--warn)}.bar.okpath{background:var(--ok)}
+.ms{font:600 11px var(--mono);color:var(--muted);text-align:right}
+.ind1{padding-left:14px}.ind2{padding-left:28px}.ind3{padding-left:42px}
+.chev{cursor:pointer;font:700 11px var(--mono);color:var(--accent);background:none;border:none;padding:0 4px}
+@media(max-width:560px){.row{grid-template-columns:minmax(90px,130px) minmax(0,1fr) 44px}.ind1{padding-left:6px}.ind2{padding-left:12px}.ind3{padding-left:18px}}
+.card{position:sticky;top:10px}
+.card h3{font-family:var(--mono)}
+@media(max-width:900px){.card{position:static}}
+.kv{background:var(--soft);border:1px solid var(--edge);border-radius:8px;padding:8px;font:12px/1.45 var(--mono);overflow-wrap:anywhere;margin:4px 0 8px;white-space:pre-wrap}
+.lbl{font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--title);margin-top:8px}
+.check{border-left:3px solid var(--ok);padding-left:10px}
+.pill{display:inline-block;font:700 11px var(--mono);padding:2px 8px;border-radius:99px;margin-right:4px}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.warn{background:var(--warn-soft);color:var(--warn)}
+table{border-collapse:collapse;width:100%}
+td,th{padding:5px 8px;border-bottom:1px solid var(--edge);text-align:left;vertical-align:top;font-size:13px}
+th{font:700 11px var(--mono);color:var(--muted)}
+.scroll{overflow-x:auto;max-width:100%}
+.new{background:var(--ok-soft);color:var(--ok);font-weight:700;border-radius:4px;padding:0 4px}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.cl{border:1px solid var(--edge);border-radius:10px;padding:10px;background:var(--soft)}
+.cl .n{font:700 12px var(--mono);color:var(--title);margin-bottom:4px}
+.good{color:var(--ok);font-weight:700}.badt{color:var(--bad);font-weight:700}
+.mock{border:2px dashed var(--muted);border-radius:10px;padding:12px 10px 10px;position:relative;margin-top:12px}
+.mock .tag{position:absolute;top:-10px;right:10px;background:var(--panel);padding:0 6px;font:700 10px var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.errbox{background:var(--bad-soft);border:1px solid var(--bad);border-radius:8px;padding:8px;font:12px var(--mono)}
+.llmbox{background:var(--vio-soft);border:1px solid var(--vio);border-radius:8px;padding:8px;font:12px var(--mono)}
+.ui{display:grid;grid-template-columns:150px minmax(0,1fr) 220px;border:1px solid var(--edge);border-radius:10px;overflow:hidden;font-size:12px}
+.ui>div{padding:10px;border-right:1px solid var(--edge)}.ui>div:last-child{border-right:none}
+.ui .hl{outline:2px solid var(--accent);background:var(--blue-soft);border-radius:6px;padding:3px 6px;display:block;margin:4px 0}
+.ui b.s{display:inline-block;background:var(--accent);color:#fff;border-radius:50%;width:18px;height:18px;text-align:center;font:700 11px/18px var(--mono);margin-right:4px}
+@media(max-width:700px){.ui{grid-template-columns:1fr}.ui>div{border-right:none;border-bottom:1px solid var(--edge)}}
+.dash{--dfg:#1c1c1e;--dmuted:#5c5c63;--dcard:#fff;--dline:#d8d8de;--dok:#1a7f37;--dbar:#3b6fd4;--dtrack:#e6e8ee;
+  background:var(--dcard);color:var(--dfg);border:1px solid var(--dline);border-radius:8px;padding:14px 16px 14px 36px;font:14px/1.45 system-ui,Segoe UI,Arial,sans-serif;position:relative;min-width:0}
+@media (prefers-color-scheme:dark){.dash{--dfg:#ececf0;--dmuted:#a0a0aa;--dcard:#1f2026;--dline:#363843;--dok:#4cc26b;--dbar:#7aa2f7;--dtrack:#33353f}}
+.dash h2{font:700 17px system-ui;letter-spacing:0;text-transform:none;color:var(--dfg);margin:0 0 6px;position:relative}
+.dash h3{font:700 14px system-ui;margin:14px 0 4px;color:var(--dmuted);position:relative}
+.dash .meta{color:var(--dmuted);overflow-wrap:anywhere}
+.dash td,.dash th{border-bottom:1px solid var(--dline);padding:3px 8px;font-size:14px}
+.dash th{color:var(--dmuted);font:600 14px system-ui}
+.dash .PASS,.dash .passed,.dash .met{color:var(--dok)}
+.dash .badge{font-weight:700;text-transform:uppercase;font-size:12px}
+.dash svg .trk{fill:var(--dtrack)}.dash svg .brr{fill:var(--dbar)}.dash svg .dt{fill:var(--dfg)}
+.co{position:absolute;left:-28px;top:-1px;width:22px;height:22px;border-radius:50%;background:var(--title);color:#fff;border:none;font:700 12px/22px var(--mono);cursor:pointer;padding:0;text-align:center}
+.co.inl{position:static;display:inline-block;margin-right:6px;vertical-align:middle}
+.co:hover,.co.sel{background:var(--accent);box-shadow:0 0 0 3px var(--blue-soft)}
+#coExp{position:sticky;bottom:8px;z-index:5;border:2px solid var(--title);box-shadow:0 4px 14px rgba(0,0,0,.2);margin-top:12px}
+.cat{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px;align-items:center;margin:6px 0}
+.cat .nm{font:600 12px var(--mono)}.cat.weak .nm{color:var(--warn)}
+.cb{position:relative;height:10px;background:var(--soft);border:1px solid var(--edge);border-radius:3px;margin:3px 0}
+.cb i{position:absolute;left:0;top:0;bottom:0;background:var(--blue)}
+.cb.q i{background:var(--vio)}
+.cat.weak .cb.p i{background:var(--warn)}
+.cb .gl{position:absolute;left:16.67%;top:-3px;bottom:-3px;border-left:2px solid var(--bad)}
+.cb span{position:absolute;right:4px;top:-3px;font:600 10px var(--mono);color:var(--ink)}
+.axis{display:flex;justify-content:space-between;font:10px var(--mono);color:var(--muted);margin-left:158px}
+@media(max-width:560px){.cat{grid-template-columns:1fr}.axis{margin-left:0}}
+ol.ten{margin:0;padding-left:20px}
+ol.ten li{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>GUÍA VISUAL - leer una traza y el panel de evaluación</h1>
+<p class="muted" style="margin:4px 0 0">Datos reales de la demo del ciclo de compra (pasada 1, <code>cycle-run-0001</code>) y de la suite <code>order_line_extraction</code>. Lo marcado como "ejemplo" o "solo en ejecuciones reales" no es de esta pasada.</p>
+</header>
+<div class="tabs" role="tablist">
+<button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="s1">1 - Leer una traza (Phoenix)</button>
+<button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="s2">2 - Leer el panel de evaluaci&oacute;n</button>
+</div>
+
+<section class="sec" id="s1" role="tabpanel">
+<div class="panel">
+<div class="big">Una traza es la grabaci&oacute;n de una ejecuci&oacute;n: una caja por cada paso, y cada caja dice cu&aacute;nto tard&oacute;, si sali&oacute; bien, qu&eacute; entr&oacute; y qu&eacute; sali&oacute;.</div>
+<p class="muted">Abajo tienes la traza real de la pasada 1 de la demo. Pulsa cualquier caja para ver qu&eacute; es y qu&eacute; mirar. El ancho de la barra es proporcional a los milisegundos (la posici&oacute;n es aproximada: los pasos van uno tras otro). Pulsa [+] para abrir los pasos de cada flujo.</p>
+</div>
+
+<div class="grid2">
+<div class="panel">
+<h2>&Aacute;rbol de la traza - purchase_cycle (377 ms)</h2>
+<div class="legend">
+<span><span class="dot"></span> OK</span>
+<span><span class="dot bad"></span> error (no hay ninguno aqu&iacute;)</span>
+<span style="color:var(--warn)">&#9632; camino email: termina en ask &gt; wait (pedido B en pausa)</span>
+<span style="color:var(--ok)">&#9632; resto de pedidos: terminan en store &gt; reply</span>
+</div>
+<div id="tree"></div>
+</div>
+<div class="panel card" id="card" aria-live="polite"></div>
+</div>
+
+<div class="panel">
+<h2>Los contadores se van acumulando</h2>
+<p>Cada etapa recibe como entrada los contadores de las anteriores y devuelve los suyos a&ntilde;adidos. En cada fila, lo nuevo aparece resaltado.</p>
+<div class="scroll"><table>
+<tr><th>Etapa (paso)</th><th>Entra</th><th>Sale</th></tr>
+<tr><td class="mono">orders (1)</td><td class="mono">vac&iacute;o</td><td class="mono"><span class="new">orders: items 4, stored 3, paused 1, failed 0</span></td></tr>
+<tr><td class="mono">quotes (2)</td><td class="mono">orders</td><td class="mono">orders + <span class="new">quotes: started 2, accepted 0, waiting 2, decided 0, no_offers 0</span></td></tr>
+<tr><td class="mono">reconcile (3)</td><td class="mono">orders, quotes</td><td class="mono">... + <span class="new">reconcile: documents 0, new 0, claims 0</span></td></tr>
+<tr><td class="mono">receipts (4)</td><td class="mono">orders, quotes, reconcile</td><td class="mono">... + <span class="new">receipts: received 0, served 1, issued 1</span></td></tr>
+<tr><td class="mono">sales (5)</td><td class="mono">todo lo anterior</td><td class="mono">... + <span class="new">sales: invoiced 1, signed_notes 0, reconciled 1, corrections 0, responses 0</span></td></tr>
+<tr><td class="mono">purchase_cycle (ra&iacute;z)</td><td class="mono">-</td><td class="mono">todos los contadores juntos = lo mismo que ves en consola</td></tr>
+</table></div>
+<p class="muted" style="margin-top:8px">Ejemplo de lectura: de 4 pedidos, 3 quedaron guardados y 1 en pausa (el pedido B por email, que pregunta al cliente).</p>
+</div>
+
+<div class="panel">
+<h2>Checklist bueno / malo</h2>
+<p>De lo r&aacute;pido a lo fino. Si el primer punto falla, no hace falta seguir.</p>
+<div class="cards3">
+<div class="cl"><div class="n">1 - Estado</div><p><span class="good">Bueno:</span> todas las cajas verdes (OK).</p><p><span class="badt">Malo:</span> alguna roja = error. &Aacute;brela y lee <code>status_message</code>.</p></div>
+<div class="cl"><div class="n">2 - Contadores</div><p><span class="good">Bueno:</span> coinciden con lo esperado (4 entran, 3 guardados, 1 en pausa) y con la consola.</p><p><span class="badt">Malo:</span> cifras distintas a la consola, o <code>failed</code> mayor que 0.</p></div>
+<div class="cl"><div class="n">3 - Camino de cada documento</div><p><span class="good">Bueno:</span> el pedido que debe guardarse acaba en <code>store &gt; reply</code>.</p><p><span class="badt">Malo:</span> un pedido que deber&iacute;a guardarse acaba en <code>wait</code>: se qued&oacute; parado.</p></div>
+<div class="cl"><div class="n">4 - Duraci&oacute;n</div><p><span class="good">Bueno:</span> tiempos parecidos a otras pasadas.</p><p><span class="badt">Malo:</span> una caja anormalmente lenta = cuello de botella.</p></div>
+<div class="cl"><div class="n">5 - Coste (solo ejecuciones reales)</div><p><span class="good">Bueno:</span> la caja <code>ChatAnthropic</code> muestra modelo y tokens razonables.</p><p><span class="badt">Malo:</span> muchos m&aacute;s tokens de lo habitual en un paso.</p></div>
+</div>
+
+<div class="cards3" style="margin-top:6px">
+<div>
+<div class="mock"><span class="tag">ejemplo - no es de esta traza</span>
+<div class="lbl" style="margin-top:0">As&iacute; se ve algo malo</div>
+<p><span class="dot bad"></span> <code>store</code> - 12 ms</p>
+<div class="errbox">status: ERROR<br>status_message: (aqu&iacute; aparece el texto del fallo)<br>El paso fall&oacute;; las etapas siguientes pueden no haberse ejecutado.</div></div>
+</div>
+<div>
+<div class="mock"><span class="tag">solo en ejecuciones reales</span>
+<div class="lbl" style="margin-top:0">Caja de modelo</div>
+<div class="llmbox"><b>ChatAnthropic</b> - modelo claude-haiku-4-5<br>prompt: 8853 tokens<br>completion: 57 tokens<br><span class="muted">(n&uacute;meros reales del 16 oct)</span></div>
+<p class="muted" style="margin:8px 0 0">En modo replay las respuestas salen de la grabaci&oacute;n: no hay llamadas al modelo, as&iacute; que esta caja no aparece en la traza de arriba.</p></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<h2>D&oacute;nde est&aacute; en Phoenix</h2>
+<div class="ui">
+<div><b class="s">1</b><b>Proyecto</b><span class="hl">purchase-cycle</span><span class="muted mono">http://127.0.0.1:6006</span></div>
+<div><b class="s">2</b><b>Pesta&ntilde;a Traces</b> - una fila por ejecuci&oacute;n:
+<span class="hl mono">purchase_cycle - 20 oct, 10:39 (7 filas = 7 pasadas; la m&aacute;s antigua es la pasada 1)</span>
+<span class="muted mono">Otras 6 filas de hoy (email_order, 2 quote_decision, 2 claim, customer_response) = las 6 decisiones humanas: cada comando CLI es su propia ejecuci&oacute;n con su propia traza.</span></div>
+<div><b class="s">3</b><b>Panel derecho</b> - al pulsar una fila aparece el &aacute;rbol. Al pulsar una caja: <span class="hl">Info</span> = entrada y salida; <span class="hl">Attributes</span> = metadatos.</div>
+</div>
+</div>
+</section>
+
+<section class="sec" id="s2" role="tabpanel" hidden>
+<div class="panel">
+<div class="big">Cada suite es un examen de una tarea con respuestas conocidas: el panel te dice si el sistema aprob&oacute;, con qu&eacute; nota y si empeor&oacute; respecto a la &uacute;ltima vez.</div>
+<p class="muted">Esta suite (<code>order_line_extraction</code>, una de 21): dada una l&iacute;nea de pedido en texto libre ("2 cajas de guantes nitrilo M"), &iquest;elige el producto del cat&aacute;logo y la cantidad correctos? 1500 casos. Pasa el rat&oacute;n o pulsa las burbujas numeradas.</p>
+</div>
+
+<div class="panel">
+<h2>El panel real, con burbujas</h2>
+<div class="dash" id="dash">
+<h2><button class="co" data-c="1" aria-label="Explicación 1">1</button>order_line_extraction <span class="badge passed">passed</span></h2>
+<p class="meta">exit code: 0; mode: replay; split: test; model: claude-haiku-4-5; cases: 1500; counts: cases=1500; baseline date: 2026-10-06; regression: regression vs baseline 2026-10-06: no significant drop (product_accuracy lost 0 gained 0 p=1.00, quantity_accuracy lost 0 gained 0 p=1.00); failed cases: 16</p>
+<h3><button class="co" data-c="2" aria-label="Explicación 2">2</button>Metrics</h3>
+<div class="scroll"><table><tr><th>metric</th><th>value</th><th><button class="co inl" data-c="3" aria-label="Explicación 3">3</button>ci low</th><th>ci high</th><th>95% interval</th><th>n</th><th>unit</th><th><button class="co inl" data-c="4" aria-label="Explicación 4">4</button>target</th><th>target met</th><th>note</th></tr>
+<tr><td>product_accuracy</td><td>99.5%</td><td>99.0</td><td>99.7</td><td><svg width="120" height="14" viewBox="0 0 120 14" role="img" aria-label="interval 99.0 to 99.7"><rect class="trk" x="2" y="5" width="116" height="4"/><rect class="brr" x="116.8" y="3" width="1.0" height="8"/><circle class="dt" cx="117.4" cy="7" r="3"/></svg></td><td>1500</td><td>line</td><td>&gt;=95.0%</td><td><span class="met">met</span></td><td>-</td></tr>
+<tr><td>quantity_accuracy</td><td>99.5%</td><td>99.0</td><td>99.7</td><td><svg width="120" height="14" viewBox="0 0 120 14" role="img" aria-label="interval 99.0 to 99.7"><rect class="trk" x="2" y="5" width="116" height="4"/><rect class="brr" x="116.8" y="3" width="1.0" height="8"/><circle class="dt" cx="117.4" cy="7" r="3"/></svg></td><td>1500</td><td>line</td><td>&gt;=95.0%</td><td><span class="met">met</span></td><td>-</td></tr></table></div>
+<h3><button class="co" data-c="5" aria-label="Explicación 5">5</button>Gates</h3>
+<div class="scroll"><table><tr><th>metric</th><th>threshold</th><th>verdict</th></tr><tr><td>product_accuracy</td><td>95.0%</td><td><span class="PASS">PASS</span></td></tr><tr><td>quantity_accuracy</td><td>95.0%</td><td><span class="PASS">PASS</span></td></tr></table></div>
+<h3><button class="co" data-c="6" aria-label="Explicación 6">6</button>Critical errors</h3>
+<p>total -; by kind: -</p>
+<h3><button class="co" data-c="7" aria-label="Explicación 7">7</button>Per category</h3>
+<div class="scroll"><table><tr><th>label</th><th>counts</th><th>figures</th></tr>
+<tr><td>exact_name</td><td>n=187</td><td>product 100.0 [98.0, 100.0] n=-; quantity 100.0 [98.0, 100.0] n=-</td></tr>
+<tr><td>synonym</td><td>n=187</td><td>product 98.4 [95.4, 99.5] n=-; quantity 99.5 [97.0, 99.9] n=-</td></tr>
+<tr><td>quantity_words</td><td>n=187</td><td>product 100.0 [98.0, 100.0] n=-; quantity 98.4 [95.4, 99.5] n=-</td></tr>
+<tr><td>unit_expression</td><td>n=187</td><td>product 99.5 [97.0, 99.9] n=-; quantity 98.4 [95.4, 99.5] n=-</td></tr>
+<tr><td>noise</td><td>n=188</td><td>product 100.0 [98.0, 100.0] n=-; quantity 100.0 [98.0, 100.0] n=-</td></tr>
+<tr><td>typo</td><td>n=188</td><td>product 100.0 [98.0, 100.0] n=-; quantity 100.0 [98.0, 100.0] n=-</td></tr>
+<tr><td>near_miss</td><td>n=188</td><td>product 100.0 [98.0, 100.0] n=-; quantity 100.0 [98.0, 100.0] n=-</td></tr>
+<tr><td>out_of_catalog</td><td>n=188</td><td>product 97.9 [94.7, 99.2] n=-; quantity 99.5 [97.0, 99.9] n=-</td></tr></table></div>
+</div>
+<div class="panel" id="coExp" aria-live="polite">Elige una burbuja numerada para leer su explicaci&oacute;n.</div>
+</div>
+
+<div class="panel">
+<h2>Por categor&iacute;a, en barras</h2>
+<p>Escala 94-100 %. La l&iacute;nea roja es la barra de aprobado (95 %). Azul = producto, violeta = cantidad. La m&aacute;s d&eacute;bil es <b style="color:var(--warn)">out_of_catalog</b> (producto que no vendemos: debe responder "no encontrado"), aun as&iacute; por encima de la barra.</p>
+<div id="cats"></div>
+<div class="axis"><span>94</span><span>95 (barra)</span><span>100</span></div>
+<div class="scroll" style="margin-top:10px"><table>
+<tr><th>Categor&iacute;a</th><th>Qu&eacute; significa</th></tr>
+<tr><td class="mono">exact_name</td><td>nombre exacto</td></tr>
+<tr><td class="mono">synonym</td><td>sin&oacute;nimos</td></tr>
+<tr><td class="mono">quantity_words</td><td>cantidad en palabras ("dos docenas")</td></tr>
+<tr><td class="mono">unit_expression</td><td>forma de decir la unidad ("una caja de 100")</td></tr>
+<tr><td class="mono">noise</td><td>texto de m&aacute;s alrededor</td></tr>
+<tr><td class="mono">typo</td><td>erratas</td></tr>
+<tr><td class="mono">near_miss</td><td>producto parecido pero distinto</td></tr>
+<tr><td class="mono">out_of_catalog</td><td>producto que no vendemos</td></tr>
+</table></div>
+</div>
+
+<div class="panel">
+<h2>Lectura en 10 segundos (todo el panel)</h2>
+<ol class="ten">
+<li><b>Arriba del todo:</b> "21 passed, 0 failed, 0 missing of 21 suites".</li>
+<li><b>En cada suite:</b> PASSED y todos los Gates en PASS.</li>
+<li><b>Regresi&oacute;n:</b> "no significant drop" = el sistema es tan bueno como la &uacute;ltima vez.</li>
+</ol>
+<p class="muted">Si las tres cosas se cumplen, no hace falta m&aacute;s. Las categor&iacute;as solo sirven para saber d&oacute;nde mejorar.</p>
+</div>
+</section>
+</div>
+
+<script>
+(function(){
+"use strict";
+var T=377;
+var ND={
+ root:{n:"purchase_cycle",ms:377,what:"Es la pasada completa del orquestador: el grafo que encadena las 5 etapas del ciclo de compra. Su salida reúne todos los contadores.",io:"sale: {\"counts\": {\"orders\": {\"items\": 4, \"stored\": 3, \"paused\": 1, \"failed\": 0}, \"quotes\": {\"started\": 2, \"waiting\": 2 ...}, ...}\nsession.id = cycle-run-0001",chk:"Verde (OK) y contadores finales = los de la consola. Es la primera caja que se mira."},
+ orders:{n:"orders",ms:231,what:"Etapa 1: procesa los 4 pedidos de clientes, cada uno por su canal (web, email, WhatsApp).",io:"entra: {\"counts\": {}, \"ran\": []}\nsale: {\"counts\": {\"orders\": {\"items\": 4, \"stored\": 3, \"paused\": 1, \"failed\": 0}}, \"ran\": [\"orders\"]}",chk:"4 entran, 3 guardados, 1 en pausa, 0 fallidos. Si stored + paused no suma items, algo se perdió."},
+ wfA:{n:"web_form_order (A)",ms:44,path:"ok",what:"Pedido A, llegado por formulario web. Se valida, se casa con el catálogo, se aclara si hay dudas, se guarda y se contesta.",io:"camino: validate > match > clarify > store > reply",chk:"Termina en store > reply: pedido guardado y respondido. Camino sano."},
+ emB:{n:"email_order (B)",ms:40,path:"pause",what:"Pedido B, llegado por email. Hay una duda: el sistema pregunta al cliente (ask) y se PARA esperando respuesta (wait). No llega a store.",io:"camino: intake > extract > clarify > ask > wait\n(no hay store ni reply: pedido en pausa)",chk:"Es el único camino distinto y es correcto: paused = 1 en los contadores. Sería un problema si este pedido debiera haberse guardado."},
+ waC:{n:"whatsapp_order (C)",ms:29,path:"ok",what:"Pedido C, llegado por WhatsApp. Se recibe, se extrae, se aclara, se guarda y se contesta.",io:"camino: intake > extract > clarify > store > reply",chk:"Termina en store > reply: guardado."},
+ wfD:{n:"web_form_order (D)",ms:32,path:"ok",what:"Pedido D, otro formulario web.",io:"camino: validate > match > clarify > store > reply",chk:"Termina en store > reply: guardado."},
+ quotes:{n:"quotes",ms:78,what:"Etapa 2: solicitudes de oferta a proveedores. Algunas piden precio (send) y todas esperan (wait) la respuesta.",io:"entra: {\"counts\": {\"orders\": {...}}, \"ran\": [\"orders\"]}\nsale: {\"counts\": {\"quotes\": {\"started\": 2, \"accepted\": 0, \"waiting\": 2, \"decided\": 0, \"no_offers\": 0}}, \"ran\": [\"quotes\"]}",chk:"4 quote_request: dos hacen send y luego wait, dos solo wait. started 2 y waiting 2 es coherente."},
+ reconcile:{n:"reconcile",ms:7,what:"Etapa 3: concilia documentos de proveedores (facturas). Aún no hay ninguno, por eso no tiene cajas hijas.",io:"entra: contadores de orders y quotes\nsale: {\"counts\": {\"reconcile\": {\"documents\": 0, \"new\": 0, \"claims\": 0}}, \"ran\": [\"reconcile\"]}",chk:"Sin hijos y todo a cero: normal en la pasada 1 (todavía no hay documentos de proveedor)."},
+ receipts:{n:"receipts",ms:20,what:"Etapa 4: recepción de mercancía. Recibe, sirve el pedido y emite el albarán.",io:"entra: contadores de las etapas previas\nsale: {\"counts\": {\"receipts\": {\"received\": 0, \"served\": 1, \"issued\": 1}}, \"ran\": [\"receipts\"]}",chk:"served 1 e issued 1: se sirve el pedido A y se emite su albarán."},
+ sales:{n:"sales",ms:32,what:"Etapa 5: ventas. Factura, lee, enlaza y concilia la factura del pedido A.",io:"entra: contadores de las etapas previas\nsale: {\"counts\": {\"sales\": {\"invoiced\": 1, \"signed_notes\": 0, \"reconciled\": 1, \"corrections\": 0, \"responses\": 0}}, \"ran\": [\"sales\"]}",chk:"invoiced 1 y reconciled 1: la factura de A existe y cuadra."},
+ rc:{n:"receipt",ms:16,what:"Recibe la mercancía, sirve el pedido A y emite su albarán de entrega.",io:"camino: receive > serve > issue",chk:"Los tres pasos en verde; coincide con served 1 e issued 1."},
+ sl:{n:"sales (flujo)",ms:25,what:"Flujo de factura del pedido A: factura, lee, enlaza, casa y guarda.",io:"camino: invoice > read > link > match > store",chk:"Termina en store: la factura de A queda guardada y conciliada."}
+};
+var STEP_WHAT={validate:"Comprueba que el formulario está completo y bien formado.",match:"Casa cada línea con un producto del catálogo.",clarify:"Decide si hay dudas que aclarar con el cliente.",store:"Guarda el pedido en la base de datos compartida.",reply:"Contesta al cliente confirmando.",intake:"Recibe y lee el mensaje entrante.",extract:"Extrae las líneas de pedido del texto.",ask:"Redacta la pregunta al cliente.",wait:"Se detiene esperando respuesta.",send:"Envía la petición de precio a los proveedores.",receive:"Registra la mercancía recibida.",serve:"Sirve el pedido a partir de lo recibido.",issue:"Emite el albarán de entrega.",invoice:"Emite la factura.",read:"Lee el documento.",link:"Enlaza la factura con el pedido."};
+var TREE=[
+ {id:"root",d:0,s:0,ms:377},
+ {id:"orders",d:1,s:0,ms:231,kids:[
+  {id:"wfA",d:2,s:0,ms:44,steps:[["validate",5],["match",1],["clarify",11],["store",5],["reply",2]]},
+  {id:"emB",d:2,s:44,ms:40,steps:[["intake",4],["extract",1],["clarify",26],["ask",5],["wait",3]]},
+  {id:"waC",d:2,s:84,ms:29,steps:[["intake",2],["extract",1],["clarify",8],["store",4],["reply",2]]},
+  {id:"wfD",d:2,s:113,ms:32,steps:[["validate",2],["match",1],["clarify",7],["store",4],["reply",7]]}]},
+ {id:"quotes",d:1,s:231,ms:78,kids:[
+  {id:"q1",n:"quote_request",d:2,s:231,ms:20,steps:[["send",14],["wait",2]]},
+  {id:"q2",n:"quote_request",d:2,s:251,ms:22,steps:[["send",13],["wait",2]]},
+  {id:"q3",n:"quote_request",d:2,s:273,ms:7,steps:[["wait",2]]},
+  {id:"q4",n:"quote_request",d:2,s:280,ms:7,steps:[["wait",2]]}]},
+ {id:"reconcile",d:1,s:309,ms:7},
+ {id:"receipts",d:1,s:316,ms:20,kids:[{id:"rc",d:2,s:316,ms:16,steps:[["receive",2],["serve",5],["issue",4]]}]},
+ {id:"sales",d:1,s:336,ms:32,kids:[{id:"sl",d:2,s:336,ms:25,steps:[["invoice",5],["read",2],["link",1],["match",6],["store",2]]}]}
+];
+["q1","q2","q3","q4"].forEach(function(id,i){
+  var two=i<2;
+  ND[id]={n:"quote_request",ms:[20,22,7,7][i],what:"Una petición de oferta a un proveedor.",io:"camino: "+(two?"send > wait":"wait"),chk:two?"Hace send (pide precio) y luego wait (espera la respuesta).":"Solo wait: espera una respuesta ya pedida."};
+});
+var openSet={orders:true}, selId="root";
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function row(n,d,s,ms,cls,id,hasKids,expId){
+  var r=el("div","row");
+  var left=el("div","ind"+d);
+  left.style.display="flex";left.style.alignItems="center";left.style.minWidth="0";
+  if(hasKids){var b=el("button","chev",openSet[expId]?"[-]":"[+]");b.setAttribute("aria-label","expandir "+n);b.onclick=function(){openSet[expId]=!openSet[expId];render();};left.appendChild(b);}
+  var nb=el("button","node "+cls+(selId===id?" sel":""));
+  nb.appendChild(el("span","dot"+(cls==="pausepath"?" pause":"")));nb.appendChild(document.createTextNode(n));
+  nb.onclick=function(){selId=id;render();showCard(id);};
+  left.appendChild(nb);
+  var tr=el("div","track");var bar=el("div","bar "+cls);
+  bar.style.left=(s/T*100)+"%";bar.style.width=Math.max(ms/T*100,0.6)+"%";tr.appendChild(bar);
+  r.appendChild(left);r.appendChild(tr);r.appendChild(el("div","ms",ms+" ms"));return r;
+}
+function render(){
+  var host=document.getElementById("tree");host.textContent="";
+  TREE.forEach(function(t){
+    var nd=ND[t.id];
+    if(t.d===0){host.appendChild(row(nd.n,0,t.s,t.ms,"",t.id,false));return;}
+    host.appendChild(row(nd.n,1,t.s,t.ms,"",t.id,!!t.kids,t.id));
+    if(t.kids&&openSet[t.id]){
+      t.kids.forEach(function(k){
+        var kd=ND[k.id];
+        var cls=kd.path==="pause"?"pausepath":(kd.path==="ok"?"okpath":"");
+        host.appendChild(row(kd.n,2,k.s,k.ms,cls,k.id,!!k.steps,k.id));
+        if(k.steps&&openSet[k.id]){
+          var off=k.s;
+          k.steps.forEach(function(st){
+            var sid=k.id+":"+st[0]+":"+off;
+            ND[sid]={n:st[0],ms:st[1],what:STEP_WHAT[st[0]]||"Un paso del flujo.",io:"dentro de "+kd.n+" (duración "+st[1]+" ms)",chk:(k.id==="emB"&&st[0]==="wait")?"Aquí acaba el pedido B: ask > wait, sin store. Es la pausa esperada.":(st[0]==="store"?"Si falta store en un pedido que debía guardarse, está parado.":"Verde y con duración parecida a otras pasadas.")};
+            var c2=(k.id==="emB"&&(st[0]==="ask"||st[0]==="wait"))?"pausepath":(cls==="okpath"&&(st[0]==="store"||st[0]==="reply")?"okpath":"");
+            host.appendChild(row(st[0],3,off,st[1],c2,sid,false));
+            off+=st[1];
+          });
+        }
+      });
+    }
+  });
+}
+function showCard(id){
+  var d=ND[id];var c=document.getElementById("card");c.textContent="";
+  c.appendChild(el("h2",null,"Detalle de la caja"));
+  c.appendChild(el("h3",null,d.n+" - "+d.ms+" ms"));
+  var p=el("p");p.appendChild(el("span","pill ok","OK"));
+  if(d.path==="pause")p.appendChild(el("span","pill warn","pedido en pausa"));
+  c.appendChild(p);
+  c.appendChild(el("div","lbl","Qué es"));c.appendChild(el("p",null,d.what));
+  c.appendChild(el("div","lbl","Entrada / salida real (acortada)"));c.appendChild(el("div","kv",d.io));
+  c.appendChild(el("div","lbl","Qué comprobar"));c.appendChild(el("p","check",d.chk));
+}
+render();showCard("root");
+
+var t1=document.getElementById("t1"),t2=document.getElementById("t2"),s1=document.getElementById("s1"),s2=document.getElementById("s2");
+function tab(a){t1.setAttribute("aria-selected",String(a===1));t2.setAttribute("aria-selected",String(a===2));s1.hidden=a!==1;s2.hidden=a!==2;}
+t1.onclick=function(){tab(1);};t2.onclick=function(){tab(2);};
+
+var CO={
+ 1:["Cabecera","Nombre de la suite y veredicto: PASSED = aprobada. Debajo, los datos del examen: exit code 0 (terminó sin fallo); mode replay (respuestas grabadas, sin coste); split test (casos reservados, no usados para ajustar los prompts = examen honesto); model claude-haiku-4-5; cases 1500; baseline date 2026-10-06 (fecha con la que se compara); regression: no significant drop = frente al 6 oct ningún caso empeoró ni mejoró (lost 0, gained 0, p=1.00), sirve para detectar si un cambio de código rompio algo; failed cases 16 = casos fallados de 1500."],
+ 2:["Metrics - la nota","product_accuracy (acierta el producto) y quantity_accuracy (acierta la cantidad): 99.5 % cada una sobre 1500 casos. 'unit line' = se mide por línea de pedido."],
+ 3:["ci - rango de confianza","'ci' = rango de confianza (99.0 a 99.7). Con 1500 casos el valor verdadero está casi seguro dentro. Cuanto más estrecho, más fiable es la nota."],
+ 4:["target - objetivo",">=95.0 % es el objetivo de la métrica; 'met' = cumplido."],
+ 5:["Gates - la barra de aprobado","Gate = barra de aprobado: 95.0 % para cada métrica, ambas PASS. Si una cae por debajo, la suite suspende, el check del proyecto falla y la entrega se bloquea. En otras suites 'reported' = se mide sin barra."],
+ 6:["Critical errors","Fallos graves que hunden la suite aunque el porcentaje sea bueno. Aquí 'total -' = ninguno."],
+ 7:["Per category","La misma nota desglosada por tipo de línea (producto / cantidad, n casos). Sirve para ver donde mejorar. La más debil es out_of_catalog (97.9 % en producto), aun por encima de la barra."]
+};
+var exp=document.getElementById("coExp");
+function showCo(k){
+  var e=CO[k];exp.textContent="";
+  exp.appendChild(el("b",null,"Burbuja "+k+" - "+e[0]+". "));
+  exp.appendChild(document.createTextNode(e[1]));
+  var all=document.querySelectorAll("#dash .co");
+  for(var i=0;i<all.length;i++){all[i].classList.toggle("sel",all[i].getAttribute("data-c")===String(k));}
+}
+var cos=document.querySelectorAll("#dash .co");
+for(var i=0;i<cos.length;i++){(function(b){var k=b.getAttribute("data-c");
+  b.addEventListener("mouseenter",function(){showCo(k);});b.addEventListener("click",function(){showCo(k);});b.addEventListener("focus",function(){showCo(k);});})(cos[i]);}
+
+var CATS=[["exact_name",100,100],["synonym",98.4,99.5],["quantity_words",100,98.4],["unit_expression",99.5,98.4],["noise",100,100],["typo",100,100],["near_miss",100,100],["out_of_catalog",97.9,99.5]];
+var host=document.getElementById("cats");
+CATS.forEach(function(c){
+  var weak=c[0]==="out_of_catalog";
+  var r=el("div","cat"+(weak?" weak":""));
+  r.appendChild(el("div","nm",c[0]+(weak?" (más debil)":"")));
+  var w=el("div");
+  [["p","producto",c[1]],["q","cantidad",c[2]]].forEach(function(x){
+    var b=el("div","cb "+x[0]);b.title=x[1]+" "+x[2]+" %";
+    var i=el("i");i.style.width=Math.max(0,(x[2]-94)/6*100)+"%";b.appendChild(i);
+    b.appendChild(el("div","gl"));b.appendChild(el("span",null,x[2].toFixed(1)));w.appendChild(b);});
+  r.appendChild(w);host.appendChild(r);
+});
+})();
+</script>
+</body>
+</html>
