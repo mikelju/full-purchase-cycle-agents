@@ -103,8 +103,8 @@ All live spend of the phase happens here, once, after `npm run check` is green w
 ### Batch G - Validation and closing
 - [x] 16. `npm run check` in a fresh clone with no key and no `.env` (C1, C11) - check: `npm ci`, `uv sync` and `npm run check` in a fresh clone outside the repo (`--no-hardlinks`), Anthropic and LangSmith variables unset, run in the background with the log at `.evidence/fase-12/fresh-clone-check.log`, tail read only; twenty-one evaluations in replay with every gate PASS; `git diff --stat a8186f4 -- evals/recordings evals/datasets evals/baselines` lists added files only.
   - Evidence: fresh clone with `--no-hardlinks`, no `.env`, Anthropic and LangSmith variables unset: `npm ci`, `uv sync`, `npm run check` exit 0, 1670 passed, 21 evaluations in replay with every gate PASS, 0 FAIL (`.evidence/fase-12/fresh-clone-check.log`); `git diff --stat a8186f4` over recordings, datasets and baselines lists 17 added files, 0 modified or deleted (`.evidence/fase-12/data-diff.txt`).
-- [ ] 17. Adversarial review with `sdd-review` through `sdd-delivery`, at most two rounds, over `a8186f4..HEAD` with new files included; findings and fixes recorded below with regression tests; `npm run check` rerun after the fixes (background, one at a time); a third round needs an owner decision.
-  - Evidence: round 1 fixes in increment 17 commits; `npm run check` after the fixes exit 0, 1685 passed, 21 evaluations PASS (`.evidence/fase-12/check-after-review-r1.log`, untracked). Round 2 (evaluation oracle, dashboard) pending.
+- [x] 17. Adversarial review with `sdd-review` through `sdd-delivery`, at most two rounds, over `a8186f4..HEAD` with new files included; findings and fixes recorded below with regression tests; `npm run check` rerun after the fixes (background, one at a time); a third round needs an owner decision.
+  - Evidence: round 1 fixes in increment 17 commits; `npm run check` after the fixes exit 0, 1685 passed, 21 evaluations PASS (`.evidence/fase-12/check-after-review-r1.log`, untracked). Round 2 fixes in increment 17 commits; `npm run check` after them exit 0, 1697 passed, 21 evaluations PASS (`.evidence/fase-12/check-after-review-r2.log`, untracked).
 - [ ] 18. Results per criterion, master plan row 12 status, open items and limitations, candidate learnings; delivery per `.agents/skills/sdd-delivery/SKILL.md`: push the branch to `origin` and open a PR to `main` with `--body-file` (goal, criteria with evidence, review table, pending items), never merge or approve.
   - Evidence:
 
@@ -123,6 +123,7 @@ All live spend of the phase happens here, once, after `npm run check` is green w
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
 | 1 | single reviewer, read-only | `a8186f4..2d34062` | correctness, evidence | 0 blocker, 3 major, 6 minor | M1, M2, m1, m3, m4, m5 fixed with regression tests (increment 17); m2, m6 logged in Deviations; M3 pending the owner's console figure (see C13) |
+| 2 | single reviewer, read-only | `2d34062..4f065de` plus unread areas | correctness, evidence | 0 blocker, 3 major, 4 minor | R2-M1, R2-M2, R2-M3, m1-m4 fixed with regression tests (increment 17); M3 fixed by strict tags and changes to PC-002, 007, 011, 012 within the 16 scenarios; check exit 0 |
 
 ## Results
 Per criterion: command or path run, observed result and reference to the evidence.
