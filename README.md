@@ -713,7 +713,7 @@ By default (`--mode replay`) it reads the model answers from `evals/recordings/c
 That recording is made once with `--mode record`, which made 18 model calls (4 supplier document extractions, 2 web form matchings, 2 clarification questions, 2 offer extractions, 2 claim drafts, and 1 each of email intake, email order extraction, clarification answer, WhatsApp intake, WhatsApp order extraction and response drafting) and needs `ANTHROPIC_API_KEY`.
 `--recordings <file>` picks another file.
 
-Cost of the record run: 18 calls at Claude Haiku 4.5 list prices, at most about 0.22 USD (an upper bound: only the clarification answer step prints its token usage, 740 uncached and 8587 cache-write input tokens and 68 output tokens, about 0.012 USD).
+Cost of the record run: 18 calls to Claude Haiku 4.5, 0.11 USD billed (measured on the Anthropic console cost page for 2026-10-20 UTC, filtered by the project API key).
 Elapsed time of the replay run: about 24 seconds on the development machine.
 
 Interactive walkthrough of the 14-step demo (Spanish): [docs/assets/cycle-demo-visual-es.html](docs/assets/cycle-demo-visual-es.html).
