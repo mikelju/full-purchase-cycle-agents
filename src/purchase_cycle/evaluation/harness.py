@@ -544,7 +544,7 @@ def cmd_upload(args) -> int:
 
 SUMMARIES_DIR = DATA_DIR / "eval_summaries"
 _ROW = re.compile(
-    r"^(\S+)\s+(\S+)\s+(\[[^\]]*\]|-)\s+(\d+)\s+(\S+)\s+(\S+)\s+(met|not met|n/a)\s+(\S+)\s+(PASS|FAIL|reported)(?:\s+(.*))?$"
+    r"^(\S+)\s+(\S+)\s+(\[[^\]]*\]|-)\s+(\d+)\s+(\S+(?: \S+)?)\s+(\S+)\s+(met|not met|n/a)\s+(\S+)\s+(PASS|FAIL|reported)(?:\s+(.*))?$"
 )
 _FIGURE = re.compile(r"(?:(\w+)\s+)?(\d+(?:\.\d+)?)%\s+\[(\d+(?:\.\d+)?), (\d+(?:\.\d+)?)\](?:\s+n=(\d+))?")
 
@@ -610,6 +610,8 @@ def parse_report(text: str, code: int) -> dict:
                 {"metric": name, "threshold": _number(threshold), "threshold_text": threshold, "verdict": gate}
             )
             block = None
+        elif re.search(r"\s(?:PASS|FAIL|reported)(?:\s|$)", line) and not line.startswith(" "):
+            raise ValueError(f"eval report row not understood by the summary writer: {line!r}")
         elif line.strip().startswith("by kind:"):
             by_kind = {k: int(v) for k, v in re.findall(r"(\w+)=(\d+)", line)}
         elif line.startswith("regression vs baseline"):

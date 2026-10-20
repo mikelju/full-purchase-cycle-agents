@@ -142,3 +142,17 @@ def test_summaries_folder_is_git_ignored():
     root = Path(__file__).resolve().parent.parent
     result = subprocess.run(["git", "check-ignore", "-q", "data/eval_summaries/x.json"], cwd=root, check=False)
     assert result.returncode == 0
+
+
+def test_a_report_row_the_writer_cannot_read_fails_loudly_instead_of_being_dropped(monkeypatch, tmp_path):
+    odd = REPORT.replace("scenario_success          100.0%", "scenario success          100.0 %", 1)
+    with pytest.raises(ValueError, match="not understood"):
+        run(monkeypatch, tmp_path, "quote_wait", Stub(odd, 0))
+
+
+def test_a_unit_of_two_words_is_read_as_one_metric_row(monkeypatch, tmp_path):
+    row = "discrepancy_coverage        100.0%  [95.9, 100.0]   90    discrepancy row   none     n/a         none       reported\n"
+    report = REPORT.replace("failures: 0\n", row + "failures: 0\n")
+    _, out = run(monkeypatch, tmp_path, "quote_wait", Stub(report, 0))
+    s = json.loads((out / "quote_wait.json").read_text(encoding="utf-8"))
+    assert [m["unit"] for m in s["metrics"]][-1] == "discrepancy row" and len(s["gates"]) == 3
