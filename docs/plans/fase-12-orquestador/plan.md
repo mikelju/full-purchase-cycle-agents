@@ -1,6 +1,6 @@
 # Phase 12 - Orchestrator: plan and results
 
-Status: in progress
+Status: integrated (merged via PR #30)
 Spec: `spec.md` (approved 2026-10-19, frozen)
 Base: branch `fase-12-orquestador` at `a8186f4` (change 018 merged into `main` through PR #29); the unchanged-behaviour reference of C11 is the code at `a8186f4`.
 
