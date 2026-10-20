@@ -169,9 +169,7 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
         states = [r["state"] or {} for r in results]
         conn = db.connect(db_path)
         try:
-            parked = {
-                row[0] for row in conn.execute("SELECT thread_id FROM failures WHERE status = 'needs_review'")
-            }
+            parked = {row[0] for row in conn.execute("SELECT thread_id FROM failures WHERE status = 'needs_review'")}
         finally:
             conn.close()
         counts = {

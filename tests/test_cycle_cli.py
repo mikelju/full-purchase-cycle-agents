@@ -179,7 +179,16 @@ def test_record_mode_keeps_the_recordings_already_captured_when_a_stage_raises_a
 
     monkeypatch.setattr(cycle_cli, "ModelClient", Made)
     monkeypatch.setattr(cycle_cli.cycle, "run_cycle", run_cycle)
-    names = ("orders", "replies", "documents", "signed_notes", "outbox", "supplier_outbox", "delivery_notes", "invoices")
+    names = (
+        "orders",
+        "replies",
+        "documents",
+        "signed_notes",
+        "outbox",
+        "supplier_outbox",
+        "delivery_notes",
+        "invoices",
+    )
     args = argparse.Namespace(
         mode="record", recordings=tmp_path / "r.jsonl", db=tmp_path / "b.db", checkpoints=tmp_path / "c.sqlite"
     )
