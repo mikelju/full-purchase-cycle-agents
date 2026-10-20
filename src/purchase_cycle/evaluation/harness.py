@@ -692,7 +692,12 @@ def run_suite_with_summary(name: str, run) -> int:
             },
         )
         raise
-    write_summary(name, parse_report(buffer.getvalue(), code))
+    try:
+        summary = parse_report(buffer.getvalue(), code)
+    except ValueError as error:  # the report stays as printed and the exit code of the suite is unchanged
+        print(f"Warning: summary for {name} recorded as unreadable: {error}", file=sys.stderr)
+        summary = {"status": "failed", "exit_code": code, "error": f"ValueError: {error}", "report": buffer.getvalue()}
+    write_summary(name, summary)
     return code
 
 

@@ -91,6 +91,13 @@ def test_missing_and_failed_shown_and_escaped(tmp_path):
     assert "<script" not in page and "<b>note" not in page and "&lt;b&gt;note" in page
 
 
+def test_a_summary_that_is_valid_json_but_not_an_object_is_shown_as_failed(tmp_path):
+    (tmp_path / f"{ALL_SUITES[0]}.json").write_text("[]", encoding="utf-8")
+    (tmp_path / f"{ALL_SUITES[1]}.json").write_text('"text"', encoding="utf-8")
+    page = build_html(tmp_path)
+    assert "2 failed" in page and page.count("expected an object") == 2
+
+
 def test_no_external_resources(tmp_path):
     _fixtures(tmp_path)
     page = build_html(tmp_path)

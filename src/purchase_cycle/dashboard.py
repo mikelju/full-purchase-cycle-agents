@@ -141,9 +141,16 @@ def _load(directory: Path, name: str) -> dict | None:
     if not path.is_file():
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        loaded = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         return {"suite": name, "status": "failed", "error": f"unreadable summary: {exc}"}
+    if not isinstance(loaded, dict):
+        return {
+            "suite": name,
+            "status": "failed",
+            "error": f"unreadable summary: expected an object, got {type(loaded).__name__}",
+        }
+    return loaded
 
 
 def build_html(directory: Path = SUMMARIES_DIR) -> str:

@@ -144,10 +144,14 @@ def test_summaries_folder_is_git_ignored():
     assert result.returncode == 0
 
 
-def test_a_report_row_the_writer_cannot_read_fails_loudly_instead_of_being_dropped(monkeypatch, tmp_path):
+def test_a_report_row_the_writer_cannot_read_warns_and_never_changes_the_exit_code(monkeypatch, tmp_path, capsys):
     odd = REPORT.replace("scenario_success          100.0%", "scenario success          100.0 %", 1)
-    with pytest.raises(ValueError, match="not understood"):
-        run(monkeypatch, tmp_path, "quote_wait", Stub(odd, 0))
+    code, out = run(monkeypatch, tmp_path, "quote_wait", Stub(odd, 0))
+    captured = capsys.readouterr()
+    assert code == 0 and captured.out == odd
+    assert "unreadable" in captured.err and "not understood" in captured.err
+    s = json.loads((out / "quote_wait.json").read_text(encoding="utf-8"))
+    assert s["status"] == "failed" and s["exit_code"] == 0 and "not understood" in s["error"]
 
 
 def test_a_unit_of_two_words_is_read_as_one_metric_row(monkeypatch, tmp_path):
