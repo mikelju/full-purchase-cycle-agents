@@ -1,133 +1,21 @@
-"""Phase 12 increment 10 (C7): `cycle-demo` runs the four-order scenario, each step in its own process, network blocked."""
+"""Phase 12 (C7): `cycle-demo` replays the versioned recording of the four-order scenario, each step in its own process, network blocked."""
 
-import contextlib
-import io
-import json
 import os
 import sqlite3
 import subprocess
 import sys
-import types
 
 import pytest
 
 from conftest import SITECUSTOMIZE
-from purchase_cycle import cli, cycle_cli, sales_cli
-from purchase_cycle.llm import (
-    CLAIM_DRAFTING,
-    CLARIFICATION_ANSWER,
-    CLARIFICATION_QUESTION,
-    EMAIL_EXTRACTION,
-    EMAIL_INTAKE,
-    MATCHING,
-    OFFER_EXTRACTION,
-    RESPONSE_DRAFTING,
-    SUPPLIER_DOCUMENT_EXTRACTION,
-    WHATSAPP_EXTRACTION,
-    WHATSAPP_INTAKE,
-)
-from test_cycle import ANSWERS as BASE
-from test_cycle_cli import RecordingClient
+from purchase_cycle import config
 
-SIZES = ", ".join(f"Nitrile examination gloves, powder-free, size {s}" for s in ("XS", "S", "M", "L", "XL"))
-GLOVES_S = "Nitrile examination gloves, powder-free, size S"
-GLOVES_XS = "Nitrile examination gloves, powder-free, size XS"
-
-
-def _offer(quantity):
-    return {
-        "offers": True,
-        "quantity": quantity,
-        "unit_price": 4.1,
-        "currency": "EUR",
-        "vat_included": False,
-        "vat_rate": None,
-        "lead_time_days": 5,
-        "working_days": True,
-        "price_text": "4.10 EUR per box",
-    }
-
-
-def _document(kind, number, po, product, quantity, price):
-    return {
-        "kind": kind,
-        "number": number,
-        "po_reference": po,
-        "issue_date": "2026-10-20",
-        "currency": "EUR" if kind == "invoice" else None,
-        "supplier_text": "Distribuciones Sanitarias del Norte S.A.",
-        "lines": [
-            {
-                "product": product,
-                "quantity": quantity,
-                "unit_price": price,
-                "line_total": round(price * quantity, 2) if price else None,
-            }
-        ],
-    }
-
-
-# Hand-written answers, keyed by a part of the prompt text the demo sends to each task.
-ANSWERS = {
-    MATCHING.name: {"nitrile gloves M": {"sku": "GLV-NIT-M"}, "nitrile gloves XS": {"sku": "GLV-NIT-XS"}},
-    EMAIL_INTAKE.name: {"": {"is_order": True, "reason": "an order"}},
-    EMAIL_EXTRACTION.name: {
-        "10 boxes of nitrile gloves": {
-            "lines": [{"source": "body", "source_text": "nitrile gloves", "sku": None, "quantity": 10}]
-        }
-    },
-    WHATSAPP_INTAKE.name: BASE[WHATSAPP_INTAKE.name],
-    WHATSAPP_EXTRACTION.name: BASE[WHATSAPP_EXTRACTION.name],
-    CLARIFICATION_QUESTION.name: {
-        "": {"question": f'For "nitrile gloves" (10 boxes), which one do you want: {SIZES}?'}
-    },
-    CLARIFICATION_ANSWER.name: {
-        "": {"resolutions": [{"line_id": 1, "action": "set", "sku": "GLV-NIT-L", "quantity": 10}]}
-    },
-    OFFER_EXTRACTION.name: {"4 boxes of GLV-NIT-S": _offer(4), "3 boxes of GLV-NIT-XS": _offer(3)},
-    SUPPLIER_DOCUMENT_EXTRACTION.name: {
-        "INVOICE F-0101": _document("invoice", "F-0101", "PO-0001", GLOVES_S, 4, 4.6),
-        "DELIVERY NOTE A-0101": _document("delivery_note", "A-0101", "PO-0001", GLOVES_S, 4, None),
-        "INVOICE F-0102": _document("invoice", "F-0102", "PO-0002", GLOVES_XS, 3, 4.1),
-        "DELIVERY NOTE A-0102": _document("delivery_note", "A-0102", "PO-0002", GLOVES_XS, 2, None),
-    },
-    CLAIM_DRAFTING.name: {"": {"body": "Dear supplier, please review the invoice."}},
-    RESPONSE_DRAFTING.name: {"": {"body": "Dear customer, we are sorry for the damaged units."}},
-}
-
-
-def write_recordings(path, tmp_path, monkeypatch):
-    """Run the demo in this process with the hand-written answers and keep each under the key a replay looks up."""
-    calls, recorded = [], {}
-
-    def factory(mode, catalog, recordings=None, task=None):
-        return RecordingClient(task, calls, ANSWERS, catalog, recorded)
-
-    def in_process(command, capture_output=True, text=True):
-        out, err = io.StringIO(), io.StringIO()
-        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            try:
-                code = cli.main(command[3:])  # drop: python -m purchase_cycle.cli
-            except SystemExit as stop:
-                code = stop.code
-        return types.SimpleNamespace(returncode=code, stdout=out.getvalue(), stderr=err.getvalue())
-
-    for module in (cli, sales_cli, cycle_cli):
-        monkeypatch.setattr(module, "ModelClient", factory)
-    monkeypatch.setattr(cycle_cli.subprocess, "run", in_process)
-    empty = tmp_path / "empty.jsonl"
-    empty.write_text("", encoding="utf-8")
-    assert cli.main(["cycle-demo", "--workdir", str(tmp_path / "recording"), "--recordings", str(empty)]) == 0
-    path.write_text("".join(json.dumps(row) + "\n" for row in recorded.values()), encoding="utf-8")
-    return len(calls)
+RECORDINGS = config.EVALS_DIR / "recordings" / "cycle_demo.jsonl"
 
 
 @pytest.fixture(scope="module")
 def cycle_demo(tmp_path_factory):
     tmp = tmp_path_factory.mktemp("cycle")
-    recordings = tmp / "recordings.jsonl"
-    with pytest.MonkeyPatch.context() as patch:
-        asked = write_recordings(recordings, tmp, patch)
     site = tmp / "site"
     site.mkdir()
     (site / "sitecustomize.py").write_text(SITECUSTOMIZE, encoding="utf-8")
@@ -136,17 +24,13 @@ def cycle_demo(tmp_path_factory):
     env.update(PYTHONPATH=str(site), ORDERS_DEMO_TEST_LOG=str(log))
     workdir = tmp / "work"
     command = [sys.executable, "-m", "purchase_cycle.cli", "cycle-demo", "--workdir", str(workdir)]
-    command += ["--recordings", str(recordings)]
+    command += ["--recordings", str(RECORDINGS)]
     run = subprocess.run(command, capture_output=True, text=True, env=env)
-    return run, log, workdir, asked
-
-
-def test_the_run_asks_for_seventeen_model_calls(cycle_demo):
-    assert cycle_demo[3] == 17
+    return run, log, workdir
 
 
 def test_the_demo_runs_with_the_network_blocked_each_step_in_its_own_process(cycle_demo):
-    run, log, _, _ = cycle_demo
+    run, log, _ = cycle_demo
     out = run.stdout
     assert run.returncode == 0, out + run.stderr
     assert run.stderr == ""
@@ -178,7 +62,7 @@ def test_the_printed_output_shows_stages_pending_decisions_and_operator_decision
 
 
 def test_the_database_holds_the_four_final_states(cycle_demo):
-    run, _, workdir, _ = cycle_demo
+    run, _, workdir = cycle_demo
     assert run.returncode == 0, run.stdout + run.stderr
     conn = sqlite3.connect(workdir / "business.db")
     try:

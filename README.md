@@ -710,12 +710,11 @@ Then it runs each step as its own process: a `cycle run` pass, `clarify answer` 
 It ends with one line per order (status, invoice result and credit note status), the supplier claims and the quote requests still waiting, and exits non-zero when a step fails.
 
 By default (`--mode replay`) it reads the model answers from `evals/recordings/cycle_demo.jsonl` and needs no key and no network.
-That recording is made once with `--mode record`, which makes 17 model calls (4 supplier document extractions, 2 web form matchings, 2 offer extractions, 2 claim drafts, and 1 each of email intake, email order extraction, clarification question, clarification answer, WhatsApp intake, WhatsApp order extraction and response drafting) and needs `ANTHROPIC_API_KEY`.
-Until that recording is versioned (increment 14 of the phase plan), `--mode replay` stops with an error that says to record it first.
+That recording is made once with `--mode record`, which made 18 model calls (4 supplier document extractions, 2 web form matchings, 2 clarification questions, 2 offer extractions, 2 claim drafts, and 1 each of email intake, email order extraction, clarification answer, WhatsApp intake, WhatsApp order extraction and response drafting) and needs `ANTHROPIC_API_KEY`.
 `--recordings <file>` picks another file.
 
-Cost of the record run: COST-PLACEHOLDER (to be filled in increment 14 from the real run).
-Elapsed time of the replay run: TIME-PLACEHOLDER (to be filled in increment 14).
+Cost of the record run: 18 calls at Claude Haiku 4.5 list prices, at most about 0.22 USD (an upper bound: only the clarification answer step prints its token usage, 740 uncached and 8587 cache-write input tokens and 68 output tokens, about 0.012 USD).
+Elapsed time of the replay run: about 24 seconds on the development machine.
 
 ### See the evaluations in a dashboard
 

@@ -132,3 +132,5 @@ Each decision keeps its options and trade-offs for the record; the chosen option
 - D5 - Trace evidence:
   - A (recommended, chosen): C10 met with a local Phoenix trace of a replay cycle run, at no cost; the LangSmith trace goes to the catch-up change after about 2026-11-05.
   - B: C10 as a LangSmith trace criterion left pending until the quota resets, as phases 02 to 10.
+- D6 - How the live record is run (owner 2026-10-20 through `.lavish/fase-12-grabacion.html`):
+  - A (chosen): Claude runs the single record now with the owner present, the key loaded from `.env` by the command and never read; if the run fails or an order misses its final state, stop and report before any retry.
