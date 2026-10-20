@@ -50,6 +50,13 @@ def test_graph_has_the_stages_in_order_with_the_sqlite_checkpointer(tmp_path):
     checkpointer.conn.close()
 
 
+def test_the_compiled_graph_is_named_purchase_cycle_so_traces_have_a_named_root(tmp_path):
+    checkpointer = sqlite_checkpointer(tmp_path / "cp.sqlite")
+    graph = cycle.build_cycle_graph(tmp_path / "b.db", checkpointer, _folders(tmp_path), lambda task, catalog: None)
+    assert graph.name == "purchase_cycle"
+    checkpointer.conn.close()
+
+
 def test_a_pass_over_empty_folders_counts_nothing_and_the_next_pass_is_a_new_run(tmp_path):
     class NoCalls:
         def extract(self, *args, **kwargs):

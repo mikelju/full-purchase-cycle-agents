@@ -232,7 +232,7 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
     for before, after in zip(STAGES, STAGES[1:], strict=False):
         builder.add_edge(before, after)
     builder.add_edge(STAGES[-1], END)
-    return builder.compile(checkpointer=checkpointer, interrupt_after=interrupt_after)
+    return builder.compile(name="purchase_cycle", checkpointer=checkpointer, interrupt_after=interrupt_after)
 
 
 def _last_run(checkpointer) -> int:
