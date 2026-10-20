@@ -139,7 +139,9 @@ def _seen_web_form(checkpointer, graph) -> Callable[[Path], bool]:
     seen = set()
     for thread in threads:
         submission = graph.get_state({"configurable": {"thread_id": thread}}).values.get("submission") or {}
-        seen.add(submission.get("submission_id"))
+        submission_id = submission.get("submission_id")
+        if isinstance(submission_id, str) and submission_id:  # a null, list or object id never matches a file
+            seen.add(submission_id)
 
     def skip(path: Path) -> bool:
         if path.suffix.lower() != ".json":
@@ -148,7 +150,7 @@ def _seen_web_form(checkpointer, graph) -> Callable[[Path], bool]:
             data = json.loads(path.read_text(encoding="utf-8-sig"))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError):
             return False
-        return isinstance(data, dict) and data.get("submission_id") in seen
+        return isinstance(data, dict) and isinstance(data.get("submission_id"), str) and data["submission_id"] in seen
 
     return skip
 
@@ -165,11 +167,25 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
         skip = _seen_web_form(checkpointer, graphs[WEB_FORM])
         results = router.run_inbox(folder, graphs, db_path, run_id(thread_id), folders.outbox, skip)
         states = [r["state"] or {} for r in results]
+        conn = db.connect(db_path)
+        try:
+            parked = {
+                row[0] for row in conn.execute("SELECT thread_id FROM failures WHERE status = 'needs_review'")
+            }
+        finally:
+            conn.close()
         counts = {
             "items": len(results),
             "stored": sum(1 for s in states if s.get("order_id") is not None),
             "paused": sum(1 for s in states if s.get("__interrupt__")),
-            "failed": sum(1 for r in results if r["error"] is not None or r["route"].kind == router.REJECTED),
+            "failed": sum(
+                1
+                for r in results
+                if r["error"] is not None
+                or r["route"].kind == router.REJECTED
+                or r["thread_id"] in parked
+                or ((r["state"] or {}).get("errors") and (r["state"] or {}).get("order_id") is None)
+            ),
         }
         return {"counts": {"orders": counts}}
 

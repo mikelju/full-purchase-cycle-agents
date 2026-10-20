@@ -672,3 +672,75 @@ def test_cycle_py_calls_no_approve_reject_or_answer_function():
     }
     assert {name for name in called if name.startswith(("approve", "reject", "answer"))} == set()
     assert "Command" not in called
+
+
+# Review round 1 (M1, M2, m1): a malformed web form file must not hide other items nor crash the orders stage
+
+
+def _inbox_world(tmp_path):
+    for name in ("orders", "replies", "documents", "signed"):
+        (tmp_path / name).mkdir()
+    return tmp_path / "b.db", tmp_path / "cp.sqlite", _folders(tmp_path)
+
+
+def _write_bad_form(tmp_path, submission_id):
+    form = {"submission_id": submission_id, "customer_code": "CLI-001", "lines": []}
+    (tmp_path / "orders" / "a-bad.json").write_text(json.dumps(form), encoding="utf-8")
+
+
+def _write_whatsapp(tmp_path):
+    message = {
+        "message_id": "wamid.X1",
+        "from": PHONE,
+        "timestamp": "1760000000",
+        "type": "text",
+        "text": {"body": WHATSAPP_TEXT},
+    }
+    (tmp_path / "orders" / "b-wa.json").write_text(json.dumps(message), encoding="utf-8")
+
+
+@pytest.mark.parametrize("bad_id", [None, ["x"], {"a": 1}, 7, ""])
+def test_a_web_form_with_a_malformed_submission_id_never_hides_a_later_whatsapp_order(tmp_path, bad_id):
+    db_path, checkpoints, folders = _inbox_world(tmp_path)
+    calls = []
+
+    def client(task, catalog):
+        return CountingClient(task, calls)
+
+    _write_bad_form(tmp_path, bad_id)
+    cycle.run_cycle(db_path, checkpoints, folders, client)
+    _write_whatsapp(tmp_path)
+    second = cycle.run_cycle(db_path, checkpoints, folders, client)
+    assert second["counts"]["orders"]["items"] >= 1
+    assert second["counts"]["orders"]["stored"] == 1
+    conn = db.connect(db_path)
+    try:
+        assert conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0] == 1
+    finally:
+        conn.close()
+
+
+def test_an_unhashable_submission_id_does_not_crash_the_orders_stage_and_the_next_pass_is_a_no_op(tmp_path):
+    db_path, checkpoints, folders = _inbox_world(tmp_path)
+    calls = []
+
+    def client(task, catalog):
+        return CountingClient(task, calls)
+
+    _write_bad_form(tmp_path, ["x"])
+    _write_whatsapp(tmp_path)
+    first = cycle.run_cycle(db_path, checkpoints, folders, client)
+    assert first["counts"]["orders"]["stored"] == 1
+    assert first["counts"]["orders"]["failed"] >= 1
+    before = len(calls)
+    third = cycle.run_cycle(db_path, checkpoints, folders, client)
+    assert len(calls) == before
+    assert third["counts"]["orders"]["stored"] <= 1
+
+
+def test_a_parked_web_form_is_counted_as_failed_not_as_failed_zero(tmp_path):
+    db_path, checkpoints, folders = _inbox_world(tmp_path)
+    _write_bad_form(tmp_path, "SUB-BAD-1")
+    result = cycle.run_cycle(db_path, checkpoints, folders, lambda task, catalog: CountingClient(task, []))
+    orders = result["counts"]["orders"]
+    assert (orders["items"], orders["stored"], orders["failed"]) == (1, 0, 1)
