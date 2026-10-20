@@ -105,8 +105,8 @@ All live spend of the phase happens here, once, after `npm run check` is green w
   - Evidence: fresh clone with `--no-hardlinks`, no `.env`, Anthropic and LangSmith variables unset: `npm ci`, `uv sync`, `npm run check` exit 0, 1670 passed, 21 evaluations in replay with every gate PASS, 0 FAIL (`.evidence/fase-12/fresh-clone-check.log`); `git diff --stat a8186f4` over recordings, datasets and baselines lists 17 added files, 0 modified or deleted (`.evidence/fase-12/data-diff.txt`).
 - [x] 17. Adversarial review with `sdd-review` through `sdd-delivery`, at most two rounds, over `a8186f4..HEAD` with new files included; findings and fixes recorded below with regression tests; `npm run check` rerun after the fixes (background, one at a time); a third round needs an owner decision.
   - Evidence: round 1 fixes in increment 17 commits; `npm run check` after the fixes exit 0, 1685 passed, 21 evaluations PASS (`.evidence/fase-12/check-after-review-r1.log`, untracked). Round 2 fixes in increment 17 commits; `npm run check` after them exit 0, 1697 passed, 21 evaluations PASS (`.evidence/fase-12/check-after-review-r2.log`, untracked).
-- [ ] 18. Results per criterion, master plan row 12 status, open items and limitations, candidate learnings; delivery per `.agents/skills/sdd-delivery/SKILL.md`: push the branch to `origin` and open a PR to `main` with `--body-file` (goal, criteria with evidence, review table, pending items), never merge or approve.
-  - Evidence:
+- [x] 18. Results per criterion, master plan row 12 status, open items and limitations, candidate learnings; delivery per `.agents/skills/sdd-delivery/SKILL.md`: push the branch to `origin` and open a PR to `main` with `--body-file` (goal, criteria with evidence, review table, pending items), never merge or approve.
+  - Evidence: Results section above; master plan row 12 set to in review with PR open and C13 pending; branch pushed and PR to `main` opened with `--body-file`, not merged or approved.
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
@@ -128,6 +128,28 @@ All live spend of the phase happens here, once, after `npm run check` is green w
 ## Results
 Per criterion: command or path run, observed result and reference to the evidence.
 Open items, limitations and what could not be checked, said plainly.
+
+Final check after the verification minors: `npm run check` exit 0, 1698 passed, 21 evaluations in replay with every gate PASS, 0 FAIL (`.evidence/fase-12/check-final.log`, untracked).
+The verification minors tightened the `short_of_stock` and `served_from_stock` tags to the spec wording, made the pause tag count decisions only, counted a duplicate after a resumption only when a table or file count exceeds the reference, and regenerated only the six `purchase_cycle` dataset files whose tags changed (PC-004, 007, 010, 011, 012, 016); no other suite changed.
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| C1 | Met | Increment 16: fresh clone, no key, no `.env`: `uv sync` and `npm run check` exit 0, 21 evaluations PASS; final check above |
+| C2 | Met | Increments 2 and 6: `tests/test_cycle.py` compares a cycle run with the module commands |
+| C3 | Met | Increment 3: one order id followed across the tables |
+| C4 | Met | Increment 4: one test per pause kind, no decision taken |
+| C5 | Met | Increment 5: idempotent second pass and crash resumption with no model call; review round 2 fixes |
+| C6 | Met | Increment 6: each step as a subprocess equals the in-process run |
+| C7 | Met | Increment 14: one live record run, 14 steps, four final states; replay with no keys exit 0; known limit D7 |
+| C8 | Met | Increment 7 and review: 16 scenarios, 16/16 success, Wilson interval [80.6, 100.0], 0 critical errors; injected-error tests |
+| C9 | Met | Increments 8 and 9: one summary per suite and a static HTML dashboard over 21 suites |
+| C10 | Met | Increment 15: spans of a replay cycle run read back from the local Phoenix |
+| C11 | Met | Increments 1, 11 and 16: demos equal before and after, no modified or deleted recordings, datasets or baselines |
+| C12 | Met | Increment 12: `tests/test_secrets.py` covers the new files |
+| C13 | PENDING | Only the owner's Anthropic console figure for 2026-10-20 UTC measures the cost. Upper bound from list prices: 18 calls, at most 0.22 USD against the 5 USD cap. Not marked met until the figure arrives |
+| C14 | Met | Increment 12: README in English; master plan row 12 updated in increment 18 |
+
+Open items: C13 awaits the console figure; D7 limits a re-record of the demo; the LangSmith trace is left to the catch-up change (D5 of the spec).
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
