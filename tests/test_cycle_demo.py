@@ -81,16 +81,43 @@ def test_the_database_holds_the_four_final_states(cycle_demo):
     assert waiting == [3]
 
 
+def _fake_repository(tmp_path):
+    """A throwaway git repository with a few tracked files; the test never touches the real checkout."""
+    root = tmp_path / "repo"
+    for name in ("examples/orders/a.txt", "examples/invoices/b.txt", "examples/cycle/orders/c.txt", "src/d.py"):
+        (root / name).parent.mkdir(parents=True, exist_ok=True)
+        (root / name).write_text("x", encoding="utf-8")
+    identity = ["-c", "user.name=t", "-c", "user.email=t@example.com"]
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    subprocess.run(["git", "add", "."], cwd=root, check=True)
+    subprocess.run(["git", *identity, "commit", "-q", "-m", "x"], cwd=root, check=True)
+    return root
+
+
+def _boom(*args, **kwargs):
+    raise AssertionError("the demo tried to delete something")
+
+
 @pytest.mark.parametrize("target", ["examples/cycle", "examples", "examples/cycle/orders", "src", "."])
-def test_the_demo_refuses_a_workdir_that_holds_versioned_files_and_removes_nothing(target, capsys):
+@pytest.mark.parametrize("guard_regressed", [False, True])
+def test_the_demo_refuses_a_workdir_that_holds_versioned_files_and_removes_nothing(
+    target, guard_regressed, tmp_path, monkeypatch, capsys
+):
     from argparse import Namespace
 
     from purchase_cycle import cycle_cli
 
-    before = sorted(p for p in (config.ROOT / "examples").rglob("*") if p.is_file())
-    args = Namespace(
-        mode="replay", examples=config.ROOT / "examples", workdir=config.ROOT / target, recordings=RECORDINGS
-    )
-    assert cycle_cli.cmd_cycle_demo(args) == 1
-    assert "versioned" in capsys.readouterr().err
-    assert sorted(p for p in (config.ROOT / "examples").rglob("*") if p.is_file()) == before
+    root = _fake_repository(tmp_path)
+    monkeypatch.setattr(config, "ROOT", root)
+    monkeypatch.setattr(cycle_cli.shutil, "rmtree", _boom)
+    monkeypatch.setattr(cycle_cli.Path, "unlink", _boom)
+    before = sorted(p for p in root.rglob("*") if p.is_file() and ".git" not in p.parts)
+    args = Namespace(mode="replay", examples=root / "examples", workdir=root / target, recordings=RECORDINGS)
+    if guard_regressed:  # proves the test itself is harmless when the guard is gone
+        monkeypatch.setattr(cycle_cli, "_is_versioned", lambda *a: False)
+        with pytest.raises(AssertionError, match="tried to delete"):
+            cycle_cli.cmd_cycle_demo(args)
+    else:
+        assert cycle_cli.cmd_cycle_demo(args) == 1
+        assert "versioned" in capsys.readouterr().err
+    assert sorted(p for p in root.rglob("*") if p.is_file() and ".git" not in p.parts) == before
