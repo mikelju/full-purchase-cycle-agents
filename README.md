@@ -673,6 +673,84 @@ Phoenix tracing is never set up inside `npm run check`.
 - The trace of this phase is local to the owner's machine; the LangSmith trace and the `response_drafting` experiment come with a later change.
 - The phase 08 limitations remain on the purchase side: one invoice and one delivery note per order, fixed tolerances.
 
+## Run the whole purchase cycle
+
+Phase 12 composes the modules into one graph, `purchase_cycle` (`src/purchase_cycle/cycle.py`).
+One pass runs five stages in order, each one a node that calls the same module functions as the module commands, with the same database, checkpoint file and folders:
+
+1. `orders` - the phase 05 router reads the inbox of web form, email and WhatsApp items and runs each order graph.
+2. `quotes` - phase 06 and 07: requests quotes for the shortfalls, accepts the supplier replies and decides the quotes that are ready.
+3. `reconcile` - phase 08 and 09: reads the supplier invoices and delivery notes, matches them with the purchase orders and drafts the claims.
+4. `receipts` - phase 10: puts reconciled goods into stock and serves the customer orders with a delivery note.
+5. `sales` - phase 11: invoices the delivery notes, reads the signed notes, matches them and drafts the responses.
+
+Stages hand off only through the database and the folders; the graph state holds the per-stage counts.
+The orchestrator takes no decision: a clarification answer, a quote approval, a claim or a customer response that needs a person stays paused, and the pass ends by listing those decisions with the module command that resolves each one.
+A second pass with nothing new changes nothing, and a pass that was interrupted resumes from its checkpoint.
+
+### Run commands
+
+```
+uv run purchase-cycle cycle run --orders DIR --replies DIR --documents DIR --signed-notes DIR [--outbox DIR] [--supplier-outbox DIR] [--delivery-notes DIR] [--invoices DIR] [--mode live|record|replay] [--recordings FILE] [--checkpoints FILE]
+```
+
+`--db` is a global option placed before the subcommand.
+`cycle run` prints the mode, the pass id (`new` or `resumed`), one line of counts per stage, and the pending decisions with their commands.
+`--mode record` and `--mode live` need `ANTHROPIC_API_KEY`; replay needs no key and no network.
+
+### Run the cycle demo
+
+```
+uv run purchase-cycle cycle-demo [--mode replay|record|live] [--workdir DIR] [--recordings FILE] [--examples DIR]
+```
+
+`cycle-demo` starts from a fresh database in `data/cycle-demo/` (`--workdir <folder>` to change it; the data folder itself is refused).
+It seeds the catalog, sets the stock of the two small glove sizes to zero and copies the four orders of `examples/cycle/orders/` (a web form, an email, a WhatsApp message and a second web form).
+Then it runs each step as its own process: a `cycle run` pass, `clarify answer` with `examples/cycle/clarification_reply.txt`, a pass, the simulated clock moved six days with the supplier replies of `examples/cycle/replies/` in place, a pass, `quotes approve` for both requests, a pass with the supplier documents of `examples/cycle/documents/`, `reconcile approve` and `reconcile reject` for two invoices, a pass, a pass with the signed notes of `examples/cycle/signed_notes/`, and `sales approve` for one response followed by a last pass.
+It ends with one line per order (status, invoice result and credit note status), the supplier claims and the quote requests still waiting, and exits non-zero when a step fails.
+
+By default (`--mode replay`) it reads the model answers from `evals/recordings/cycle_demo.jsonl` and needs no key and no network.
+That recording is made once with `--mode record`, which made 18 model calls (4 supplier document extractions, 2 web form matchings, 2 clarification questions, 2 offer extractions, 2 claim drafts, and 1 each of email intake, email order extraction, clarification answer, WhatsApp intake, WhatsApp order extraction and response drafting) and needs `ANTHROPIC_API_KEY`.
+`--recordings <file>` picks another file.
+
+Cost of the record run: 18 calls at Claude Haiku 4.5 list prices, at most about 0.22 USD (an upper bound: only the clarification answer step prints its token usage, 740 uncached and 8587 cache-write input tokens and 68 output tokens, about 0.012 USD).
+Elapsed time of the replay run: about 24 seconds on the development machine.
+
+### See the evaluations in a dashboard
+
+```
+uv run purchase-cycle dashboard [--summaries DIR] [--output FILE]
+```
+
+`npm run eval` and `uv run purchase-cycle eval` write one summary file per suite in `data/eval_summaries/`.
+`dashboard` reads them and writes one static HTML page, `data/dashboard.html` by default, with the status, metrics, gates, critical errors and per-category figures of every suite; a suite without a summary shows as missing.
+Every string in the page is escaped (`html.escape`, SEC-030 in `docs/security.md`) and the page has no script and no external resource, so it opens from disk.
+
+### The cycle in the local Phoenix
+
+Start `npm run phoenix` as described in "See local traces in Phoenix", then run `PHOENIX_TRACING=true uv run purchase-cycle cycle run ...` or `PHOENIX_TRACING=true uv run purchase-cycle cycle-demo`.
+The five stages of the `purchase_cycle` graph appear as nodes of the trace, each with the module graphs it calls; in a replay run there are no model spans.
+`cycle-demo` runs its steps as child processes that inherit the variable, so each step sends its own trace.
+Phoenix tracing is never set up inside `npm run check`.
+
+### The `purchase_cycle` evaluation
+
+`uv run purchase-cycle eval --suite purchase_cycle` runs 16 hand-built scenarios (`evals/datasets/purchase_cycle/PC-001.json` to `PC-016.json`) through the orchestrator on a temporary database, deterministic with scripted model answers and no split or baseline.
+Each scenario scripts the inbox, the passes and the human decisions between them, and the evaluation checks the final database state, the order of the stages, that no decision was taken by the orchestrator, and that a repeated pass duplicates nothing.
+Tags cover orders served from stock, orders short of stock, and the four pauses (clarification, quote approval, claim, customer response).
+The gate is 100% scenario success and 0 critical errors (decision taken, duplicate, stage out of order, model call, final state differs).
+It is part of `npm run eval` and `npm run check`.
+
+### Limitations of the orchestrator
+
+- `cycle run` is one pass driven by an operator or the demo; nothing ticks by itself, and the simulated clock still moves only with `clock` and `quotes tick`.
+- A decision is never taken by the orchestrator: a paused thread stays paused until a person runs the command listed in the pass output.
+- The module command `purchase-cycle route` still asks a clarification again when the same web form is submitted again; only `cycle run` skips a web form it has already seen.
+- The record run of `cycle-demo` makes 17 model calls and needs a key; replay needs the versioned recording.
+- The scenario evaluation is deterministic with scripted model answers, so it checks the wiring and the state, not the quality of the model answers, which the module evaluations score.
+- All limitations of the modules (simulated channels, fixed tolerances, one invoice and one delivery note per order) apply unchanged.
+- The cost and time figures of the demo are placeholders until increment 14.
+
 ## See local traces in Phoenix
 
 During development the graph runs can be traced in a local Arize Phoenix instead of LangSmith; LangSmith tracing works as before.
@@ -795,7 +873,7 @@ Limits:
 npm run check
 ```
 
-Runs the method's hook tests, ruff, pytest and the twenty evaluations in replay mode.
+Runs the method's hook tests, ruff, pytest and the twenty-one evaluations in replay mode.
 
 ## The golden dataset
 
@@ -943,7 +1021,7 @@ npm run eval
 npm run eval:live
 ```
 
-`npm run eval` replays the twenty evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
+`npm run eval` replays the twenty-one evaluations (the test split of the model ones) and exits non-zero when a gate of any of them fails.
 For `order_line_extraction` it prints product and quantity accuracy with 95% Wilson intervals, globally and per category, the failures and the contrast set.
 For `web_form_matching` it prints line product accuracy with 95% Wilson intervals, globally and per category, the model calls per category (zero for exact name and SKU typed), submission accuracy (reported, not gated) and the failures.
 The gates are:

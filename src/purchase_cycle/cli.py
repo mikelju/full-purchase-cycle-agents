@@ -1338,8 +1338,8 @@ def _clarify_graph(
     finally:
         conn.close()
     clients = ClarificationClients(
-        ModelClient(args.mode, catalog, task=CLARIFICATION_QUESTION),
-        ModelClient(args.mode, catalog, task=CLARIFICATION_ANSWER),
+        ModelClient(args.mode, catalog, getattr(args, "recordings", None), task=CLARIFICATION_QUESTION),
+        ModelClient(args.mode, catalog, getattr(args, "recordings", None), task=CLARIFICATION_ANSWER),
     )
     checkpointer = sqlite_checkpointer(args.checkpoints)
     if channel == WEB_FORM:
@@ -1947,6 +1947,18 @@ def cmd_resume(args) -> int:
     return 0
 
 
+def cmd_dashboard(args) -> int:
+    from purchase_cycle import dashboard
+
+    kwargs = {}
+    if args.summaries:
+        kwargs["directory"] = Path(args.summaries)
+    if args.output:
+        kwargs["output"] = Path(args.output)
+    print(f"dashboard written to {dashboard.write_dashboard(**kwargs).resolve()}")
+    return 0
+
+
 def main(argv=None) -> int:
     load_dotenv()
     parser = argparse.ArgumentParser(prog="purchase-cycle")
@@ -2028,6 +2040,7 @@ def main(argv=None) -> int:
     close.add_argument("thread_id")
     for command, handler in ((answer, cmd_clarify_answer), (close, cmd_clarify_close)):
         command.add_argument("--mode", choices=config.MODES, default="replay")
+        command.add_argument("--recordings", default=None, help="one recordings file for the clarification tasks")
         command.add_argument("--checkpoints", default=str(config.default_checkpoint_path()))
         command.add_argument("--outbox", default=str(config.OUTBOX_DIR), help="folder for the WhatsApp reply files")
         command.set_defaults(handler=handler)
@@ -2199,9 +2212,18 @@ def main(argv=None) -> int:
 
     add_sales_commands(sub)
 
+    from purchase_cycle.cycle_cli import add_cycle_commands
+
+    add_cycle_commands(sub)
+
     from purchase_cycle.evaluation.cli import add_eval_commands
 
     add_eval_commands(sub)
+
+    dash = sub.add_parser("dashboard", help="build one static HTML page from the evaluation summaries")
+    dash.add_argument("--summaries", default=None, help="folder of summary files (default data/eval_summaries)")
+    dash.add_argument("--output", default=None, help="HTML file to write (default data/dashboard.html)")
+    dash.set_defaults(handler=cmd_dashboard)
 
     args = parser.parse_args(argv)
     if args.command == "demo" and args.resume and not args.thread_id:

@@ -343,3 +343,23 @@ def test_phase_11_files_are_tracked_and_hold_no_keys():
     for name in fixed + files:
         assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
         assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name
+
+
+def test_phase_12_files_are_tracked_and_hold_no_keys():
+    tracked = set(_tracked())
+    fixed = [
+        "src/purchase_cycle/cycle.py",
+        "src/purchase_cycle/cycle_cli.py",
+        "src/purchase_cycle/dashboard.py",
+        "src/purchase_cycle/evaluation/purchase_cycle_eval.py",
+    ]
+    folders = [ROOT / "examples" / "cycle", ROOT / "evals" / "datasets" / "purchase_cycle"]
+    # The cycle-demo recording is made once with --mode record (increment 14); it is scanned from the day it exists.
+    optional = ["evals/recordings/cycle_demo.jsonl"]
+    fixed += [name for name in optional if (ROOT / name).exists()]
+    files = sorted(str(p.relative_to(ROOT).as_posix()) for folder in folders for p in folder.rglob("*") if p.is_file())
+    assert len([f for f in files if f.startswith("examples/cycle/")]) == 13
+    assert len([f for f in files if f.startswith("evals/datasets/purchase_cycle/")]) == 16
+    for name in fixed + files:
+        assert name in tracked, f"{name} is not versioned, so the secret scan skips it"
+        assert not SECRET_PATTERNS.search((ROOT / name).read_text(encoding="utf-8", errors="ignore")), name

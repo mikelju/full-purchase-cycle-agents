@@ -1,6 +1,6 @@
 # 018 - Fix the known defects before phase 12
 
-Status: implemented, adversarial review complete, delivery in progress
+Status: integrated (merged via PR #29)
 
 ## Contract
 Goal and reason:

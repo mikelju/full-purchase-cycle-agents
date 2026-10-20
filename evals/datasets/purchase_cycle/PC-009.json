@@ -1,0 +1,45 @@
+{
+  "dataset_version": "1.0",
+  "expected": {
+    "claims": [],
+    "clarifications": [
+      "closed"
+    ],
+    "customer_invoices": 0,
+    "customer_responses": [],
+    "failures": 0,
+    "orders": [],
+    "pending": [],
+    "purchase_orders": 0,
+    "quote_requests": [],
+    "sales_results": []
+  },
+  "id": "PC-009",
+  "initial_state": {
+    "seed": "db.seed: catalog, stock, customers and the clock; the stock of the short SKU set to zero"
+  },
+  "orders": [
+    {
+      "file": "c-doubt.json",
+      "kind": "web_form",
+      "product": "nitrile gloves",
+      "quantity": 10
+    }
+  ],
+  "steps": [
+    {
+      "do": "pass"
+    },
+    {
+      "command": "close",
+      "do": "decide",
+      "ref": "web_form-c0001-c-doubt"
+    },
+    {
+      "do": "pass"
+    }
+  ],
+  "tags": [
+    "pause_clarification"
+  ]
+}
