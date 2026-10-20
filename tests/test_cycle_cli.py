@@ -154,3 +154,37 @@ def test_each_pass_and_each_decision_in_a_new_process_gives_the_same_rows_and_fi
     assert proc_rows == mem_rows
     assert proc_files == mem_files
     assert "pending decisions: 0" in last
+
+
+def test_record_mode_keeps_the_recordings_already_captured_when_a_stage_raises_anything(tmp_path, monkeypatch):
+    import argparse
+
+    import pytest
+
+    from purchase_cycle import cycle_cli
+
+    saved = []
+
+    class Made:
+        def __init__(self, mode, catalog, recordings, task=None):
+            pass
+
+        def save_recordings(self):
+            saved.append(1)
+            return 1
+
+    def run_cycle(db_path, checkpoints, folders, client):
+        client(CLAIM_DRAFTING, [])
+        raise RuntimeError("receipts stage blew up")
+
+    monkeypatch.setattr(cycle_cli, "ModelClient", Made)
+    monkeypatch.setattr(cycle_cli.cycle, "run_cycle", run_cycle)
+    names = ("orders", "replies", "documents", "signed_notes", "outbox", "supplier_outbox", "delivery_notes", "invoices")
+    args = argparse.Namespace(
+        mode="record", recordings=tmp_path / "r.jsonl", db=tmp_path / "b.db", checkpoints=tmp_path / "c.sqlite"
+    )
+    for name in names:
+        setattr(args, name, tmp_path / name)
+    with pytest.raises(RuntimeError):
+        cycle_cli.cmd_cycle_run(args)
+    assert saved == [1]

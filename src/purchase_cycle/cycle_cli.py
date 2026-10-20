@@ -53,12 +53,14 @@ def cmd_cycle_run(args) -> int:
         args.delivery_notes,
         args.invoices,
     )
+    saved = 0
     try:
         result = cycle.run_cycle(args.db, args.checkpoints, folders, client)
     except MissingRecording as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
-    saved = sum(made.save_recordings() for made in clients)
+    finally:  # live answers already paid for are kept whatever stopped the pass
+        saved = sum(made.save_recordings() for made in clients)
     kind = "resumed" if result["resumed"] else "new"
     print(f"mode={args.mode}  pass={result['thread_id']} ({kind})")
     for stage in cycle.STAGES:
@@ -76,11 +78,28 @@ def cmd_cycle_run(args) -> int:
     return 0
 
 
+def _is_versioned(workdir: Path, examples: Path) -> bool:
+    """True for a workdir that is, holds or lies inside the examples folder or the repository root, or has tracked files."""
+    target, shown = workdir.resolve(), examples.resolve()
+    if target == shown or shown in target.parents or target in shown.parents or target == config.ROOT.resolve():
+        return True
+    try:
+        listed = subprocess.run(
+            ["git", "ls-files", "--", str(target)], cwd=config.ROOT, capture_output=True, text=True, check=True
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    return bool(listed.stdout.strip())
+
+
 def cmd_cycle_demo(args) -> int:
     """The four-order scenario through the whole cycle, each step in its own process."""
     examples, workdir = Path(args.examples), Path(args.workdir)
     if workdir.resolve() == config.DATA_DIR.resolve():
         print(f"Error: --workdir {args.workdir} is the data folder; pick another folder", file=sys.stderr)
+        return 1
+    if _is_versioned(workdir, examples):
+        print(f"Error: --workdir {args.workdir} holds versioned files; pick another folder", file=sys.stderr)
         return 1
     recordings = Path(args.recordings)
     if args.mode == "replay" and not recordings.is_file():

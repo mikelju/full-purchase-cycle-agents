@@ -79,3 +79,18 @@ def test_the_database_holds_the_four_final_states(cycle_demo):
     assert corrections == ["credit_note"] and responses == ["sent"]
     assert claims == ["rejected", "sent"]
     assert waiting == [3]
+
+
+@pytest.mark.parametrize("target", ["examples/cycle", "examples", "examples/cycle/orders", "src", "."])
+def test_the_demo_refuses_a_workdir_that_holds_versioned_files_and_removes_nothing(target, capsys):
+    from argparse import Namespace
+
+    from purchase_cycle import cycle_cli
+
+    before = sorted(p for p in (config.ROOT / "examples").rglob("*") if p.is_file())
+    args = Namespace(
+        mode="replay", examples=config.ROOT / "examples", workdir=config.ROOT / target, recordings=RECORDINGS
+    )
+    assert cycle_cli.cmd_cycle_demo(args) == 1
+    assert "versioned" in capsys.readouterr().err
+    assert sorted(p for p in (config.ROOT / "examples").rglob("*") if p.is_file()) == before
