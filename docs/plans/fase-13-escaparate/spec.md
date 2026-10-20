@@ -1,6 +1,6 @@
 # Phase 13 - Portfolio showcase: specification
 
-Status: spec in review
+Status: spec approved (2026-10-20, frozen)
 Approved by the owner: pending
 Master plan: `../0_plan_maestro.md`
 

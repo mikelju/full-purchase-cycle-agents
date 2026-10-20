@@ -1,6 +1,6 @@
 # Phase 13 - Portfolio showcase: plan and results
 
-Status: pending (spec in review)
+Status: pending (spec approved, execution on hold by owner)
 Spec: `spec.md` (in review; frozen on approval)
 Base: branch `fase-13-escaparate` from `main` at `2895902` (phase 12 merged through PR #30, visual guides through PR #31); the unchanged-behaviour reference of C9 is the code at `2895902`.
 
