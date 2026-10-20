@@ -1,6 +1,7 @@
 import copy
 import json
 import re
+import sqlite3
 
 import pytest
 
@@ -164,6 +165,30 @@ def test_a_duplicate_after_a_resumption_is_a_duplicate_not_a_different_final_sta
     assert errors["duplicate"] >= 1 and errors["final_state_differs"] == 0
 
 
+def test_a_missing_row_after_a_resumption_is_a_different_final_state_not_a_duplicate(tmp_path, monkeypatch):
+    item = _item("PC-002")
+    real = pc._cycle_pass
+
+    stopped = []
+
+    def losing(root, stage, calls, process):
+        out = real(root, stage, calls, process)
+        if stage:
+            stopped.append(stage)
+        elif stopped:  # the pass that resumes a stopped one loses a row
+            conn = sqlite3.connect(root / "business.db")
+            conn.execute("PRAGMA foreign_keys = OFF")
+            conn.execute("DELETE FROM customer_invoices WHERE rowid = (SELECT MIN(rowid) FROM customer_invoices)")
+            conn.commit()
+            conn.close()
+            stopped.clear()
+        return out
+
+    monkeypatch.setattr(pc, "_cycle_pass", losing)
+    errors = pc.grade(item, pc.measure(item, tmp_path))["critical"]
+    assert errors["duplicate"] == 0 and errors["final_state_differs"] == 1
+
+
 def test_a_failed_decision_step_is_not_a_model_call(tmp_path):
     item = copy.deepcopy(_item("PC-006"))
     step = next(s for s in item["steps"] if s["do"] == "decide")
@@ -185,3 +210,11 @@ def test_the_tags_follow_the_wording_of_the_spec():
     assert tagged("rejected") == {"PC-010", "PC-011"}  # a rejected quote or claim that leaves the order waiting
     assert tagged("short_delivery") == {"PC-007", "PC-011", "PC-016"}  # and a new quote request starts
     assert tagged("restart") == {"PC-002", "PC-012"}  # a cycle pass run by a new process
+    assert tagged("short_of_stock") == {
+        "PC-005",
+        "PC-006",
+        "PC-008",
+        "PC-013",
+        "PC-014",
+    }  # quotes, order, invoice, served
+    assert all(len(tagged(t)) >= 2 for t in ("served_from_stock", "short_of_stock"))

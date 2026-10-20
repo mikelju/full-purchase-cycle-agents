@@ -270,7 +270,7 @@ CASES = [
             orders=["served"], quotes=["ordered"], po=1, invoices=1, sales=["discrepancies"], responses=["rejected"]
         ),
     },
-    {  # PC-007: the supplier delivers 2 boxes of the 3 invoiced; once the claim is approved the missing box is requested
+    {  # PC-007: the supplier delivers 2 boxes of the 3 invoiced; the receipt, not the approved claim, requests the missing box
         "orders": [WEB_XS],
         "steps": [*TO_APPROVAL, decide("approve_offer"), docs(note_quantity=2), PASS, decide("approve_claim"), PASS],
         "expected": want(orders=["received"], quotes=["ordered", "waiting"], po=1, claims=["sent"]),
@@ -333,7 +333,7 @@ CASES = [
         "steps": [crash("sales"), PASS],
         "expected": want(orders=["served", "served"], invoices=2, sales=["awaiting_delivery_note"] * 2),
     },
-    {  # PC-016: the supplier delivers 1 box of 3; once the claim is approved the missing boxes start a new quote request
+    {  # PC-016: the supplier delivers 1 box of 3; the receipt, not the approved claim, starts a new quote request
         "orders": [WEB_XS],
         "steps": [*TO_APPROVAL, decide("approve_offer"), docs(note_quantity=1), PASS, decide("approve_claim"), PASS],
         "expected": want(orders=["received"], quotes=["ordered", "waiting"], po=1, claims=["sent"]),
@@ -366,11 +366,16 @@ def derive_tags(item: dict) -> list[str]:
     if any(s.get("process") and s["do"] == "pass" for s in steps):  # a cycle pass run by a new process
         tags.append("restart")
     expected = item["expected"]
-    if expected["orders"] and not expected["quote_requests"]:
+    if expected["orders"] and not expected["quote_requests"] and expected["customer_invoices"] >= 1:
         tags.append("served_from_stock")
-    if expected["quote_requests"]:
+    if (
+        expected["quote_requests"]
+        and expected["purchase_orders"] >= 1
+        and expected["customer_invoices"] >= 1
+        and "served" in expected["orders"]
+    ):
         tags.append("short_of_stock")
-    paused = {kind for kind, _ in expected["pending"]} | {PAUSE_OF[s["command"]] for s in steps if s["do"] == "decide"}
+    paused = {PAUSE_OF[s["command"]] for s in steps if s["do"] == "decide"}
     tags += [f"pause_{kind}" for kind in dict.fromkeys(PAUSE_OF.values()) if kind in paused]
     if any(s.get("command") in ("reject_offer", "reject_claim") for s in steps) and "received" in expected["orders"]:
         tags.append("rejected")  # a rejected quote or claim that leaves the order waiting
@@ -502,6 +507,14 @@ def _snapshot(root: Path) -> dict:
 def _shape(snapshot: dict) -> tuple:
     """How many rows each table holds and which files exist: what a duplicate changes."""
     return {t: len(r) for t, r in snapshot["rows"].items()}, sorted(snapshot["files"])
+
+
+def _has_extra(snapshot: dict, reference: dict) -> bool:
+    """True when the snapshot holds more rows in a table or more files than the reference: a duplicate, not a missing row."""
+    rows, ref_rows = _shape(snapshot)[0], _shape(reference)[0]
+    return any(n > ref_rows.get(t, 0) for t, n in rows.items()) or bool(
+        set(snapshot["files"]) - set(reference["files"])
+    )
 
 
 def _query(root: Path, sql: str) -> list:
@@ -780,7 +793,7 @@ def measure(item: dict, tmp: Path) -> dict:
                     _reference(ref_root, ref_passes == 0)
                 ref_passes += 1
                 if kind == "resume":  # a resumption must leave the same rows and files as an uninterrupted pass
-                    passes[-1]["duplicate"] = _shape(_snapshot(cycle_root)) != _shape(_snapshot(ref_root))
+                    passes[-1]["duplicate"] = _has_extra(_snapshot(cycle_root), _snapshot(ref_root))
     return {
         "passes": passes,
         "failed_steps": failed,
