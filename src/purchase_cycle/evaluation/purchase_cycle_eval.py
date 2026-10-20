@@ -29,6 +29,7 @@ from pathlib import Path
 from purchase_cycle import claims, cli, customer_responses, cycle, cycle_cli, db, llm, sales_cli
 from purchase_cycle.catalog import CUSTOMERS
 from purchase_cycle.config import EVALS_DIR
+from purchase_cycle.graph import sqlite_checkpointer
 from purchase_cycle.evaluation.email_eval import _ci, _pct
 from purchase_cycle.evaluation.recovery_eval import _rate
 from purchase_cycle.evaluation.stats import target_cells, zero_event_note
@@ -498,6 +499,11 @@ def _snapshot(root: Path) -> dict:
     return {"rows": rows, "files": files}
 
 
+def _shape(snapshot: dict) -> tuple:
+    """How many rows each table holds and which files exist: what a duplicate changes."""
+    return {t: len(r) for t, r in snapshot["rows"].items()}, sorted(snapshot["files"])
+
+
 def _query(root: Path, sql: str) -> list:
     conn = sqlite3.connect(root / "business.db")
     try:
@@ -556,8 +562,20 @@ def _run_cli(root: Path, words: list[str], process: bool) -> tuple[int, list[str
     return code, out.getvalue().splitlines()
 
 
+def _ran(root: Path) -> list[str]:
+    """The stages of the last pass in the order they really ran, read from the pass checkpoint."""
+    checkpointer = sqlite_checkpointer(root / "cp.sqlite")
+    try:
+        number = cycle._last_run(checkpointer)
+        thread = {"configurable": {"thread_id": f"{cycle.THREAD_PREFIX}{number:04d}"}}
+        saved = checkpointer.get_tuple(thread)
+        return list(saved.checkpoint["channel_values"].get("ran", [])) if saved else []
+    finally:
+        checkpointer.conn.close()
+
+
 def _cycle_pass(root: Path, stage, calls: list[str], process: bool) -> tuple[int, list[str], list[list[str]]]:
-    """One pass of `cycle run` (or a pass stopped after `stage`): exit code, printed stages, pending decisions."""
+    """One pass of `cycle run` (or a pass stopped after `stage`): exit code, stages in run order, pending decisions."""
     if stage:
         result = cycle.run_cycle(
             root / "business.db",
@@ -566,7 +584,7 @@ def _cycle_pass(root: Path, stage, calls: list[str], process: bool) -> tuple[int
             lambda task, catalog: CountingClient(task, calls),
             [stage],
         )
-        return 0, [], [[p["kind"], p["reference"]] for p in result["pending"]]
+        return 0, list(result["ran"]), [[p["kind"], p["reference"]] for p in result["pending"]]
     words = ["cycle", "run"]
     flags = (
         ("--orders", "orders"),
@@ -582,8 +600,7 @@ def _cycle_pass(root: Path, stage, calls: list[str], process: bool) -> tuple[int
         words += [flag, str(root / name)]
     words += ["--checkpoints", str(root / "cp.sqlite")]
     code, lines = _run_cli(root, words, process)
-    stages = [m.group(1) for line in lines if (m := re.match(r"^  (\w+):", line)) and m.group(1) in cycle.STAGES]
-    return code, stages, _pending(lines)
+    return code, _ran(root), _pending(lines)
 
 
 def _reference(root: Path, first: bool) -> None:
@@ -762,6 +779,8 @@ def measure(item: dict, tmp: Path) -> dict:
                 with _Patched(ref_calls):
                     _reference(ref_root, ref_passes == 0)
                 ref_passes += 1
+                if kind == "resume":  # a resumption must leave the same rows and files as an uninterrupted pass
+                    passes[-1]["duplicate"] = _shape(_snapshot(cycle_root)) != _shape(_snapshot(ref_root))
     return {
         "passes": passes,
         "failed_steps": failed,
@@ -794,21 +813,27 @@ def _got(measured: dict) -> dict:
     }
 
 
+def _in_order(p: dict) -> bool:
+    """The stages of a pass ran in the order of the cycle; a finished pass ran all of them, a stopped one a prefix."""
+    ran = p["stages"]
+    if not ran:
+        return p["rc"] != 0  # a failed pass is counted elsewhere
+    return ran == list(cycle.STAGES[: len(ran)]) and (p["kind"] == "crash" or len(ran) == len(cycle.STAGES))
+
+
 def _errors(item: dict, measured: dict) -> dict[str, int]:
     """The critical errors of one scenario, counted from the measured passes and the two final states."""
     errors = dict.fromkeys(CRITICAL_KINDS, 0)
     passes = measured["passes"]
     errors["decision_taken"] = sum(p["decided"][1] > p["decided"][0] for p in passes)
-    errors["duplicate"] = sum(p["changed"] for p in passes if p["kind"] == "repeat")
-    errors["stage_out_of_order"] = sum(p["stages"] != list(cycle.STAGES) for p in passes if p["stages"]) + int(
-        bool(measured["violations"])
+    errors["duplicate"] = sum(p["changed"] for p in passes if p["kind"] == "repeat") + sum(
+        bool(p.get("duplicate")) for p in passes
     )
+    errors["stage_out_of_order"] = sum(not _in_order(p) for p in passes) + int(bool(measured["violations"]))
     again = [p for p in passes if p["kind"] in ("repeat", "resume")]
-    errors["model_call"] = (
-        sum(bool(p["calls"]) or p["rc"] != 0 for p in again) + measured["real_calls"] + measured["failed_steps"]
-    )
+    errors["model_call"] = sum(bool(p["calls"]) or p["rc"] != 0 for p in again) + measured["real_calls"]
     errors["final_state_differs"] = int(
-        measured["cycle"] != measured["ref"] or measured["calls"] != measured["ref_calls"]
+        not errors["duplicate"] and (measured["cycle"] != measured["ref"] or measured["calls"] != measured["ref_calls"])
     )
     return errors
 

@@ -8,6 +8,7 @@ per-stage counts. The orchestrator takes no decision: a module thread that reach
 from __future__ import annotations
 
 import json
+import operator
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 from pathlib import Path
@@ -81,6 +82,7 @@ def _merge(old: dict | None, new: dict) -> dict:
 
 class CycleState(TypedDict, total=False):
     counts: Annotated[dict, _merge]
+    ran: Annotated[list, operator.add]  # the stages in the order they actually ran, across resumptions
 
 
 def run_number(thread_id: str) -> int:
@@ -161,7 +163,7 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
     def orders(state: CycleState, config: RunnableConfig) -> CycleState:
         folder = folders.orders
         if not folder.is_dir() or not any(p.is_file() for p in folder.iterdir()):
-            return {"counts": {"orders": {"items": 0, "stored": 0, "paused": 0, "failed": 0}}}
+            return {"counts": {"orders": {"items": 0, "stored": 0, "paused": 0, "failed": 0}}, "ran": ["orders"]}
         graphs = _order_graphs(db_path, checkpointer, client, folders.outbox)
         thread_id = config["configurable"]["thread_id"]
         skip = _seen_web_form(checkpointer, graphs[WEB_FORM])
@@ -185,7 +187,7 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
                 or ((r["state"] or {}).get("errors") and (r["state"] or {}).get("order_id") is None)
             ),
         }
-        return {"counts": {"orders": counts}}
+        return {"counts": {"orders": counts}, "ran": ["orders"]}
 
     def quotes_stage(state: CycleState) -> CycleState:
         started = quotes.scan(db_path, checkpointer, folders.supplier_outbox)
@@ -199,7 +201,7 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
             "decided": len(decided["decided"]),
             "no_offers": len(decided["no_offers"]),
         }
-        return {"counts": {"quotes": counts}}
+        return {"counts": {"quotes": counts}, "ran": ["quotes"]}
 
     def reconcile(state: CycleState) -> CycleState:
         documents = []
@@ -209,7 +211,7 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
             )
         drafted = claims.draft_claims(db_path, checkpointer, client(CLAIM_DRAFTING, []))
         counts = {"documents": len(documents), "new": sum(1 for d in documents if d["new"]), "claims": len(drafted)}
-        return {"counts": {"reconcile": counts}}
+        return {"counts": {"reconcile": counts}, "ran": ["reconcile"]}
 
     def receipts_stage(state: CycleState) -> CycleState:
         result = receipts.run_receipts(db_path, folders.delivery_notes, checkpointer)
@@ -218,7 +220,7 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
             "served": len(result.get("served", [])),
             "issued": len(result.get("issued", [])),
         }
-        return {"counts": {"receipts": counts}}
+        return {"counts": {"receipts": counts}, "ran": ["receipts"]}
 
     def sales_stage(state: CycleState) -> CycleState:
         result = sales.run_sales(db_path, folders.invoices, folders.signed_notes, checkpointer)
@@ -230,7 +232,7 @@ def build_cycle_graph(db_path, checkpointer, folders: Folders, client: ClientFac
             "corrections": len(result.get("corrections", [])),
             "responses": len(drafted),
         }
-        return {"counts": {"sales": counts}}
+        return {"counts": {"sales": counts}, "ran": ["sales"]}
 
     nodes = {
         "orders": orders,
@@ -352,6 +354,7 @@ def run_cycle(db_path, checkpoint_path, folders: Folders, client: ClientFactory,
             "thread_id": thread["configurable"]["thread_id"],
             "resumed": resumed,
             "counts": values.get("counts", {}),
+            "ran": values.get("ran", []),
             "pending": pending_decisions(db_path),
         }
     finally:

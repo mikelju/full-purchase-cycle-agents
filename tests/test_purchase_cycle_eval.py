@@ -110,3 +110,62 @@ def test_each_injected_critical_error_fails_the_suite_with_exit_one(kind, tmp_pa
 def test_purchase_cycle_is_a_local_suite_registered_last():
     assert "purchase_cycle" in harness.SUITES and harness.ALL_SUITES[-1] == "purchase_cycle"
     assert "purchase_cycle" not in harness.UPLOAD_SUITES
+
+
+def _item(item_id):
+    return next(i for i in pc.load_dataset() if i["id"] == item_id)
+
+
+def test_stages_that_really_run_out_of_order_are_caught(tmp_path, monkeypatch):
+    from purchase_cycle import cycle
+
+    build, real = cycle.build_cycle_graph, cycle.STAGES
+
+    def swapped(*args, **kwargs):  # the graph is wired with receipts before reconcile
+        monkeypatch.setattr(cycle, "STAGES", ("orders", "quotes", "receipts", "reconcile", "sales"))
+        try:
+            return build(*args, **kwargs)
+        finally:
+            monkeypatch.setattr(cycle, "STAGES", real)
+
+    monkeypatch.setattr(cycle, "build_cycle_graph", swapped)
+    item = _item("PC-013")
+    result = pc.grade(item, pc.measure(item, tmp_path))
+    assert result["critical"]["stage_out_of_order"] >= 1
+
+
+def test_a_stage_that_never_ran_in_a_finished_pass_is_caught(baseline):
+    _, measured = baseline
+    rows = copy.deepcopy(measured)
+    full = next(p for p in rows["passes"] if p["kind"] == "pass")
+    full["stages"] = full["stages"][:-1]
+    assert pc._errors(baseline[0], rows)["stage_out_of_order"] >= 1
+
+
+def test_a_duplicate_after_a_resumption_is_a_duplicate_not_a_different_final_state(tmp_path, monkeypatch):
+    item = _item("PC-002")
+    real = pc._cycle_pass
+
+    stopped = []
+
+    def duplicating(root, stage, calls, process):
+        out = real(root, stage, calls, process)
+        if stage:
+            stopped.append(stage)
+        elif stopped:  # the pass that resumes a stopped one leaves an extra file behind
+            (root / "outbox").mkdir(exist_ok=True)
+            (root / "outbox" / "extra.txt").write_text("duplicate", encoding="utf-8")
+            stopped.clear()
+        return out
+
+    monkeypatch.setattr(pc, "_cycle_pass", duplicating)
+    errors = pc.grade(item, pc.measure(item, tmp_path))["critical"]
+    assert errors["duplicate"] >= 1 and errors["final_state_differs"] == 0
+
+
+def test_a_failed_decision_step_is_not_a_model_call(tmp_path):
+    item = copy.deepcopy(_item("PC-006"))
+    step = next(s for s in item["steps"] if s["do"] == "decide")
+    step["ref"] = 99  # a reference that does not exist
+    result = pc.grade(item, pc.measure(item, tmp_path))
+    assert result["critical"]["model_call"] == 0 and result["correct"] is False
