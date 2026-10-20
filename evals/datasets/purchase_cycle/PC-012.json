@@ -34,7 +34,8 @@
       "do": "pass"
     },
     {
-      "do": "pass"
+      "do": "pass",
+      "process": true
     },
     {
       "do": "reply",
@@ -58,6 +59,7 @@
   ],
   "tags": [
     "crash_resume",
+    "restart",
     "short_of_stock",
     "pause_quote_approval"
   ]

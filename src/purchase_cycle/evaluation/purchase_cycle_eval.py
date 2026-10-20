@@ -29,10 +29,10 @@ from pathlib import Path
 from purchase_cycle import claims, cli, customer_responses, cycle, cycle_cli, db, llm, sales_cli
 from purchase_cycle.catalog import CUSTOMERS
 from purchase_cycle.config import EVALS_DIR
-from purchase_cycle.graph import sqlite_checkpointer
 from purchase_cycle.evaluation.email_eval import _ci, _pct
 from purchase_cycle.evaluation.recovery_eval import _rate
 from purchase_cycle.evaluation.stats import target_cells, zero_event_note
+from purchase_cycle.graph import sqlite_checkpointer
 from purchase_cycle.llm import (
     CLAIM_DRAFTING,
     CLARIFICATION_ANSWER,
@@ -231,9 +231,9 @@ CASES = [
         "steps": [PASS, AGAIN],
         "expected": want(orders=["served"], invoices=1, sales=["awaiting_delivery_note"]),
     },
-    {  # PC-002: two orders in stock; a pass stopped after the orders stage resumes with no model call
+    {  # PC-002: two orders in stock; a pass stopped after the orders stage resumes in a new process, no model call
         "orders": [WEB_M, EMAIL],
-        "steps": [crash("orders"), PASS],
+        "steps": [crash("orders"), process(PASS)],
         "expected": want(orders=["served", "served"], invoices=2, sales=["awaiting_delivery_note"] * 2),
     },
     {  # PC-003: an ambiguous order waits for the customer, a second pass decides nothing, the answer resumes it
@@ -270,12 +270,10 @@ CASES = [
             orders=["served"], quotes=["ordered"], po=1, invoices=1, sales=["discrepancies"], responses=["rejected"]
         ),
     },
-    {  # PC-007: the supplier delivers 2 boxes of the 3 invoiced
+    {  # PC-007: the supplier delivers 2 boxes of the 3 invoiced; once the claim is approved the missing box is requested
         "orders": [WEB_XS],
-        "steps": [*TO_APPROVAL, decide("approve_offer"), docs(note_quantity=2), PASS],
-        "expected": want(
-            orders=["received"], quotes=["ordered"], po=1, claims=["awaiting_approval"], pending=[("claim", "INV-0001")]
-        ),
+        "steps": [*TO_APPROVAL, decide("approve_offer"), docs(note_quantity=2), PASS, decide("approve_claim"), PASS],
+        "expected": want(orders=["received"], quotes=["ordered", "waiting"], po=1, claims=["sent"]),
     },
     {  # PC-008: the customer reports 2 damaged boxes; the response is approved in a new process
         "orders": [WEB_XS],
@@ -303,21 +301,21 @@ CASES = [
         "steps": [*TO_APPROVAL, decide("reject_offer"), PASS],
         "expected": want(orders=["received"], quotes=["rejected"]),
     },
-    {  # PC-011: a rejected claim sends nothing; the goods are in and the order is served
+    {  # PC-011: a rejected claim sends nothing; the delivery was short, so the order keeps waiting with a new request
         "orders": [WEB_XS],
-        "steps": [*TO_APPROVAL, decide("approve_offer"), docs(price=5.0), PASS, decide("reject_claim"), PASS],
-        "expected": want(
-            orders=["served"],
-            quotes=["ordered"],
-            po=1,
-            claims=["rejected"],
-            invoices=1,
-            sales=["awaiting_delivery_note"],
-        ),
+        "steps": [
+            *TO_APPROVAL,
+            decide("approve_offer"),
+            docs(price=5.0, note_quantity=2),
+            PASS,
+            decide("reject_claim"),
+            PASS,
+        ],
+        "expected": want(orders=["received"], quotes=["ordered", "waiting"], po=1, claims=["rejected"]),
     },
-    {  # PC-012: a pass stopped after quotes resumes with no model call; the rest follows as in PC-004
+    {  # PC-012: a pass stopped after quotes resumes in a new process with no model call; the rest follows as in PC-004
         "orders": [WEB_XS],
-        "steps": [crash("quotes"), PASS, reply(), wait(), PASS, decide("approve_offer"), PASS],
+        "steps": [crash("quotes"), process(PASS), reply(), wait(), PASS, decide("approve_offer"), PASS],
         "expected": want(orders=["received"], quotes=["ordered"], po=1),
     },
     {  # PC-013: a pass stopped after reconcile resumes with no model call
@@ -365,7 +363,7 @@ def derive_tags(item: dict) -> list[str]:
         tags.append("second_pass")
     if any(s.get("crash") for s in steps):
         tags.append("crash_resume")
-    if any(s.get("process") for s in steps):
+    if any(s.get("process") and s["do"] == "pass" for s in steps):  # a cycle pass run by a new process
         tags.append("restart")
     expected = item["expected"]
     if expected["orders"] and not expected["quote_requests"]:
@@ -374,10 +372,12 @@ def derive_tags(item: dict) -> list[str]:
         tags.append("short_of_stock")
     paused = {kind for kind, _ in expected["pending"]} | {PAUSE_OF[s["command"]] for s in steps if s["do"] == "decide"}
     tags += [f"pause_{kind}" for kind in dict.fromkeys(PAUSE_OF.values()) if kind in paused]
-    if any(s.get("command", "").startswith("reject") or s.get("command") == "close" for s in steps):
-        tags.append("rejected")
-    if any(s["do"] == "documents" and s["note_quantity"] < s["invoice_quantity"] for s in steps):
-        tags.append("short_delivery")
+    if any(s.get("command") in ("reject_offer", "reject_claim") for s in steps) and "received" in expected["orders"]:
+        tags.append("rejected")  # a rejected quote or claim that leaves the order waiting
+    if any(s["do"] == "documents" and s["note_quantity"] < s["invoice_quantity"] for s in steps) and (
+        "waiting" in expected["quote_requests"]
+    ):
+        tags.append("short_delivery")  # a short delivery that starts a new quote request
     return tags
 
 

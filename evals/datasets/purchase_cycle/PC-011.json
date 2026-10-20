@@ -5,20 +5,19 @@
       "rejected"
     ],
     "clarifications": [],
-    "customer_invoices": 1,
+    "customer_invoices": 0,
     "customer_responses": [],
     "failures": 0,
     "orders": [
-      "served"
+      "received"
     ],
     "pending": [],
     "purchase_orders": 1,
     "quote_requests": [
-      "ordered"
+      "ordered",
+      "waiting"
     ],
-    "sales_results": [
-      "awaiting_delivery_note"
-    ]
+    "sales_results": []
   },
   "id": "PC-011",
   "initial_state": {
@@ -56,7 +55,7 @@
       "do": "documents",
       "invoice_quantity": 3,
       "n": 1,
-      "note_quantity": 3,
+      "note_quantity": 2,
       "price": 5.0
     },
     {
@@ -75,6 +74,7 @@
     "short_of_stock",
     "pause_quote_approval",
     "pause_claim",
-    "rejected"
+    "rejected",
+    "short_delivery"
   ]
 }

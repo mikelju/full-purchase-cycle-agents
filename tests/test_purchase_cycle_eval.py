@@ -1,4 +1,5 @@
 import copy
+import json
 import re
 
 import pytest
@@ -169,3 +170,18 @@ def test_a_failed_decision_step_is_not_a_model_call(tmp_path):
     step["ref"] = 99  # a reference that does not exist
     result = pc.grade(item, pc.measure(item, tmp_path))
     assert result["critical"]["model_call"] == 0 and result["correct"] is False
+
+
+def test_the_dataset_files_equal_the_scenarios_in_code():
+    assert pc.load_dataset() == [json.loads(json.dumps(i)) for i in pc.build_items()]
+
+
+def test_the_tags_follow_the_wording_of_the_spec():
+    items = {i["id"]: i for i in pc.build_items()}
+
+    def tagged(tag):
+        return {k for k, i in items.items() if tag in i["tags"]}
+
+    assert tagged("rejected") == {"PC-010", "PC-011"}  # a rejected quote or claim that leaves the order waiting
+    assert tagged("short_delivery") == {"PC-007", "PC-011", "PC-016"}  # and a new quote request starts
+    assert tagged("restart") == {"PC-002", "PC-012"}  # a cycle pass run by a new process

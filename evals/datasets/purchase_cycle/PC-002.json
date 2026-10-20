@@ -40,11 +40,13 @@
       "do": "pass"
     },
     {
-      "do": "pass"
+      "do": "pass",
+      "process": true
     }
   ],
   "tags": [
     "crash_resume",
+    "restart",
     "served_from_stock"
   ]
 }

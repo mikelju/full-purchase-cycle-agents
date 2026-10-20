@@ -91,10 +91,8 @@
   ],
   "tags": [
     "second_pass",
-    "restart",
     "short_of_stock",
     "pause_quote_approval",
-    "pause_customer_response",
-    "rejected"
+    "pause_customer_response"
   ]
 }
