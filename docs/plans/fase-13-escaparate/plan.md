@@ -1,6 +1,6 @@
 # Phase 13 - Portfolio showcase: plan and results
 
-Status: in execution (spec approved 2026-10-20 and frozen; increments 1-9 done, increment 10 verification and delivery in progress)
+Status: delivered via PR #34 (awaiting owner merge); spec approved 2026-10-20 and frozen; increments 1-10 done
 Spec: `spec.md` (approved 2026-10-20, frozen)
 Base: branch `fase-13-escaparate` from `main` at `2895902` (phase 12 merged through PR #30, visual guides through PR #31); the unchanged-behaviour reference of C9 is the code at `2895902`.
 
@@ -41,7 +41,7 @@ This file is the durable state: a new session resumes from here and from Git.
   - Evidence: `docs/guide.md` is the README of base 2895902 with only link targets rewritten (docs/ prefix dropped, `../LICENSE`); comparison script output in `.evidence/fase-13/guide-move.txt`: 75 of 75 headings and 293 of 293 paragraph blocks present, 0 missing. `README.md` is an interim stub (link to the guide, results block, license) until increment 9. Files: `docs/guide.md`, `README.md`.
 - [x] 8. Screenshots (C8) - files: `docs/assets/dashboard.png`, `docs/assets/trace-*.png`; check: Phoenix spans of the replay `cycle-demo` read back from its API into `.evidence/fase-13/phoenix-spans.json`; each image inspected and noted here (no key, header, email address or user path). Evidence: spans of the Phoenix project read back from its REST API into `.evidence/fase-13/phoenix-spans.json` (502 spans, not versioned; trace d979d5ec... has 70 spans, the model-call trace edb77406... has 4). Images inspected one by one with no key, header, email address or user path: `dashboard.png` (summary page of 21 suites), `trace-orchestrator.png` (replay cycle-demo root span, output counts and the span tree), `trace-module-graph.png` (the inner sales graph under its stage), `trace-model-call.png` (ChatAnthropic span of the stored live run: system and user prompt, tool call, 8,910 tokens). The three trace images are cropped to the detail panel because the full page showed a truncated local path in the traces table.
 - [x] 9. Short README (C5, C14) - files: `README.md`, `tests/test_readme.py`; check: section order, at most 250 lines, every relative link resolves, the Stack section symbols exist in the named files, generated tables equal the command outputs; quickstart followed in a clean clone, output in `.evidence/fase-13/quickstart.txt`. Evidence: README of 144 lines with the ten sections in order, `tests/test_readme.py` (5 tests passing: order and length, every relative link in README, guide and graphs resolves to a versioned file, quickstart of 4 commands, before/after table equals `compare-baselines 636711e`, Stack symbols exist in the named files); `results-table --check README.md` exits 0; the results table equality stays with the `check` step because it needs the summaries of `npm run eval`. Quickstart in a clean clone: `.evidence/fase-13/quickstart.txt`.
-- [ ] 10. Verification and delivery (C1 to C14) - files: this plan, master plan row 13; check: full local `npm run check` with keys unset, CI green on the PR, unchanged-behaviour comparison (C9), cost 0 USD (C11), adversarial review per `sdd-delivery`, push and PR to `main`.
+- [x] 10. Verification and delivery (C1 to C14) - files: this plan, master plan row 13; check: full local `npm run check` with keys unset, CI green on the PR, unchanged-behaviour comparison (C9), cost 0 USD (C11), adversarial review per `sdd-delivery`, push and PR to `main`. Evidence: local `npm run check` on 6469806 exit 0 (1716 passed in 41:09, ruff clean, every eval gate PASS, results table up to date); PR #34 CI run 39927971692 success (see Results); `git diff --stat main...HEAD -- evals/recordings evals/datasets evals/baselines` empty; cost 0 USD; adversarial review in the table below.
 
 ## Deviations
 | ID | Summary | Affects criteria | Status |
@@ -50,24 +50,25 @@ This file is the durable state: a new session resumes from here and from Git.
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | Opus | origin/main...HEAD | spec compliance, correctness, honesty of claims | F1 README lacks the change 018 test-informed disclosure; F2 orchestrator diagram hand-written; F3 missing Spanish material line; F4 LangSmith `evaluate` check tautological; F5 captions untested; F6 `compare-baselines` bad rev exit 0 and n=0 ZeroDivisionError; F7 `npm ci` without `--ignore-scripts`; F8 trace captions overstate screenshots; F9 quickstart network claim; F10 pitch led with orchestration | F1-F10 all fixed in 6469806 (F1 disclosure; F2 generated block plus test; F3 line added; F4 checks `Client().evaluate(`; F5 caption test; F6 rev validated, n=0 guarded; F7 `--ignore-scripts` plus workflow test; F8 captions rewritten, no recapture; F9 network note; F10 pitch opens with evaluation) |
 
 ## Results
 | ID | Command or path run | Observed result | Evidence |
 |---|---|---|---|
-| C1 | | | |
-| C2 | | | |
-| C3 | | | |
-| C4 | | | |
-| C5 | | | |
-| C6 | | | |
-| C7 | | | |
-| C8 | | | |
-| C9 | | | |
-| C10 | | | |
-| C11 | | | |
-| C12 | | | |
-| C13 | | | |
-| C14 | | | |
+| C1 | `gh pr checks 34`; run 39927971692 | job `check` success in 8m43s on ubuntu-24.04 (Node v22.23.3, Python 3.13.17) | PR CI run 39927971692 (https://github.com/mikelju/full-purchase-cycle-agents/actions/runs/39927971692), pull_request, head 6469806 |
+| C2 | `tests/test_ci_workflow.py`; CI log | workflow rules test passes (no `secrets.`, `contents: read`, SHA-pinned actions: checkout@3d3c42e5, setup-node@949feb24); log shows 21 `mode=replay` suite headers, 0 `mode=live`/`mode=record` | PR CI run 39927971692 (https://github.com/mikelju/full-purchase-cycle-agents/actions/runs/39927971692), pull_request, head 6469806 |
+| C3 | CI run 39927971692; local `npm run check` on 6469806 with keys unset | CI on Linux: `uv sync --locked` ok, ruff clean, 1716 passed in 392s, all suite verdicts PASS; local Windows: exit 0, 1716 passed (41:09), ruff clean, every eval gate PASS | CI run above; local log `check-6469806.log` (scratchpad, not versioned) |
+| C4 | `uv run purchase-cycle diagrams`; `tests/test_showcase.py` | 13 Mermaid diagrams written to `docs/graphs.md` offline; drift test passes, hand edit detected | Increment 4; `check` on 6469806 |
+| C5 | `tests/test_readme.py`; quickstart in a clean clone | README 144 lines, sections in spec order, links resolve, 4-command quickstart; tests pass in full `check` | `.evidence/fase-13/quickstart.txt` (local); `check` on 6469806 |
+| C6 | comparison script over README at 2895902 | 75 of 75 headings and 293 of 293 paragraph blocks present in `docs/guide.md` | `.evidence/fase-13/guide-move.txt` (local) |
+| C7 | `purchase-cycle results-table --check README.md` | 21-suite table; exit 0 on current README, 1 on changed value or missing markers; final step of `npm run check`: "results table in README.md is up to date" | `check` on 6469806 and CI run above |
+| C8 | file inspection; Phoenix REST API | `docs/assets/dashboard.png` and 3 trace screenshots inspected (no key, header, email or local path); captions match the images; 502 spans read back | Increment 8 note; F8 fix in 6469806 |
+| C9 | `git diff --stat main...HEAD -- evals/recordings evals/datasets evals/baselines`; full `check` | diff empty; pytest 1716 passed; 21 evaluations replay, every gate PASS locally and in CI | `check` on 6469806; CI run above |
+| C10 | `tests/test_secrets.py` | covers every tracked text file including workflow, `docs/graphs.md`, README and guide; passes | `check` on 6469806 |
+| C11 | CI log and local log grep | replay only: 0 `mode=live`/`mode=record`; cost 0 USD | CI run above |
+| C12 | master plan row 13 | row 13 shows `ready locally (PR #34 open, awaiting owner merge)`; not claimed merged | `docs/plans/0_plan_maestro.md` |
+| C13 | `purchase-cycle compare-baselines 636711e`; `tests/test_readme.py` | claims 0 lost/3 gained p=0.25; detection recall 0/12 p<0.01; documents 0/2 p=0.50, 0/1 p=1.00; email intake 0/1 p=1.00, line recall 2 lost/8 gained p=0.11; equal to change 018; README table equals output; F1 disclosure added | `.evidence/fase-13/compare-018.txt` (local); `check` on 6469806 |
+| C14 | `tests/test_readme.py` Stack test | Stack names LangChain, LangGraph, LangSmith, Phoenix with files; symbols `ChatAnthropic`, `StateGraph`, `interrupt`, `Client().evaluate(`, `configure_phoenix_tracing` found | `check` on 6469806 |
 
 ## Candidate learnings
 Only reusable lessons with a verbatim quote from the session; consolidated when the phase closes.
