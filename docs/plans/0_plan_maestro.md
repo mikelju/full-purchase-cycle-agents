@@ -28,7 +28,7 @@ Phases 01 to 05 complete the orders module; quotes, reconciliation and the orche
 | 10 | Goods receipt and serving: the reconciled supplier delivery note puts the goods into stock, pending customer orders are served and our delivery note to the customer is issued | 09 | integrated (merged via PR #21); C13 pending (LangSmith trace, blocked by the trace quota until about 2026-11-05) |
 | 11 | Customer invoicing and sales reconciliation: invoice to the customer and reconciliation of order, delivery note and invoice on the sales side with the same matching, triggered by the signed delivery note the customer returns with incidents (missing, extra, damaged); response to the customer, credit note or corrective invoice with human approval, reusing the phase 09 pattern; payment out of scope | 10 | integrated (merged via PR #28) |
 | 12 | Orchestrator: top-level graph composing the three subgraphs over the shared database, with an end-to-end demo and an evaluation metrics dashboard | 11 | integrated (merged via PR #30) |
-| 13 | Portfolio showcase: CV-oriented README with graph diagrams, sample traces, evaluation results and continuous integration on GitHub Actions | 12 | in progress |
+| 13 | Portfolio showcase: CV-oriented README with graph diagrams, sample traces, evaluation results and continuous integration on GitHub Actions | 12 | ready locally (PR #34 open, awaiting owner merge) |
 
 Statuses: pending, spec in review, spec approved, in progress, blocked, ready locally, integrated.
 Only the owner adds, removes or reorders phases; the agent proposes.
