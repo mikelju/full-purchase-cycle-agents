@@ -35,7 +35,7 @@ The posts do not teach what an agent is and use the word sparingly.
 |---|--------|
 | 1 | Approved by the owner |
 | 2 | Published by the owner on 2026-10-21; the text below is the published one |
-| 3 | Approved in general; figures updated on 2026-10-23 after change 018; the owner may still adjust the wording |
+| 3 | Published by the owner on 2026-10-23; the text below is the published one |
 | 4 | Approved in general; the owner may still adjust the wording; image to be decided |
 
 ## Post 1 - orders
@@ -124,22 +124,33 @@ Días después llegan el albarán y la factura.
 
 La tercera parte del sistema se resume en una frase: la IA lee, el código cuenta.
 
-👉 La IA lee cada albarán y cada factura, venga en PDF, en Excel o en texto, y saca el número, el pedido al que se refiere y sus líneas.
-👉 El código lo compara línea a línea con el pedido: precio, cantidad, líneas de más y líneas de menos. Un céntimo de margen en el precio y ninguno en la cantidad.
-👉 Si algo no cuadra, la IA redacta el email de reclamación, el código comprueba que todo lo que dice es cierto y una persona lo aprueba antes de que salga.
+👉 La IA lee cada albarán y cada factura, venga en PDF, en Excel o en texto
+👉 El código lo compara línea a línea con el pedido: precio, cantidad, líneas de más y líneas de menos.
+👉 Si algo no cuadra, la IA redacta el email de reclamación y una persona lo aprueba antes de que salga.
 👉 Cuando todo cuadra, entra el stock y se sirven, por orden de llegada, los pedidos de clientes que estaban esperando.
 
 En el vídeo, dos rondas: en la primera el pedido, el albarán y la factura cuadran y la factura se registra; en la segunda llegaron 35 unidades y se facturaron 40, así que se calcula la diferencia (-25,00 €) y se pide un abono al proveedor.
 
-¿Por qué no dejar que la IA compare también? Porque sumar y comparar números es lo que un programa normal hace sin fallar nunca. Y cuando hay dinero de por medio, eso no se negocia.
+¿Por qué no dejar que la IA compare también? Porque sumar y comparar números es lo que un programa normal hace sin fallar nunca.
 
 Medido y a la vista: la comparación supera los 58 casos de prueba.
+
 La lectura de documentos tenía 2 errores graves. Los analicé, ajusté las instrucciones de la IA y ahora acierta los 90 documentos de prueba sin ningún error grave.
-Eso sí: ajusté mirando esos dos fallos, así que ese 100% es optimista, y así lo dejo escrito.
 
 El lunes, lo que no se ve en los vídeos: cómo lo he construido.
 
 #InteligenciaArtificial #Automatización #Finanzas
+```
+
+First comment as published:
+
+```text
+El proyecto completo:
+https://github.com/mikelju/full-purchase-cycle-agents
+
+Si te perdiste los posts anteriores de la serie:
+- Pedidos: https://lnkd.in/p/e3v3Kzqt
+- Proveedores: https://lnkd.in/p/esQAcdWa
 ```
 
 ## Post 4 - how it is built
