@@ -8,7 +8,7 @@
   "scripts": {
     "lavish": "lavish-axi",
     "github": "gh-axi",
-    "check": "npm ls --depth=0 && node .claude/hooks/test-hooks.mjs && npm run --silent check:python && npm run --silent eval",
+    "check": "npm ls --depth=0 && node .claude/hooks/test-hooks.mjs && npm run --silent check:python && npm run --silent eval && uv run --quiet purchase-cycle results-table --check README.md",
     "check:puerta": "node .claude/hooks/test-hooks.mjs && npm run --silent check:python",
     "check:python": "uv run --quiet ruff check && uv run --quiet ruff format --check && uv run --quiet pytest -q",
     "format": "uv run --quiet ruff format --quiet",

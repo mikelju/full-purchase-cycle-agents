@@ -2216,6 +2216,10 @@ def main(argv=None) -> int:
 
     add_cycle_commands(sub)
 
+    from purchase_cycle.showcase import add_showcase_commands
+
+    add_showcase_commands(sub)
+
     from purchase_cycle.evaluation.cli import add_eval_commands
 
     add_eval_commands(sub)
