@@ -1,6 +1,6 @@
 # Phase 13 - Portfolio showcase: plan and results
 
-Status: delivered via PR #34 (awaiting owner merge); spec approved 2026-10-20 and frozen; increments 1-10 done
+Status: integrated (merged into `main` via PR #34, merge 31fe2e6); follow-up docs PR for the closing tables; spec approved 2026-10-20 and frozen; increments 1-10 done
 Spec: `spec.md` (approved 2026-10-20, frozen)
 Base: branch `fase-13-escaparate` from `main` at `2895902` (phase 12 merged through PR #30, visual guides through PR #31); the unchanged-behaviour reference of C9 is the code at `2895902`.
 
@@ -66,7 +66,7 @@ This file is the durable state: a new session resumes from here and from Git.
 | C9 | `git diff --stat main...HEAD -- evals/recordings evals/datasets evals/baselines`; full `check` | diff empty; pytest 1716 passed; 21 evaluations replay, every gate PASS locally and in CI | `check` on 6469806; CI run above |
 | C10 | `tests/test_secrets.py` | covers every tracked text file including workflow, `docs/graphs.md`, README and guide; passes | `check` on 6469806 |
 | C11 | CI log and local log grep | replay only: 0 `mode=live`/`mode=record`; cost 0 USD | CI run above |
-| C12 | master plan row 13 | row 13 shows `ready locally (PR #34 open, awaiting owner merge)`; not claimed merged | `docs/plans/0_plan_maestro.md` |
+| C12 | master plan row 13 | row 13 shows `integrated (merged via PR #34)` after the merge (shown as `ready locally` while the PR was open) | `docs/plans/0_plan_maestro.md` |
 | C13 | `purchase-cycle compare-baselines 636711e`; `tests/test_readme.py` | claims 0 lost/3 gained p=0.25; detection recall 0/12 p<0.01; documents 0/2 p=0.50, 0/1 p=1.00; email intake 0/1 p=1.00, line recall 2 lost/8 gained p=0.11; equal to change 018; README table equals output; F1 disclosure added | `.evidence/fase-13/compare-018.txt` (local); `check` on 6469806 |
 | C14 | `tests/test_readme.py` Stack test | Stack names LangChain, LangGraph, LangSmith, Phoenix with files; symbols `ChatAnthropic`, `StateGraph`, `interrupt`, `Client().evaluate(`, `configure_phoenix_tracing` found | `check` on 6469806 |
 
