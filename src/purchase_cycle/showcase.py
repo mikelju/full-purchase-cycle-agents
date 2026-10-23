@@ -1,5 +1,7 @@
 """Generators for the portfolio showcase: graph diagrams, the evaluation results table and the baseline comparison."""
 
+import json
+import re
 import tempfile
 from pathlib import Path
 
@@ -108,7 +110,62 @@ def cmd_diagrams(args) -> int:
     return 0
 
 
+RESULTS_START, RESULTS_END = "<!-- results-table:start -->", "<!-- results-table:end -->"
+
+
+def _verdict(summary: dict) -> str:
+    if summary.get("status") != "passed":
+        return "FAIL"
+    verdicts = {g["verdict"] for g in summary.get("gates", [])}
+    return "PASS" if "PASS" in verdicts else "reported"
+
+
+def results_table(directory: Path | None = None) -> str:
+    """One Markdown table over the replayed summaries: cases, main metric with its 95% Wilson interval, gate verdict."""
+    from purchase_cycle.evaluation.harness import ALL_SUITES, SUMMARIES_DIR
+
+    directory = Path(directory) if directory else SUMMARIES_DIR
+    rows = ["| Suite | Cases | Main metric | Value (95% Wilson) | Gate |", "|---|---|---|---|---|"]
+    for name in ALL_SUITES:
+        path = directory / f"{name}.json"
+        try:
+            summary = json.loads(path.read_text(encoding="utf-8"))
+            metric = summary["metrics"][0]
+        except (OSError, ValueError, KeyError, IndexError):
+            rows.append(f"| {name} | - | - | - | missing |")
+            continue
+        interval = f" [{metric['ci_low']}, {metric['ci_high']}]" if metric.get("ci_low") is not None else ""
+        rows.append(
+            f"| {name} | {summary['case_count']} | {metric['name']} | {metric['value_text']}{interval} "
+            f"| {_verdict(summary)} |"
+        )
+    return "\n".join(rows)
+
+
+def marked_block(text: str, start: str, end: str) -> str | None:
+    """The text between two README markers, without the surrounding blank lines; None when a marker is missing."""
+    match = re.search(re.escape(start) + r"(.*?)" + re.escape(end), text, re.DOTALL)
+    return match.group(1).strip() if match else None
+
+
+def cmd_results_table(args) -> int:
+    table = results_table(args.summaries)
+    if not args.check:
+        print(table)
+        return 0
+    block = marked_block(Path(args.check).read_text(encoding="utf-8"), RESULTS_START, RESULTS_END)
+    if block == table:
+        print(f"results table in {args.check} is up to date")
+        return 0
+    print(f"results table in {args.check} differs from the summaries; replace the block with:\n{table}")
+    return 1
+
+
 def add_showcase_commands(sub) -> None:
     sub.add_parser("diagrams", help="write docs/graphs.md with one Mermaid diagram per graph").set_defaults(
         handler=cmd_diagrams
     )
+    results = sub.add_parser("results-table", help="print the evaluation results table from the summaries")
+    results.add_argument("--summaries", default=None, help="folder of summary files (default data/eval_summaries)")
+    results.add_argument("--check", metavar="FILE", help="exit 1 when the table between the markers of FILE differs")
+    results.set_defaults(handler=cmd_results_table)
