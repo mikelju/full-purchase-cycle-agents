@@ -16,7 +16,7 @@ The posts do not teach what an agent is and use the word sparingly.
 | 1 | Monday | Customer orders; presents the whole project | `docs/assets/purchase-cycle-flow.mp4` |
 | 2 | Wednesday | Supplier quotes, comparison and human approval | `docs/assets/quotes-flow.mp4` |
 | 3 | Friday | Delivery notes and invoices: AI reads, code counts | `docs/assets/reconcile-flow.mp4` |
-| 4 | Monday | How it is built: SDD Lite, tests, evaluations and what comes next (the orchestrator) | To be decided |
+| 4 | Monday | How the LLM agents are evaluated: test cases, minimum scores, regression check when instructions change, traces, dashboard, known failures published | None (text only) |
 
 ## Rules
 
@@ -37,7 +37,7 @@ The posts do not teach what an agent is and use the word sparingly.
 | 1 | Approved by the owner |
 | 2 | Published by the owner on 2026-10-21; the text below is the published one |
 | 3 | Published by the owner on 2026-10-23; the text below is the published one |
-| 4 | Approved in general; the owner may still adjust the wording; image to be decided |
+| 4 | Rewritten on 2026-10-23 to focus on evaluation (the orchestrator is built); pending owner approval; image to be decided |
 
 ## Post 1 - orders
 
@@ -154,36 +154,53 @@ Si te perdiste los posts anteriores de la serie:
 - Proveedores: https://lnkd.in/p/esQAcdWa
 ```
 
-## Post 4 - how it is built
+## Post 4 - how the AI is evaluated
 
 ```text
-Esta semana te he enseñado las tres partes del sistema: pedidos, proveedores y facturas.
-Hoy, lo que no se ve en los vídeos: cómo lo he construido.
+Hoy, cómo sé que la IA hace bien su trabajo
 
-No empecé escribiendo código. Empecé por un plan.
+Esta semana te he enseñado pedidos, proveedores y facturas.
+El viernes te prometí lo que no se ve en los vídeos.
 
-👉 Un plan general dividido en fases pequeñas, y cada una deja algo que funciona.
-👉 Antes de cada fase, unos criterios de aceptación que se congelan. Si algo cambia, queda escrito por qué.
-👉 Agentes de IA programan cada fase, y otros revisan el trabajo buscando fallos a propósito antes de que yo apruebe nada.
+Y lo que no se ve es lo más importante: comprobar que la IA acierta. No una vez en una demo, sino cada vez que cambio algo.
 
-Lo que más me importa es poder demostrar que funciona:
+Así lo hago:
 
-👉 1.288 pruebas automáticas.
-👉 17 evaluaciones que miden cuánto acierta la IA en cada tarea, con un mínimo exigido y una prueba estadística que avisa si algo empeora.
-👉 Trazas de cada paso, para saber por qué el sistema hizo lo que hizo.
-👉 Los fallos conocidos, publicados y no escondidos.
+👉 Cada tarea de la IA tiene su banco de casos de prueba: emails, mensajes de WhatsApp, ofertas, facturas... Todos inventados y con la respuesta correcta ya escrita.
+👉 Una parte de esos casos la uso para ajustar las instrucciones de la IA. La otra la guardo aparte, solo para medir. Así no me hago trampas.
+👉 Cada evaluación tiene una nota mínima. Si la IA baja de ahí, la comprobación falla y no lo entrego.
+👉 Cuando cambio las instrucciones, el sistema compara caso por caso con el último resultado guardado. Si empeora de forma clara, avisa.
+👉 Cuando lo activo, cada paso y cada llamada a la IA dejan una traza. Si algo sale raro, sé exactamente dónde.
+👉 Un panel reúne todas las evaluaciones en una sola página.
 
-Y sin disparar el coste: toda la fase de reclamaciones costó menos de 20 céntimos en llamadas a la IA.
+En total, 21 evaluaciones y 1.698 pruebas automáticas, que se lanzan con un solo comando.
 
-¿Qué viene ahora? La facturación a clientes y, después, el coordinador: la pieza que une las tres partes y supervisa toda la operativa de principio a fin.
+Y los fallos conocidos están publicados, no escondidos. Como los 2 errores graves de lectura de documentos del viernes: estaban apuntados, los analicé y los arreglé.
+Y cuando un arreglo sale de mirar los casos que guardo para medir, lo digo: ese resultado ya no es del todo limpio.
 
-Construir con IA no es pedirle que lo haga todo.
-Es decidir bien qué hace ella, qué hace el código y qué decide una persona.
+Por cierto, el coordinador que une las tres partes ya está construido.
+
+Que funcione en una demo es fácil.
+Lo difícil es saber cuándo deja de funcionar.
 
 El código está abierto: te dejo el enlace en los comentarios.
 
 #InteligenciaArtificial #LangGraph #IngenieríaDeSoftware
 ```
+
+First comment:
+
+```text
+El código está abierto en GitHub, por si quieres curiosear cómo está hecho por dentro:
+https://github.com/mikelju/full-purchase-cycle-agents
+
+Si te perdiste los posts anteriores de la serie:
+- Pedidos: https://lnkd.in/p/e3v3Kzqt
+- Proveedores: https://lnkd.in/p/esQAcdWa
+```
+
+The post 3 LinkedIn link is not recorded and can be added when the owner provides it.
+The figures in post 4 (21 evaluations, 1,698 tests) come from `docs/plans/fase-12-orquestador/plan.md` line 132 and `README.md`.
 
 The figures in posts 2 to 4 come from the README and the change records as of 2026-10-16: 1,288 tests, 17 evaluations, offer extraction 98.9%, quote decision 39/39, reconciliation matching 58/58, document extraction 97.8% with 2 critical errors, phase 09 live calls about 0.18 USD.
 On 2026-10-23 post 3 was published with the README figures after change 018: document extraction correct on all 90 test documents with 0 critical errors, after the 2 critical errors were analyzed and the instructions adjusted.
