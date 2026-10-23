@@ -24,6 +24,7 @@ The posts do not teach what an agent is and use the word sparingly.
 - The GitHub link goes in the first comment, not in the post.
 - Post 1 opens with an everyday scene; posts 2 to 4 pick up from the previous post instead of opening with a new scene.
 - Owner's voice: short lines and standalone sentences, bullets with 👉, informal singular "tú", a colloquial turn here and there, a reflective or question close.
+  Learned from post 3 as published: shorter and less technical, explaining how the system works rather than implementation detail.
 - Post 1 gives the general scope (three parts plus a coordinator that organizes and supervises) before focusing on orders.
 - Spanish copies of the three animations are proposed as a separate change; the owner will decide whether the posts use the Spanish or the English videos.
   The English ones stay in the README.
@@ -185,7 +186,8 @@ El código está abierto: te dejo el enlace en los comentarios.
 ```
 
 The figures in posts 2 to 4 come from the README and the change records as of 2026-10-16: 1,288 tests, 17 evaluations, offer extraction 98.9%, quote decision 39/39, reconciliation matching 58/58, document extraction 97.8% with 2 critical errors, phase 09 live calls about 0.18 USD.
-On 2026-10-23 post 3 was updated to the README figures after change 018: document extraction 100.0% exact match on 90 test documents with 0 critical errors, not a clean held-out measure because the instructions were worded from the two diagnosed misses.
+On 2026-10-23 post 3 was published with the README figures after change 018: document extraction correct on all 90 test documents with 0 critical errors, after the 2 critical errors were analyzed and the instructions adjusted.
+The published text does not carry the caveat that this result is not a clean held-out measure, because the instructions were worded from the two diagnosed misses.
 Check them again before publishing.
 
 ## Possible new animations
