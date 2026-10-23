@@ -1,7 +1,7 @@
 # Full Purchase Cycle Agents
 
-Multi-agent orchestration with LangGraph over a company's purchase cycle, built around one idea: every LLM step is evaluated, and a prompt change that makes it worse fails the build.
-Multichannel customer orders, supplier quotes and invoice reconciliation run as LangGraph subgraphs over a shared database, composed by an orchestrator graph, with Claude Haiku 4.5 behind LangChain.
+A showcase of how an LLM project is evaluated: every model step has a golden dataset, metrics with confidence intervals and a regression gate, and a prompt change that makes it worse fails the build.
+The setting is a company's purchase cycle: multichannel customer orders, supplier quotes and invoice reconciliation run as LangGraph subgraphs over a shared database, composed by an orchestrator graph, with Claude Haiku 4.5 behind LangChain.
 
 [![check](https://github.com/mikelju/full-purchase-cycle-agents/actions/workflows/check.yml/badge.svg)](https://github.com/mikelju/full-purchase-cycle-agents/actions/workflows/check.yml)
 
@@ -74,6 +74,7 @@ This table is the output of `uv run purchase-cycle compare-baselines 636711e` on
 <!-- before-after:end -->
 
 The instruction changes were caught and checked this way: the only losses are two expected lines in `email_order_extraction` against eight gained, and the clarification recall gain is significant (p < 0.01).
+The wording of the new instructions was informed by the test misses it fixes, so these gains are not a clean held-out estimate; the disclosure is in [change 018](docs/changes/018-known-defects.md).
 
 ## Sample traces
 
@@ -82,15 +83,15 @@ The first two come from a replay of `cycle-demo`; the third is a model call of a
 
 ![Orchestrator trace](docs/assets/trace-orchestrator.png)
 
-*One `cycle-demo` run: the orchestrator span with its five stages and the counts it returns.*
+*One `cycle-demo` run: the root `purchase_cycle` span with the spans of its stages in the left list and the per-stage counts it returns.*
 
 ![Module graph trace](docs/assets/trace-module-graph.png)
 
-*The `sales` graph under its stage, with its nodes in the span tree and the LangGraph metadata.*
+*The `sales` span of the same run: its output and the LangGraph metadata (thread, step and node); the left list holds the node spans of every stage.*
 
 ![Model call trace](docs/assets/trace-model-call.png)
 
-*A `ChatAnthropic` span of a live run: the system and user prompt, the structured tool call and the token count.*
+*A `ChatAnthropic` span of a live run: the user message (the system prompt is collapsed), the structured tool call, the token count and the cost.*
 
 ## Stack
 
@@ -106,12 +107,33 @@ The orchestrator runs the five stages in order over one database; every stage is
 ![Purchase cycle flow](docs/assets/purchase-cycle-flow.gif)
 
 ```mermaid
-graph LR
-    orders --> quotes --> reconcile --> receipts --> sales
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	orders(orders)
+	quotes(quotes)
+	reconcile(reconcile)
+	receipts(receipts)
+	sales(sales)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> orders;
+	orders --> quotes;
+	quotes --> reconcile;
+	receipts --> sales;
+	reconcile --> receipts;
+	sales --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
 ```
 
 All thirteen graphs are generated from the code in [docs/graphs.md](docs/graphs.md).
 The full manual, with every command and demo, is [docs/guide.md](docs/guide.md).
+Material in Spanish: the flow animation [purchase-cycle-flow-es.gif](docs/assets/purchase-cycle-flow-es.gif) and the guides [cycle-demo-visual-es.html](docs/assets/cycle-demo-visual-es.html) and [trace-dashboard-guide-es.html](docs/assets/trace-dashboard-guide-es.html).
 
 ## How it is built
 
@@ -121,7 +143,7 @@ CI runs `npm run check` on every pull request and push to `main`, on Linux, with
 
 ## Quickstart
 
-Python 3.13 with uv; no API key and no network are needed, the model answers are replayed from `evals/recordings/`.
+Python 3.13 with uv; network access is needed only to clone and install, and no API key is needed because the model answers are replayed from `evals/recordings/`.
 
 ```
 git clone https://github.com/mikelju/full-purchase-cycle-agents.git

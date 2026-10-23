@@ -48,6 +48,23 @@ def test_relative_links_and_images_resolve_to_versioned_files():
             assert path in tracked, f"{doc.name} links {target}, which is not a versioned file"
     for name in ("dashboard", "trace-orchestrator", "trace-module-graph", "trace-model-call"):
         assert f"docs/assets/{name}.png" in README
+    captions = re.findall(r"^\*[^*\n]+\*$", README, re.M)
+    assert len(captions) >= 4, "each of the four screenshots needs an italic caption line"
+    for name in ("dashboard", "trace-orchestrator", "trace-module-graph", "trace-model-call"):
+        after = README.split(f"docs/assets/{name}.png)")[1].lstrip("\n").splitlines()[0]
+        assert after in captions, f"{name} has no caption right after it"
+
+
+def test_architecture_diagram_is_the_generated_orchestrator_graph():
+    block = re.search(r"```mermaid\n.*?\n```", README.split("## Architecture")[1], re.S).group(0)
+    assert block == re.search(r"```mermaid\n.*?\n```", showcase.render_graphs(), re.S).group(0)
+
+
+def test_readme_leads_with_evaluation_discloses_and_links_spanish_material():
+    assert "evaluated" in README.split("\n## ")[0]
+    assert "docs/changes/018-known-defects.md" in README.split("## Sample traces")[0]
+    assert "not a clean held-out estimate" in README
+    assert "Material in Spanish" in README
 
 
 def test_quickstart_has_at_most_four_commands():
@@ -69,7 +86,7 @@ def test_stack_section_names_each_tool_with_a_file_that_uses_it():
     expected = {
         "LangChain": "ChatAnthropic",
         "LangGraph": "StateGraph",
-        "LangSmith": "evaluate",
+        "LangSmith": "Client().evaluate(",
         "Phoenix": "configure_phoenix_tracing",
     }
     for tool, symbol in expected.items():

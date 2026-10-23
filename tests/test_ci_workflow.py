@@ -27,6 +27,8 @@ def violations(text: str) -> list[str]:
         found.append("not Node 22 and Python 3.13")
     if "fetch-depth: 0" not in text:
         found.append("checkout is shallow, so compare-baselines cannot read revision 636711e")
+    if "run: npm ci --ignore-scripts" not in text:
+        found.append("does not install with npm ci --ignore-scripts")
     if "run: npm run check" not in text:
         found.append("does not run npm run check")
     return found
@@ -50,6 +52,7 @@ def test_each_rule_fails_on_a_workflow_that_breaks_it():
         "versions": text.replace("node-version: 22", "node-version: 20"),
         "depth": text.replace("fetch-depth: 0", "fetch-depth: 1"),
         "check": text.replace("npm run check", "npm test"),
+        "install": text.replace("npm ci --ignore-scripts", "npm ci"),
     }
     for rule, content in broken.items():
         assert violations(content), f"a workflow that breaks the {rule} rule passed"

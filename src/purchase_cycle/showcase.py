@@ -3,6 +3,7 @@
 import json
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -216,6 +217,10 @@ def _p_text(p: float) -> str:
     return "<0.01" if p < 0.01 else f"{p:.2f}"
 
 
+def _share(k: int, n: int) -> str:
+    return f"{k}/{n} ({k / n:.1%})" if n else "0/0 (n/a)"
+
+
 def _git_show(rev: str, name: str) -> dict | None:
     done = subprocess.run(
         ["git", "show", f"{rev}:evals/baselines/{name}.json"],
@@ -229,7 +234,16 @@ def _git_show(rev: str, name: str) -> dict | None:
 def compare_baselines(old_rev: str, directory: Path | None = None, load_old=None) -> str:
     """Markdown table of each metric before (at `old_rev`) and after (working tree) for every baseline that changed."""
     directory = Path(directory) if directory else BASELINES_DIR
-    load_old = load_old or (lambda name: _git_show(old_rev, name))
+    if load_old is None:
+        done = subprocess.run(
+            ["git", "rev-parse", "--verify", "--quiet", f"{old_rev}^{{commit}}"],
+            cwd=config.ROOT,
+            capture_output=True,
+            encoding="utf-8",
+        )
+        if done.returncode != 0:
+            raise ValueError(f"unknown git revision: {old_rev}")
+        load_old = lambda name: _git_show(old_rev, name)  # noqa: E731
     rows = [
         "| Suite | Metric | Unit | Before | After | Lost | Gained | Exact McNemar p |",
         "|---|---|---|---|---|---|---|---|",
@@ -244,15 +258,20 @@ def compare_baselines(old_rev: str, directory: Path | None = None, load_old=None
             continue
         for metric, unit, pairs in COMPARISONS[path.stem]:
             r = compare_pairs(pairs(before), pairs(after))
+            n = r["n"]
             rows.append(
-                f"| {path.stem} | {metric} | {unit} | {r['before']}/{r['n']} ({r['before'] / r['n']:.1%}) "
-                f"| {r['after']}/{r['n']} ({r['after'] / r['n']:.1%}) | {r['lost']} | {r['gained']} | {_p_text(r['p'])} |"
+                f"| {path.stem} | {metric} | {unit} | {_share(r['before'], n)} "
+                f"| {_share(r['after'], n)} | {r['lost']} | {r['gained']} | {_p_text(r['p'])} |"
             )
     return "\n".join(rows + notes)
 
 
 def cmd_compare_baselines(args) -> int:
-    print(compare_baselines(args.old_rev))
+    try:
+        print(compare_baselines(args.old_rev))
+    except ValueError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
     return 0
 
 

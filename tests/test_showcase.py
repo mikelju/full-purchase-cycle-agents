@@ -90,3 +90,26 @@ def test_compare_baselines_from_two_fixtures(tmp_path):
     assert "| claim_drafting | case_pass_rate | claim | 6/10 (60.0%) | 10/10 (100.0%) | 0 | 4 | 0.12 |" in table
     assert "order_scenarios: baseline changed" in table
     assert "unchanged" not in table
+
+
+def test_compare_baselines_rejects_an_unknown_revision(capsys):
+    import pytest
+
+    with pytest.raises(ValueError, match="unknown git revision"):
+        showcase.compare_baselines("no-such-revision-0000")
+
+    class Args:
+        old_rev = "no-such-revision-0000"
+
+    assert showcase.cmd_compare_baselines(Args()) == 1
+    assert "unknown git revision" in capsys.readouterr().err
+
+
+def test_compare_baselines_with_no_shared_cases_does_not_divide_by_zero(tmp_path):
+    import json
+
+    new = _claims_baseline([True, True])
+    (tmp_path / "claim_drafting.json").write_text(json.dumps(new), encoding="utf-8")
+    old = {"cases": {"OTHER-1": {"case_pass_rate": True}}}
+    table = showcase.compare_baselines("OLD", tmp_path, load_old=lambda name: old)
+    assert "| claim_drafting | case_pass_rate | claim | 0/0 (n/a) | 0/0 (n/a) | 0 | 0 |" in table
