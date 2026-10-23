@@ -1,8 +1,30 @@
 # Full Purchase Cycle Agents
 
-Interim README of phase 13 while the showcase is built; the full operating manual is [docs/guide.md](docs/guide.md).
+Multi-agent orchestration with LangGraph over a company's purchase cycle, built around one idea: every LLM step is evaluated, and a prompt change that makes it worse fails the build.
+Multichannel customer orders, supplier quotes and invoice reconciliation run as LangGraph subgraphs over a shared database, composed by an orchestrator graph, with Claude Haiku 4.5 behind LangChain.
+
+[![check](https://github.com/mikelju/full-purchase-cycle-agents/actions/workflows/check.yml/badge.svg)](https://github.com/mikelju/full-purchase-cycle-agents/actions/workflows/check.yml)
+
+## How the LLM work is evaluated
+
+Every model step has a versioned golden dataset, a live recording made once with Claude Haiku 4.5, and an offline replay that runs inside `npm run check` and in CI with no API key.
+Each metric carries a 95% Wilson interval, absolute gates fail the build, and a McNemar test against the stored baseline catches a regression case by case.
+
+```mermaid
+flowchart LR
+    D[Golden datasets] --> R[Live record with Claude Haiku 4.5]
+    R --> P[Recordings in git]
+    P --> E[Offline replay in npm run check and CI]
+    E --> M[Metrics with 95% Wilson intervals]
+    M --> G[Absolute gates]
+    M --> X[McNemar test against the baseline]
+    G --> B[Dashboard and results table]
+    X --> B
+```
 
 ## Evaluation results
+
+Generated from the stored summaries by `uv run purchase-cycle results-table`; `npm run check` fails when this table is stale.
 
 <!-- results-table:start -->
 | Suite | Cases | Main metric | Value (95% Wilson) | Gate |
@@ -29,6 +51,93 @@ Interim README of phase 13 while the showcase is built; the full operating manua
 | response_drafting | 60 | reference_accuracy | 100.0% [94.0, 100.0] | PASS |
 | purchase_cycle | 16 | scenario_success | 100.0% [80.6, 100.0] | PASS |
 <!-- results-table:end -->
+
+![Evaluation dashboard](docs/assets/dashboard.png)
+
+*The static dashboard of `uv run purchase-cycle dashboard`: status, metrics, gates and per-category figures of the 21 suites.*
+
+## Catching an instruction change
+
+Change 018 changed the instructions behind four suites to fix known defects.
+The regression gate compared the new baselines with the old ones case by case and showed what was lost and what was gained, with the exact McNemar p.
+This table is the output of `uv run purchase-cycle compare-baselines 636711e` on the versioned baselines.
+
+<!-- before-after:start -->
+| Suite | Metric | Unit | Before | After | Lost | Gained | Exact McNemar p |
+|---|---|---|---|---|---|---|---|
+| claim_drafting | case_pass_rate | claim | 57/60 (95.0%) | 60/60 (100.0%) | 0 | 3 | 0.25 |
+| clarification_detection | detection_recall | expected doubt | 141/154 (91.6%) | 153/154 (99.4%) | 0 | 12 | <0.01 |
+| document_extraction | exact_match | document | 88/90 (97.8%) | 90/90 (100.0%) | 0 | 2 | 0.50 |
+| document_extraction | unit_price_accuracy | document | 65/66 (98.5%) | 66/66 (100.0%) | 0 | 1 | 1.00 |
+| email_order_extraction | intake_accuracy | email | 231/234 (98.7%) | 232/234 (99.1%) | 0 | 1 | 1.00 |
+| email_order_extraction | line_recall | expected line | 568/586 (96.9%) | 574/586 (98.0%) | 2 | 8 | 0.11 |
+<!-- before-after:end -->
+
+The instruction changes were caught and checked this way: the only losses are two expected lines in `email_order_extraction` against eight gained, and the clarification recall gain is significant (p < 0.01).
+
+## Sample traces
+
+Local Phoenix traces (OpenTelemetry).
+The first two come from a replay of `cycle-demo`; the third is a model call of a live run stored in the same Phoenix.
+
+![Orchestrator trace](docs/assets/trace-orchestrator.png)
+
+*One `cycle-demo` run: the orchestrator span with its five stages and the counts it returns.*
+
+![Module graph trace](docs/assets/trace-module-graph.png)
+
+*The `sales` graph under its stage, with its nodes in the span tree and the LangGraph metadata.*
+
+![Model call trace](docs/assets/trace-model-call.png)
+
+*A `ChatAnthropic` span of a live run: the system and user prompt, the structured tool call and the token count.*
+
+## Stack
+
+- LangChain: `ChatAnthropic` with tool-schema structured output, in `src/purchase_cycle/llm.py`.
+- LangGraph: `StateGraph` subgraphs and the orchestrator in `src/purchase_cycle/cycle.py`; `interrupt` pauses for human approval in `src/purchase_cycle/quote_decision.py`; SQLite checkpoints in `src/purchase_cycle/graph.py`.
+- LangSmith: `evaluate` experiments and datasets in `src/purchase_cycle/evaluation/harness.py`, plus optional tracing of live runs.
+- Phoenix: local OpenTelemetry traces, set up by `configure_phoenix_tracing` in `src/purchase_cycle/config.py`.
+
+## Architecture
+
+The orchestrator runs the five stages in order over one database; every stage is itself a graph.
+
+![Purchase cycle flow](docs/assets/purchase-cycle-flow.gif)
+
+```mermaid
+graph LR
+    orders --> quotes --> reconcile --> receipts --> sales
+```
+
+All thirteen graphs are generated from the code in [docs/graphs.md](docs/graphs.md).
+The full manual, with every command and demo, is [docs/guide.md](docs/guide.md).
+
+## How it is built
+
+The project follows SDD Lite: a master plan, phases with frozen acceptance criteria, autonomous agent execution and adversarial review.
+Guardrails live in `.claude/settings.json` and `.claude/hooks/`.
+CI runs `npm run check` on every pull request and push to `main`, on Linux, with read-only permissions, no secrets and pinned actions.
+
+## Quickstart
+
+Python 3.13 with uv; no API key and no network are needed, the model answers are replayed from `evals/recordings/`.
+
+```
+git clone https://github.com/mikelju/full-purchase-cycle-agents.git
+cd full-purchase-cycle-agents
+uv sync
+uv run purchase-cycle cycle-demo
+```
+
+To run every check, install Node.js 22 and run `npm ci --ignore-scripts` and then `npm run check`.
+
+## Limits
+
+- Data, suppliers, the ERP and the clock are simulated; the datasets are synthetic.
+- The recordings come from Claude Haiku 4.5; a prompt or model change needs a new record run, which costs API credit.
+- Public LangSmith traces are not published yet.
+- It is a portfolio project, not a production system.
 
 ## License
 
