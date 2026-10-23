@@ -34,8 +34,8 @@ The posts do not teach what an agent is and use the word sparingly.
 | # | Status |
 |---|--------|
 | 1 | Approved by the owner |
-| 2 | Approved in general; the owner may still adjust the wording |
-| 3 | Approved in general; the owner may still adjust the wording |
+| 2 | Published by the owner on 2026-10-21; the text below is the published one |
+| 3 | Approved in general; figures updated on 2026-10-23 after change 018; the owner may still adjust the wording |
 | 4 | Approved in general; the owner may still adjust the wording; image to be decided |
 
 ## Post 1 - orders
@@ -85,13 +85,14 @@ https://github.com/mikelju/full-purchase-cycle-agents
 ## Post 2 - suppliers
 
 ```text
-El lunes te enseñé cómo entran los pedidos de clientes.
+Hoy la gestión de proveedores
+
+Quizás viste mi post de antes de ayer sobre el proyecto de agentes que controlan globalmente una empresa de productos sanitarios. En él te enseñé cómo se gestionan los pedidos que van llegando, de forma automática.
 
 Pero ¿qué pasa cuando alguien pide 12 cajas de guantes y en el almacén no quedan?
+Ahí entra la segunda parte del sistema: el flujo de proveedores.
 
-Ahí entra la segunda parte del sistema: los proveedores.
-
-👉 Detecta lo que falta y escribe a todos los proveedores que pueden servirlo.
+👉 Detecta qué productos faltan y escribe a todos los proveedores que pueden servirlo.
 👉 Espera sus respuestas, días si hace falta: recordatorio al tercer día y fecha límite al quinto. Aunque el sistema se reinicie, no pierde la espera.
 👉 La IA lee cada respuesta: si ofertan o no, cantidad, precio, IVA y plazo de entrega.
 
@@ -108,14 +109,14 @@ Medido: la lectura de ofertas acierta el 98,9% de los datos, sin ningún error g
 
 El viernes, la tercera parte: facturas y albaranes.
 
-¿En tu empresa quién decide a qué proveedor se compra, y con qué criterio?
-
 #InteligenciaArtificial #Automatización #Compras
 ```
 
 ## Post 3 - delivery notes and invoices
 
 ```text
+Hoy, albaranes y facturas
+
 El miércoles el sistema hacía un pedido de compra a un proveedor.
 Días después llegan el albarán y la factura.
 
@@ -132,11 +133,11 @@ En el vídeo, dos rondas: en la primera el pedido, el albarán y la factura cuad
 
 ¿Por qué no dejar que la IA compare también? Porque sumar y comparar números es lo que un programa normal hace sin fallar nunca. Y cuando hay dinero de por medio, eso no se negocia.
 
-Medido y a la vista: la comparación supera los 58 casos de prueba, y la lectura de documentos acierta el 97,8% de los datos, con 2 errores graves que tengo identificados y documentados.
+Medido y a la vista: la comparación supera los 58 casos de prueba.
+La lectura de documentos tenía 2 errores graves. Los analicé, ajusté las instrucciones de la IA y ahora acierta los 90 documentos de prueba sin ningún error grave.
+Eso sí: ajusté mirando esos dos fallos, así que ese 100% es optimista, y así lo dejo escrito.
 
 El lunes, lo que no se ve en los vídeos: cómo lo he construido.
-
-¿Cuántas horas al mes se van en tu empresa en cuadrar facturas?
 
 #InteligenciaArtificial #Automatización #Finanzas
 ```
@@ -173,6 +174,7 @@ El código está abierto: te dejo el enlace en los comentarios.
 ```
 
 The figures in posts 2 to 4 come from the README and the change records as of 2026-10-16: 1,288 tests, 17 evaluations, offer extraction 98.9%, quote decision 39/39, reconciliation matching 58/58, document extraction 97.8% with 2 critical errors, phase 09 live calls about 0.18 USD.
+On 2026-10-23 post 3 was updated to the README figures after change 018: document extraction 100.0% exact match on 90 test documents with 0 critical errors, not a clean held-out measure because the instructions were worded from the two diagnosed misses.
 Check them again before publishing.
 
 ## Possible new animations
