@@ -4,17 +4,19 @@ Source of the flow animations, kept so they can be regenerated:
 - `docs/assets/purchase-cycle-flow.gif` and `.mp4` (change 005, orders).
 - `docs/assets/quotes-flow.gif` and `.mp4` (change 008, quotes).
 - `docs/assets/reconcile-flow.gif` and `.mp4` (change 011, invoice reconciliation; redesigned in change 017).
-- Spanish copies of the three, with an `-es` suffix (`docs/assets/purchase-cycle-flow-es.gif` and `.mp4`, and the same for `quotes-flow-es` and `reconcile-flow-es`; change 016).
+- `docs/assets/orchestrator-flow.gif` and `.mp4` (change 019, the `purchase_cycle` graph: five stages in passes over one database).
+- Spanish copies of the four, with an `-es` suffix (`docs/assets/purchase-cycle-flow-es.gif` and `.mp4`, and the same for `quotes-flow-es`, `reconcile-flow-es` and `orchestrator-flow-es`; changes 016 and 019).
 
 ## Files
 - `purchase-cycle-flow.html`: the orders animated SVG page; it loads the Inter and JetBrains Mono fonts from Google Fonts, so capturing needs network access.
 - `quotes-flow.html`: the quotes animated SVG page (customer, three suppliers, quotes and decision graphs, database); same fonts, about 37 s.
 - `reconcile-flow.html`: the reconciliation animated SVG page (one connected graph in two rounds: the quantity, price and total of the order, delivery note and invoice are extracted and compared; round 1 matches and goes to register, round 2 charges 40 units against 35 delivered and goes through the claim subgraph: compute difference, draft email, approve by a person and send, with an envelope that opens as a short email card in a Supplier panel; no captions); same fonts, about 36 s.
-- `purchase-cycle-flow-es.html`, `quotes-flow-es.html` and `reconcile-flow-es.html`: the Spanish copies of the three pages, with the same layout and timeline (the reconciliation one rebuilt with its English page in change 017); they declare `<meta charset="utf-8">` so accents and the letter ñ are not misread from the file.
+- `orchestrator-flow.html`: the orchestrator animated SVG page (graph start, `orders`, `quotes`, `reconcile`, `receipts`, `sales`, end over one `business.db` panel, seven passes with the person decisions between them; figures from a replay run of `cycle-demo`; no captions); same fonts, about 40 s.
+- `purchase-cycle-flow-es.html`, `quotes-flow-es.html`, `reconcile-flow-es.html` and `orchestrator-flow-es.html`: the Spanish copies of the four pages (the orchestrator one keeps the graph node names as code identifiers), with the same layout and timeline (the reconciliation one rebuilt with its English page in change 017); they declare `<meta charset="utf-8">` so accents and the letter ñ are not misread from the file.
 - `record.py`: captures a page (optional name argument, default the orders page) frame by frame into `frames/<page>/` (git-ignored; the folder is cleaned before each capture) with a virtual clock, so the output is deterministic: 15 fps, 1280x720 PNG.
   Before the first frame it loads every font face the page declares (each family, weight and character subset), so no frame falls back to another font while a weight or the accented glyphs load.
 
-The flows are conceptual, as stated in `docs/changes/005-flow-animation.md`, `docs/changes/008-quotes-flow-animation.md`, `docs/changes/011-reconcile-flow-animation.md` and `docs/changes/017-simple-reconcile-animation.md`: it does not claim to show the exact current behavior of the code.
+The flows are conceptual, as stated in `docs/changes/005-flow-animation.md`, `docs/changes/008-quotes-flow-animation.md`, `docs/changes/011-reconcile-flow-animation.md`, `docs/changes/017-simple-reconcile-animation.md` and `docs/changes/019-orchestrator-flow-animation.md`: it does not claim to show the exact current behavior of the code.
 
 ## Capture frames
 Requires Google Chrome installed and Playwright, which is not a project dependency, so it is pulled only for this run:
@@ -26,13 +28,15 @@ uv run --with playwright python docs/assets/flow-animation/record.py reconcile-f
 uv run --with playwright python docs/assets/flow-animation/record.py purchase-cycle-flow-es.html
 uv run --with playwright python docs/assets/flow-animation/record.py quotes-flow-es.html
 uv run --with playwright python docs/assets/flow-animation/record.py reconcile-flow-es.html
+uv run --with playwright python docs/assets/flow-animation/record.py orchestrator-flow.html
+uv run --with playwright python docs/assets/flow-animation/record.py orchestrator-flow-es.html
 ```
 
 Playwright drives the installed Chrome (`channel="chrome"`), so no browser download is needed.
 
 ## Encode
 The frames are encoded with ffmpeg into a GIF of 960x540 (looping) and an MP4 of 1280x720 (H.264).
-The commands below are the ones used for the quotes animation (change 008) and, with `quotes-flow` replaced by `reconcile-flow`, for the reconciliation one (change 011); the three Spanish copies (change 016) use the same commands with `quotes-flow` replaced by `purchase-cycle-flow-es`, `quotes-flow-es` or `reconcile-flow-es`; the orders animation (change 005) was encoded earlier with unrecorded commands.
+The commands below are the ones used for the quotes animation (change 008) and, with `quotes-flow` replaced by `reconcile-flow`, for the reconciliation one (change 011); the three Spanish copies (change 016) use the same commands with `quotes-flow` replaced by `purchase-cycle-flow-es`, `quotes-flow-es` or `reconcile-flow-es`, and the orchestrator ones (change 019) with `orchestrator-flow` or `orchestrator-flow-es`; the orders animation (change 005) was encoded earlier with unrecorded commands.
 They need an ffmpeg build with `palettegen` and `paletteuse` (a full build; a minimal one fails with "No such filter").
 Run them from the repository root, with `F=docs/assets/flow-animation/frames/quotes-flow`:
 

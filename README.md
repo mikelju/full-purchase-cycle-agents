@@ -104,7 +104,7 @@ The first two come from a replay of `cycle-demo`; the third is a model call of a
 
 The orchestrator runs the five stages in order over one database; every stage is itself a graph.
 
-![Purchase cycle flow](docs/assets/purchase-cycle-flow.gif)
+![Orchestrator flow: five stages in order over one database](docs/assets/orchestrator-flow.gif)
 
 ```mermaid
 ---
@@ -133,7 +133,13 @@ graph TD;
 
 All thirteen graphs are generated from the code in [docs/graphs.md](docs/graphs.md).
 The full manual, with every command and demo, is [docs/guide.md](docs/guide.md).
-Material in Spanish: the flow animation [purchase-cycle-flow-es.gif](docs/assets/purchase-cycle-flow-es.gif) and the guides [cycle-demo-visual-es.html](docs/assets/cycle-demo-visual-es.html) and [trace-dashboard-guide-es.html](docs/assets/trace-dashboard-guide-es.html).
+Flow animations (English and Spanish):
+- Orchestrator: [GIF](docs/assets/orchestrator-flow.gif), [MP4](docs/assets/orchestrator-flow.mp4); Spanish [GIF](docs/assets/orchestrator-flow-es.gif), [MP4](docs/assets/orchestrator-flow-es.mp4).
+- Customer orders: [GIF](docs/assets/purchase-cycle-flow.gif), [MP4](docs/assets/purchase-cycle-flow.mp4); Spanish [GIF](docs/assets/purchase-cycle-flow-es.gif), [MP4](docs/assets/purchase-cycle-flow-es.mp4).
+- Supplier quotes: [GIF](docs/assets/quotes-flow.gif), [MP4](docs/assets/quotes-flow.mp4); Spanish [GIF](docs/assets/quotes-flow-es.gif), [MP4](docs/assets/quotes-flow-es.mp4).
+- Invoice reconciliation: [GIF](docs/assets/reconcile-flow.gif), [MP4](docs/assets/reconcile-flow.mp4); Spanish [GIF](docs/assets/reconcile-flow-es.gif), [MP4](docs/assets/reconcile-flow-es.mp4).
+
+Material in Spanish: the guides [cycle-demo-visual-es.html](docs/assets/cycle-demo-visual-es.html) and [trace-dashboard-guide-es.html](docs/assets/trace-dashboard-guide-es.html).
 
 ## How it is built
 

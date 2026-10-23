@@ -1,0 +1,408 @@
+<title>Orchestrator Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;600;700&display=swap">
+<style>
+/* Layout: one fixed 16:9 stage (GIF-ready) - reconciliation graph (three documents, extract, compare with its table, decision, register or claim subgraph) | supplier. Visual style of the orders animation (purchase-cycle-flow.html). Single deliberate light, high-contrast look, independent of the OS theme. */
+:root {
+  --ground: #EDF1F7;
+  --panel: #FFFFFF;
+  --panel-edge: #B9C4D4;
+  --ink: #0F172A;
+  --muted: #475569;
+  --line: #8A99AF;
+  --node: #FFFFFF;
+  --node-edge: #5B6B82;
+  --active: #0891B2;
+  --title: #4338CA;
+  --done: #0D9488;
+  --done-soft: #CCFBF1;
+  --done-ink: #134E4A;
+  --msg: #D97706;
+  --msg-soft: #FEF3C7;
+  --hot: #F59E0B;
+  --hot-ink: #1C1300;
+  --bad: #E11D48;
+  --bad-ink: #9F1239;
+  --idle: #F4F6FA;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --sans: "Inter", system-ui, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+html, body { background: var(--ground); color: var(--ink); }
+body { font-family: var(--sans); padding-block: 16px; padding-inline: 16px; }
+.wrap { max-width: 1280px; margin: 0 auto; display: grid; gap: 10px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font: 600 14px/1.3 var(--mono); letter-spacing: .02em; margin: 0; text-wrap: balance; color: var(--title); }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; }
+button { font: 500 12px var(--mono); color: var(--ink); background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: var(--active); color: var(--title); }
+button:focus-visible { outline: 2px solid var(--active); outline-offset: 2px; }
+.stage { overflow-x: auto; }
+svg { display: block; width: 100%; min-width: 0; height: auto; background: var(--ground); }
+body.clean header { display: none; }
+
+.frame { fill: var(--panel); stroke: var(--panel-edge); stroke-width: 1.2; filter: url(#shadow); }
+.subframe { fill: var(--idle); stroke: var(--node-edge); stroke-dasharray: 4 4; transition: fill .4s, stroke .4s; }
+.subframe.open { fill: #ECFEFF; stroke: var(--active); stroke-width: 1.6; }
+.flabel { font: 700 12px var(--mono); fill: var(--title); letter-spacing: .16em; text-transform: uppercase; }
+.small { font: 400 12px var(--mono); fill: var(--muted); }
+.cond { font: 700 12px var(--mono); fill: var(--ink); }
+.pname { font: 600 14px var(--sans); fill: var(--ink); text-anchor: middle; }
+
+/* nodes: idle white, active solid amber with glow, done teal (as in the orders animation) */
+.node rect { fill: var(--node); stroke: var(--node-edge); stroke-width: 1.4; transition: fill .3s, stroke .3s; }
+.node text { font: 600 13px var(--mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; transition: fill .3s; }
+.node circle { fill: var(--node); stroke: var(--muted); stroke-width: 1.6; transition: fill .3s, stroke .3s; }
+.node.endc circle.dot { fill: var(--muted); stroke: none; }
+.node.active rect { fill: var(--hot); stroke: var(--hot); filter: url(#glow); }
+.node.active text { fill: var(--hot-ink); font-weight: 700; }
+.node.active circle { stroke: var(--hot); }
+.node.active circle.dot { fill: var(--hot); }
+.node.done rect { fill: var(--done-soft); stroke: var(--done); stroke-width: 1.8; }
+.node.done text { fill: var(--done-ink); }
+.node.done circle { stroke: var(--done); }
+.node.done circle.dot { fill: var(--done); }
+.idle { opacity: .45; transition: opacity .4s; }
+.lit { opacity: 1; transition: opacity .4s; }
+
+.edge { fill: none; stroke: var(--line); stroke-width: 1.6; transition: stroke .3s; }
+.edge.hot { stroke: var(--hot); stroke-width: 2.6; stroke-dasharray: 9 5; animation: flow .45s linear infinite; filter: url(#glow-e); }
+@keyframes flow { to { stroke-dashoffset: -14; } }
+.edge.done { stroke: var(--done); stroke-opacity: .9; stroke-width: 2; }
+.link { stroke: var(--node-edge); stroke-dasharray: 3 4; fill: none; }
+@media (prefers-reduced-motion: reduce) { .edge.hot { animation: none; } }
+
+
+/* orchestrator: stage chips, database rows, person lane, link stubs */
+.frame.flash { stroke: var(--hot); stroke-width: 2.4; }
+.chip { opacity: 0; transition: opacity .4s; }
+.chip.on { opacity: 1; }
+.chip rect.b { fill: var(--msg-soft); stroke: var(--msg); }
+.chip text { font: 600 13px var(--mono); fill: var(--ink); dominant-baseline: central; white-space: pre; }
+.stub { stroke: var(--line); stroke-width: 1.6; stroke-dasharray: 3 4; fill: none; }
+.stub.hot { stroke: var(--hot); stroke-width: 2.6; stroke-dasharray: 9 5; animation: flow .45s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .stub.hot { animation: none; } }
+.dbrow rect { fill: #F8FAFC; stroke: var(--panel-edge); stroke-width: 1.2; transition: fill .3s, stroke .3s; }
+.dbrow.flash rect { fill: var(--msg-soft); stroke: var(--hot); stroke-width: 2; }
+.rl { font: 700 12px var(--mono); fill: var(--muted); dominant-baseline: central; }
+.rv { font: 600 14px var(--mono); fill: var(--ink); dominant-baseline: central; }
+.cmd { opacity: 0; transition: opacity .3s; }
+.cmd.on { opacity: 1; }
+.cmd rect { fill: #FFFFFF; stroke: var(--node-edge); stroke-width: 1.4; }
+.cmd text { font: 600 14px var(--mono); fill: var(--ink); dominant-baseline: central; white-space: pre; }
+.fline { opacity: 0; transition: opacity .4s; }
+.fline.on { opacity: 1; }
+.fline text { font: 600 13px var(--mono); fill: var(--done-ink); dominant-baseline: central; white-space: pre; }
+.fline rect { fill: var(--done-soft); stroke: var(--done); stroke-width: 1.4; }
+.ctag { opacity: 0; transition: opacity .3s; }
+.ctag.on { opacity: 1; }
+.ctag rect { fill: var(--hot); }
+.ctag text { font: 700 12px var(--mono); fill: var(--hot-ink); text-anchor: middle; dominant-baseline: central; letter-spacing: .08em; }
+.tag rect { fill: var(--title); }
+.tag text { font: 700 12px var(--mono); fill: #fff; text-anchor: middle; dominant-baseline: central; letter-spacing: .08em; }
+.progress { fill: url(#prog); }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1 id="h1"></h1>
+    <div class="controls">
+      <button id="btn-pause" type="button"></button>
+      <button id="btn-restart" type="button"></button>
+      <button id="btn-speed" type="button"></button>
+      <button id="btn-clean" type="button"></button>
+    </div>
+  </header>
+  <div class="stage">
+  <svg id="svg" viewBox="0 0 1280 720" role="img">
+    <defs>
+      <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#EDF1F7"/><circle cx="12" cy="12" r="1.1" fill="#D3DAE5"/></pattern>
+      <linearGradient id="prog" x1="0" x2="1"><stop offset="0" stop-color="#F59E0B"/><stop offset=".5" stop-color="#22C55E"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+      <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1E293B" flood-opacity=".14"/></filter>
+      <filter id="glow" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".55"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".6"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-t" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".4"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-e" filterUnits="userSpaceOnUse" x="0" y="0" width="1280" height="720"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A99AF"/></marker>
+      <marker id="arr-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker>
+      <marker id="arr-done" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0D9488"/></marker>
+    </defs>
+
+    <rect width="1280" height="720" fill="url(#dots)"/>
+    <!-- orchestrator graph, database and person panels -->
+    <rect class="frame" x="24" y="64" width="640" height="616" rx="10"/>
+    <text class="flabel" id="graphLab" x="36" y="88"></text>
+    <rect class="frame" id="dbFrame" x="688" y="64" width="568" height="456" rx="10"/>
+    <text class="flabel" id="dbLab" x="700" y="88"></text>
+    <text class="small" id="dbName" x="1244" y="88" text-anchor="end"></text>
+    <rect class="frame" x="688" y="536" width="568" height="144" rx="10"/>
+    <text class="flabel" id="lowLab" x="700" y="560"></text>
+
+    <g id="links"></g>
+    <g id="edges"></g>
+    <g id="nodes"></g>
+    <g id="chips"></g>
+    <g id="rows"></g>
+    <g id="personG">
+      <circle cx="730" cy="612" r="15" fill="#E2E8F0" stroke="#8A99AF"/>
+      <circle cx="730" cy="607" r="5.4" fill="#64748B"/>
+      <path d="M720,624 a10,8.5 0 0 1 20,0" fill="#64748B"/>
+      <g id="cmds"></g>
+    </g>
+    <g id="finalG"></g>
+    <g id="tagG" class="tag"><rect x="552" y="74" width="104" height="24" rx="12"/><text id="tag" x="604" y="86.5"></text></g>
+    <g id="ctagG" class="ctag"><rect x="436" y="74" width="104" height="24" rx="12"/><text id="ctag" x="488" y="86.5"></text></g>
+
+    <rect x="24" y="704" width="1232" height="4" rx="2" fill="#D5DCE6"/>
+    <rect class="progress" id="progress" x="24" y="704" width="0" height="4" rx="2"/>
+  </svg>
+  </div>
+</div>
+
+<script>
+// ---------- every visible string (the Spanish page differs only in this block, the charset and the <title>) ----------
+const S = {
+  h1: "orchestrator - five stages in order over one database, in passes, with a person deciding between passes",
+  aria: "Animated orchestrator graph: start, orders, quotes, reconcile, receipts, sales and end, run in order seven times over one shared database; the counts of each stage come from a replay run; between passes a person answers a clarification, approves two quotes, approves one claim and rejects another, and approves one customer response",
+  btn: { pause: "Pause", play: "Play", restart: "Restart", speed: "Speed", clean: "Clean frame" },
+  graph: "orchestrator graph", db: "database", dbName: "business.db", person: "person", result: "orders at the end",
+  start: "start", end: "end", pass: "pass", clock: "+6 days",
+  rows: { orders: "orders", quotes: "quote requests", po: "purchase orders", claims: "reconciliations and claims", inv: "customer invoices" },
+  // chips per pass and stage (orders, quotes, reconcile, receipts, sales); a chip with two lines is a two-element array
+  p: [
+    [["4 items, 3 stored, 1 paused"], ["2 started, 2 waiting"], ["nothing new"], ["1 served, 1 issued"], ["1 invoiced, 1 reconciled"]],
+    [["2 items, 2 stored"], ["2 waiting"], ["nothing new"], ["1 served, 1 issued"], ["1 invoiced, 1 reconciled"]],
+    [["2 items, 2 stored"], ["2 replies accepted, 2 waiting, 2 decided"], ["nothing new"], ["nothing new"], ["nothing new"]],
+    [["2 items, 2 stored"], ["nothing new"], ["4 documents, 4 new, 2 claims drafted"], ["2 received, 1 served, 1 issued"], ["1 invoiced, 1 reconciled"]],
+    [["2 items, 2 stored"], ["1 started, 1 waiting"], ["4 documents"], ["nothing new"], ["nothing new"]],
+    [["2 items, 2 stored"], ["1 waiting"], ["4 documents"], ["nothing new"], ["2 signed notes, 2 reconciled,", "1 corrections, 1 responses drafted"]],
+    [["2 items, 2 stored"], ["1 waiting"], ["4 documents"], ["nothing new"], ["nothing new"]],
+  ],
+  // database row values
+  v: {
+    orders1: "3 stored, 1 paused", orders2: "order 4 stored",
+    quotes1: "2 waiting", quotes2: "2 decided", quotes3: "QR-0001, QR-0002 ordered", quotes4: "QR-0003 waiting",
+    po: "PO-0001, PO-0002", claims1: "2 claims drafted", claims2: "1 sent, 1 rejected",
+    inv1: "1 invoiced, 1 reconciled", inv2: "SINV-0002 response drafted", inv3: "SINV-0002 response sent",
+  },
+  final: ["order 1 (A): served, invoice matched", "order 2 (C): served, invoice awaiting_delivery_note", "order 3 (D): received, not invoiced", "order 4 (B): served, invoice discrepancies, credit note sent"],
+};
+</script>
+<script>
+const SVGNS = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+const el = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const txt = (attrs, s, parent) => { const e = el("text", attrs, parent); e.textContent = s; return e; };
+
+$("h1").textContent = S.h1; $("svg").setAttribute("aria-label", S.aria);
+$("btn-pause").textContent = S.btn.pause; $("btn-restart").textContent = S.btn.restart;
+$("btn-speed").textContent = S.btn.speed + " 1x"; $("btn-clean").textContent = S.btn.clean;
+$("graphLab").textContent = S.graph; $("dbLab").textContent = S.db; $("dbName").textContent = S.dbName;
+$("ctag").textContent = S.clock;
+
+// ---------- timeline (ms): one node active at a time ----------
+const T = { slow: 1000, fast: 420, ends: [400, 200], edge: [350, 200], cmd: 500, sceneHold: 1400, final: 450, finalHold: 1400 };
+
+// ---------- graph: start, five stages, end (the real orchestrator order), one column ----------
+const NH = 38, NW = 120, X0 = 120;
+const STAGES = ["orders", "quotes", "reconcile", "receipts", "sales"];
+const SY = [200, 280, 360, 440, 520];
+const nodes = {}, edges = {}, chips = [], stubs = [];
+const mkNode = (k, y, label, circle) => {
+  const g = el("g", { class: "node" + (circle ? " endc" : ""), transform: `translate(${X0},${y})` }, $("nodes"));
+  if (circle) { el("circle", { r: 9 }, g); el("circle", { class: "dot", r: 5 }, g); txt({ class: "small", x: X0 + 20, y: y, "dominant-baseline": "central" }, label, $("nodes")); }
+  else { el("rect", { x: -NW / 2, y: -NH / 2, width: NW, height: NH, rx: 8 }, g); txt({}, label, g); }
+  nodes[k] = g;
+};
+mkNode("start", 130, S.start, true);
+STAGES.forEach((k, i) => mkNode(k, SY[i], k));
+mkNode("end", 610, S.end, true);
+const ORDER = ["start", ...STAGES, "end"], OY = [130, ...SY, 610];
+for (let i = 1; i < ORDER.length; i++) {
+  const a = OY[i - 1] + (i === 1 ? 9 : 19), b = OY[i] - (i === ORDER.length - 1 ? 9 : 19);
+  edges[ORDER[i]] = el("polyline", { class: "edge", points: `${X0},${a} ${X0},${b}`, "marker-end": "url(#arr)" }, $("edges"));
+}
+function setNode(k, state) { const g = nodes[k]; g.classList.remove("active", "done"); if (state) g.classList.add(state); }
+function setEdge(k, state) {
+  const e = edges[k]; e.classList.remove("hot", "done"); if (state) e.classList.add(state);
+  e.setAttribute("marker-end", state === "hot" ? "url(#arr-hot)" : state === "done" ? "url(#arr-done)" : "url(#arr)");
+}
+
+// the shared database: a bus beside the graph panel, one stub per stage, all joined to the database panel
+el("polyline", { class: "link", points: "676,200 676,520" }, $("links"));
+const dbIn = el("polyline", { class: "stub", points: "676,360 688,360" }, $("links"));
+SY.forEach(y => stubs.push(el("polyline", { class: "stub", points: `664,${y} 676,${y}` }, $("links"))));
+
+// a counts chip to the right of each stage
+SY.forEach(y => {
+  const g = el("g", { class: "chip", transform: `translate(196,${y})` }, $("chips"));
+  const rect = el("rect", { class: "b", x: 0, y: -13, width: 100, height: 26, rx: 4 }, g);
+  const bar = el("rect", { x: 0, y: -13, width: 5, height: 26, rx: 2, fill: "#F59E0B" }, g);
+  const t1 = txt({ x: 14, y: 0 }, "", g), t2 = txt({ x: 14, y: 9 }, "", g);
+  chips.push({ g, rect, bar, t1, t2 });
+});
+function setChip(i, lines) {
+  const c = chips[i], two = lines.length > 1;
+  c.t1.textContent = lines[0]; c.t2.textContent = lines[1] || "";
+  c.t1.setAttribute("y", two ? -9 : 0);
+  for (const r of [c.rect, c.bar]) { r.setAttribute("y", two ? -21 : -13); r.setAttribute("height", two ? 42 : 26); }
+  c.rect.setAttribute("width", Math.max(c.t1.getComputedTextLength(), two ? c.t2.getComputedTextLength() : 0) + 28);
+}
+
+// ---------- database rows ----------
+const RK = ["orders", "quotes", "po", "claims", "inv"], RY = [104, 182, 260, 338, 416], rows = {};
+RK.forEach((k, i) => {
+  const g = el("g", { class: "dbrow" }, $("rows"));
+  el("rect", { x: 700, y: RY[i], width: 544, height: 62, rx: 6 }, g);
+  txt({ class: "rl", x: 716, y: RY[i] + 31 }, S.rows[k], g);
+  rows[k] = { g, v: txt({ class: "rv", x: 950, y: RY[i] + 31 }, "", g) };
+});
+
+// ---------- lower panel: the person's commands, then the final order lines ----------
+const cmds = [0, 1].map(i => {
+  const g = el("g", { class: "cmd" }, $("cmds"));
+  const rect = el("rect", { x: 764, y: 574 + i * 42, width: 100, height: 32, rx: 6 }, g);
+  const t = txt({ x: 778, y: 590 + i * 42 }, "", g);
+  return { g, rect, t };
+});
+function showCmd(i, s) {
+  const c = cmds[i]; c.t.textContent = s; c.rect.setAttribute("width", c.t.getComputedTextLength() + 28); c.g.classList.add("on");
+}
+const flines = S.final.map((s, i) => {
+  const g = el("g", { class: "fline" }, $("finalG"));
+  const rect = el("rect", { x: 700, y: 574 + i * 25, width: 100, height: 22, rx: 4 }, g);
+  const t = txt({ x: 712, y: 585 + i * 25 }, s, g);
+  rect.setAttribute("width", t.getComputedTextLength() + 24);
+  return { g, rect, t };
+});
+
+// ---------- timeline engine ----------
+let runId = 0, paused = false, speed = 1;
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function tween(dur, fn) {
+  const my = runId;
+  return new Promise((res, rej) => {
+    let t = 0, last = null;
+    function f(ts) {
+      if (my !== runId) return rej("restart");
+      if (last === null) last = ts;
+      if (!paused) t += (ts - last) * speed;
+      last = ts;
+      const p = Math.min(1, t / dur);
+      fn(p);
+      p < 1 ? requestAnimationFrame(f) : res();
+    }
+    requestAnimationFrame(f);
+  });
+}
+const wait = ms => tween(ms, () => {});
+const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+const bg = p => p.catch(e => { if (e !== "restart") throw e; });
+function move(g, pts, dur) {
+  const segs = []; let total = 0;
+  for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); segs.push(l); total += l; }
+  const place = (x, y) => g.setAttribute("transform", `translate(${x},${y})`);
+  place(pts[0][0], pts[0][1]); g.classList.add("on");
+  return tween(RM ? 1 : dur, p => {
+    let d = ease(p) * total, i = 0;
+    while (i < segs.length - 1 && d > segs[i]) { d -= segs[i]; i++; }
+    const r = segs[i] ? d / segs[i] : 1;
+    place(pts[i][0] + (pts[i + 1][0] - pts[i][0]) * r, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * r);
+  });
+}
+// an edge pulses amber while the flow crosses it, then stays teal
+async function cross(id) { setEdge(id, "hot"); await wait(T.edge); setEdge(id, "done"); }
+
+// progress follows the story clock; LOOP is the story length of one pass as measured by record.py (lastStoryMs)
+const LOOP = 38733;
+let vt = 0, lastTs = null, storyStart = null;
+function ticker(ts) {
+  if (lastTs !== null && !paused) vt += (ts - lastTs) * speed;
+  lastTs = ts;
+  if (storyStart !== null) $("progress").setAttribute("width", Math.min(1, (vt - storyStart) / LOOP) * 1232);
+  requestAnimationFrame(ticker);
+}
+requestAnimationFrame(ticker);
+
+// ---------- one pass: the five stages in order, one node active at a time ----------
+// database writes per pass: pass index -> stage index -> [row, value key]
+const DBW = { 0: { 0: ["orders", "orders1"], 1: ["quotes", "quotes1"], 4: ["inv", "inv1"] }, 2: { 1: ["quotes", "quotes2"] }, 3: { 2: ["claims", "claims1"] }, 4: { 1: ["quotes", "quotes4"] }, 5: { 4: ["inv", "inv2"] } };
+function resetPass(n) {
+  for (const k in nodes) setNode(k, null);
+  for (const k in edges) setEdge(k, null);
+  chips.forEach(c => c.g.classList.remove("on"));
+  cmds.forEach(c => c.g.classList.remove("on"));
+  $("tag").textContent = S.pass + " " + (n + 1);
+  $("ctagG").classList.toggle("on", n === 2);
+}
+async function hop(k, ms, ei, body) {
+  setNode(k, "active"); if (edges[k]) setEdge(k, "hot");
+  const e = bg(wait(T.edge[ei]).then(() => { if (edges[k]) setEdge(k, "done"); }));
+  await Promise.all([wait(ms), body ? body() : null, e]);
+  setNode(k, "done");
+}
+async function pass(n, fast) {
+  resetPass(n);
+  const ei = fast ? 1 : 0, hold = fast ? T.fast : T.slow;
+  await hop("start", T.ends[ei], ei);
+  for (let i = 0; i < 5; i++) {
+    setChip(i, S.p[n][i]); chips[i].g.classList.add("on");
+    stubs[i].classList.add("hot"); dbIn.classList.add("hot"); $("dbFrame").classList.add("flash");
+    const w = DBW[n] && DBW[n][i];
+    await hop(STAGES[i], hold, ei, () => w ? setRow(w[0], w[1]) : null);
+    stubs[i].classList.remove("hot"); dbIn.classList.remove("hot"); $("dbFrame").classList.remove("flash");
+  }
+  await hop("end", T.ends[ei], ei);
+}
+async function setRow(k, key) {
+  rows[k].v.textContent = S.v[key]; rows[k].g.classList.add("flash");
+  await wait(hold1()); rows[k].g.classList.remove("flash");
+}
+const hold1 = () => 800;
+// a person acts between passes: commands appear, then the database rows they change
+async function person(list, writes) {
+  for (let i = 0; i < list.length; i++) { showCmd(i, list[i]); await wait(T.cmd); }
+  await Promise.all(writes.map(w => setRow(w[0], w[1])));
+  await wait(T.sceneHold - 800);
+}
+function resetAll() {
+  for (const k in rows) { rows[k].v.textContent = ""; rows[k].g.classList.remove("flash"); }
+  flines.forEach(f => f.g.classList.remove("on"));
+  $("personG").style.display = ""; $("lowLab").textContent = S.person;
+  resetPass(0); $("tag").textContent = S.pass + " 1";
+}
+
+// ---------- story ----------
+async function story() {
+  storyStart = vt; $("progress").setAttribute("width", 0);
+  resetAll();
+  await pass(0, false);
+  await person(["clarify answer"], [["orders", "orders2"]]);
+  await pass(1, true);
+  await pass(2, true);
+  await person(["quotes approve QR-0001", "quotes approve QR-0002"], [["quotes", "quotes3"], ["po", "po"]]);
+  await pass(3, false);
+  await person(["reconcile approve INV-0002", "reconcile reject INV-0004"], [["claims", "claims2"]]);
+  await pass(4, true);
+  await pass(5, true);
+  await person(["sales approve SINV-0002"], [["inv", "inv3"]]);
+  await pass(6, true);
+  // final: the four orders as the run summary lists them
+  cmds.forEach(c => c.g.classList.remove("on")); $("personG").style.display = "none"; $("lowLab").textContent = S.result;
+  for (const f of flines) { f.rect.setAttribute("width", f.t.getComputedTextLength() + 24); f.g.classList.add("on"); await wait(T.final); }
+  await wait(T.finalHold);
+  window.lastStoryMs = vt - storyStart;
+  $("progress").setAttribute("width", 1232); storyStart = null;
+  await wait(2000);
+}
+async function loop() {
+  const my = ++runId;
+  try { while (my === runId) await story(); } catch (e) { if (e !== "restart") throw e; }
+}
+$("btn-pause").onclick = () => { paused = !paused; $("btn-pause").textContent = paused ? S.btn.play : S.btn.pause; };
+$("btn-restart").onclick = () => { paused = false; $("btn-pause").textContent = S.btn.pause; loop(); };
+$("btn-speed").onclick = () => { speed = speed === 1 ? 2 : speed === 2 ? 0.5 : 1; $("btn-speed").textContent = S.btn.speed + " " + speed + "x"; };
+$("btn-clean").onclick = () => document.body.classList.toggle("clean");
+if (location.hash === "#clean") document.body.classList.add("clean");
+loop();
+</script>
