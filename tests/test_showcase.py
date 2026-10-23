@@ -62,3 +62,31 @@ def test_check_exits_non_zero_when_the_readme_table_differs(tmp_path, capsys):
     assert "differs" in capsys.readouterr().out
     readme.write_text("no markers here\n", encoding="utf-8")
     assert cli.main(args) == 1
+
+
+def _claims_baseline(passes: list[bool]) -> dict:
+    return {"cases": {f"CLM-{i}": {"case_pass_rate": ok} for i, ok in enumerate(passes)}}
+
+
+def test_compare_pairs_counts_lost_gained_and_p():
+    before = {"a": True, "b": True, "c": False, "d": False, "e": True}
+    after = {"a": True, "b": False, "c": True, "d": True, "e": True, "extra": True}
+    result = showcase.compare_pairs(before, after)
+    assert (result["n"], result["before"], result["after"]) == (5, 3, 4)
+    assert (result["lost"], result["gained"]) == (1, 2)
+    assert abs(result["p"] - 1.0) < 1e-9  # 3 discordant pairs: 2 * P(X <= 1) = 2 * 0.5 -> capped at 1
+
+
+def test_compare_baselines_from_two_fixtures(tmp_path):
+    import json
+
+    old = _claims_baseline([True, True, False, False, False, False, True, True, True, True])
+    new = _claims_baseline([True, True, True, True, True, True, True, True, True, True])
+    (tmp_path / "claim_drafting.json").write_text(json.dumps(new), encoding="utf-8")
+    (tmp_path / "order_scenarios.json").write_text(json.dumps({"x": 1}), encoding="utf-8")
+    (tmp_path / "unchanged.json").write_text(json.dumps({"x": 1}), encoding="utf-8")
+    olds = {"claim_drafting": old, "order_scenarios": {"x": 0}, "unchanged": {"x": 1}}
+    table = showcase.compare_baselines("OLD", tmp_path, load_old=olds.get)
+    assert "| claim_drafting | case_pass_rate | claim | 6/10 (60.0%) | 10/10 (100.0%) | 0 | 4 | 0.12 |" in table
+    assert "order_scenarios: baseline changed" in table
+    assert "unchanged" not in table

@@ -2,6 +2,7 @@
 
 import json
 import re
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -161,6 +162,100 @@ def cmd_results_table(args) -> int:
     return 1
 
 
+BEFORE_AFTER_START, BEFORE_AFTER_END = "<!-- before-after:start -->", "<!-- before-after:end -->"
+BASELINES_DIR = config.EVALS_DIR / "baselines"
+
+
+def _flags(section: str, key: str):
+    return lambda baseline: {k: v[key] for k, v in baseline[section].items()}
+
+
+def _document_flags(metric: str):
+    """A document counts as right when all units of the metric are right; None (skipped) when it does not apply."""
+
+    def flags(baseline: dict) -> dict:
+        found = {k: v["counts"][metric] for k, v in baseline["documents"].items()}
+        return {k: hits == n for k, (hits, n) in found.items() if n}
+
+    return flags
+
+
+# suite -> (metric, unit of one case, paired per-case outcomes); the same pairing each suite regression gate uses
+COMPARISONS = {
+    "email_order_extraction": [
+        ("intake_accuracy", "email", _flags("emails", "intake_accuracy")),
+        ("line_recall", "expected line", _flags("lines", "line_recall")),
+    ],
+    "clarification_detection": [("detection_recall", "expected doubt", lambda baseline: dict(baseline["doubts"]))],
+    "document_extraction": [
+        ("exact_match", "document", _document_flags("exact_match")),
+        ("unit_price_accuracy", "document", _document_flags("unit_price_accuracy")),
+    ],
+    "claim_drafting": [("case_pass_rate", "claim", _flags("cases", "case_pass_rate"))],
+}
+
+
+def compare_pairs(before: dict, after: dict) -> dict:
+    """Lost, gained and exact McNemar p over the cases both sides hold."""
+    from purchase_cycle.evaluation.stats import mcnemar_exact
+
+    ids = sorted(set(before) & set(after))
+    lost = sum(1 for i in ids if before[i] and not after[i])
+    gained = sum(1 for i in ids if not before[i] and after[i])
+    return {
+        "n": len(ids),
+        "before": sum(1 for i in ids if before[i]),
+        "after": sum(1 for i in ids if after[i]),
+        "lost": lost,
+        "gained": gained,
+        "p": mcnemar_exact(lost, gained),
+    }
+
+
+def _p_text(p: float) -> str:
+    return "<0.01" if p < 0.01 else f"{p:.2f}"
+
+
+def _git_show(rev: str, name: str) -> dict | None:
+    done = subprocess.run(
+        ["git", "show", f"{rev}:evals/baselines/{name}.json"],
+        cwd=config.ROOT,
+        capture_output=True,
+        encoding="utf-8",
+    )
+    return json.loads(done.stdout) if done.returncode == 0 else None
+
+
+def compare_baselines(old_rev: str, directory: Path | None = None, load_old=None) -> str:
+    """Markdown table of each metric before (at `old_rev`) and after (working tree) for every baseline that changed."""
+    directory = Path(directory) if directory else BASELINES_DIR
+    load_old = load_old or (lambda name: _git_show(old_rev, name))
+    rows = [
+        "| Suite | Metric | Unit | Before | After | Lost | Gained | Exact McNemar p |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    notes = []
+    for path in sorted(directory.glob("*.json")):
+        after, before = json.loads(path.read_text(encoding="utf-8")), load_old(path.stem)
+        if before is None or before == after:
+            continue
+        if path.stem not in COMPARISONS:
+            notes.append(f"- {path.stem}: baseline changed, no paired comparison is defined for it")
+            continue
+        for metric, unit, pairs in COMPARISONS[path.stem]:
+            r = compare_pairs(pairs(before), pairs(after))
+            rows.append(
+                f"| {path.stem} | {metric} | {unit} | {r['before']}/{r['n']} ({r['before'] / r['n']:.1%}) "
+                f"| {r['after']}/{r['n']} ({r['after'] / r['n']:.1%}) | {r['lost']} | {r['gained']} | {_p_text(r['p'])} |"
+            )
+    return "\n".join(rows + notes)
+
+
+def cmd_compare_baselines(args) -> int:
+    print(compare_baselines(args.old_rev))
+    return 0
+
+
 def add_showcase_commands(sub) -> None:
     sub.add_parser("diagrams", help="write docs/graphs.md with one Mermaid diagram per graph").set_defaults(
         handler=cmd_diagrams
@@ -169,3 +264,6 @@ def add_showcase_commands(sub) -> None:
     results.add_argument("--summaries", default=None, help="folder of summary files (default data/eval_summaries)")
     results.add_argument("--check", metavar="FILE", help="exit 1 when the table between the markers of FILE differs")
     results.set_defaults(handler=cmd_results_table)
+    compare = sub.add_parser("compare-baselines", help="compare the stored baselines with those of a git revision")
+    compare.add_argument("old_rev", metavar="OLD_REV", help="git revision holding the old baselines")
+    compare.set_defaults(handler=cmd_compare_baselines)
