@@ -24,6 +24,7 @@ The posts do not teach what an agent is and use the word sparingly.
 - The GitHub link goes in the first comment, not in the post.
 - Post 1 opens with an everyday scene; posts 2 to 4 pick up from the previous post instead of opening with a new scene.
 - Owner's voice: short lines and standalone sentences, bullets with 👉, informal singular "tú", a colloquial turn here and there, a reflective or question close.
+  Learned from post 3 as published: shorter and less technical, explaining how the system works rather than implementation detail.
 - Post 1 gives the general scope (three parts plus a coordinator that organizes and supervises) before focusing on orders.
 - Spanish copies of the three animations are proposed as a separate change; the owner will decide whether the posts use the Spanish or the English videos.
   The English ones stay in the README.
@@ -35,7 +36,7 @@ The posts do not teach what an agent is and use the word sparingly.
 |---|--------|
 | 1 | Approved by the owner |
 | 2 | Published by the owner on 2026-10-21; the text below is the published one |
-| 3 | Approved in general; figures updated on 2026-10-23 after change 018; the owner may still adjust the wording |
+| 3 | Published by the owner on 2026-10-23; the text below is the published one |
 | 4 | Approved in general; the owner may still adjust the wording; image to be decided |
 
 ## Post 1 - orders
@@ -124,22 +125,33 @@ Días después llegan el albarán y la factura.
 
 La tercera parte del sistema se resume en una frase: la IA lee, el código cuenta.
 
-👉 La IA lee cada albarán y cada factura, venga en PDF, en Excel o en texto, y saca el número, el pedido al que se refiere y sus líneas.
-👉 El código lo compara línea a línea con el pedido: precio, cantidad, líneas de más y líneas de menos. Un céntimo de margen en el precio y ninguno en la cantidad.
-👉 Si algo no cuadra, la IA redacta el email de reclamación, el código comprueba que todo lo que dice es cierto y una persona lo aprueba antes de que salga.
+👉 La IA lee cada albarán y cada factura, venga en PDF, en Excel o en texto
+👉 El código lo compara línea a línea con el pedido: precio, cantidad, líneas de más y líneas de menos.
+👉 Si algo no cuadra, la IA redacta el email de reclamación y una persona lo aprueba antes de que salga.
 👉 Cuando todo cuadra, entra el stock y se sirven, por orden de llegada, los pedidos de clientes que estaban esperando.
 
 En el vídeo, dos rondas: en la primera el pedido, el albarán y la factura cuadran y la factura se registra; en la segunda llegaron 35 unidades y se facturaron 40, así que se calcula la diferencia (-25,00 €) y se pide un abono al proveedor.
 
-¿Por qué no dejar que la IA compare también? Porque sumar y comparar números es lo que un programa normal hace sin fallar nunca. Y cuando hay dinero de por medio, eso no se negocia.
+¿Por qué no dejar que la IA compare también? Porque sumar y comparar números es lo que un programa normal hace sin fallar nunca.
 
 Medido y a la vista: la comparación supera los 58 casos de prueba.
+
 La lectura de documentos tenía 2 errores graves. Los analicé, ajusté las instrucciones de la IA y ahora acierta los 90 documentos de prueba sin ningún error grave.
-Eso sí: ajusté mirando esos dos fallos, así que ese 100% es optimista, y así lo dejo escrito.
 
 El lunes, lo que no se ve en los vídeos: cómo lo he construido.
 
 #InteligenciaArtificial #Automatización #Finanzas
+```
+
+First comment as published:
+
+```text
+El proyecto completo:
+https://github.com/mikelju/full-purchase-cycle-agents
+
+Si te perdiste los posts anteriores de la serie:
+- Pedidos: https://lnkd.in/p/e3v3Kzqt
+- Proveedores: https://lnkd.in/p/esQAcdWa
 ```
 
 ## Post 4 - how it is built
@@ -174,7 +186,8 @@ El código está abierto: te dejo el enlace en los comentarios.
 ```
 
 The figures in posts 2 to 4 come from the README and the change records as of 2026-10-16: 1,288 tests, 17 evaluations, offer extraction 98.9%, quote decision 39/39, reconciliation matching 58/58, document extraction 97.8% with 2 critical errors, phase 09 live calls about 0.18 USD.
-On 2026-10-23 post 3 was updated to the README figures after change 018: document extraction 100.0% exact match on 90 test documents with 0 critical errors, not a clean held-out measure because the instructions were worded from the two diagnosed misses.
+On 2026-10-23 post 3 was published with the README figures after change 018: document extraction correct on all 90 test documents with 0 critical errors, after the 2 critical errors were analyzed and the instructions adjusted.
+The published text does not carry the caveat that this result is not a clean held-out measure, because the instructions were worded from the two diagnosed misses.
 Check them again before publishing.
 
 ## Possible new animations
