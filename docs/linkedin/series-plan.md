@@ -202,7 +202,7 @@ Si te perdiste los posts anteriores de la serie:
 The post 3 LinkedIn link is not recorded and can be added when the owner provides it.
 The figures in post 4 (21 evaluations, 1,698 tests) come from `docs/plans/fase-12-orquestador/plan.md` line 132 and `README.md`.
 
-The figures in posts 2 to 4 come from the README and the change records as of 2026-10-16: 1,288 tests, 17 evaluations, offer extraction 98.9%, quote decision 39/39, reconciliation matching 58/58, document extraction 97.8% with 2 critical errors, phase 09 live calls about 0.18 USD.
+The figures in posts 2 and 3 come from the README and the change records as of 2026-10-16: 1,288 tests, 17 evaluations, offer extraction 98.9%, quote decision 39/39, reconciliation matching 58/58, document extraction 97.8% with 2 critical errors, phase 09 live calls about 0.18 USD.
 On 2026-10-23 post 3 was published with the README figures after change 018: document extraction correct on all 90 test documents with 0 critical errors, after the 2 critical errors were analyzed and the instructions adjusted.
 The published text does not carry the caveat that this result is not a clean held-out measure, because the instructions were worded from the two diagnosed misses.
 Check them again before publishing.
