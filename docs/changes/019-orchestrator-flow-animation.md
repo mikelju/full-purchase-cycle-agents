@@ -32,12 +32,12 @@ Owner request relayed on 2026-10-23 by the intermediary session: build the chang
 ## Plan
 Executor notes for every step: run `unset ANTHROPIC_API_KEY LANGSMITH_API_KEY` in the same Bash call before any command; one git command per Bash call, no `git -C`, no `cd ... &&` chains; never open `.env`; keep evidence in `.evidence/cambio-019/` (git-ignored, check with `git check-ignore .evidence/cambio-019/x`).
 
-- [ ] 1. Data.
+- [x] 1. Data.
   Run the replay demo into a folder outside the repository and keep its output:
   `uv run purchase-cycle cycle-demo --workdir <scratchpad>/cycle-demo > .evidence/cambio-019/cycle-demo.txt 2>&1`, exit 0, about 25 s, no key and no network.
   The planner ran it on 2026-10-23 (exit 0); the figures the script below uses are from that run: 14 steps, passes `cycle-run-0001` to `0007`, the summary lines `order 1 (A): served, invoice matched`, `order 2 (C): served, invoice awaiting_delivery_note`, `order 3 (D): received, not invoiced`, `order 4 (B): served, invoice discrepancies, credit note sent`, `supplier claims: 1 rejected, 1 sent`, `quote requests waiting: QR-0003 GLV-NIT-XS x1`.
   The output holds example email addresses and absolute paths: never copy those lines into a page.
-- [ ] 2. English page `docs/assets/flow-animation/orchestrator-flow.html`; C2, C3, C4.
+- [x] 2. English page `docs/assets/flow-animation/orchestrator-flow.html`; C2, C3, C4.
   Copy `reconcile-flow.html` as the skeleton (style block, `S` strings block, `T` timeline constants, `step` helper, progress bar with `LOOP`, `window.lastStoryMs`, `#clean`) and replace the SVG and the story.
   Layout at 1280x720: frame "orchestrator graph" with a vertical or left-to-right chain start, `orders`, `quotes`, `reconcile`, `receipts`, `sales`, end (labels exactly as the node names in `cycle.py`), each stage with a one-line counts chip on the side; frame "database" (`business.db`) with chips for orders, quote requests, purchase orders, reconciliations and claims, customer invoices; a small "person" lane for the decisions between passes; a pass tag (`pass 1` to `pass 7`).
   Script (proposal, about 38 s of story plus the 2 s recorder tail):
@@ -53,21 +53,21 @@ Executor notes for every step: run `unset ANTHROPIC_API_KEY LANGSMITH_API_KEY` i
   | Final | hold | four order lines: A served, matched; B served, discrepancies, credit note sent; C served, awaiting delivery note; D received, not invoiced |
   Rules: one node active at a time; each fully lit stage hold at least 0.4 s in fast passes and at least 0.9 s in passes 1 and 4; no captions besides node names, chips, the pass tag, the person lane label and the frame headers; no email address, path, thread id or file name of the run output.
   Set `LOOP` to the story length measured by `record.py` (`story ms` line) after the first capture and re-record once.
-- [ ] 3. Spanish page `orchestrator-flow-es.html`; C2, C6.
+- [x] 3. Spanish page `orchestrator-flow-es.html`; C2, C6.
   Copy the English page, add `<meta charset="utf-8">` as the first line, translate the `<title>` and only the `S` block, with the rules of change 016: node names (`orders`, `quotes`, `reconcile`, `receipts`, `sales`) stay as code identifiers because they are the graph node names; statuses with an underscore and references (QR-0001, PO-0001, INV-0002, SINV-0002) stay; plain words are translated (pass to `pasada`, person to `persona`, database to `base de datos`, served to `servido`, delivery note to `albarán`, credit note to `abono`); Spanish number format if any decimal appears.
   Check: `diff orchestrator-flow.html orchestrator-flow-es.html` shows only the charset, title and strings block.
-- [ ] 4. Leak grep on the sources; C5.
+- [x] 4. Leak grep on the sources; C5.
   `grep -n -E "@|[A-Za-z]:[\\/]|/Users/|mikel|sk-ant|lsv2|thread|cycle-run-|\.eml|example\.com" docs/assets/flow-animation/orchestrator-flow*.html` must print nothing except the Google Fonts `@` free lines (there should be none; CSS has no `@` in these pages unless `@media`/`@keyframes` is added, which is then listed by hand as harmless).
-- [ ] 5. Capture and encode; C1.
+- [x] 5. Capture and encode; C1.
   `uv run --with playwright python docs/assets/flow-animation/record.py orchestrator-flow.html > .evidence/cambio-019/record-en.log 2>&1` and the same with `orchestrator-flow-es.html` (`record-es.log`); needs Chrome and network for the fonts; frames land in `docs/assets/flow-animation/frames/<page>/` (git-ignored).
   The ffmpeg on PATH may lack `palettegen`; use the full build under WinGet (`Gyan.FFmpeg`, found with `ls "$LOCALAPPDATA/Microsoft/WinGet/Packages/" | grep -i ffmpeg`) as in change 011.
   From the repository root, with `F=docs/assets/flow-animation/frames/orchestrator-flow` (then `orchestrator-flow-es`), run the three commands of the folder README with `quotes-flow` replaced by `orchestrator-flow` (or `orchestrator-flow-es`).
   Probe: `ffprobe -v error -show_entries stream=codec_name,width,height,pix_fmt,nb_frames -show_entries format=duration,size <file>` for the four files into `.evidence/cambio-019/ffprobe.txt`; GIF loop block: `grep -c NETSCAPE2.0 <gif>` gives 1.
-- [ ] 6. Frame inspection; C3, C5, C6.
+- [x] 6. Frame inspection; C3, C5, C6.
   Extract one frame every 2 s from each of the four files: `ffmpeg -v error -i docs/assets/orchestrator-flow.gif -vf "select=not(mod(n\,30))" -vsync vfr .evidence/cambio-019/frames-en-gif/f%03d.png`, and the same for the `-es` GIF and both MP4s (folders `frames-es-gif`, `frames-en-mp4`, `frames-es-mp4`).
   Read every extracted PNG (about 20 per file) and check: the active stage order in each pass, the chips against `cycle-demo.txt`, no email, path, user name, key or thread id, no overflow; zoom one Spanish frame with accents (`ffmpeg -i <png> -vf "crop=480:270:X:Y,scale=960:540" zoom-es.png`).
   Record the frame numbers checked and what each shows in Evidence.
-- [ ] 7. READMEs and test; C7, C8, C9.
+- [x] 7. READMEs and test; C7, C8, C9.
   `README.md` line 107: replace `![Purchase cycle flow](docs/assets/purchase-cycle-flow.gif)` with `![Orchestrator flow: five stages in order over one database](docs/assets/orchestrator-flow.gif)`; keep the sentence above it.
   Replace line 136 ("Material in Spanish: ...") with a short block, no new `##` heading, keeping the exact words "Material in Spanish" for the guides:
   ```
@@ -100,9 +100,9 @@ Executor notes for every step: run `unset ANTHROPIC_API_KEY LANGSMITH_API_KEY` i
 
 ## Evidence
 Local evidence in `.evidence/cambio-019/` (git-ignored).
-- C1: `ffprobe.txt`: GIFs 960x540, 612 frames, 40.8 s, 1.95 MB (EN) and 2.01 MB (ES); MP4s 1280x720 h264 yuv420p, 40.8 s (story 38.7 s, under 45 s); `grep -c NETSCAPE2.0` gives 1 for both GIFs.
+- C1: `ffprobe.txt`: GIFs 960x540, 612 frames, 40.8 s, 1.96 MB (EN) and 2.03 MB (ES); MP4s 1280x720 h264 yuv420p, 40.8 s (story 38.7 s, under 45 s); `grep -c NETSCAPE2.0` gives 1 for both GIFs.
 - C2: `diff` of the two pages differs only in charset meta, title and strings block (39 changed lines).
-- C3, C6: `frames.md`: 21 sampled frames per file in contact sheets, all four files viewed in full; stage order and no overflow; `zoom-es.png` for accents.
+- C3, C6: `frames.md`: 21 sampled frames per file (one every 2 s), all viewed; stage order and no overflow; no ñ appears in the strings; accents í checked (`zoom-es.png`).
 - C4: chips and figures compared with `cycle-demo.txt` (passes 1-7, final four order lines) in `frames.md`.
 - C5: leak grep over both pages (only harmless CSS at-rules, SVG namespace and font links) and every sampled frame (see `frames.md`).
 - C7: `README.md` 172 lines, ten `##` headings; Architecture embeds `orchestrator-flow.gif` and lists the 16 media links (all paths exist).
@@ -113,6 +113,7 @@ Local evidence in `.evidence/cambio-019/` (git-ignored).
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
+| 1 | local | HEAD~1..HEAD (22847a9) | content correctness; evidence and leaks | 11 (nits included): ES chips wording (entradas, guardados), ES pass 6 singulars, folder README conceptual sentence, evidence wording, database rows (orders, customer invoices), layout comment, dead code, LOOP comment, clock tag, README test, plan ticks | all 11 fixed; pages re-recorded, media re-encoded and re-inspected |
 
 ## Delivery
 To fill at delivery.

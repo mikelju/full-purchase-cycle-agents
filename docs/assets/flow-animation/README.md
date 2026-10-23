@@ -16,7 +16,8 @@ Source of the flow animations, kept so they can be regenerated:
 - `record.py`: captures a page (optional name argument, default the orders page) frame by frame into `frames/<page>/` (git-ignored; the folder is cleaned before each capture) with a virtual clock, so the output is deterministic: 15 fps, 1280x720 PNG.
   Before the first frame it loads every font face the page declares (each family, weight and character subset), so no frame falls back to another font while a weight or the accented glyphs load.
 
-The flows are conceptual, as stated in `docs/changes/005-flow-animation.md`, `docs/changes/008-quotes-flow-animation.md`, `docs/changes/011-reconcile-flow-animation.md`, `docs/changes/017-simple-reconcile-animation.md` and `docs/changes/019-orchestrator-flow-animation.md`: it does not claim to show the exact current behavior of the code.
+The flows are conceptual, as stated in `docs/changes/005-flow-animation.md`, `docs/changes/008-quotes-flow-animation.md`, `docs/changes/011-reconcile-flow-animation.md` and `docs/changes/017-simple-reconcile-animation.md`: it does not claim to show the exact current behavior of the code.
+The orchestrator animation (change 019) follows the real graph order and the figures of a replay run of `cycle-demo`.
 
 ## Capture frames
 Requires Google Chrome installed and Playwright, which is not a project dependency, so it is pulled only for this run:

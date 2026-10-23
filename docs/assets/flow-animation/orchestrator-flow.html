@@ -2,7 +2,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;600;700&display=swap">
 <style>
-/* Layout: one fixed 16:9 stage (GIF-ready) - reconciliation graph (three documents, extract, compare with its table, decision, register or claim subgraph) | supplier. Visual style of the orders animation (purchase-cycle-flow.html). Single deliberate light, high-contrast look, independent of the OS theme. */
+/* Layout: one fixed 16:9 stage (GIF-ready) - orchestrator graph (start, five stages, end) with stage chips | database rows | person lane. Visual style of the orders animation (purchase-cycle-flow.html). Single deliberate light, high-contrast look, independent of the OS theme. */
 :root {
   --ground: #EDF1F7;
   --panel: #FFFFFF;
@@ -42,12 +42,8 @@ svg { display: block; width: 100%; min-width: 0; height: auto; background: var(-
 body.clean header { display: none; }
 
 .frame { fill: var(--panel); stroke: var(--panel-edge); stroke-width: 1.2; filter: url(#shadow); }
-.subframe { fill: var(--idle); stroke: var(--node-edge); stroke-dasharray: 4 4; transition: fill .4s, stroke .4s; }
-.subframe.open { fill: #ECFEFF; stroke: var(--active); stroke-width: 1.6; }
 .flabel { font: 700 12px var(--mono); fill: var(--title); letter-spacing: .16em; text-transform: uppercase; }
 .small { font: 400 12px var(--mono); fill: var(--muted); }
-.cond { font: 700 12px var(--mono); fill: var(--ink); }
-.pname { font: 600 14px var(--sans); fill: var(--ink); text-anchor: middle; }
 
 /* nodes: idle white, active solid amber with glow, done teal (as in the orders animation) */
 .node rect { fill: var(--node); stroke: var(--node-edge); stroke-width: 1.4; transition: fill .3s, stroke .3s; }
@@ -120,8 +116,6 @@ body.clean header { display: none; }
       <linearGradient id="prog" x1="0" x2="1"><stop offset="0" stop-color="#F59E0B"/><stop offset=".5" stop-color="#22C55E"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
       <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1E293B" flood-opacity=".14"/></filter>
       <filter id="glow" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".55"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="glow-s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".6"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="glow-t" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feComponentTransfer in="b" result="b2"><feFuncA type="linear" slope=".4"/></feComponentTransfer><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <filter id="glow-e" filterUnits="userSpaceOnUse" x="0" y="0" width="1280" height="720"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A99AF"/></marker>
       <marker id="arr-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker>
@@ -180,7 +174,7 @@ const S = {
   ],
   // database row values
   v: {
-    orders1: "3 stored, 1 paused", orders2: "order 4 stored",
+    orders1: "3 stored, 1 paused", orders2: "4 stored, order 4 answered",
     quotes1: "2 waiting", quotes2: "2 decided", quotes3: "QR-0001, QR-0002 ordered", quotes4: "QR-0003 waiting",
     po: "PO-0001, PO-0002", claims1: "2 claims drafted", claims2: "1 sent, 1 rejected",
     inv1: "1 invoiced, 1 reconciled", inv2: "SINV-0002 response drafted", inv3: "SINV-0002 response sent",
@@ -278,7 +272,6 @@ const flines = S.final.map((s, i) => {
 
 // ---------- timeline engine ----------
 let runId = 0, paused = false, speed = 1;
-const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
 function tween(dur, fn) {
   const my = runId;
   return new Promise((res, rej) => {
@@ -298,22 +291,10 @@ function tween(dur, fn) {
 const wait = ms => tween(ms, () => {});
 const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
 const bg = p => p.catch(e => { if (e !== "restart") throw e; });
-function move(g, pts, dur) {
-  const segs = []; let total = 0;
-  for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); segs.push(l); total += l; }
-  const place = (x, y) => g.setAttribute("transform", `translate(${x},${y})`);
-  place(pts[0][0], pts[0][1]); g.classList.add("on");
-  return tween(RM ? 1 : dur, p => {
-    let d = ease(p) * total, i = 0;
-    while (i < segs.length - 1 && d > segs[i]) { d -= segs[i]; i++; }
-    const r = segs[i] ? d / segs[i] : 1;
-    place(pts[i][0] + (pts[i + 1][0] - pts[i][0]) * r, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * r);
-  });
-}
 // an edge pulses amber while the flow crosses it, then stays teal
 async function cross(id) { setEdge(id, "hot"); await wait(T.edge); setEdge(id, "done"); }
 
-// progress follows the story clock; LOOP is the story length of one pass as measured by record.py (lastStoryMs)
+// progress follows the story clock; LOOP is the story length as measured by record.py (lastStoryMs)
 const LOOP = 38733;
 let vt = 0, lastTs = null, storyStart = null;
 function ticker(ts) {
@@ -326,7 +307,7 @@ requestAnimationFrame(ticker);
 
 // ---------- one pass: the five stages in order, one node active at a time ----------
 // database writes per pass: pass index -> stage index -> [row, value key]
-const DBW = { 0: { 0: ["orders", "orders1"], 1: ["quotes", "quotes1"], 4: ["inv", "inv1"] }, 2: { 1: ["quotes", "quotes2"] }, 3: { 2: ["claims", "claims1"] }, 4: { 1: ["quotes", "quotes4"] }, 5: { 4: ["inv", "inv2"] } };
+const DBW = { 0: { 0: ["orders", "orders1"], 1: ["quotes", "quotes1"], 4: ["inv", "inv1"] }, 2: { 1: ["quotes", "quotes2"] }, 3: { 2: ["claims", "claims1"], 4: ["inv", "inv1"] }, 4: { 1: ["quotes", "quotes4"] }, 5: { 4: ["inv", "inv2"] } };
 function resetPass(n) {
   for (const k in nodes) setNode(k, null);
   for (const k in edges) setEdge(k, null);
@@ -356,11 +337,11 @@ async function pass(n, fast) {
 }
 async function setRow(k, key) {
   rows[k].v.textContent = S.v[key]; rows[k].g.classList.add("flash");
-  await wait(hold1()); rows[k].g.classList.remove("flash");
+  await wait(800); rows[k].g.classList.remove("flash");
 }
-const hold1 = () => 800;
 // a person acts between passes: commands appear, then the database rows they change
 async function person(list, writes) {
+  $("ctagG").classList.remove("on");
   for (let i = 0; i < list.length; i++) { showCmd(i, list[i]); await wait(T.cmd); }
   await Promise.all(writes.map(w => setRow(w[0], w[1])));
   await wait(T.sceneHold - 800);
