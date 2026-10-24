@@ -67,6 +67,19 @@ def test_readme_leads_with_evaluation_discloses_and_links_spanish_material():
     assert "Material in Spanish" in README
 
 
+def test_architecture_shows_orchestrator_gif_and_all_animations_are_linked():
+    architecture = README.split("## Architecture")[1].split("## How it is built")[0]
+    assert (
+        "![Orchestrator flow: five stages in order over one database](docs/assets/orchestrator-flow.gif)"
+        in architecture
+    )
+    assert "](docs/assets/purchase-cycle-flow.gif)" not in architecture.split("Flow animations")[0]
+    for name in ("orchestrator-flow", "purchase-cycle-flow", "quotes-flow", "reconcile-flow"):
+        for suffix in ("", "-es"):
+            for ext in ("gif", "mp4"):
+                assert f"docs/assets/{name}{suffix}.{ext}" in architecture
+
+
 def test_quickstart_has_at_most_four_commands():
     block = README.split("## Quickstart")[1].split("```")[1]
     commands = [line for line in block.splitlines() if line.strip()]
