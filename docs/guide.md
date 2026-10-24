@@ -1234,7 +1234,7 @@ Recordings in `evals/recordings/` are tied to the exact prompt and model: changi
 - The fact check does not read the direction of a difference: a credit asked on a difference in the supplier's favour passes the check.
 - The dispute figure is checked only as one correct total in a sentence that names the dispute: a wrong figure beside the correct total in such sentences passes, and the total in dispute can stand in for the amount of the last row, because a stricter reading failed 14 of the 60 test claims.
 - The blind second pass of the `claim_drafting` dataset compared rows, amounts and totals, not the expected and found values, and the raw annotator readings were not kept.
-- `claim_drafting` has 3 critical errors out of 60 test claims against a target of 0, its gate is on the edge at 95.0%, and the writer and the evaluated model belong to the same family, so the figures may be optimistic.
+- `claim_drafting` scores 60 of 60 on the test claims (0 critical errors, 95% interval 94.0% to 100.0%) after the instruction tuning of change 018, so that result is not a clean held-out measure, and the writer and the evaluated model belong to the same family, so the figures may be optimistic.
 - The LangSmith trace of a live `reconcile-demo` claim run and the experiment of `claim_drafting` are pending until the LangSmith trace quota resets, around 2026-11-05.
 
 ## License
