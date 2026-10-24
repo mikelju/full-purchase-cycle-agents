@@ -36,7 +36,7 @@ The posts do not teach what an agent is and use the word sparingly.
 |---|--------|
 | 1 | Approved by the owner |
 | 2 | Published by the owner on 2026-10-21; the text below is the published one |
-| 3 | Published by the owner on 2026-10-23; the text below is the published one |
+| 3 | Published by the owner on 2026-10-23 (https://lnkd.in/p/e9arM6bD); the text below is the published one |
 | 4 | Rewritten on 2026-10-23 to focus on evaluation (the orchestrator is built); pending owner approval; image to be decided |
 
 ## Post 1 - orders
@@ -197,9 +197,10 @@ https://github.com/mikelju/full-purchase-cycle-agents
 Si te perdiste los posts anteriores de la serie:
 - Pedidos: https://lnkd.in/p/e3v3Kzqt
 - Proveedores: https://lnkd.in/p/esQAcdWa
+- Albaranes y facturas: https://lnkd.in/p/e9arM6bD
 ```
 
-The post 3 LinkedIn link is not recorded and can be added when the owner provides it.
+The post 3 LinkedIn link is https://lnkd.in/p/e9arM6bD (provided by the owner).
 The figures in post 4 (21 evaluations, 1,716 tests) come from `README.md` line 57 (21 suites) and `uv run pytest --collect-only -q` (1,716 tests collected after phase 13); the earlier 1,698 was the phase 12 check in `docs/plans/fase-12-orquestador/plan.md` line 132.
 
 The figures in posts 2 and 3 come from the README and the change records as of 2026-10-16: 1,288 tests, 17 evaluations, offer extraction 98.9%, quote decision 39/39, reconciliation matching 58/58, document extraction 97.8% with 2 critical errors, phase 09 live calls about 0.18 USD.
