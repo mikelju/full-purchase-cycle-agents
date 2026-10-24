@@ -108,7 +108,7 @@ Local evidence in `.evidence/cambio-019/` (git-ignored).
 - C7: `README.md` 172 lines, ten `##` headings; Architecture embeds `orchestrator-flow.gif` and lists the 16 media links (all paths exist).
 - C8: `uv run pytest -q tests/test_readme.py`: 8 passed.
 - C9: `docs/assets/flow-animation/README.md` lists the new pages, record commands and ffmpeg substitution.
-- C10: pending (`npm run check` and PR CI after review, steps 8-10).
+- C10: `npm run check` exit 0 on the post-review head (hooks tests, ruff, pytest, eval, README results table up to date); PR CI result in the PR checks.
 
 ## Adversarial review
 | Round | Backend | Range | Lenses | Findings | Status |
