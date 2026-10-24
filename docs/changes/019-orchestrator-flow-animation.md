@@ -114,6 +114,7 @@ Local evidence in `.evidence/cambio-019/` (git-ignored).
 | Round | Backend | Range | Lenses | Findings | Status |
 |---|---|---|---|---|---|
 | 1 | local | HEAD~1..HEAD (22847a9) | content correctness; evidence and leaks | 11 (nits included): ES chips wording (entradas, guardados), ES pass 6 singulars, folder README conceptual sentence, evidence wording, database rows (orders, customer invoices), layout comment, dead code, LOOP comment, clock tag, README test, plan ticks | all 11 fixed; pages re-recorded, media re-encoded and re-inspected |
+| 2 | local | HEAD~1..HEAD (5019bee) | content correctness; evidence and leaks | minor: invoices row shows per-pass counts from the replay instead of cumulative | approve; minor accepted (no figure is false) |
 
 ## Delivery
 To fill at delivery.
